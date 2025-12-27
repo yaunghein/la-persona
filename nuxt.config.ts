@@ -13,4 +13,7 @@ export default defineNuxtConfig({
   colorMode: {
     preference: 'dark',
   },
+  runtimeConfig: {
+    databaseUrl: process.env.DATABASE_URL,
+  },
 });

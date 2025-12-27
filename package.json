@@ -12,12 +12,17 @@
   },
   "dependencies": {
     "@nuxt/ui": "^4.3.0",
+    "drizzle-orm": "^0.45.1",
     "nuxt": "^4.2.2",
+    "pg": "^8.16.3",
     "vue": "^3.5.26",
     "vue-router": "^4.6.4",
     "zod": "^4.2.1"
   },
   "devDependencies": {
-    "prettier": "^3.7.4"
+    "@types/pg": "^8.16.0",
+    "drizzle-kit": "^0.31.8",
+    "prettier": "^3.7.4",
+    "tsx": "^4.21.0"
   }
 }
