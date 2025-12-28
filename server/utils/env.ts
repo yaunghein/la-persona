@@ -7,6 +7,7 @@ const EnvSchema = z.object({
   BASE_URL: z.string(),
   GITHUB_CLIENT_ID: z.string(),
   GITHUB_CLIENT_SECRET: z.string(),
+  DEFAULT_SPLINE_URL: z.string(),
 });
 
 export type EnvSchema = z.infer<typeof EnvSchema>;
