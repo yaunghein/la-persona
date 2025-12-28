@@ -4,7 +4,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '../db';
 import { ensureUserHasFreeCard } from '../services/card';
 import { env } from '../utils/env';
-import type { User } from '../utils/type';
+import type { User } from '../../shared/utils/type';
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {

@@ -2,7 +2,7 @@ import { db } from '../db';
 import { card } from '../db/schema';
 import { findFreeCardByUserId } from '../db/queries/card';
 import { env } from '../utils/env';
-import type { User } from '../utils/type';
+import type { User } from '../../shared/utils/type';
 
 export const ensureUserHasFreeCard = async (user: User) => {
   const existing = await findFreeCardByUserId(user.id);
