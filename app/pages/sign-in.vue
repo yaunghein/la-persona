@@ -1,4 +1,8 @@
 <script setup lang="ts">
+definePageMeta({
+  middleware: 'guest-only',
+});
+
 import * as z from 'zod';
 import type { FormSubmitEvent, AuthFormField } from '@nuxt/ui';
 
@@ -63,7 +67,7 @@ function onSubmit(payload: FormSubmitEvent<Schema>) {
     <UPageCard class="w-full max-w-md">
       <UAuthForm
         :schema="schema"
-        title="Login to La Persona"
+        title="Sign In to La Persona"
         description="Enter your credentials to access your account."
         icon="i-lucide-user"
         :fields="fields"
