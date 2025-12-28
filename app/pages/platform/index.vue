@@ -4,4 +4,4 @@ definePageMeta({
 });
 </script>
 
-<template>Platform Home Page Pay Par</template>
+<template>Platform Home Page Lay Par</template>
