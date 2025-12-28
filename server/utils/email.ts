@@ -18,9 +18,11 @@ export const sendEmail = async (params: {
 };
 
 export const emailSchema = z.object({
+  name: z.string().nonempty().min(1),
   to: z.array(z.email()).nonempty().min(1),
   subject: z.string().nonempty().min(1),
-  html: z.string().nonempty().min(1),
+  // html: z.string().nonempty().min(1),
+  template: z.enum(['Welcome']),
 });
 
 export type EmailSchema = z.infer<typeof emailSchema>;

@@ -21,6 +21,7 @@
     "drizzle-orm": "^0.45.1",
     "nanoid": "^5.1.6",
     "nuxt": "^4.2.2",
+    "nuxt-email-renderer": "^2.1.2",
     "pg": "^8.16.3",
     "resend": "^6.6.0",
     "vue": "^3.5.26",

@@ -2,9 +2,11 @@
 import * as z from 'zod';
 import type { FormSubmitEvent } from '@nuxt/ui';
 
+// TODO: refactor email related schemas and types
 const schema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.email('Invalid email address'),
+  template: z.enum(['Welcome']),
 });
 
 type Schema = z.output<typeof schema>;
@@ -12,6 +14,7 @@ type Schema = z.output<typeof schema>;
 const state = reactive<Partial<Schema>>({
   name: undefined,
   email: undefined,
+  template: 'Welcome',
 });
 
 const pending = ref(false);
@@ -24,12 +27,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     await $fetch('/api/email/send', {
       method: 'POST',
       body: {
+        name: event.data.name,
         to: [event.data.email],
-        subject: `Welcome ${event.data.name}`,
-        html: `
-          <p>Hello <strong>${event.data.name}</strong>,</p>
-          <p>Welcome aboard!</p>
-        `,
+        subject: `Welcome to La Persona, ${event.data.name.split(' ')[0]} 👋`,
+        template: event.data.template,
       },
     });
 
@@ -43,10 +44,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
     state.name = undefined;
     state.email = undefined;
-  } catch {
+  } catch (error: any) {
     toast.add({
       title: 'Failed to send email',
-      description: 'Please try again.',
+      description: error.statusMessage || 'Please try again.',
       color: 'error',
       icon: 'i-heroicons-x-circle',
       progress: false,

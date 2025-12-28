@@ -7,7 +7,19 @@ export default defineEventHandler(async (event) => {
       data: result.error.issues,
     });
   }
+
+  // await new Promise((r) => setTimeout(r, 3000));
+  // throw new Error('test hehe');
+  // return { success: true };
+
+  const html = await renderEmailComponent(result.data.template, {
+    name: result.data.name,
+  });
+  // @ts-ignore
+  result.data.html = html;
+
   try {
+    // @ts-ignore
     const response = await sendEmail(result.data);
     return {
       success: true,
