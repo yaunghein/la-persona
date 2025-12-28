@@ -1,5 +1,5 @@
-import { auth } from '../auth';
-import { findCardsByUserId } from '../db/queries/card';
+import { auth } from '~~/server/auth';
+import { findCardsByUserId } from '~~/server/db/queries/card';
 
 export default defineEventHandler(async (event) => {
   const session = await auth.api.getSession({
