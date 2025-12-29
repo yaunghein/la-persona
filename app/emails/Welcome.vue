@@ -29,9 +29,9 @@ defineProps<Props>();
         "
       >
         <EImg
-          src="https://www.la-persona.com/images/email/welcome-email-banner.jpg"
+          src="/images/emails/welcome-email-banner.jpg"
           alt="LA PERSONA digital card preview"
-          style="width: 100%; margin-bottom: 32px"
+          style="width: 100%; margin-bottom: 32px; margin-top: -12px"
         />
 
         <EText>Hi {{ name }},</EText>

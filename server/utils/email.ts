@@ -10,7 +10,7 @@ export const sendEmail = async (params: {
   html: string;
 }) => {
   return await resend.emails.send({
-    from: 'La Persona <no-reply@contact.la-persona.com>',
+    from: 'La Persona <welcome@contact.la-persona.com>',
     to: params.to,
     subject: params.subject,
     html: params.html,
