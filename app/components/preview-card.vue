@@ -48,7 +48,7 @@ const emit = defineEmits<{
           size="xs"
           color="primary"
           variant="ghost"
-          @click="emit('edit', card)"
+          :to="`/platform/cards/${card.id}`"
         />
         <UButton
           icon="i-heroicons-trash"
