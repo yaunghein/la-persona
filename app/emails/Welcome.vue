@@ -29,7 +29,7 @@ defineProps<Props>();
         "
       >
         <EImg
-          src="/images/emails/welcome-email-banner.jpg"
+          src="https://temporary.la-persona.com/images/emails/welcome-email-banner.jpg"
           alt="LA PERSONA digital card preview"
           style="width: 100%; margin-bottom: 32px; margin-top: -12px"
         />
