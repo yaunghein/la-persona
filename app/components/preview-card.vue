@@ -40,7 +40,8 @@ const emit = defineEmits<{
           size="xs"
           color="neutral"
           variant="ghost"
-          @click="emit('view', card)"
+          target="_black"
+          :to="`/${card.id}`"
         />
         <UButton
           icon="i-heroicons-pencil-square"

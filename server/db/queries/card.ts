@@ -14,3 +14,9 @@ export const findCardsByUserId = async (userId: string) => {
     orderBy: desc(card.createdAt),
   });
 };
+
+export const findCardsById = async (id: string) => {
+  return await db.query.card.findFirst({
+    where: eq(card.id, id),
+  });
+};
