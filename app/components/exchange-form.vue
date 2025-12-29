@@ -2,8 +2,12 @@
 import * as z from 'zod';
 import type { FormSubmitEvent } from '@nuxt/ui';
 
-defineProps<{
+const props = defineProps<{
   card: CardDTO;
+}>();
+
+const emit = defineEmits<{
+  submitted: [];
 }>();
 
 const schema = z.object({
@@ -20,41 +24,45 @@ const state = reactive<Partial<Schema>>({
 
 const pending = ref(false);
 const toast = useToast();
+const isDone = ref(false);
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   pending.value = true;
 
-  // try {
-  //   await $fetch('/api/email/send', {
-  //     method: 'POST',
-  //     body: {
-  //       name: event.data.name,
-  //       to: [event.data.email],
-  //       subject: `Welcome to La Persona, ${event.data.name.split(' ')[0]} 👋`,
-  //     },
-  //   });
+  try {
+    await $fetch('/api/contact-exchange', {
+      method: 'POST',
+      body: {
+        name: event.data.name,
+        phone: '+66626366748',
+        email: event.data.email,
+        position: 'Engineer @ La Persona',
+        cardId: props.card.id,
+      },
+    });
 
-  //   toast.add({
-  //     title: 'Email sent',
-  //     description: 'The welcome email was sent successfully.',
-  //     color: 'success',
-  //     icon: 'i-heroicons-check-circle',
-  //     progress: false,
-  //   });
+    toast.add({
+      title: 'Success',
+      description: 'The contacts were exchanged successfully.',
+      color: 'success',
+      icon: 'i-heroicons-check-circle',
+      progress: false,
+    });
 
-  //   state.name = undefined;
-  //   state.email = undefined;
-  // } catch (error: any) {
-  //   toast.add({
-  //     title: 'Failed to send email',
-  //     description: error.statusMessage || 'Please try again.',
-  //     color: 'error',
-  //     icon: 'i-heroicons-x-circle',
-  //     progress: false,
-  //   });
-  // } finally {
-  //   pending.value = false;
-  // }
+    state.name = undefined;
+    state.email = undefined;
+    isDone.value = true;
+  } catch (error: any) {
+    toast.add({
+      title: 'Failed to exchange contact',
+      description: error.statusMessage || 'Please try again.',
+      color: 'error',
+      icon: 'i-heroicons-x-circle',
+      progress: false,
+    });
+  } finally {
+    pending.value = false;
+  }
 }
 </script>
 
@@ -69,7 +77,16 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           </p>
         </div>
 
+        <UButton
+          v-if="isDone"
+          block
+          class="font-bold"
+          @click="emit('submitted')"
+        >
+          Save {{ props.card.name }}'s Contact
+        </UButton>
         <UForm
+          v-else
           :schema="schema"
           :state="state"
           class="space-y-4"

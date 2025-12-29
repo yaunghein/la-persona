@@ -6,5 +6,6 @@ export const ROUTES = {
   platform: {
     root: PLATFORM_ROOT,
     cards: `${PLATFORM_ROOT}/cards`,
+    contacts: `${PLATFORM_ROOT}/contacts`,
   },
 } as const;

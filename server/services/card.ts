@@ -13,6 +13,6 @@ export const ensureUserHasFreeCard = async (user: User) => {
     splineUrl: env.DEFAULT_SPLINE_URL,
     userId: user.id,
   };
-  const [created] = await db.insert(card).values(values).returning();
-  return created;
+  const [inserted] = await db.insert(card).values(values).returning();
+  return inserted;
 };

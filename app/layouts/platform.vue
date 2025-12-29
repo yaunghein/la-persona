@@ -26,9 +26,9 @@ const links = [
       },
     },
     {
-      label: 'Customers',
-      icon: 'i-lucide-users',
-      to: '',
+      label: 'Contacts',
+      icon: 'i-lucide-contact-round',
+      to: ROUTES.platform.contacts,
       onSelect: () => {
         open.value = false;
       },
@@ -168,6 +168,7 @@ const period = ref<Period>('daily');
 const pageLabel: Record<string, string> = {
   [ROUTES.platform.root]: 'Home',
   [ROUTES.platform.cards]: 'My Cards',
+  [ROUTES.platform.contacts]: 'Contacts',
 } as const;
 
 const currentPageLabel = computed(() => {

@@ -41,7 +41,7 @@ const isFormOpen = ref(false);
     class="absolute inset-0 w-full h-full bg-black/80 grid place-items-center"
   >
     <div>
-      <ExchangeForm :card />
+      <ExchangeForm :card @submitted="isFormOpen = false" />
     </div>
   </div>
 </template>
