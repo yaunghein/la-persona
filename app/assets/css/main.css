@@ -4,3 +4,17 @@
 @theme {
   --font-sans: 'Red Hat Display', sans-serif;
 }
+
+:root {
+  --ui-primary: #121212;
+  --ui-text: #121212;
+  --ui-bg: #ffffff;
+  --ui-border: #e5e6e9;
+}
+
+.dark {
+  --ui-primary: white;
+  --ui-text: white;
+  --ui-bg: #121212;
+  --ui-border: #2a2a2a;
+}

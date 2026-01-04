@@ -8,6 +8,7 @@ export default defineNuxtConfig({
     head: {
       title: 'La Persona',
       htmlAttrs: { lang: 'en' },
+      link: [{ rel: 'icon', type: 'image/x-icon', href: 'images/favicon.png' }],
     },
   },
   colorMode: {

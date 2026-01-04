@@ -1,13 +1,15 @@
+<script setup lang="ts">
+const SECTIONS = {
+  MASTERPIECES: 'masterpieces',
+  HOW_IT_WORKS: 'how-it-works',
+  WHY_US: 'why-us',
+  COMMISSION_US: 'commission-us',
+};
+
+const landingContext: LandingContext = { SECTIONS };
+provide(LandingContextKey, landingContext);
+</script>
+
 <template>
-  <div class="flex flex-col items-center justify-center gap-5 h-screen">
-    <div class="font-black text-2xl text-center px-5">
-      LA PERSONA Yae S Yan Hla Tae Website Gyi!
-    </div>
-    <UButton
-      label="Go to Plaform"
-      class="font-black"
-      icon="i-lucide-arrow-right"
-      to="/platform"
-    />
-  </div>
+  <LandingNavbar />
 </template>

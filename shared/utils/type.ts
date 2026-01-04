@@ -1,5 +1,6 @@
-import type { InferSelectModel } from 'drizzle-orm';
 import { user, card, contactExchange } from '~~/server/db/schema';
+import type { InferSelectModel } from 'drizzle-orm';
+import type { InjectionKey } from 'vue';
 
 export type User = InferSelectModel<typeof user>;
 
@@ -17,3 +18,15 @@ export type ContactExchangeDTO = Omit<
   createdAt: string;
   updatedAt: string;
 };
+
+export interface LandingContext {
+  SECTIONS: {
+    MASTERPIECES: string;
+    HOW_IT_WORKS: string;
+    WHY_US: string;
+    COMMISSION_US: string;
+  };
+}
+
+export const LandingContextKey: InjectionKey<LandingContext> =
+  Symbol('landing-context');
