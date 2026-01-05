@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { SECTIONS } = inject(LandingContextKey)!;
+const { SECTIONS, isHeaderVisible } = inject(LandingContextKey)!;
 
 const navItems = [
   { label: 'The Masterpieces', href: `#${SECTIONS.MASTERPIECES}` },
@@ -10,7 +10,7 @@ const navItems = [
 </script>
 
 <template>
-  <header class="z-10 bg-dark px-4 sm:px-18">
+  <header class="z-20 bg-dark px-4 sm:px-18">
     <div
       class="flex items-center justify-center border-b border-white/10 py-7 sm:py-13"
     >
@@ -21,7 +21,7 @@ const navItems = [
   </header>
 
   <nav
-    class="sticky top-0 z-10 hidden items-center justify-between bg-dark px-4 sm:flex sm:px-18"
+    class="sticky top-0 z-20 hidden items-center justify-between bg-dark px-4 sm:flex sm:px-18"
   >
     <a
       v-for="item in navItems"
@@ -30,11 +30,19 @@ const navItems = [
     >
       <AnimatedText :text="item.label" />
       <div
-        class="absolute inset-0 top-auto h-px w-full bg-white transition-all duration-1000 {currentSection === item.href.split('#')[1] ? 'scale-x-100' : 'scale-x-0'}"
+        class="absolute inset-0 top-auto h-px w-full bg-white transition-all duration-1000"
+        :class="{
+          'scale-x-100': `currentSection` === item.href.split('#')[1],
+          'scale-x-0': `currentSection` !== item.href.split('#')[1],
+        }"
       ></div>
     </a>
     <div
-      class="absolute inset-0 top-auto h-px w-full bg-white/10 transition-all duration-1000 {isHeaderVisible ? 'scale-x-0' : 'scale-x-100'}"
+      class="absolute inset-0 top-auto h-px w-full bg-white/10 transition-all duration-1000"
+      :class="{
+        'scale-x-100': !isHeaderVisible,
+        'scale-x-0': isHeaderVisible,
+      }"
     ></div>
   </nav>
 </template>

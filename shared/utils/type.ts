@@ -1,6 +1,6 @@
 import { user, card, contactExchange } from '~~/server/db/schema';
 import type { InferSelectModel } from 'drizzle-orm';
-import type { InjectionKey } from 'vue';
+import type { InjectionKey, Ref } from 'vue';
 
 export type User = InferSelectModel<typeof user>;
 
@@ -26,6 +26,7 @@ export interface LandingContext {
     WHY_US: string;
     COMMISSION_US: string;
   };
+  isHeaderVisible: Ref<boolean>;
 }
 
 export const LandingContextKey: InjectionKey<LandingContext> =
