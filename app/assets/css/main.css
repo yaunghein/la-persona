@@ -22,3 +22,16 @@
   --ui-border: #2a2a2a;
   --ui-bg-elevated: #2a2a2a;
 }
+
+@layer utilities {
+  .mask-dots {
+    -webkit-mask-image: url('/images/masks/dots.svg');
+    mask-image: url('/images/masks/dots.svg');
+    -webkit-mask-repeat: repeat-x;
+    mask-repeat: repeat-x;
+    -webkit-mask-size: 2.8125rem 2.5rem;
+    mask-size: 2.8125rem 2.5rem;
+    -webkit-mask-position: left center;
+    mask-position: left center;
+  }
+}

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 defineProps<{
-  number: string;
+  number: number;
   title: string;
   body: string;
 }>();
@@ -11,7 +11,7 @@ defineProps<{
     <div class="flex w-full items-center gap-2 sm:gap-0">
       <div
         class="flex-1"
-        :class="{ 'mask-dots h-10 bg-white/20': number !== '1' }"
+        :class="{ 'mask-dots h-10 bg-white/20': number !== 1 }"
       >
         <div
           :id="`how-it-works-line-left-${number}`"
@@ -28,7 +28,7 @@ defineProps<{
             stroke="white"
             stroke-width="2"
             stroke-dasharray="0 1000"
-            id="circle-{number}"
+            :id="`circle-${number}`"
           />
         </svg>
         <div
@@ -39,7 +39,7 @@ defineProps<{
       </div>
       <div
         class="flex-1"
-        :class="{ 'mask-dots h-10 bg-white/20': number !== '3' }"
+        :class="{ 'mask-dots h-10 bg-white/20': number !== 3 }"
       >
         <div
           :id="`how-it-works-line-right-${number}`"
