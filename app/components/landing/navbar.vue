@@ -1,5 +1,6 @@
 <script setup lang="ts">
-const { SECTIONS, isHeaderVisible } = inject(LandingContextKey)!;
+const { SECTIONS, isHeaderVisible, currentSection } =
+  inject(LandingContextKey)!;
 
 const navItems = [
   { label: 'The Masterpieces', href: `#${SECTIONS.MASTERPIECES}` },
@@ -32,8 +33,8 @@ const navItems = [
       <div
         class="absolute inset-0 top-auto h-px w-full bg-white transition-all duration-1000"
         :class="{
-          'scale-x-100': `currentSection` === item.href.split('#')[1],
-          'scale-x-0': `currentSection` !== item.href.split('#')[1],
+          'scale-x-100': currentSection === item.href.split('#')[1],
+          'scale-x-0': currentSection !== item.href.split('#')[1],
         }"
       ></div>
     </a>

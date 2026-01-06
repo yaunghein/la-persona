@@ -19,6 +19,17 @@ export type ContactExchangeDTO = Omit<
   updatedAt: string;
 };
 
+export const SECTIONS = {
+  MASTERPIECES: 'masterpieces',
+  HOW_IT_WORKS: 'how-it-works',
+  WHY_US: 'why-us',
+  COMMISSION_US: 'commission-us',
+};
+
+export type currentSectionType =
+  | (typeof SECTIONS)[keyof typeof SECTIONS]
+  | null;
+
 export interface LandingContext {
   SECTIONS: {
     MASTERPIECES: string;
@@ -27,6 +38,7 @@ export interface LandingContext {
     COMMISSION_US: string;
   };
   isHeaderVisible: Ref<boolean>;
+  currentSection: Ref<currentSectionType>;
 }
 
 export const LandingContextKey: InjectionKey<LandingContext> =

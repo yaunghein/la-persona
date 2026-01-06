@@ -3,14 +3,8 @@ import Lenis from 'lenis';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-const SECTIONS = {
-  MASTERPIECES: 'masterpieces',
-  HOW_IT_WORKS: 'how-it-works',
-  WHY_US: 'why-us',
-  COMMISSION_US: 'commission-us',
-};
-
 const isHeaderVisible = ref(true);
+const currentSection = ref<currentSectionType>(null);
 
 onMounted(async () => {
   const lenis = new Lenis();
@@ -23,7 +17,7 @@ onMounted(async () => {
   }
   requestAnimationFrame(raf);
 
-  // header visibility check to animate the line below navigation
+  // check header visibility and animate below whole navigation line
   ScrollTrigger.create({
     trigger: 'header',
     start: 'top top',
@@ -33,6 +27,27 @@ onMounted(async () => {
     onEnterBack: () => (isHeaderVisible.value = true),
   });
 
+  // check sections visibility and animate navbar item line
+  const sections = Object.values(SECTIONS)
+    .map((id) => {
+      const element = document.getElementById(id);
+      return element as HTMLDivElement;
+    })
+    .filter(Boolean) as HTMLDivElement[];
+  sections.forEach((section, index) => {
+    ScrollTrigger.create({
+      trigger: section,
+      start: 'top 50%',
+      end: 'bottom 50%',
+      onEnter: () => (currentSection.value = section.id as currentSectionType),
+      onLeave: () => (currentSection.value = null),
+      onEnterBack: () =>
+        (currentSection.value = section.id as currentSectionType),
+      onLeaveBack: () => index === 0 && (currentSection.value = null),
+    });
+  });
+
+  // animate how it works horizontal items
   ScrollTrigger.create({
     trigger: '#how-it-works-scroll-container',
     start: 'top top',
@@ -68,6 +83,7 @@ onMounted(async () => {
 const landingContext: LandingContext = {
   SECTIONS,
   isHeaderVisible,
+  currentSection,
 };
 provide(LandingContextKey, landingContext);
 </script>
