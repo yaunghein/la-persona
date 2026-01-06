@@ -78,6 +78,18 @@ onMounted(async () => {
       .to('#circle-3', { strokeDasharray: '283 0', duration: 1 }, 10)
       .to({}, { duration: 0.75 }),
   });
+
+  // reveal image on scroll
+  ScrollTrigger.create({
+    trigger: '#reveal-container',
+    start: 'top top',
+    end: 'bottom bottom',
+    scrub: 1.2,
+    animation: gsap
+      .timeline()
+      .to('#reveal-mask', { borderWidth: 0 })
+      .to({}, { duration: 0.2 }),
+  });
 });
 
 const landingContext: LandingContext = {
@@ -93,4 +105,5 @@ provide(LandingContextKey, landingContext);
   <LandingHero />
   <LandingMasterpiece />
   <LandingHowItWorks />
+  <LandingReveal />
 </template>
