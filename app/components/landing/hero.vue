@@ -1,10 +1,18 @@
 <script setup lang="ts">
 import { Application } from '@splinetool/runtime';
 
-onMounted(() => {
+const loading = ref(false);
+
+onMounted(async () => {
+  const timerId = setTimeout(() => (loading.value = true), 500);
   const canvas = document.querySelector('canvas') as HTMLCanvasElement;
   const spline = new Application(canvas);
-  spline.load('https://prod.spline.design/RLMffXoyzfSZ0XE3/scene.splinecode');
+  spline
+    .load('https://prod.spline.design/RLMffXoyzfSZ0XE3/scene.splinecode')
+    .then(() => {
+      clearTimeout(timerId);
+      loading.value = false;
+    });
 });
 </script>
 
@@ -21,7 +29,11 @@ onMounted(() => {
     <div
       class="pointer-events-none inset-0 -ml-[8%] h-full min-h-150 w-[120%] translate-y-7 scale-75 sm:pointer-events-auto sm:absolute sm:ml-0 sm:w-full sm:translate-y-20"
     >
-      <canvas class="h-full w-full"></canvas>
+      <USkeleton
+        v-if="loading"
+        class="h-full w-full absolute inset-0 scale-y-32 scale-x-40 -translate-y-12 rounded-none"
+      />
+      <canvas class="h-full w-full opacity-50"></canvas>
     </div>
 
     <div

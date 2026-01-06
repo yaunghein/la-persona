@@ -12,6 +12,7 @@
   --ui-text: var(--color-dark);
   --ui-bg: #ffffff;
   --ui-border: #e5e6e9;
+  --ui-bg-elevated: #e5e6e9;
 }
 
 .dark {
@@ -19,4 +20,5 @@
   --ui-text: white;
   --ui-bg: var(--color-dark);
   --ui-border: #2a2a2a;
+  --ui-bg-elevated: #2a2a2a;
 }
