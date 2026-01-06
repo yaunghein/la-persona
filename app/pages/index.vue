@@ -106,4 +106,5 @@ provide(LandingContextKey, landingContext);
   <LandingMasterpiece />
   <LandingHowItWorks />
   <LandingReveal />
+  <LandingWhyChooseUs />
 </template>
