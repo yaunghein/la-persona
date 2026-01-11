@@ -3,11 +3,15 @@ const { SECTIONS, isHeaderVisible, currentSection } =
   inject(LandingContextKey)!;
 
 const navItems = [
-  { label: 'The Masterpieces', href: `#${SECTIONS.MASTERPIECES}` },
-  { label: 'How It Works', href: `#${SECTIONS.HOW_IT_WORKS}` },
-  { label: 'Why Us?', href: `#${SECTIONS.WHY_US}` },
-  { label: 'commission Us', href: `#${SECTIONS.COMMISSION_US}` },
+  { label: 'The Masterpieces', id: SECTIONS.MASTERPIECES },
+  { label: 'How It Works', id: SECTIONS.HOW_IT_WORKS },
+  { label: 'Why Us?', id: SECTIONS.WHY_US },
+  { label: 'commission Us', id: SECTIONS.COMMISSION_US },
 ];
+
+const goToSection = (item: (typeof navItems)[number]) => {
+  document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' });
+};
 </script>
 
 <template>
@@ -24,20 +28,20 @@ const navItems = [
   <nav
     class="sticky top-0 z-20 hidden items-center justify-between bg-dark px-4 sm:flex sm:px-18"
   >
-    <a
+    <button
       v-for="item in navItems"
-      :href="item.href"
-      class="group relative py-6 text-sm font-light uppercase leading-[1.1] tracking-[0.28rem]"
+      @click="goToSection(item)"
+      class="cursor-pointer group relative py-6 text-sm font-light uppercase leading-[1.1] tracking-[0.28rem]"
     >
       <AnimatedText :text="item.label" />
       <div
         class="absolute inset-0 top-auto h-px w-full bg-white transition-all duration-1000"
         :class="{
-          'scale-x-100': currentSection === item.href.split('#')[1],
-          'scale-x-0': currentSection !== item.href.split('#')[1],
+          'scale-x-100': currentSection === item.id,
+          'scale-x-0': currentSection !== item.id,
         }"
       ></div>
-    </a>
+    </button>
     <div
       class="absolute inset-0 top-auto h-px w-full bg-white/10 transition-all duration-1000"
       :class="{
