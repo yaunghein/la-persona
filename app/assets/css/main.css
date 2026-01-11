@@ -1,6 +1,10 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
 
+html {
+  scroll-behavior: smooth;
+}
+
 @theme {
   --font-sans: 'Red Hat Display', sans-serif;
 
@@ -18,9 +22,12 @@
 .dark {
   --ui-primary: white;
   --ui-text: white;
+  --ui-text-dimmed: #5f5f5f;
   --ui-bg: var(--color-dark);
   --ui-border: #2a2a2a;
   --ui-bg-elevated: #2a2a2a;
+  --ui-bg-accented: #2a2a2a;
+  --ui-border-accented: #2a2a2a;
 }
 
 @layer utilities {

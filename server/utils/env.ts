@@ -9,6 +9,8 @@ const EnvSchema = z.object({
   GITHUB_CLIENT_SECRET: z.string(),
   DEFAULT_SPLINE_URL: z.string(),
   RESEND_API_KEY: z.string(),
+  HUBSPOT_PORTAL_ID: z.string(),
+  HUBSPOT_FORM_GUID_LEAD: z.string(),
 });
 
 export type EnvSchema = z.infer<typeof EnvSchema>;

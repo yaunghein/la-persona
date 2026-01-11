@@ -53,7 +53,11 @@ defineProps<{
       {{ title }}
     </h3>
     <p
-      class="mx-auto {number === '3' ? 'max-w-[18rem]' : 'max-w-84'} text-center text-xs font-light leading-normal tracking-[0.0875rem] sm:max-w-108 sm:text-sm"
+      class="mx-auto text-center text-xs font-light leading-normal tracking-[0.0875rem] sm:max-w-108 sm:text-sm"
+      :class="{
+        'max-w-[18rem]': number === 3,
+        'max-w-84': number !== 3,
+      }"
     >
       {{ body }}
     </p>
