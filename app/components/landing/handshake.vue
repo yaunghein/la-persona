@@ -33,7 +33,7 @@ const goToSection = (item: (typeof navItems)[number]) => {
         Stand Out.<br />Be Remembered.
       </h2>
       <p
-        class="relative mx-auto max-w-[18rem] text-center text-sm font-light leading-normal sm:max-w-[20rem]"
+        class="relative mx-auto max-w-56 text-center text-sm font-light leading-normal sm:max-w-[20rem]"
       >
         Your next-level business card is a few steps away. Tell us who you are.
         We'll take care of the rest.
