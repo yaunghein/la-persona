@@ -12,9 +12,8 @@ export default defineEventHandler(async (event) => {
   // throw new Error('test hehe');
   // return { success: true };
 
-  const html = await renderEmailComponent(result.data.template, {
-    name: result.data.name,
-  });
+  const { template, ...data } = result.data;
+  const html = await renderEmailComponent(result.data.template, data);
   // @ts-ignore
   result.data.html = html;
 
