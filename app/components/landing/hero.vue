@@ -5,7 +5,7 @@ const loading = ref(false);
 
 onMounted(async () => {
   const timerId = setTimeout(() => (loading.value = true), 500);
-  const canvas = document.querySelector('canvas') as HTMLCanvasElement;
+  const canvas = document.querySelector('#demo-card') as HTMLCanvasElement;
   const spline = new Application(canvas);
   spline
     .load('https://prod.spline.design/ZEuYzbIAFVDYpUrb/scene.splinecode')
@@ -40,11 +40,14 @@ const goToSection = (item: (typeof navItems)[number]) => {
         v-if="loading"
         class="h-full w-full absolute inset-0 scale-y-32 scale-x-40 -translate-y-12 rounded-none"
       /> -->
-      <canvas class="h-full w-full translate-y-40 sm:translate-y-100"></canvas>
+      <canvas
+        id="demo-card"
+        class="h-full w-full translate-y-40 sm:translate-y-100"
+      ></canvas>
     </div>
 
     <div
-      class="relative z-20 sm:mt-16 mb-64 flex flex-col items-center justify-center gap-3 sm:mb-130 sm:flex-row sm:gap-5"
+      class="relative z-20 sm:mt-16 mb-64 flex flex-col items-center justify-center gap-3 sm:mb-125 sm:flex-row sm:gap-5"
     >
       <a
         href="https://www.la-persona.com/minhtetmyet"
