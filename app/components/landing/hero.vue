@@ -28,7 +28,9 @@ const goToSection = (item: (typeof navItems)[number]) => {
 </script>
 
 <template>
-  <section class="flex flex-col sm:justify-between pb-7 pt-20 sm:pb-0 sm:pt-40">
+  <section
+    class="relative flex flex-col sm:justify-between pb-7 pt-20 sm:pb-0 sm:pt-40"
+  >
     <h1
       class="pointer-events-none mb-10 relative z-10 mx-auto max-w-[20rem] text-center text-xl font-light uppercase leading-[1.1] tracking-[0.2rem] sm:my-auto sm:max-w-3xl sm:text-[2.5rem] sm:tracking-[0.3rem]"
     >
@@ -44,7 +46,7 @@ const goToSection = (item: (typeof navItems)[number]) => {
       /> -->
       <canvas
         id="demo-card"
-        class="h-full w-full translate-y-46 sm:translate-y-100"
+        class="h-full w-full translate-y-42 sm:translate-y-58"
       ></canvas>
     </div>
 

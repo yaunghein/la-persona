@@ -95,7 +95,7 @@ const benefits = [
       class="flex flex-col items-stretch justify-center px-4 sm:flex-row sm:px-0 flex-wrap max-w-300 mx-auto"
     >
       <div v-for="benefit in benefits" class="shrink-0 px-14 py-10">
-        <div class="mb-7 bg-white/10 rounded-full p-3 aspect-square w-16">
+        <div class="mb-7 bg-white/10 rounded-full p-3 aspect-square w-16 h-16">
           <component :is="iconMap[benefit.icon]" />
         </div>
         <h3
