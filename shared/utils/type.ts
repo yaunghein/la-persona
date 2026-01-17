@@ -24,6 +24,7 @@ export const SECTIONS = {
   HOW_IT_WORKS: 'how-it-works',
   WHY_US: 'why-us',
   COMMISSION_US: 'commission-us',
+  FOUNDERS_CLUB: 'founders-club',
 };
 
 export type currentSectionType =

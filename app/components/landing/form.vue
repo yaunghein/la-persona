@@ -12,14 +12,13 @@ const onSubmit = async (e: SubmitEvent) => {
 
   submitting.value = true;
 
-  await new Promise((r) => setTimeout(r, 3000));
+  // await new Promise((r) => setTimeout(r, 3000));
 
   try {
     const response = await $fetch('/api/marketing/landing-form', {
       method: 'POST',
       body: data,
     });
-    console.log({ response });
 
     // toast.add({
     //   title: 'Thank you for your interest.',
@@ -31,6 +30,7 @@ const onSubmit = async (e: SubmitEvent) => {
     //   duration: 5000,
     // });
 
+    (document.querySelector('#landing-form') as HTMLFormElement)?.reset();
     success.value = true;
   } catch (error: any) {
     toast.add({
@@ -85,6 +85,7 @@ const onSubmit = async (e: SubmitEvent) => {
       v-else
       @submit.prevent="onSubmit"
       class="mx-auto grid w-full max-w-[39.88rem] gap-6 px-4 sm:px-0"
+      id="landing-form"
     >
       <label for="email">
         <span

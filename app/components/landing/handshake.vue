@@ -3,7 +3,7 @@ const navItems = [
   { label: 'The Masterpieces', id: SECTIONS.MASTERPIECES },
   { label: 'How It Works', id: SECTIONS.HOW_IT_WORKS },
   { label: 'Why Us?', id: SECTIONS.WHY_US },
-  { label: 'commission Us', id: SECTIONS.COMMISSION_US },
+  { label: 'commision us', id: SECTIONS.COMMISSION_US },
 ];
 
 const goToSection = (item: (typeof navItems)[number]) => {
@@ -42,7 +42,7 @@ const goToSection = (item: (typeof navItems)[number]) => {
         @click="goToSection(navItems[3]!)"
         class="group relative w-60 rounded-full border border-white/10 py-4 text-xs font-light uppercase leading-none tracking-[0.1rem] transition-all duration-500 hover:bg-white hover:text-dark sm:w-[19.05rem] sm:text-sm"
       >
-        <AnimatedText text="commission your card" />
+        <AnimatedText text="join founders club" />
       </button>
     </div>
   </section>

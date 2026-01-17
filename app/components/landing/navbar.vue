@@ -6,7 +6,7 @@ const navItems = [
   { label: 'The Masterpieces', id: SECTIONS.MASTERPIECES },
   { label: 'How It Works', id: SECTIONS.HOW_IT_WORKS },
   { label: 'Why Us?', id: SECTIONS.WHY_US },
-  { label: 'commission Us', id: SECTIONS.COMMISSION_US },
+  { label: 'founders club', id: SECTIONS.FOUNDERS_CLUB },
 ];
 
 const goToSection = (item: (typeof navItems)[number]) => {
