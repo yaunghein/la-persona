@@ -24,6 +24,6 @@ jobs:
         run: bun install -g @railway/cli
 
       - name: Run Drizzle Migration
-        run: railway run bun run db:migrate
+        run: railway run --service la-persona bun run db:migrate
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
