@@ -1,39 +1,4 @@
 <script setup lang="ts">
-import { Application } from '@splinetool/runtime';
-
-onMounted(async () => {
-  let spline: Application;
-  const canvas = document.querySelector(
-    '#founders-club-invite'
-  ) as HTMLCanvasElement;
-  spline = new Application(canvas);
-  spline.load('https://prod.spline.design/jbLz0UL46t58GTzK/scene.splinecode');
-
-  const targetElement = document.querySelector('#founders-club') as HTMLElement;
-  const observerCallback = (
-    entries: IntersectionObserverEntry[],
-    observer: IntersectionObserver
-  ) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting && spline) {
-        const object = spline.findObjectByName('cover');
-        if (!object) return;
-        object.emitEvent('mouseDown');
-        observer.unobserve(entry.target);
-      }
-    });
-  };
-  const observerOptions: IntersectionObserverInit = {
-    root: null,
-    rootMargin: '0px',
-    threshold: 0.5,
-  };
-  const observer = new IntersectionObserver(observerCallback, observerOptions);
-  if (targetElement) {
-    observer.observe(targetElement);
-  }
-});
-
 const iconMap: Record<string, any> = {
   access: resolveComponent('IconFounderAccess'),
   card: resolveComponent('IconFounderCard'),
@@ -78,9 +43,16 @@ const benefits = [
 </script>
 
 <template>
-  <section id="founders-club" class="pointer-events-none relative h-screen">
-    <div class="absolute inset-0 w-full h-full">
-      <canvas id="founders-club-invite" class="h-full w-full"></canvas>
+  <section
+    id="founders-club"
+    class="overflow-hidden pointer-events-none relative sm:h-screen"
+  >
+    <div class="sm:absolute inset-0 w-full h-full bg-[#151515]">
+      <img
+        src="/images/founders-club-scene-landing-page.webp"
+        alt="Founders Club Invitation"
+        class="w-150 aspect-[1/1.69] mx-auto -mt-20"
+      />
     </div>
   </section>
 
@@ -101,10 +73,10 @@ const benefits = [
         <h3
           class="mb-3 text-base font-light uppercase leading-normal tracking-[0.2rem] max-w-64"
         >
-          Lifetime Founder Status
+          {{ benefit.title }}
         </h3>
         <p class="max-w-54 text-sm font-light leading-normal">
-          Recognized forever as one of the first 20 members.
+          {{ benefit.body }}
         </p>
       </div>
     </div>
