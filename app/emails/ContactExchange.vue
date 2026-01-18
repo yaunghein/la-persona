@@ -38,20 +38,20 @@ const subject = encodeURIComponent(`Great meeting you / LA PERSONA Connection`);
         <EText
           style="
             font-size: 16px;
-            font-weight: 900;
+            font-weight: 500;
             letter-spacing: 2px;
-            margin-bottom: 32px;
+            margin-bottom: 48px;
             text-align: center;
           "
         >
-          LA PERSONA
+          LA <strong>PERSONA</strong>
         </EText>
 
         <EContainer
           style="
             border: 1px solid #e5e6e9;
-            padding: 40px 24px;
-            border-radius: 4px;
+            padding: 40px 24px 18px 24px;
+            border-radius: 0px;
           "
         >
           <EHeading
@@ -89,11 +89,29 @@ const subject = encodeURIComponent(`Great meeting you / LA PERSONA Connection`);
                 text-transform: uppercase;
                 letter-spacing: 1px;
               "
-              >Name</EText
             >
+              Name
+            </EText>
             <EText
               style="margin: 4px 0 20px 0; font-weight: 600; font-size: 15px"
-              >{{ props.name }}</EText
+            >
+              {{ props.name || 'N/A' }}
+            </EText>
+
+            <EText
+              style="
+                margin: 0;
+                font-size: 11px;
+                color: #888888;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+              "
+            >
+              Company
+            </EText>
+            <EText
+              style="margin: 4px 0 20px 0; font-weight: 600; font-size: 15px"
+              >{{ props.company || 'N/A' }}</EText
             >
 
             <EText
@@ -104,12 +122,14 @@ const subject = encodeURIComponent(`Great meeting you / LA PERSONA Connection`);
                 text-transform: uppercase;
                 letter-spacing: 1px;
               "
-              >Company</EText
             >
+              Email
+            </EText>
             <EText
               style="margin: 4px 0 20px 0; font-weight: 600; font-size: 15px"
-              >{{ props.company }}</EText
             >
+              {{ props.email || 'N/A' }}
+            </EText>
 
             <EText
               style="
@@ -119,27 +139,12 @@ const subject = encodeURIComponent(`Great meeting you / LA PERSONA Connection`);
                 text-transform: uppercase;
                 letter-spacing: 1px;
               "
-              >Email</EText
             >
-            <EText
-              style="margin: 4px 0 20px 0; font-weight: 600; font-size: 15px"
-              >{{ props.email }}</EText
-            >
-
-            <EText
-              style="
-                margin: 0;
-                font-size: 11px;
-                color: #888888;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-              "
-              >Phone</EText
-            >
-            <EText
-              style="margin: 4px 0 0 0; font-weight: 600; font-size: 15px"
-              >{{ props.phone }}</EText
-            >
+              Phone
+            </EText>
+            <EText style="margin: 4px 0 0 0; font-weight: 600; font-size: 15px">
+              {{ props.phone || 'N/A' }}
+            </EText>
           </EContainer>
 
           <EButton
@@ -161,7 +166,7 @@ const subject = encodeURIComponent(`Great meeting you / LA PERSONA Connection`);
             SEND A FOLLOW-UP EMAIL
           </EButton>
 
-          <EHr style="border-color: #e5e6e9; margin: 32px 0" />
+          <EHr style="border-color: #e5e6e9; margin: 42px 0 32px 0" />
 
           <EText
             style="
@@ -172,7 +177,7 @@ const subject = encodeURIComponent(`Great meeting you / LA PERSONA Connection`);
               font-style: italic;
             "
           >
-            We’re securing this contact for you. You'll be able to manage all
+            We're securing this contact for you. You'll be able to manage all
             your connections in your personal dashboard as soon as our platform
             launches.
           </EText>
@@ -185,6 +190,7 @@ const subject = encodeURIComponent(`Great meeting you / LA PERSONA Connection`);
             text-align: center;
             color: #121212;
             font-weight: 500;
+            text-transform: uppercase;
           "
         >
           Elevating Professional Presence.
@@ -192,7 +198,7 @@ const subject = encodeURIComponent(`Great meeting you / LA PERSONA Connection`);
 
         <EText
           style="
-            margin: 12px auto 0 auto;
+            margin: 12px auto -10px auto;
             text-transform: uppercase;
             font-size: 12px;
             text-align: center;

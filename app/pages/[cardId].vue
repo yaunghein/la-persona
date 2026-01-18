@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { ConcreteComponent } from 'vue';
+
 const { cardId } = useRoute().params;
 const card = cards.find((card) => card.id === cardId);
 
@@ -28,8 +30,6 @@ const onSubmit = async (e: SubmitEvent) => {
   // await new Promise((r) => setTimeout(r, 3000));
   // console.log({ data });
 
-  console.log({ data });
-
   try {
     await $fetch('/api/email/send', {
       method: 'POST',
@@ -41,6 +41,17 @@ const onSubmit = async (e: SubmitEvent) => {
         email: data.email,
         phone: data.phone,
         company: data.company,
+      },
+    });
+
+    await $fetch('/api/contact-exchange-before-platform', {
+      method: 'POST',
+      body: {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        position: data.company,
+        ownerEmail: data.ownerEmail,
       },
     });
 
@@ -59,7 +70,7 @@ const onSubmit = async (e: SubmitEvent) => {
   }
 };
 
-const iconMap: Record<string, any> = {
+const iconMap: Record<string, string | ConcreteComponent> = {
   directMessage: resolveComponent('IconDirectMessage'),
   world: resolveComponent('IconWorld'),
   arrowDown: resolveComponent('IconArrowDown'),

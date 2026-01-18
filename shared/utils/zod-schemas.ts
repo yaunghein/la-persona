@@ -8,6 +8,14 @@ export const ContactExchangeSchema = z.object({
   cardId: z.string().nonempty().min(1),
 });
 
+export const ContactExchangeBeforePlatformSchema = z.object({
+  name: z.string().nonempty().min(1),
+  phone: z.string().nonempty().min(1),
+  email: z.string().optional(),
+  position: z.string().optional(),
+  ownerEmail: z.email().nonempty().min(1),
+});
+
 export const UpdateCardSchema = z.object({
   id: z.string(),
   name: z.string().min(1).optional(),
