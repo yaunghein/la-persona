@@ -259,7 +259,10 @@ const iconMap: Record<string, string | ConcreteComponent> = {
         <button
           @click="isMenuOpen = false"
           class="absolute right-4 top-4 grid aspect-square w-8 place-items-center rounded-full border border-white/10 bg-white/10 transition duration-750"
-          :class="{ 'opacity-100': isMenuOpen, 'opacity-0': !isMenuOpen }"
+          :class="{
+            'opacity-100': isMenuOpen,
+            'opacity-0': !isMenuOpen,
+          }"
         >
           <div class="aspect-square w-[0.62rem]">
             <IconClose />
