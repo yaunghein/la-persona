@@ -7,6 +7,8 @@ const submitting = ref(false);
 const toast = useToast();
 
 const onSubmit = async (e: SubmitEvent) => {
+  trackEvent('submit_landing_form', { value: 1 });
+
   const formData = new FormData(e.target as HTMLFormElement);
   const data = Object.fromEntries(formData.entries());
 

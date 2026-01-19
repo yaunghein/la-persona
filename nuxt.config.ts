@@ -2,10 +2,14 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  modules: ['@nuxt/ui', 'nuxt-email-renderer', '@vueuse/nuxt'],
+  modules: ['@nuxt/ui', 'nuxt-email-renderer', '@vueuse/nuxt', 'nuxt-gtag'],
   css: ['~/assets/css/main.css'],
   colorMode: {
     preference: 'dark',
+  },
+  gtag: {
+    id: process.env.NUXT_PUBLIC_GTAG_ID,
+    enabled: process.env.NODE_ENV === 'production',
   },
   routeRules: {
     '/': { prerender: true },

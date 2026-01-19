@@ -23,6 +23,7 @@ const navItems = [
 ];
 
 const goToSection = (item: (typeof navItems)[number]) => {
+  trackEvent('click_limited_offer', { value: 1 });
   document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' });
 };
 </script>
@@ -52,6 +53,7 @@ const goToSection = (item: (typeof navItems)[number]) => {
       class="relative z-20 sm:mt-16 mb-64 flex flex-col items-center justify-center gap-3 sm:mb-125 sm:flex-row sm:gap-5"
     >
       <a
+        @click="trackEvent('click_see_demo', { value: 1 })"
         href="https://www.la-persona.com/minhtetmyet"
         class="group w-60 rounded-full border border-white/10 py-4 text-xs font-light uppercase leading-none tracking-[0.1rem] transition-all duration-500 hover:bg-white hover:text-dark sm:w-[19.05rem] sm:text-sm"
       >

@@ -7,6 +7,7 @@ const navItems = [
 ];
 
 const goToSection = (item: (typeof navItems)[number]) => {
+  trackEvent('click_join_founders_club', { value: 1 });
   document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' });
 };
 </script>
