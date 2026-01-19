@@ -58,10 +58,34 @@ CREATE TABLE "card" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "contact_exchange_before_platform" (
+	"id" text PRIMARY KEY NOT NULL,
+	"name" text NOT NULL,
+	"phone" text NOT NULL,
+	"email" text,
+	"position" text,
+	"owner_email" text NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "contact_exchange" (
+	"id" text PRIMARY KEY NOT NULL,
+	"name" text NOT NULL,
+	"phone" text NOT NULL,
+	"email" text,
+	"position" text,
+	"card_id" text NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 ALTER TABLE "account" ADD CONSTRAINT "account_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "card" ADD CONSTRAINT "card_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "contact_exchange" ADD CONSTRAINT "contact_exchange_card_id_card_id_fk" FOREIGN KEY ("card_id") REFERENCES "public"."card"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "account_userId_idx" ON "account" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "session_userId_idx" ON "session" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "verification_identifier_idx" ON "verification" USING btree ("identifier");--> statement-breakpoint
-CREATE INDEX "card_user_idx" ON "card" USING btree ("user_id");
+CREATE INDEX "card_user_idx" ON "card" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "contact_exchange_card_idx" ON "contact_exchange" USING btree ("card_id");

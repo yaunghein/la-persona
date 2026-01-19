@@ -1,1 +1,0 @@
-ALTER TABLE "contact_echange_before_platform" RENAME TO "contact_exchange_before_platform";
