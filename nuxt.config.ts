@@ -4,17 +4,50 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ['@nuxt/ui', 'nuxt-email-renderer', '@vueuse/nuxt'],
   css: ['~/assets/css/main.css'],
-  app: {
-    head: {
-      title: 'La Persona',
-      htmlAttrs: { lang: 'en' },
-      link: [{ rel: 'icon', type: 'image/x-icon', href: 'images/favicon.png' }],
-    },
-  },
   colorMode: {
     preference: 'dark',
   },
   routeRules: {
     '/': { prerender: true },
+  },
+  app: {
+    head: {
+      title: 'Elevate Your Presence - LA PERSONA',
+      htmlAttrs: { lang: 'en' },
+      link: [{ rel: 'icon', type: 'image/x-icon', href: 'images/favicon.png' }],
+      meta: [
+        {
+          name: 'description',
+          content:
+            'Experience the elegance of a card tailored to your identity. From the sleek phone wallpaper to the interactive 3D design, each element reflects your brand with precision and style.',
+        },
+        { name: 'theme-color', content: '#121212' },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:title', content: 'Elevate Your Presence - LA PERSONA' },
+        {
+          property: 'og:description',
+          content:
+            'Experience the elegance of a card tailored to your identity. From the sleek phone wallpaper to the interactive 3D design, each element reflects your brand with precision and style.',
+        },
+        {
+          property: 'og:url',
+          content: 'https://imgsrc.io/guides/open-graph-meta-tags',
+        },
+        { property: 'og:image', content: '/og.png' },
+        { property: 'og:image:width', content: '1050' },
+        { property: 'og:image:height', content: '600' },
+        { name: 'twitter:card', content: 'summary_large_image' },
+        {
+          name: 'twitter:title',
+          content: 'Elevate Your Presence - LA PERSONA',
+        },
+        {
+          name: 'twitter:description',
+          content:
+            'Experience the elegance of a card tailored to your identity. From the sleek phone wallpaper to the interactive 3D design, each element reflects your brand with precision and style.',
+        },
+        { name: 'twitter:image', content: '/og.png' },
+      ],
+    },
   },
 });

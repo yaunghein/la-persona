@@ -2,6 +2,8 @@
 import * as z from 'zod';
 import type { FormSubmitEvent, AuthFormField } from '@nuxt/ui';
 
+useSeoMeta({ ...getSeoTitle('SIGN IN - LA PERSONA') });
+
 const toast = useToast();
 
 const fields: AuthFormField[] = [

@@ -14,19 +14,23 @@ html {
 :root {
   --ui-primary: var(--color-dark);
   --ui-text: var(--color-dark);
+  --ui-text-muted: #12121275;
   --ui-bg: #ffffff;
-  --ui-border: #e5e6e9;
   --ui-bg-elevated: #e5e6e9;
+  --ui-bg-accented: #e5e6e9;
+  --ui-border: #e5e6e9;
+  --ui-border-accented: #e5e6e9;
 }
 
 .dark {
   --ui-primary: white;
   --ui-text: white;
+  --ui-text-muted: #ffffff75;
   --ui-text-dimmed: #5f5f5f;
   --ui-bg: var(--color-dark);
-  --ui-border: #2a2a2a;
   --ui-bg-elevated: #2a2a2a;
   --ui-bg-accented: #2a2a2a;
+  --ui-border: #2a2a2a;
   --ui-border-accented: #2a2a2a;
 }
 
