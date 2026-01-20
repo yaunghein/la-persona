@@ -16,12 +16,12 @@ export const auth = betterAuth({
       clientSecret: env.GITHUB_CLIENT_SECRET,
     },
   },
-  hooks: {
-    after: createAuthMiddleware(async (ctx) => {
-      if (!ctx.path.startsWith('/callback')) return;
-      const session = ctx.context.newSession;
-      if (!session) return;
-      await ensureUserHasFreeCard(session.user as User);
-    }),
-  },
+  // hooks: {
+  //   after: createAuthMiddleware(async (ctx) => {
+  //     if (!ctx.path.startsWith('/callback')) return;
+  //     const session = ctx.context.newSession;
+  //     if (!session) return;
+  //     await ensureUserHasFreeCard(session.user as User); // ensureUserHasStandardCard
+  //   }),
+  // },
 });

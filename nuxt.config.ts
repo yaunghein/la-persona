@@ -18,7 +18,9 @@ export default defineNuxtConfig({
     head: {
       title: 'Elevate Your Presence - LA PERSONA',
       htmlAttrs: { lang: 'en' },
-      link: [{ rel: 'icon', type: 'image/x-icon', href: 'images/favicon.png' }],
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/images/favicon.png' },
+      ],
       meta: [
         {
           name: 'description',

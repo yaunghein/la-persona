@@ -2,7 +2,7 @@ import { pgTable, text, timestamp, pgEnum, index } from 'drizzle-orm/pg-core';
 import { nanoid } from 'nanoid';
 import { user } from './auth';
 
-export const cardTypeEnum = pgEnum('card_type', ['free', 'premium']);
+export const cardTypeEnum = pgEnum('card_type', ['founders_club', 'standard']);
 
 export const card = pgTable(
   'card',
@@ -10,14 +10,12 @@ export const card = pgTable(
     id: text()
       .primaryKey()
       .notNull()
-      .$defaultFn(() => nanoid()),
+      .$default(() => nanoid()),
     name: text().notNull(),
     position: text().notNull(),
     splineUrl: text(),
-    type: cardTypeEnum().notNull().default('free'),
-    userId: text()
-      .notNull()
-      .references(() => user.id, { onDelete: 'cascade' }),
+    type: cardTypeEnum().notNull().default('standard'),
+    userId: text().references(() => user.id, { onDelete: 'cascade' }),
     createdAt: timestamp().defaultNow().notNull(),
     updatedAt: timestamp()
       .defaultNow()
