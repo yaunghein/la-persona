@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { card } from '#build/ui';
-
-useSeoMeta({ ...getSeoTitle('GENERATE INVITE - LA PERSONA') });
+useSeoMeta({ ...getSeoTitle('Generate Invite - LA PERSONA') });
 
 const toast = useToast();
 
@@ -57,41 +55,59 @@ const copyLink = () => {
 </script>
 
 <template>
-  <UContainer class="py-10">
-    <UCard class="max-w-2xl mx-auto bg-dark border-neutral-800">
-      <template #header>
-        <div class="flex items-center justify-between">
+  <UContainer class="py-12">
+    <div class="max-w-xl mx-auto bg-dark border border-accented p-8 rounded-lg">
+      <div class="space-y-6">
+        <div class="flex items-center justify-between mb-5">
           <h1 class="text-xl font-bold uppercase tracking-tight text-white">
             Generate Invitation Link
           </h1>
-          <UBadge color="primary" variant="subtle">Admin Only</UBadge>
+          <UBadge
+            color="neutral"
+            variant="outline"
+            class="text-[10px] uppercase tracking-widest px-2 py-0"
+          >
+            Admin
+          </UBadge>
         </div>
-      </template>
 
-      <div class="space-y-6 py-4">
-        <USelectMenu
-          v-model="state.cardId"
-          :items="cards?.map((card) => ({ label: card.name, id: card.id }))"
-          value-attribute="id"
-          option-attribute="name"
-          placeholder="Search cards..."
-          size="xl"
-          :loading="loadingCards"
-        />
+        <div>
+          <label class="block text-xs font-bold text-muted uppercase mb-2">
+            Select Available Card
+          </label>
+          <USelectMenu
+            v-model="state.cardId"
+            :items="cards?.map((card) => ({ label: card.name, id: card.id }))"
+            placeholder="Search unclaimed cards..."
+            size="xl"
+            class="w-full"
+            :loading="loadingCards"
+            :ui-menu="{ background: 'bg-dark', border: 'border-accented' }"
+          />
+        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-          <UInput v-model="state.minutes" type="number" size="xl" />
+        <div>
+          <label class="block text-xs font-bold text-muted uppercase mb-2">
+            Expiry Time (Minutes)
+          </label>
+          <UInput
+            v-model="state.minutes"
+            type="number"
+            placeholder="30"
+            size="xl"
+            class="w-full"
+          />
         </div>
 
         <UButton
           block
           size="xl"
           color="neutral"
-          class="font-bold uppercase tracking-widest mt-4"
+          class="uppercase tracking-widest mt-4 rounded-full"
           :loading="isSubmitting"
           @click="handleGenerate"
         >
-          Generate Invitation Link
+          Generate
         </UButton>
 
         <Transition
@@ -101,34 +117,42 @@ const copyLink = () => {
         >
           <div
             v-if="generatedUrl"
-            class="mt-8 p-4 rounded bg-white/5 border border-neutral-800 space-y-3"
+            class="mt-8 pt-6 border-t border-accented space-y-4"
           >
-            <label
-              class="text-[10px] font-bold uppercase tracking-widest text-neutral-500"
-              >Shareable Invitation Link</label
-            >
-            <div class="flex gap-2">
-              <UInput
-                v-model="generatedUrl"
-                readonly
-                class="flex-1"
-                variant="none"
-              />
-              <UButton
-                icon="i-heroicons-clipboard"
-                color="neutral"
-                variant="ghost"
-                @click="copyLink"
-              />
+            <div>
+              <label
+                class="block text-[10px] font-bold uppercase tracking-[0.2em] text-primary-500 mb-3"
+              >
+                Secure Invitation URL
+              </label>
+              <div
+                class="flex items-center bg-white/5 border border-accented rounded-lg px-2 py-1"
+              >
+                <UInput
+                  v-model="generatedUrl"
+                  readonly
+                  class="flex-1"
+                  variant="none"
+                  color="neutral"
+                />
+                <UButton
+                  icon="i-heroicons-clipboard-document"
+                  color="neutral"
+                  variant="ghost"
+                  class="rounded-md"
+                  @click="copyLink"
+                />
+              </div>
             </div>
+
             <p
-              class="text-[10px] text-primary-500 italic uppercase tracking-tighter"
+              class="text-[10px] text-muted uppercase tracking-widest text-center"
             >
-              Expires in {{ state.minutes }} minutes
+              * Valid for {{ state.minutes }} minutes from generation
             </p>
           </div>
         </Transition>
       </div>
-    </UCard>
+    </div>
   </UContainer>
 </template>

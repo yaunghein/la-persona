@@ -4,7 +4,7 @@ import { card } from '../schema';
 
 export const findFreeCardByUserId = (userId: string) => {
   return db.query.card.findFirst({
-    where: and(eq(card.userId, userId), eq(card.type, 'free')),
+    where: and(eq(card.userId, userId), eq(card.type, 'standard')),
   });
 };
 

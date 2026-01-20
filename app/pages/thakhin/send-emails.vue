@@ -2,6 +2,8 @@
 import * as z from 'zod';
 import type { FormSubmitEvent } from '@nuxt/ui';
 
+useSeoMeta({ ...getSeoTitle('Send Emails - LA PERSONA') });
+
 // TODO: refactor email related schemas and types
 const schema = z.object({
   name: z.string().min(1, 'Name is required'),

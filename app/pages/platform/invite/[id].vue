@@ -1,5 +1,5 @@
 <script setup lang="ts">
-useSeoMeta({ ...getSeoTitle('INVITATION - LA PERSONA') });
+useSeoMeta({ ...getSeoTitle('Invitation - LA PERSONA') });
 
 const route = useRoute();
 const { id } = route.params;
@@ -129,7 +129,7 @@ onMounted(async () => {
             size="xl"
             color="neutral"
             variant="solid"
-            class="font-bold uppercase tracking-tight"
+            class="uppercase tracking-tight rounded-full"
           >
             Enter Platform
           </UButton>

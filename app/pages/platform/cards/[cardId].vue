@@ -9,7 +9,11 @@ const canvasRef = ref<HTMLCanvasElement | null>(null);
 
 const route = useRoute();
 const { cardId } = route.params;
-const { data: card, pending, error } = await useFetch(`/api/cards/${cardId}`);
+const {
+  data: card,
+  pending,
+  error,
+} = await useFetch<CardDTO>(`/api/cards/${cardId}`);
 const firstName = computed(() => card.value?.name?.split(' ')[0] ?? '');
 const lastName = computed(
   () => card.value?.name?.split(' ').slice(1).join(' ') ?? ''
