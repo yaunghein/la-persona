@@ -12,6 +12,7 @@ export default defineEventHandler(async (event) => {
 
   const expiresAt = new Date();
   expiresAt.setMinutes(expiresAt.getMinutes() + (minutes || 30));
+  console.log(expiresAt);
 
   try {
     const [inserted] = await db

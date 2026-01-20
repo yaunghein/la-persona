@@ -31,6 +31,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         to: [event.data.email],
         subject: `Welcome to La Persona, ${event.data.name.split(' ')[0]} 👋`,
         template: event.data.template,
+
+        // this is nonsense to add
+        // need to refactor tying
+        email: '',
+        phone: '',
+        company: '',
       },
     });
 

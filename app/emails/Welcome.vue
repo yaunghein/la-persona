@@ -30,7 +30,7 @@ const props = defineProps<Props>();
       >
         <EContainer style="border: 1px solid #e5e6e9">
           <EImg
-            src="https://temporary.la-persona.com/images/emails/welcome-email-banner.jpg"
+            src="https://www.la-persona.com/images/emails/welcome-email-banner.jpg"
             alt="LA PERSONA digital card preview"
             style="width: 100%; margin-bottom: 32px; margin-top: -12px"
           />
