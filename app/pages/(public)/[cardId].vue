@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Application } from '@splinetool/runtime';
 import type { ConcreteComponent } from 'vue';
 
 const { cardId } = useRoute().params;
@@ -14,6 +15,13 @@ const isSubmitting = ref(false);
 const error = ref('');
 
 const toast = useToast();
+
+onMounted(async () => {
+  if (!card) return;
+  const canvas = document.querySelector('#card') as HTMLCanvasElement;
+  const spline = new Application(canvas);
+  spline.load(card.spline);
+});
 
 const closeForm = () => {
   isFormOpen.value = false;
@@ -81,13 +89,9 @@ const iconMap: Record<string, string | ConcreteComponent> = {
 
 <template>
   <div v-if="card" class="relative z-10 h-dvh w-screen overflow-hidden">
-    <iframe
-      title="Spline Scene"
-      :src="card.spline"
-      class="absolute left-0 top-0 z-0 h-full w-full"
-      frameborder="0"
-      allow="autoplay"
-    ></iframe>
+    <div class="absolute inset-0 w-full h-full">
+      <canvas id="card" class="h-full w-full"></canvas>
+    </div>
 
     <div
       class="absolute bottom-8 left-0 right-0 flex w-full gap-3 px-5 transition duration-750 sm:mx-auto sm:max-w-96"

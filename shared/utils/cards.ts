@@ -1,89 +1,8 @@
 export const cards = [
   {
-    id: 'maythazinmoenyunt@urbanus',
-    name: 'Maythazin Moenyunt',
-    spline:
-      'https://my.spline.design/untitled-daaf8707e731320f7ac1627373f3221c/',
-    vcf: '/vcfs/mtmn.vcf',
-    phone: '+9592055594',
-    links: [
-      {
-        icon: 'world',
-        href: 'https://www.tiktok.com/@urbanus0209',
-        label: 'Go to Website',
-      },
-      {
-        icon: 'arrowDown',
-        href: 'https://www.tiktok.com/@urbanus0209',
-        label: 'Download Resume',
-      },
-      {
-        icon: '/images/card/facebook.png',
-        href: 'https://www.tiktok.com/@urbanus0209',
-        label: 'Facebook',
-      },
-      {
-        icon: '/images/card/instagram.png',
-        href: 'https://www.tiktok.com/@urbanus0209',
-        label: 'Instagram',
-      },
-      {
-        icon: '/images/card/linkedin.png',
-        href: 'https://www.tiktok.com/@urbanus0209',
-        label: 'LinkedIn',
-      },
-    ],
-  },
-  {
-    id: 'minhtetdipar@thesandstudio',
-    name: 'Min Htet Dipar',
-    spline:
-      'https://my.spline.design/kodipardigitalbusinesscard-5b7ed0859b13202dceb80e7995b0266d/',
-    vcf: '/vcfs/minhtetdipar-sand.vcf',
-    phone: '+65 87685983',
-    links: [
-      {
-        icon: 'world',
-        href: 'https://thesandstudio.com/',
-        label: 'Go to Website',
-      },
-    ],
-  },
-  {
-    id: 'hannah',
-    name: 'Hannah',
-    spline:
-      'https://my.spline.design/hannahdigitalbusinesscard-4f2c2cf66e0ca057458df2088587a931/',
-    vcf: '/vcfs/minhtetdipar.vcf',
-    phone: '+65 87685983',
-    links: [
-      {
-        icon: 'world',
-        href: 'https://hannah.com/',
-        label: 'Go to Website',
-      },
-    ],
-  },
-  {
-    id: 'hlayuparaye@digiboxes',
-    name: 'Hla Yupar Aye',
-    spline:
-      'https://my.spline.design/hlaayedigitalbusinesscard-0f8d94c20d7a457552d4c7becf417711/',
-    vcf: '/vcfs/hlayuparaye.vcf',
-    phone: '09775097767',
-    links: [
-      {
-        icon: 'world',
-        href: 'https://digiboxes.com.mm/',
-        label: 'Go to Website',
-      },
-    ],
-  },
-  {
     id: 'aungpyaekyaw',
     name: 'Aung Pyae Kyaw',
-    spline:
-      'https://my.spline.design/aungpyaedigitalbusinesscard-7a4462430bd14bd687b2039df05de743/',
+    spline: 'https://prod.spline.design/Mu3aeSb6RERM23Q7/scene.splinecode',
     vcf: '/vcfs/apk.vcf',
     phone: '0626365372',
     email: 'aungpyaekyaw200@gmail.com',
@@ -113,15 +32,14 @@ export const cards = [
   {
     id: 'yanaunghein',
     name: 'Yan Aung Hein',
-    spline:
-      'https://my.spline.design/yanaungdigitalbusinesscard-277b9e5b63017458131b2ddd22407e38/',
+    spline: 'https://prod.spline.design/6cleevEOZ7wfurwy/scene.splinecode',
     vcf: '/vcfs/yanaunghein.vcf',
     phone: '0626366748',
     email: 'yanaunghein311@gmail.com',
     links: [
       {
         icon: 'world',
-        href: 'https://www.duodesignlab.com/about/yan-aung-hein/',
+        href: 'https://www.duodesignlab.com/',
         label: 'Go to Website',
       },
       {
@@ -130,21 +48,42 @@ export const cards = [
         label: 'Facebook',
       },
       {
+        icon: '/images/card/linkedin.png',
+        href: 'https://www.linkedin.com/in/yanaunghein/',
+        label: 'LinkedIn',
+      },
+      {
+        icon: '/images/card/telegram.png',
+        href: 'https://t.me/yuzuamericano',
+        label: 'Telegram',
+      },
+
+      {
         icon: '/images/card/instagram.png',
         href: 'https://www.instagram.com/yuzu.americano/',
         label: 'Instagram',
       },
       {
-        icon: '/images/card/linkedin.png',
-        href: 'https://www.linkedin.com/in/yanaunghein/',
-        label: 'LinkedIn',
+        icon: '/images/card/whatsapp.png',
+        href: 'https://wa.me/959962323716',
+        label: 'WhatsApp',
+      },
+      {
+        icon: '/images/card/line.png',
+        href: 'https://line.me/ti/p/u90-V9lYb7',
+        label: 'Line',
+      },
+      {
+        icon: '/images/card/github.png',
+        href: 'https://github.com/yaunghein/',
+        label: 'Github',
       },
     ],
   },
   {
     id: 'minhtetmyet',
     name: 'Min Htet Myet',
-    spline: 'https://my.spline.design/untitled-tRG860P00Pzj7FfnRp8PxZNH',
+    spline: 'https://prod.spline.design/RLMffXoyzfSZ0XE3/scene.splinecode',
     vcf: '/vcfs/minhtetmyet.vcf',
     phone: '0626366748',
     email: 'minhtetmyet24@gmail.com',
@@ -172,10 +111,39 @@ export const cards = [
     ],
   },
   {
+    id: 'shuneleiyee',
+    name: 'Shune Lei Yee',
+    spline: 'https://prod.spline.design/CjsXSz0FFX4SvCBS/scene.splinecode',
+    vcf: '/vcfs/minhtetdipar.vcf',
+    phone: '+60102020324',
+    email: 'dipar@thesandstudio.com',
+    links: [
+      {
+        icon: 'directMessage',
+        href: 'https://m.me/shuneleiy.feng/',
+        label: 'Direct Message',
+      },
+      {
+        icon: '/images/card/facebook.png',
+        href: 'https://www.facebook.com/shuneleiy.feng',
+        label: 'Facebook',
+      },
+      {
+        icon: '/images/card/instagram.png',
+        href: 'https://www.instagram.com/feng.riji/',
+        label: 'Instagram',
+      },
+      {
+        icon: '/images/card/linkedin.png',
+        href: 'https://www.linkedin.com/in/shune-leiyee/',
+        label: 'LinkedIn',
+      },
+    ],
+  },
+  {
     id: 'minhtetdipar',
     name: 'Min Htet Dipar',
-    spline:
-      'https://my.spline.design/minhtetmyetcardcopy-bNr8JffidZ4H6lwAOlGDheRB/',
+    spline: 'https://prod.spline.design/OGDRhHmEWgT91YFp/scene.splinecode',
     vcf: '/vcfs/minhtetdipar.vcf',
     phone: '+66614644220',
     email: 'dipar@thesandstudio.com',
@@ -193,7 +161,7 @@ export const cards = [
       {
         icon: '/images/card/whatsapp.png',
         href: 'https://wa.me/66614644220',
-        label: 'WhatsAPp',
+        label: 'WhatsApp',
       },
       {
         icon: '/images/card/line.png',

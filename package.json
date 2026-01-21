@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@nuxt/ui": "^4.3.0",
-    "@splinetool/runtime": "^1.12.36",
+    "@splinetool/runtime": "^1.12.39",
     "@vueuse/nuxt": "14.1.0",
     "better-auth": "^1.4.9",
     "country-codes-flags-phone-codes": "^1.1.1",

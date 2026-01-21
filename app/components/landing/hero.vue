@@ -38,7 +38,9 @@ const goToSection = (item: (typeof navItems)[number]) => {
       Elevate Your Presence with a Bespoke Digital Experience
     </h1>
 
-    <div class="pointer-events-none absolute inset-0 w-full h-full">
+    <div
+      class="pointer-events-none sm:pointer-events-auto absolute inset-0 w-full h-full"
+    >
       <!-- <USkeleton
         v-if="loading"
         class="h-full w-full absolute inset-0 scale-y-32 scale-x-40 -translate-y-12 rounded-none"

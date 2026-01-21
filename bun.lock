@@ -6,7 +6,7 @@
       "name": "la-persona",
       "dependencies": {
         "@nuxt/ui": "^4.3.0",
-        "@splinetool/runtime": "^1.12.36",
+        "@splinetool/runtime": "^1.12.39",
         "@vueuse/nuxt": "14.1.0",
         "better-auth": "^1.4.9",
         "country-codes-flags-phone-codes": "^1.1.1",
@@ -482,7 +482,7 @@
 
     "@speed-highlight/core": ["@speed-highlight/core@1.2.12", "", {}, "sha512-uilwrK0Ygyri5dToHYdZSjcvpS2ZwX0w5aSt3GCEN9hrjxWCoeV4Z2DTXuxjwbntaLQIEEAlCeNQss5SoHvAEA=="],
 
-    "@splinetool/runtime": ["@splinetool/runtime@1.12.36", "", { "dependencies": { "on-change": "4.0.0", "semver-compare": "1.0.0" } }, "sha512-ixhRDoa34f/N6PkJJn6+yTKEaLM/+/yLRtdXQQ8VvK7HtzNRQPORA3yMpCVYRRLgMZth+Cpn9FVyivSLLSQdeA=="],
+    "@splinetool/runtime": ["@splinetool/runtime@1.12.39", "", { "dependencies": { "on-change": "4.0.0", "semver-compare": "1.0.0" } }, "sha512-izzEnyR1Tc6OQwmBODHxrYlUb/HIwVnguGKJlM7K6FMz22BTbyFI+hxbompClWJWd/2RrE5y88lbujTnl0v3zA=="],
 
     "@stablelib/base64": ["@stablelib/base64@1.0.1", "", {}, "sha512-1bnPQqSxSuc3Ii6MhBysoWCg58j97aUjuCSZrGSmDxNqtytIi0k8utUenAwTZN4V5mXXYGsVUI9zeBqy+jBOSQ=="],
 
