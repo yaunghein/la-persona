@@ -21,5 +21,5 @@ export const UpdateCardSchema = z.object({
   name: z.string().min(1).optional(),
   position: z.string().min(1).optional(),
   splineUrl: z.string().url().nullable().optional(),
-  type: z.enum(['free', 'premium']).optional(),
+  type: z.enum(['founders_club', 'standard']).optional(),
 });
