@@ -36,10 +36,10 @@ export const cards = [
   },
   {
     id: 'minhtetdipar@thesandstudio',
-    name: 'Minhtet Di Par',
+    name: 'Min Htet Dipar',
     spline:
       'https://my.spline.design/kodipardigitalbusinesscard-5b7ed0859b13202dceb80e7995b0266d/',
-    vcf: '/vcfs/minhtetdipar.vcf',
+    vcf: '/vcfs/minhtetdipar-sand.vcf',
     phone: '+65 87685983',
     links: [
       {
@@ -168,6 +168,47 @@ export const cards = [
         icon: '/images/card/linkedin.png',
         href: 'https://www.linkedin.com/in/min-htet/',
         label: 'LinkedIn',
+      },
+    ],
+  },
+  {
+    id: 'minhtetdipar',
+    name: 'Min Htet Dipar',
+    spline:
+      'https://my.spline.design/minhtetmyetcardcopy-bNr8JffidZ4H6lwAOlGDheRB/',
+    vcf: '/vcfs/minhtetdipar.vcf',
+    phone: '+66614644220',
+    email: 'dipar@thesandstudio.com',
+    links: [
+      {
+        icon: 'world',
+        href: 'https://www.thesandstudio.com',
+        label: 'Go to Website',
+      },
+      {
+        icon: '/images/card/telegram.png',
+        href: 'https://t.me/minhtetdipar',
+        label: 'Telegram',
+      },
+      {
+        icon: '/images/card/whatsapp.png',
+        href: 'https://wa.me/66614644220',
+        label: 'WhatsAPp',
+      },
+      {
+        icon: '/images/card/line.png',
+        href: 'https://line.me/ti/p/3QQmyibS3y',
+        label: 'Line',
+      },
+      {
+        icon: '/images/card/instagram.png',
+        href: 'https://www.instagram.com/minhtet.dipar',
+        label: 'Instagram',
+      },
+      {
+        icon: '/images/card/facebook.png',
+        href: 'https://www.facebook.com/share/1Gb61GPhJH',
+        label: 'Facebook',
       },
     ],
   },

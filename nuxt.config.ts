@@ -23,6 +23,10 @@ export default defineNuxtConfig({
       ],
       meta: [
         {
+          name: 'viewport',
+          content: 'width=device-width, initial-scale=1, maximum-scale=1',
+        },
+        {
           name: 'description',
           content:
             'Experience the elegance of a card tailored to your identity. From the sleek phone wallpaper to the interactive 3D design, each element reflects your brand with precision and style.',

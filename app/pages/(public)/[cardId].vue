@@ -4,6 +4,8 @@ import type { ConcreteComponent } from 'vue';
 const { cardId } = useRoute().params;
 const card = cards.find((card) => card.id === cardId);
 
+useSeoMeta({ ...getSeoTitle(`${card?.name}`) });
+
 const isMenuOpen = ref(false);
 const isFormOpen = ref(false);
 const isSuccess = ref(false);
@@ -71,14 +73,14 @@ const onSubmit = async (e: SubmitEvent) => {
 };
 
 const iconMap: Record<string, string | ConcreteComponent> = {
-  directMessage: resolveComponent('IconDirectMessage'),
   world: resolveComponent('IconWorld'),
+  directMessage: resolveComponent('IconDirectMessage'),
   arrowDown: resolveComponent('IconArrowDown'),
 };
 </script>
 
 <template>
-  <div v-if="card" class="relative z-10 h-svh w-screen overflow-hidden">
+  <div v-if="card" class="relative z-10 h-dvh w-screen overflow-hidden">
     <iframe
       title="Spline Scene"
       :src="card.spline"
@@ -114,7 +116,7 @@ const iconMap: Record<string, string | ConcreteComponent> = {
       class="fixed inset-0 top-auto -mb-px h-[calc(100dvh-3.5rem)] w-full scale-[1.005] rounded-t-xl border border-white/10 bg-dark transition duration-750 sm:mx-auto sm:max-w-104"
       :class="{
         'translate-y-0': isFormOpen,
-        'translate-y-full': !isFormOpen,
+        'translate-y-[101%]': !isFormOpen,
       }"
     >
       <div class="flex h-full flex-col">
@@ -201,7 +203,7 @@ const iconMap: Record<string, string | ConcreteComponent> = {
             v-if="isSuccess"
             :href="card.vcf"
             :download="`${card.id}.vcf`"
-            class="w-full rounded-full border border-white/10 bg-white py-4 text-center text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-white/10 disabled:text-white/20"
+            class="cursor-pointer w-full rounded-full border border-white/10 bg-white py-4 text-center text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-white/10 disabled:text-white/20"
           >
             Save Contact
           </a>
@@ -210,9 +212,9 @@ const iconMap: Record<string, string | ConcreteComponent> = {
             type="submit"
             form="form"
             :disabled="!isValid || isSubmitting"
-            class="relative w-full rounded-full border border-white/10 bg-white py-4 text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-white/10 disabled:text-white/20"
+            class="cursor-pointer relative w-full rounded-full border border-white/10 bg-white py-4 text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-white/10 disabled:text-white/20"
           >
-            Exchange Contact
+            Continue
             <div
               v-if="isSubmitting"
               class="absolute right-[0.26rem] top-[51.75%] -translate-y-1/2"

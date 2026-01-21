@@ -5,7 +5,6 @@ export default defineEventHandler(async (event) => {
     event,
     ContactExchangeBeforePlatformSchema.safeParse
   );
-  console.log(result);
   if (!result.success) {
     throw createError({
       statusCode: 400,
