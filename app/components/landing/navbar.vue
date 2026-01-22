@@ -3,7 +3,7 @@ const { isHeaderVisible, currentSection } = inject(LandingContextKey)!;
 </script>
 
 <template>
-  <header class="z-20 bg-dark px-4 sm:px-18">
+  <header class="z-30 bg-dark px-4 sm:px-18">
     <div
       class="flex items-center justify-center border-b border-white/10 py-7 sm:py-13"
     >
@@ -14,7 +14,7 @@ const { isHeaderVisible, currentSection } = inject(LandingContextKey)!;
   </header>
 
   <nav
-    class="sticky top-0 z-20 hidden items-center justify-between bg-dark px-4 sm:flex sm:px-18"
+    class="sticky top-0 z-30 hidden items-center justify-between bg-dark px-4 sm:flex sm:px-18"
   >
     <button
       v-for="item in LANDING_NAV_LINKS.filter(
