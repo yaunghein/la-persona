@@ -2,8 +2,6 @@ import { pgTable, text, timestamp, pgEnum, index } from 'drizzle-orm/pg-core';
 import { nanoid } from 'nanoid';
 import { user, organization } from './auth';
 
-export const cardTypeEnum = pgEnum('card_type', ['founders_club', 'standard']);
-
 export const card = pgTable(
   'card',
   {
@@ -14,7 +12,7 @@ export const card = pgTable(
     name: text().notNull(),
     position: text().notNull(),
     splineUrl: text(),
-    type: cardTypeEnum().notNull().default('standard'),
+    type: text().default('standard').notNull(),
     organizationId: text().references(() => organization.id, {
       onDelete: 'cascade',
     }),

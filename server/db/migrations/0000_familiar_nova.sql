@@ -1,4 +1,3 @@
-CREATE TYPE "public"."card_type" AS ENUM('founders_club', 'standard');--> statement-breakpoint
 CREATE TABLE "account" (
 	"id" text PRIMARY KEY NOT NULL,
 	"account_id" text NOT NULL,
@@ -87,7 +86,7 @@ CREATE TABLE "card" (
 	"name" text NOT NULL,
 	"position" text NOT NULL,
 	"spline_url" text,
-	"type" "card_type" DEFAULT 'standard' NOT NULL,
+	"type" text DEFAULT 'standard' NOT NULL,
 	"organization_id" text,
 	"user_id" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,

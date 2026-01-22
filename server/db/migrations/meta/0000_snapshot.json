@@ -1,5 +1,5 @@
 {
-  "id": "c7aec1f2-fe4f-4c18-8edd-2fee7091202e",
+  "id": "c35e60d9-70ec-4abf-ba48-e955a916bf5b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -722,8 +722,7 @@
         },
         "type": {
           "name": "type",
-          "type": "card_type",
-          "typeSchema": "public",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "default": "'standard'"
@@ -963,16 +962,7 @@
       "isRLSEnabled": false
     }
   },
-  "enums": {
-    "public.card_type": {
-      "name": "card_type",
-      "schema": "public",
-      "values": [
-        "founders_club",
-        "standard"
-      ]
-    }
-  },
+  "enums": {},
   "schemas": {},
   "sequences": {},
   "roles": {},
