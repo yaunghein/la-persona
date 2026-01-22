@@ -116,27 +116,17 @@ export const cards = [
     spline: 'https://prod.spline.design/CjsXSz0FFX4SvCBS/scene.splinecode',
     vcf: '/vcfs/minhtetdipar.vcf',
     phone: '+60102020324',
-    email: 'dipar@thesandstudio.com',
+    email: 'shuneleiyee@gmail.com',
     links: [
-      {
-        icon: 'directMessage',
-        href: 'https://m.me/shuneleiy.feng/',
-        label: 'Direct Message',
-      },
-      {
-        icon: '/images/card/facebook.png',
-        href: 'https://www.facebook.com/shuneleiy.feng',
-        label: 'Facebook',
-      },
       {
         icon: '/images/card/instagram.png',
         href: 'https://www.instagram.com/feng.riji/',
         label: 'Instagram',
       },
       {
-        icon: '/images/card/linkedin.png',
-        href: 'https://www.linkedin.com/in/shune-leiyee/',
-        label: 'LinkedIn',
+        icon: '/images/card/gmail.png',
+        href: 'mailto:shuneleiyee@gmail.com',
+        label: 'Gmail',
       },
     ],
   },
