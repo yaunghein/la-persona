@@ -4,9 +4,9 @@ import { db } from '~~/server/db';
 import { card } from '~~/server/db/schema';
 import { findFreeCardByUserId } from '~~/server/db/queries/card';
 import { env } from '~~/server/utils/env';
-import type { User } from '~~/shared/utils/type';
+import { SelectUser, SelectCard } from '~~/shared/types';
 
-export const ensureUserHasFreeCard = async (user: User) => {
+export const ensureUserHasFreeCard = async (user: SelectUser) => {
   const existing = await findFreeCardByUserId(user.id);
   if (existing) return existing;
   const values = {
@@ -19,10 +19,7 @@ export const ensureUserHasFreeCard = async (user: User) => {
   return inserted;
 };
 
-export async function updateCard(
-  userId: string,
-  input: z.infer<typeof UpdateCardSchema>
-) {
+export async function updateCard(userId: string, input: SelectCard) {
   const { id, ...data } = input;
   const [updated] = await db
     .update(card)

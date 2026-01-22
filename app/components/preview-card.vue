@@ -21,7 +21,7 @@ const emit = defineEmits<{
         <UBadge
           size="lg"
           variant="soft"
-          :color="card.type === 'free' ? 'neutral' : 'primary'"
+          :color="card.type === 'standard' ? 'neutral' : 'primary'"
           class="capitalize"
         >
           {{ card.type }}

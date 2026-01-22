@@ -3,7 +3,7 @@ import { insertContactExchange } from '~~/server/services/contact-exchange';
 export default defineEventHandler(async (event) => {
   const result = await readValidatedBody(
     event,
-    ContactExchangeSchema.safeParse
+    contactExchangeInsertSchema.safeParse
   );
   if (!result.success) {
     throw createError({

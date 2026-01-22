@@ -1,14 +1,7 @@
 <script setup lang="ts">
-const navItems = [
-  { label: 'The Masterpieces', id: SECTIONS.MASTERPIECES },
-  { label: 'How It Works', id: SECTIONS.HOW_IT_WORKS },
-  { label: 'Why Us?', id: SECTIONS.WHY_US },
-  { label: 'commision us', id: SECTIONS.COMMISSION_US },
-];
-
-const goToSection = (item: (typeof navItems)[number]) => {
+const goToFoundersClubSection = () => {
   trackEvent('click_join_founders_club', { value: 1 });
-  document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' });
+  goToSection(LANDING_NAV_LINKS[4]);
 };
 </script>
 
@@ -18,9 +11,6 @@ const goToSection = (item: (typeof navItems)[number]) => {
       class="relative flex h-svh w-full flex-col items-center justify-center gap-14"
     >
       <div class="absolute inset-0 h-full w-full overflow-hidden">
-        <!-- <video id="video" loop muted playsinline class="h-full w-full object-cover">
-				<source src="/videos/handshake.mp4" type="video/mp4" />
-			</video> -->
         <img
           src="/images/handshake.gif"
           alt=""
@@ -40,7 +30,7 @@ const goToSection = (item: (typeof navItems)[number]) => {
         We'll take care of the rest.
       </p>
       <button
-        @click="goToSection(navItems[3]!)"
+        @click="goToFoundersClubSection"
         class="group relative w-60 rounded-full border border-white/10 py-4 text-xs font-light uppercase leading-none tracking-[0.1rem] transition-all duration-500 hover:bg-white hover:text-dark sm:w-[19.05rem] sm:text-sm"
       >
         <AnimatedText text="join founders club" />

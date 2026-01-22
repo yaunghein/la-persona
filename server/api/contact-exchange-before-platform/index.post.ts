@@ -3,7 +3,7 @@ import { insertContactExchangeBeforePlatform } from '~~/server/services/contact-
 export default defineEventHandler(async (event) => {
   const result = await readValidatedBody(
     event,
-    ContactExchangeBeforePlatformSchema.safeParse
+    legacyExchangeInsertSchema.safeParse
   );
   if (!result.success) {
     throw createError({

@@ -29,7 +29,7 @@ const colors = [
 ];
 const neutrals = ['slate', 'gray', 'zinc', 'neutral', 'stone'];
 
-const session = await useSession();
+const session = await authClient.useSession(useFetch);
 
 const user = ref({
   name: session.data.value?.user.name,

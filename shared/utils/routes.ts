@@ -1,11 +1,16 @@
-const PLATFORM_ROOT = '/platform' as const;
+const PLATFORM_ROOT = '/platform';
+const THAKHIN_ROOT = '/thakhin';
 
 export const ROUTES = {
-  home: '/',
-  signIn: '/sign-in',
-  platform: {
-    root: PLATFORM_ROOT,
-    cards: `${PLATFORM_ROOT}/cards`,
-    contacts: `${PLATFORM_ROOT}/contacts`,
+  HOME: '/',
+  SIGN_IN: '/sign-in',
+  PLATFORM: {
+    ROOT: PLATFORM_ROOT,
+    CARDS: `${PLATFORM_ROOT}/cards`,
+    CONTACTS: `${PLATFORM_ROOT}/contacts`,
   },
+  THAKHIN: {
+    ROOT: THAKHIN_ROOT,
+  },
+  API: '/api',
 } as const;

@@ -1,17 +1,5 @@
 <script setup lang="ts">
-const { SECTIONS, isHeaderVisible, currentSection } =
-  inject(LandingContextKey)!;
-
-const navItems = [
-  { label: 'The Masterpieces', id: SECTIONS.MASTERPIECES },
-  { label: 'How It Works', id: SECTIONS.HOW_IT_WORKS },
-  { label: 'Why Us?', id: SECTIONS.WHY_US },
-  { label: 'founders club', id: SECTIONS.FOUNDERS_CLUB },
-];
-
-const goToSection = (item: (typeof navItems)[number]) => {
-  document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' });
-};
+const { isHeaderVisible, currentSection } = inject(LandingContextKey)!;
 </script>
 
 <template>
@@ -29,7 +17,9 @@ const goToSection = (item: (typeof navItems)[number]) => {
     class="sticky top-0 z-20 hidden items-center justify-between bg-dark px-4 sm:flex sm:px-18"
   >
     <button
-      v-for="item in navItems"
+      v-for="item in LANDING_NAV_LINKS.filter(
+        (link) => link.label !== 'Commision Us'
+      )"
       @click="goToSection(item)"
       class="cursor-pointer group relative py-6 text-sm font-light uppercase leading-[1.1] tracking-[0.28rem]"
     >

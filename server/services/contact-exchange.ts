@@ -4,10 +4,9 @@ import {
   contactExchange,
   contactExchangeBeforePlatform,
 } from '~~/server/db/schema';
+import { InsertContactExchange, InsertLegacyExchange } from '~~/shared/types';
 
-export const insertContactExchange = async (
-  contact: z.infer<typeof ContactExchangeSchema>
-) => {
+export const insertContactExchange = async (contact: InsertContactExchange) => {
   const [inserted] = await db
     .insert(contactExchange)
     .values(contact)
@@ -16,7 +15,7 @@ export const insertContactExchange = async (
 };
 
 export const insertContactExchangeBeforePlatform = async (
-  contact: z.infer<typeof ContactExchangeBeforePlatformSchema>
+  contact: InsertLegacyExchange
 ) => {
   const [inserted] = await db
     .insert(contactExchangeBeforePlatform)

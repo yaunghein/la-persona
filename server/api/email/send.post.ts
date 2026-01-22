@@ -3,35 +3,16 @@ export default defineEventHandler(async (event) => {
   if (!result.success) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Invalid body parameters',
       data: result.error.issues,
     });
   }
 
-  // await new Promise((r) => setTimeout(r, 3000));
-  // throw new Error('test hehe');
-  // return { success: true };
-
-  const { template, ...data } = result.data;
-  const html = await renderEmailComponent(result.data.template, data);
-  // @ts-ignore
-  result.data.html = html;
-
   try {
-    // @ts-ignore
-    const response = await sendEmail(result.data);
-    return {
-      success: true,
-      data: response,
-    };
+    const { template, ...payload } = result.data;
+    const html = await renderEmailComponent(template, payload);
+    const response = await sendEmail({ ...result.data, html });
+    return { success: true, data: response };
   } catch (error) {
-    handleApiError(error, {
-      statusCode: 500,
-      statusMessage: 'Failed to send email',
-    });
+    return handleApiError(error);
   }
 });
-
-// await new Promise((r) => setTimeout(r, 3000));
-// throw new Error('test hehe');
-// return { success: true };

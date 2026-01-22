@@ -1,11 +1,14 @@
-export default defineNuxtRouteMiddleware(async (to) => {
-  const { data: session } = await useSession();
-  if (!session.value && to.path.startsWith(ROUTES.platform.root)) {
+export default defineNuxtRouteMiddleware(async (from, to) => {
+  const { data: session } = await authClient.useSession(useFetch);
+  const protectedPrefixes = [ROUTES.PLATFORM.ROOT, ROUTES.THAKHIN.ROOT];
+  const isProtected = protectedPrefixes.some((prefix) =>
+    from.path.startsWith(prefix)
+  );
+
+  if (!session.value && isProtected) {
     return navigateTo({
-      path: ROUTES.signIn,
-      query: {
-        redirectTo: to.fullPath,
-      },
+      path: ROUTES.SIGN_IN,
+      query: { redirectTo: to.fullPath },
     });
   }
 });

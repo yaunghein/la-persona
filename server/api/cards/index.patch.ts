@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const result = await readValidatedBody(event, UpdateCardSchema.safeParse);
+  const result = await readValidatedBody(event, cardUpdateSchema.safeParse);
 
   if (!result.success) {
     throw createError({

@@ -4,7 +4,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 const isHeaderVisible = ref(true);
-const currentSection = ref<currentSectionType>(null);
+const currentSection = ref<CurrentSection>(null);
 
 onMounted(async () => {
   const lenis = new Lenis();
@@ -39,10 +39,9 @@ onMounted(async () => {
       trigger: section,
       start: 'top 50%',
       end: 'bottom 50%',
-      onEnter: () => (currentSection.value = section.id as currentSectionType),
+      onEnter: () => (currentSection.value = section.id as CurrentSection),
       onLeave: () => (currentSection.value = null),
-      onEnterBack: () =>
-        (currentSection.value = section.id as currentSectionType),
+      onEnterBack: () => (currentSection.value = section.id as CurrentSection),
       onLeaveBack: () => index === 0 && (currentSection.value = null),
     });
   });

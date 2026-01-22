@@ -1,6 +1,6 @@
 export default defineNuxtPlugin(async () => {
   const { gtag } = useGtag();
-  const { data: session } = await useSession();
+  const { data: session } = await authClient.useSession(useFetch);
 
   watch(
     session,

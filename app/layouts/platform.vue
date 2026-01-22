@@ -11,7 +11,7 @@ const links = [
     {
       label: 'Home',
       icon: 'i-lucide-house',
-      to: ROUTES.platform.root,
+      to: ROUTES.PLATFORM.ROOT,
       onSelect: () => {
         open.value = false;
       },
@@ -19,7 +19,7 @@ const links = [
     {
       label: 'My Cards',
       icon: 'i-lucide-credit-card',
-      to: ROUTES.platform.cards,
+      to: ROUTES.PLATFORM.CARDS,
       // badge: '4',
       onSelect: () => {
         open.value = false;
@@ -28,7 +28,7 @@ const links = [
     {
       label: 'Contacts',
       icon: 'i-lucide-contact-round',
-      to: ROUTES.platform.contacts,
+      to: ROUTES.PLATFORM.CONTACTS,
       onSelect: () => {
         open.value = false;
       },
@@ -149,7 +149,7 @@ const items = [
     {
       label: 'Request New Card',
       icon: 'i-lucide-send',
-      to: ROUTES.platform.cards,
+      to: ROUTES.PLATFORM.CARDS,
     },
     // {
     //   label: 'New customer',
@@ -166,9 +166,9 @@ const range = shallowRef<Range>({
 const period = ref<Period>('daily');
 
 const pageLabel: Record<string, string> = {
-  [ROUTES.platform.root]: 'Home',
-  [ROUTES.platform.cards]: 'My Cards',
-  [ROUTES.platform.contacts]: 'Contacts',
+  [ROUTES.PLATFORM.ROOT]: 'Home',
+  [ROUTES.PLATFORM.CARDS]: 'My Cards',
+  [ROUTES.PLATFORM.CONTACTS]: 'Contacts',
 } as const;
 
 const currentPageLabel = computed(() => {
