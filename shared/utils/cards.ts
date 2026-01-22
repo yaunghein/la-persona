@@ -114,7 +114,7 @@ export const cards = [
     id: 'shuneleiyee',
     name: 'Shune Lei Yee',
     spline: 'https://prod.spline.design/CjsXSz0FFX4SvCBS/scene.splinecode',
-    vcf: '/vcfs/minhtetdipar.vcf',
+    vcf: '/vcfs/shuneleiyee.vcf',
     phone: '+60102020324',
     email: 'shuneleiyee@gmail.com',
     links: [
