@@ -2,7 +2,6 @@ import { relations } from 'drizzle-orm';
 import { user } from './auth';
 import { card } from './card';
 import { contactExchange } from './contact-exchange';
-import { invitation } from './invitation';
 
 export const userRelations = relations(user, ({ many }) => ({
   cards: many(card),
@@ -14,7 +13,6 @@ export const cardRelations = relations(card, ({ one, many }) => ({
     references: [user.id],
   }),
   exchanges: many(contactExchange),
-  invitations: many(invitation),
 }));
 
 export const contactExchangeRelations = relations(
@@ -26,10 +24,3 @@ export const contactExchangeRelations = relations(
     }),
   })
 );
-
-export const invitationRelations = relations(invitation, ({ one }) => ({
-  card: one(card, {
-    fields: [invitation.cardId],
-    references: [card.id],
-  }),
-}));

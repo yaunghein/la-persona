@@ -1,6 +1,13 @@
 import { createAuthClient } from 'better-auth/vue';
+import {
+  magicLinkClient,
+  adminClient,
+  organizationClient,
+} from 'better-auth/client/plugins';
 
-export const authClient = createAuthClient();
+export const authClient = createAuthClient({
+  plugins: [magicLinkClient(), adminClient(), organizationClient()],
+});
 
 export const signIn = async () => {
   const route = useRoute();

@@ -1,4 +1,5 @@
 import { betterAuth } from 'better-auth';
+import { magicLink, admin, organization } from 'better-auth/plugins';
 import { createAuthMiddleware } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '../db';
@@ -15,6 +16,15 @@ export const auth = betterAuth({
       clientSecret: env.GITHUB_CLIENT_SECRET,
     },
   },
+  plugins: [
+    magicLink({
+      sendMagicLink: async ({ email, token, url }, ctx) => {
+        // send email to user
+      },
+    }),
+    admin(),
+    organization(),
+  ],
   // hooks: {
   //   after: createAuthMiddleware(async (ctx) => {
   //     if (!ctx.path.startsWith('/callback')) return;
