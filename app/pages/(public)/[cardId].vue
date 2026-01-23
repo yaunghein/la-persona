@@ -20,7 +20,7 @@ onMounted(async () => {
   if (!card) return;
   const canvas = document.querySelector('#card') as HTMLCanvasElement;
   const spline = new Application(canvas);
-  spline.load(card.spline);
+  spline.load(card.spline + `?v=${new Date().getTime()}`);
 });
 
 const closeForm = () => {
