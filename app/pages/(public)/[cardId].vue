@@ -51,6 +51,7 @@ const onSubmit = async (e: SubmitEvent) => {
         email: data.email,
         phone: data.phone,
         company: data.company,
+        position: data.position,
       },
     });
 
@@ -60,7 +61,8 @@ const onSubmit = async (e: SubmitEvent) => {
         name: data.name,
         email: data.email,
         phone: data.phone,
-        position: data.company,
+        company: data.company,
+        position: data.position,
         ownerEmail: data.ownerEmail,
       },
     });
@@ -163,7 +165,7 @@ const iconMap: Record<string, string | ConcreteComponent> = {
             <label
               class="flex flex-col gap-3 text-xs font-light tracking-[0.1rem]"
             >
-              Your Name
+              Your Name*
               <input
                 name="name"
                 type="text"
@@ -176,11 +178,12 @@ const iconMap: Record<string, string | ConcreteComponent> = {
             <label
               class="flex flex-col gap-3 text-xs font-light tracking-[0.1rem]"
             >
-              Email Address (Optional)
+              Email Address*
               <input
                 name="email"
                 type="email"
                 autocomplete="off"
+                required
                 class="h-[2.8rem] w-full appearance-none border border-white/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
@@ -188,9 +191,22 @@ const iconMap: Record<string, string | ConcreteComponent> = {
             <label
               class="flex flex-col gap-3 text-xs font-light tracking-[0.1rem]"
             >
-              Company / Role (Optional)
+              Company (Optional)
               <input
                 name="company"
+                type="text"
+                autocomplete="off"
+                placeholder="eg. Designer at La Persona"
+                class="h-[2.8rem] w-full appearance-none border border-white/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
+              />
+            </label>
+
+            <label
+              class="flex flex-col gap-3 text-xs font-light tracking-[0.1rem]"
+            >
+              Role / Position (Optional)
+              <input
+                name="position"
                 type="text"
                 autocomplete="off"
                 placeholder="eg. Designer at La Persona"

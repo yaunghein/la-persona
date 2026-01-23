@@ -4,6 +4,7 @@ interface Props {
   email: string;
   phone: string;
   company: string;
+  position: string;
 }
 
 const props = defineProps<Props>();
@@ -111,8 +112,26 @@ const subject = encodeURIComponent(`Great meeting you / LA PERSONA Connection`);
             </EText>
             <EText
               style="margin: 4px 0 20px 0; font-weight: 600; font-size: 15px"
-              >{{ props.company || 'N/A' }}</EText
             >
+              {{ props.company || 'N/A' }}
+            </EText>
+
+            <EText
+              style="
+                margin: 0;
+                font-size: 11px;
+                color: #888888;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+              "
+            >
+              Role / Position
+            </EText>
+            <EText
+              style="margin: 4px 0 20px 0; font-weight: 600; font-size: 15px"
+            >
+              {{ props.position || 'N/A' }}
+            </EText>
 
             <EText
               style="

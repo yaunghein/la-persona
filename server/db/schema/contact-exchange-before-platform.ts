@@ -10,13 +10,10 @@ export const contactExchangeBeforePlatform = pgTable(
       .$default(() => nanoid()),
     name: text().notNull(),
     phone: text().notNull(),
-    email: text(),
+    email: text().notNull(),
+    company: text(),
     position: text(),
     ownerEmail: text().notNull(),
     createdAt: timestamp().defaultNow().notNull(),
-    updatedAt: timestamp()
-      .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
   }
 );

@@ -8,6 +8,13 @@
       "when": 1769117005280,
       "tag": "0000_familiar_nova",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1769177133724,
+      "tag": "0001_fearless_hardball",
+      "breakpoints": true
     }
   ]
 }

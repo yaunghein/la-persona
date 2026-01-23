@@ -36,7 +36,7 @@ const selectCountry = (country: (typeof countries)[0]) => {
     class="flex flex-col gap-3 text-xs font-light tracking-[0.1rem]"
     for="phone"
   >
-    Phone Number
+    Phone Number*
     <div ref="dropdownRef" class="relative">
       <button
         type="button"

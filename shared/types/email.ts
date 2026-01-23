@@ -14,7 +14,8 @@ const contactExchangeSchema = baseEmailSchema.extend({
   template: z.literal('ContactExchange'),
   email: z.email(),
   phone: z.string().min(1),
-  company: z.string().min(1),
+  company: z.string().optional(),
+  position: z.string().optional(),
 });
 
 export const emailSchema = z.discriminatedUnion('template', [
