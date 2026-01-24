@@ -196,7 +196,6 @@ const iconMap: Record<string, string | ConcreteComponent> = {
                 name="company"
                 type="text"
                 autocomplete="off"
-                placeholder="eg. Designer at La Persona"
                 class="h-[2.8rem] w-full appearance-none border border-white/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
@@ -209,7 +208,6 @@ const iconMap: Record<string, string | ConcreteComponent> = {
                 name="position"
                 type="text"
                 autocomplete="off"
-                placeholder="eg. Designer at La Persona"
                 class="h-[2.8rem] w-full appearance-none border border-white/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
