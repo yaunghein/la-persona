@@ -30,6 +30,7 @@ const removeLink = (index: number) => {
 };
 
 async function onSubmit(event: FormSubmitEvent<UpdateCard>) {
+  console.log(event.data);
   loading.value = true;
   try {
     console.log(event.data);
@@ -103,7 +104,7 @@ async function onSubmit(event: FormSubmitEvent<UpdateCard>) {
       </UFormField>
     </div>
 
-    <div class="space-y-4 pt-4 border-t border-gray-800">
+    <div class="space-y-4 pt-4">
       <div class="flex items-center justify-between">
         <h3 class="text-sm font-medium">Social / Professional Links</h3>
         <UButton
@@ -121,7 +122,12 @@ async function onSubmit(event: FormSubmitEvent<UpdateCard>) {
         class="flex items-end gap-3"
       >
         <UFormField label="Label" class="flex-1">
-          <USelectMenu v-model="link.label" :items="items" class="w-full" />
+          <USelectMenu
+            placeholder="Select Social Media"
+            v-model="link.label"
+            :items="items"
+            class="w-full"
+          />
         </UFormField>
         <UFormField label="URL" class="flex-2">
           <UInput

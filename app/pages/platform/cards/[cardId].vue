@@ -1,22 +1,30 @@
 <script setup lang="ts">
+import type { TabsItem } from '@nuxt/ui';
+
+const route = useRoute();
+const router = useRouter();
+
 definePageMeta({
   layout: 'platform',
 });
 
-const items = [
-  {
-    label: '3D Card Information',
-    slot: '3d',
-  },
-  {
-    label: 'Contact Information',
-    slot: 'contact',
-  },
-  {
-    label: 'QR & Wallpapers',
-    slot: 'qr',
-  },
+const items: TabsItem[] = [
+  { label: '3D Card Information', value: '3d' },
+  { label: 'Contact Information', value: 'contact' },
+  { label: 'QR & Wallpapers', value: 'wallpaper' },
 ];
+
+const active = computed({
+  get() {
+    return (route.query.tab as string) || '3d';
+  },
+  set(tab) {
+    router.push({
+      path: route.path,
+      query: { tab },
+    });
+  },
+});
 </script>
 
 <template>
@@ -42,9 +50,9 @@ const items = [
   <p class="leading-none text-sm text-muted -mt-2 ml-8">
     Manage your 3D card information, contact information, QR, and wallpapers.
   </p>
-
   <UTabs
-    :items
+    v-model="active"
+    :items="items"
     :ui="{
       root: 'items-start',
       list: 'bg-[#171717] max-w-lg',
@@ -52,16 +60,10 @@ const items = [
       trigger: 'data-[state=active]:text-white',
     }"
   >
-    <template #3d>
-      <FormRequestCardInfoChange />
-    </template>
-
-    <template #contact>
-      <FormUpdateCardInfo />
-    </template>
-
-    <template #qr>
-      <div>QR Slot</div>
+    <template #content="{ item }">
+      <FormRequestCardInfoChange v-if="item.value === '3d'" />
+      <FormUpdateCardInfo v-if="item.value === 'contact'" />
+      <FormDownloadWallpaper v-if="item.value === 'wallpaper'" />
     </template>
   </UTabs>
 </template>

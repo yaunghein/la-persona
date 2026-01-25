@@ -21,6 +21,8 @@ export const card = pgTable(
     socials: jsonb('socials')
       .$type<{ label: string; value: string }[]>()
       .default([]),
+    wallpaperUrl: text('wallpaper_url'),
+    qrCodeUrl: text('qr_code_url'),
     organizationId: text().references(() => organization.id, {
       onDelete: 'cascade',
     }),
