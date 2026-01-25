@@ -1,10 +1,11 @@
-import { card, cardUpdateRequest } from '~~/server/db/schema';
+import { z } from 'zod';
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import {
   createSelectSchema,
   createInsertSchema,
   createUpdateSchema,
 } from 'drizzle-zod';
+import { card, cardUpdateRequest } from '~~/server/db/schema';
 
 export type SelectCard = InferSelectModel<typeof card>;
 export type InsertCard = InferInsertModel<typeof card>;
@@ -15,9 +16,19 @@ export type CardDTO = Omit<SelectCard, 'createdAt' | 'updatedAt'> & {
   updatedAt: string;
 };
 
+const socialLinkSchema = z.object({
+  label: z.string().min(1, 'Label is required'),
+  value: z.url('Must be a valid URL'),
+});
+
+const cardBaseValidators = {
+  email: z.email('Invalid email').optional().nullable(),
+  socials: z.array(socialLinkSchema).optional(),
+};
+
 export const cardSelectSchema = createSelectSchema(card);
-export const cardInsertSchema = createInsertSchema(card);
-export const cardUpdateSchema = createUpdateSchema(card);
+export const cardInsertSchema = createInsertSchema(card, cardBaseValidators);
+export const cardUpdateSchema = createUpdateSchema(card, cardBaseValidators);
 
 export type SelectCardUpdateRequest = InferSelectModel<
   typeof cardUpdateRequest

@@ -4,7 +4,7 @@ import { db } from '~~/server/db';
 import { card } from '~~/server/db/schema';
 import { findFreeCardByUserId } from '~~/server/db/queries/card';
 import { env } from '~~/server/utils/env';
-import { SelectUser, SelectCard } from '~~/shared/types';
+import { SelectUser, UpdateCard } from '~~/shared/types';
 
 export const ensureUserHasFreeCard = async (user: SelectUser) => {
   const existing = await findFreeCardByUserId(user.id);
@@ -19,8 +19,16 @@ export const ensureUserHasFreeCard = async (user: SelectUser) => {
   return inserted;
 };
 
-export async function updateCard(userId: string, input: SelectCard) {
+export async function updateCard(userId: string, input: UpdateCard) {
   const { id, ...data } = input;
+
+  if (!id) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Card ID is required for updates.',
+    });
+  }
+
   const [updated] = await db
     .update(card)
     .set({ ...data, updatedAt: new Date() })

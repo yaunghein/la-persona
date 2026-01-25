@@ -1,5 +1,5 @@
-import { updateCard } from '~~/server/services/card';
 import { auth } from '~~/server/auth';
+import { updateCard } from '~~/server/services/card';
 
 export default defineEventHandler(async (event) => {
   const session = await auth.api.getSession({
@@ -13,6 +13,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const result = await readValidatedBody(event, cardUpdateSchema.safeParse);
+  console.log(JSON.stringify(result, null, 2));
 
   if (!result.success) {
     throw createError({

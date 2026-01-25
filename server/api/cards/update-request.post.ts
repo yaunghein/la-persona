@@ -18,7 +18,6 @@ export default defineEventHandler(async (event) => {
     event,
     cardUpdateRequestInsertSchema.safeParse
   );
-  console.log(result.error);
 
   if (!result.success) {
     throw createError({
