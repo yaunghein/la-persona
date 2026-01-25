@@ -34,43 +34,51 @@ const links = [
       },
     },
     {
-      label: 'Settings',
-      to: '',
-      icon: 'i-lucide-settings',
-      defaultOpen: true,
-      type: 'trigger',
-      children: [
-        {
-          label: 'General',
-          to: '',
-          exact: true,
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-        {
-          label: 'Members',
-          to: '',
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-        {
-          label: 'Notifications',
-          to: '',
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-        {
-          label: 'Security',
-          to: '',
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-      ],
+      label: 'Spaces',
+      icon: 'i-lucide-contact',
+      to: ROUTES.PLATFORM.CONTACTS,
+      onSelect: () => {
+        open.value = false;
+      },
     },
+    // {
+    //   label: 'Settings',
+    //   to: '',
+    //   icon: 'i-lucide-settings',
+    //   defaultOpen: true,
+    //   type: 'trigger',
+    //   children: [
+    //     {
+    //       label: 'General',
+    //       to: '',
+    //       exact: true,
+    //       onSelect: () => {
+    //         open.value = false;
+    //       },
+    //     },
+    //     {
+    //       label: 'Members',
+    //       to: '',
+    //       onSelect: () => {
+    //         open.value = false;
+    //       },
+    //     },
+    //     {
+    //       label: 'Notifications',
+    //       to: '',
+    //       onSelect: () => {
+    //         open.value = false;
+    //       },
+    //     },
+    //     {
+    //       label: 'Security',
+    //       to: '',
+    //       onSelect: () => {
+    //         open.value = false;
+    //       },
+    //     },
+    //   ],
+    // },
   ],
   [
     {
@@ -172,7 +180,12 @@ const pageLabel: Record<string, string> = {
 } as const;
 
 const currentPageLabel = computed(() => {
-  return pageLabel[route.path] ?? '';
+  const path = route.path;
+  const specificMatch = Object.entries(pageLabel).find(
+    ([key]) => key !== '/' && path.startsWith(key)
+  );
+  if (specificMatch) return specificMatch[1];
+  return path === ROUTES.PLATFORM.ROOT ? pageLabel[ROUTES.PLATFORM.ROOT] : '';
 });
 </script>
 
@@ -187,14 +200,17 @@ const currentPageLabel = computed(() => {
       :ui="{ footer: 'lg:border-t lg:border-default' }"
     >
       <template #header="{ collapsed }">
-        <TeamsMenu :collapsed="collapsed" />
+        <!-- <TeamsMenu :collapsed="collapsed" /> -->
+        <NuxtLink to="/platform" class="w-44 aspect-[1/0.11]">
+          <SvgLogo />
+        </NuxtLink>
       </template>
 
       <template #default="{ collapsed }">
-        <UDashboardSearchButton
+        <!-- <UDashboardSearchButton
           :collapsed="collapsed"
           class="bg-transparent ring-default"
-        />
+        /> -->
 
         <UNavigationMenu
           :collapsed="collapsed"
@@ -202,6 +218,7 @@ const currentPageLabel = computed(() => {
           orientation="vertical"
           tooltip
           popover
+          class="[&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1 py-4"
         />
 
         <UNavigationMenu
@@ -241,9 +258,9 @@ const currentPageLabel = computed(() => {
             </UButton>
           </UTooltip> -->
 
-            <UDropdownMenu :items="items">
+            <!-- <UDropdownMenu :items="items">
               <UButton icon="i-lucide-plus" size="md" class="rounded-full" />
-            </UDropdownMenu>
+            </UDropdownMenu> -->
           </template>
         </UDashboardNavbar>
 
