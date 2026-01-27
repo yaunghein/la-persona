@@ -7,11 +7,15 @@ const EnvSchema = z.object({
   GITHUB_CLIENT_ID: z.string(),
   GITHUB_CLIENT_SECRET: z.string(),
   DEFAULT_SPLINE_URL: z.string(),
-  RESEND_API_KEY: z.string(),
   HUBSPOT_PORTAL_ID: z.string(),
   HUBSPOT_FORM_GUID_LEAD: z.string(),
-  NUXT_PUBLIC_BASE_URL: z.string(),
-  NUXT_PUBLIC_GTAG_ID: z.string(),
+  RESEND_API_KEY: z.string(),
+  AWS_ACCESS_KEY: z.string(),
+  AWS_SECRET_ACCESS_KEY: z.string(),
+  AWS_REGION: z.string(),
+  AWS_BUCKET_NAME: z.string(),
+  BASE_URL: z.string(),
+  GTAG_ID: z.string(),
 });
 
 export type EnvSchema = z.infer<typeof EnvSchema>;

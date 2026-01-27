@@ -1,10 +1,17 @@
 <script setup lang="ts">
-import { z } from 'zod';
-import type { FormSubmitEvent } from '@nuxt/ui';
+import { useQuery, useMutation } from '@tanstack/vue-query';
+import type { FormSubmitEvent } from '#ui/types';
 
-type Schema = z.output<typeof cardUpdateRequestInsertSchema>;
+const route = useRoute();
+const toast = useToast();
+const cardId = computed(() => route.params.cardId as string);
 
-const state = reactive<Partial<Schema>>({
+const { data: card, isLoading } = useQuery({
+  queryKey: ['cards', cardId],
+  queryFn: () => $fetch(`/api/cards/${cardId.value}`),
+});
+
+const state = reactive<UpdateCardUpdateRequest>({
   firstName: undefined,
   lastName: undefined,
   position: undefined,
@@ -12,79 +19,108 @@ const state = reactive<Partial<Schema>>({
   email: undefined,
   website: undefined,
   note: undefined,
-  cardId: useRoute().params.cardId as string,
+  cardId: cardId.value,
 });
 
-const toast = useToast();
+watch(
+  card,
+  (newCard: any) => {
+    if (newCard) {
+      state.firstName = newCard.firstName || '';
+      state.lastName = newCard.lastName || '';
+      state.position = newCard.position || '';
+      state.phone = newCard.phone || '';
+      state.email = newCard.email || '';
+      state.website = newCard.website || '';
+    }
+  },
+  { immediate: true }
+);
 
-async function onSubmit(event: FormSubmitEvent<Schema>) {
-  try {
-    await $fetch(`/api/cards/update-request`, {
+const { mutate: submitRequest, isPending: isSubmitting } = useMutation({
+  mutationFn: async (formData: UpdateCardUpdateRequest) => {
+    return await $fetch(`/api/cards/update-request`, {
       method: 'POST',
-      body: event.data,
+      body: formData,
     });
-
+  },
+  onSuccess: () => {
     toast.add({
       title: 'Request Submitted',
-      description:
-        'We have received your update request. Please allow 24-36 hours for the changes to reflect.',
+      description: 'Changes have been requested and are pending review.',
       color: 'success',
     });
-
-    // Optional: Reset form or redirect
-  } catch (err: any) {
+  },
+  onError: (err: any) => {
     toast.add({
       title: 'Submission Failed',
-      description:
-        err.data?.statusMessage ||
-        'Something went wrong while submitting your request.',
+      description: err.data?.statusMessage || 'Action failed',
       color: 'error',
     });
-  }
+  },
+});
+
+function onSubmit(event: FormSubmitEvent<UpdateCardUpdateRequest>) {
+  submitRequest(event.data);
 }
 </script>
 
 <template>
-  <UForm
-    :state="state"
-    :schema="cardUpdateRequestInsertSchema"
-    @submit="onSubmit"
-    class="space-y-4 grid grid-cols-2 w-full gap-x-5 mt-10"
-  >
-    <UFormField label="First Name" name="firstname">
-      <UInput class="w-full" v-model="state.firstName" />
-    </UFormField>
-
-    <UFormField label="Last Name" name="lastname">
-      <UInput class="w-full" v-model="state.lastName" />
-    </UFormField>
-
-    <UFormField label="Professional Title / Role" name="role">
-      <UInput class="w-full" v-model="state.position" />
-    </UFormField>
-
-    <UFormField label="Phone Number" name="phone">
-      <UInput class="w-full" v-model="state.phone" />
-    </UFormField>
-
-    <UFormField label="Email Address" name="email">
-      <UInput class="w-full" v-model="state.email" />
-    </UFormField>
-
-    <UFormField label="Personal Website / Portfolio" name="website">
-      <UInput class="w-full" v-model="state.website" />
-    </UFormField>
-
-    <UFormField label="Note" name="note" class="col-span-2">
-      <UInput class="w-full" v-model="state.note" />
-    </UFormField>
-
-    <input type="hidden" name="cardId" v-model="state.cardId" />
-
-    <div class="col-span-2 flex justify-end">
-      <UButton type="submit" class="rounded-full" icon="i-lucide-check">
-        Request Changes
-      </UButton>
+  <div class="bg-elevated/25 rounded-md p-6 mt-3">
+    <div v-if="isLoading" class="grid grid-cols-2 gap-5">
+      <USkeleton v-for="i in 6" :key="i" class="h-12 w-full" />
+      <USkeleton class="h-20 col-span-2 w-full" />
     </div>
-  </UForm>
+
+    <UForm
+      v-else
+      :state="state"
+      :schema="cardUpdateRequestInsertSchema"
+      @submit="onSubmit"
+      class="space-y-4 grid grid-cols-1 md:grid-cols-2 w-full gap-x-5"
+    >
+      <UFormField label="First Name" name="firstName">
+        <UInput v-model="state.firstName" class="w-full" />
+      </UFormField>
+
+      <UFormField label="Last Name" name="lastName">
+        <UInput v-model="state.lastName" class="w-full" />
+      </UFormField>
+
+      <UFormField label="Professional Title / Role" name="position">
+        <UInput v-model="state.position" class="w-full" />
+      </UFormField>
+
+      <UFormField label="Phone Number" name="phone">
+        <UInput v-model="state.phone" class="w-full" />
+      </UFormField>
+
+      <UFormField label="Email Address" name="email">
+        <UInput v-model="state.email" class="w-full" />
+      </UFormField>
+
+      <UFormField label="Personal Website / Portfolio" name="website">
+        <UInput v-model="state.website" class="w-full" />
+      </UFormField>
+
+      <UFormField label="Note (Optional)" name="note" class="md:col-span-2">
+        <UTextarea
+          v-model="state.note"
+          class="w-full"
+          placeholder="Tell us about the changes..."
+        />
+      </UFormField>
+
+      <div class="md:col-span-2 flex justify-end pt-4">
+        <UButton
+          type="submit"
+          class="rounded-full px-8"
+          icon="i-lucide-check"
+          :loading="isSubmitting"
+        >
+          Request Changes
+        </UButton>
+      </div>
+    </UForm>
+  </div>
 </template>

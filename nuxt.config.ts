@@ -7,12 +7,19 @@ export default defineNuxtConfig({
   colorMode: {
     preference: 'dark',
   },
+  runtimeConfig: {
+    public: {
+      awsRegion: process.env.AWS_REGION,
+      awsBucketName: process.env.AWS_BUCKET_NAME,
+    },
+  },
   gtag: {
-    id: process.env.NUXT_PUBLIC_GTAG_ID,
+    id: process.env.GTAG_ID,
     enabled: process.env.NODE_ENV === 'production',
   },
   routeRules: {
     '/': { prerender: true },
+    '/platform/**': { ssr: false },
   },
   app: {
     head: {

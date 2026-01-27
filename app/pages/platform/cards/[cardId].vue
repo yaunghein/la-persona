@@ -33,8 +33,7 @@ const active = computed({
       icon="i-lucide-chevron-left"
       size="md"
       color="primary"
-      variant="solid"
-      class="bg-transparent text-white -mt-[0.15rem]"
+      class="bg-transparent mr-2 text-white -mt-[0.15rem] hover:bg-white/10"
     />
     <h1
       class="text-[1.75rem] font-medium tracking-[0.17rem] uppercase leading-none"
@@ -47,7 +46,7 @@ const active = computed({
       Founders' Club Edition
     </div>
   </div>
-  <p class="leading-none text-sm text-muted -mt-2 ml-8">
+  <p class="leading-none text-sm text-muted -mt-2 ml-10">
     Manage your 3D card information, contact information, QR, and wallpapers.
   </p>
   <UTabs
