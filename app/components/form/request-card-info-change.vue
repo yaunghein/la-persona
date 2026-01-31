@@ -114,7 +114,7 @@ function onSubmit(event: FormSubmitEvent<UpdateCardUpdateRequest>) {
       <div class="md:col-span-2 flex justify-end pt-4">
         <UButton
           type="submit"
-          class="rounded-full px-8"
+          class="rounded-full px-4"
           icon="i-lucide-check"
           :loading="isSubmitting"
         >

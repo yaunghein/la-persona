@@ -5,7 +5,7 @@ import {
   createInsertSchema,
   createUpdateSchema,
 } from 'drizzle-zod';
-import { card, cardUpdateRequest } from '~~/server/db/schema';
+import { card, cardUpdateRequest, cardRequest } from '~~/server/db/schema';
 
 export type SelectCard = InferSelectModel<typeof card>;
 export type InsertCard = InferInsertModel<typeof card>;
@@ -22,7 +22,7 @@ const socialLinkSchema = z.object({
 });
 
 const cardBaseValidators = {
-  email: z.email('Invalid email').optional().nullable(),
+  email: z.string().email('Invalid email').optional().nullable(),
   socials: z.array(socialLinkSchema).optional(),
 };
 
@@ -53,3 +53,36 @@ export const cardUpdateRequestInsertSchema = createInsertSchema(
 ).omit({ requestedBy: true });
 export const cardUpdateRequestUpdateSchema =
   createUpdateSchema(cardUpdateRequest);
+
+export type SelectCardRequest = InferSelectModel<typeof cardRequest>;
+export type InsertCardRequest = InferInsertModel<typeof cardRequest>;
+export type UpdateCardRequest = Partial<InsertCardRequest>;
+
+export type CardRequestDTO = Omit<
+  SelectCardRequest,
+  'createdAt' | 'updatedAt'
+> & {
+  createdAt: string;
+  updatedAt: string;
+};
+
+const cardRequestDataSchema = z.object({
+  name: z.string().optional(),
+  position: z.string().optional(),
+  company: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().email('Invalid email').optional().or(z.literal('')),
+  website: z.string().url('Invalid URL').optional().or(z.literal('')),
+  socials: z.array(socialLinkSchema).optional(),
+});
+
+export const cardRequestSelectSchema = createSelectSchema(cardRequest);
+
+export const cardRequestInsertSchema = createInsertSchema(cardRequest, {
+  cardData: cardRequestDataSchema,
+  type: z.enum(['new_design', 'existing_design']),
+}).omit({ userId: true });
+
+export const cardRequestUpdateSchema = createUpdateSchema(cardRequest, {
+  cardData: cardRequestDataSchema,
+});

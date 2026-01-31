@@ -9,16 +9,16 @@ const open = ref(false);
 const links = [
   [
     {
-      label: 'Home',
-      icon: 'i-lucide-house',
+      label: 'Insights',
+      icon: 'i-gg:insights',
       to: ROUTES.PLATFORM.ROOT,
       onSelect: () => {
         open.value = false;
       },
     },
     {
-      label: 'My Cards',
-      icon: 'i-lucide-credit-card',
+      label: 'Cards',
+      icon: 'i-material-symbols:cards-stack-outline-sharp',
       to: ROUTES.PLATFORM.CARDS,
       // badge: '4',
       onSelect: () => {
@@ -27,16 +27,16 @@ const links = [
     },
     {
       label: 'Contacts',
-      icon: 'i-lucide-contact-round',
+      icon: 'i-material-symbols:perm-contact-calendar-sharp',
       to: ROUTES.PLATFORM.CONTACTS,
       onSelect: () => {
         open.value = false;
       },
     },
     {
-      label: 'Spaces',
-      icon: 'i-lucide-contact',
-      to: ROUTES.PLATFORM.CONTACTS,
+      label: 'Teams',
+      icon: 'i-ri:team-line',
+      to: '/',
       onSelect: () => {
         open.value = false;
       },
@@ -174,15 +174,15 @@ const range = shallowRef<Range>({
 const period = ref<Period>('daily');
 
 const pageLabel: Record<string, string> = {
-  [ROUTES.PLATFORM.ROOT]: 'Home',
-  [ROUTES.PLATFORM.CARDS]: 'My Cards',
+  [ROUTES.PLATFORM.ROOT]: 'Insights',
+  [ROUTES.PLATFORM.CARDS]: 'Cards',
   [ROUTES.PLATFORM.CONTACTS]: 'Contacts',
 } as const;
 
 const currentPageLabel = computed(() => {
   const path = route.path;
   const specificMatch = Object.entries(pageLabel).find(
-    ([key]) => key !== '/' && path.startsWith(key)
+    ([key]) => key !== '/platform' && path.startsWith(key)
   );
   if (specificMatch) return specificMatch[1];
   return path === ROUTES.PLATFORM.ROOT ? pageLabel[ROUTES.PLATFORM.ROOT] : '';
@@ -218,7 +218,7 @@ const currentPageLabel = computed(() => {
           orientation="vertical"
           tooltip
           popover
-          class="[&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1 py-4"
+          class="[&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1 py-4 [&_a]:py-2 [&_a]:font-semibold"
         />
 
         <UNavigationMenu
@@ -239,7 +239,11 @@ const currentPageLabel = computed(() => {
 
     <UDashboardPanel id="home">
       <template #header>
-        <UDashboardNavbar :title="currentPageLabel" :ui="{ right: 'gap-3' }">
+        <UDashboardNavbar
+          :title="currentPageLabel"
+          :ui="{ right: 'gap-3' }"
+          class="uppercase text-sm tracking-[1.4px]"
+        >
           <template #leading>
             <UDashboardSidebarCollapse />
           </template>

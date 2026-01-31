@@ -1,12 +1,14 @@
 <script setup lang="ts">
+definePageMeta({
+  layout: 'platform',
+});
+
+useSeoMeta({ ...getSeoTitle('Edit Card - LA PERSONA') });
+
 import type { TabsItem } from '@nuxt/ui';
 
 const route = useRoute();
 const router = useRouter();
-
-definePageMeta({
-  layout: 'platform',
-});
 
 const items: TabsItem[] = [
   { label: '3D Card Information', value: '3d' },
@@ -33,7 +35,8 @@ const active = computed({
       icon="i-lucide-chevron-left"
       size="md"
       color="primary"
-      class="bg-transparent mr-2 text-white -mt-[0.15rem] hover:bg-white/10"
+      class="bg-transparent mr-2 text-white -mt-[0.15rem] hover:bg-white/10 active:hover:bg-white/20"
+      href="/platform/cards"
     />
     <h1
       class="text-[1.75rem] font-medium tracking-[0.17rem] uppercase leading-none"
