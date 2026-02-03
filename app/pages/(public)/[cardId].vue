@@ -13,14 +13,18 @@ const isSuccess = ref(false);
 const isValid = ref(true);
 const isSubmitting = ref(false);
 const error = ref('');
+const loading = ref(false);
 
 const toast = useToast();
 
 onMounted(async () => {
   if (!card) return;
+  loading.value = true;
   const canvas = document.querySelector('#card') as HTMLCanvasElement;
   const spline = new Application(canvas);
-  spline.load(card.spline + `?v=${new Date().getTime()}`);
+  spline
+    .load(card.spline + `?v=${new Date().getTime()}`)
+    .then(() => (loading.value = false));
 });
 
 const closeForm = () => {
@@ -92,6 +96,14 @@ const iconMap: Record<string, string | ConcreteComponent> = {
 <template>
   <div v-if="card" class="relative z-10 h-dvh w-screen overflow-hidden">
     <div class="absolute inset-0 w-full h-full">
+      <div
+        v-if="loading"
+        class="inline-block size-12 animate-spin rounded-full border border-current border-t-transparent text-white/20 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+        role="status"
+        aria-label="loading"
+      >
+        <span class="sr-only">Loading...</span>
+      </div>
       <canvas id="card" class="h-full w-full"></canvas>
     </div>
 
