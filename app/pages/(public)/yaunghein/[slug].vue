@@ -16,6 +16,8 @@ onMounted(async () => {
     if (!card.value) return;
     spline.setVariables({
       firstName: card.value.firstName,
+      // TODO: fix thisupdate schema
+      // @ts-ignore
       lastName: card.value.lastName,
     });
   });
@@ -314,10 +316,13 @@ const iconMap: Record<string, string | ConcreteComponent> = {
         <div
           class="hide-scrollbar mt-8 flex justify-start gap-3 overflow-x-scroll px-5"
         >
-          <!-- <template v-for="(link, index) in card.links" :key="index">
+          <template
+            v-if="card.socials"
+            v-for="(link, index) in card.socials"
+            :key="index"
+          >
             <a
-              v-if="link.icon.includes('.')"
-              :href="link.href"
+              :href="link.value"
               target="_blank"
               class="flex shrink-0 flex-col items-center gap-4 transition duration-750"
               :class="isMenuOpen ? 'opacity-100' : 'opacity-0'"
@@ -326,18 +331,21 @@ const iconMap: Record<string, string | ConcreteComponent> = {
               <div
                 class="grid aspect-square w-[4.56rem] overflow-hidden rounded-full bg-white/10"
               >
-                <img
+                <div
+                  class="aspect-square h-full w-full object-cover rounded-full bg-white/10 border border-white/20"
+                />
+                <!-- <img
                   :src="link.icon"
                   :alt="link.label"
                   class="aspect-square h-full w-full object-cover"
-                />
+                /> -->
               </div>
               <div class="max-w-16 text-center text-xs leading-[1.1]">
                 {{ link.label }}
               </div>
             </a>
 
-            <a
+            <!-- <a
               v-else
               :href="link.href"
               target="_blank"
@@ -355,8 +363,8 @@ const iconMap: Record<string, string | ConcreteComponent> = {
               <div class="max-w-16 text-center text-xs leading-[1.1]">
                 {{ link.label }}
               </div>
-            </a>
-          </template> -->
+            </a> -->
+          </template>
         </div>
       </div>
     </div>
