@@ -50,7 +50,7 @@ const isSlideoverOpen = ref(false);
 
       <template #footer>
         <div>
-          <div>{{ card.name }}</div>
+          <div>{{ card.firstName }} {{ card.lastName }}</div>
         </div>
         <div class="mt-4 flex items-center justify-start gap-2">
           <UButton
@@ -58,6 +58,8 @@ const isSlideoverOpen = ref(false);
             color="primary"
             size="sm"
             class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
+            target="_blank"
+            :href="`/yaunghein/${card.slug}`"
           />
           <UButton
             icon="i-lucide-square-pen"
