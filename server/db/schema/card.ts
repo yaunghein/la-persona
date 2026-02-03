@@ -9,7 +9,9 @@ export const card = pgTable(
       .primaryKey()
       .notNull()
       .$default(() => nanoid()),
-    name: text().notNull(),
+    firstName: text().notNull(),
+    lastName: text(),
+    slug: text().notNull().unique(),
     position: text().notNull(),
     splineUrl: text(),
     type: text().default('standard').notNull(),

@@ -15,8 +15,8 @@ export const findCardsByUserId = async (userId: string) => {
   });
 };
 
-export const findCardsById = async (id: string) => {
+export const findCardsBySlug = async (slug: string) => {
   return await db.query.card.findFirst({
-    where: eq(card.id, id),
+    where: eq(card.slug, slug),
   });
 };

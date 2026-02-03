@@ -38,7 +38,9 @@ export default defineEventHandler(async (event) => {
     const [newCard] = await db
       .insert(card)
       .values({
-        name: result.data.name,
+        firstName: result.data.name,
+        lastName: result.data.name,
+        slug: slugify(result.data.name),
         position: result.data.position,
         splineUrl: result.data.splineUrl,
         type: result.data.type,

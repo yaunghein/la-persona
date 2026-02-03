@@ -3,9 +3,9 @@ definePageMeta({
   layout: 'platform',
 });
 
-useSeoMeta({ ...getSeoTitle('Edit Card - LA PERSONA') });
-
 import type { TabsItem } from '@nuxt/ui';
+
+useSeoMeta({ ...getSeoTitle('Edit Card - LA PERSONA') });
 
 const route = useRoute();
 const router = useRouter();

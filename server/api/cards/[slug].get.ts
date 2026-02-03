@@ -1,8 +1,8 @@
-import { findCardsById } from '~~/server/db/queries/card';
+import { findCardsBySlug } from '~~/server/db/queries/card';
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id') as string;
-  const card = await findCardsById(id);
+  const slug = getRouterParam(event, 'slug') as string;
+  const card = await findCardsBySlug(slug);
   if (!card) {
     throw createError({
       statusCode: 404,
