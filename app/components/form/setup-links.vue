@@ -174,6 +174,7 @@ const removeLink = (index: number) => {
           type="submit"
           class="rounded-full px-6 font-semibold"
           color="primary"
+          icon="material-symbols:fitbit-check-small"
           :loading="isSubmitting"
         >
           Complete Setup

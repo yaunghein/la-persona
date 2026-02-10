@@ -2,7 +2,8 @@ import { nanoid } from 'nanoid';
 import { and, eq, isNull } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { card } from '~~/server/db/schema';
-import { UpdateCard } from '~~/shared/types';
+import { env } from '~~/server/utils/env';
+import type { UpdateCard } from '~~/shared/types';
 
 import type { User } from 'better-auth';
 
@@ -29,6 +30,7 @@ export async function insertDefaultCard(user: User, organizationId: string) {
       slug: `${slugify(user.name)}-${nanoid()}`,
       position: 'Professional',
       userId: user.id,
+      splineUrl: env.DEFAULT_SPLINE_URL,
       organizationId,
     })
     .returning();

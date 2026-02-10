@@ -5,6 +5,8 @@ definePageMeta({
 
 useSeoMeta({ ...getSeoTitle('Cards - LA PERSONA') });
 
+const route = useRoute();
+
 const { data: cards, pending, error } = await useFetch<CardDTO[]>('/api/cards');
 
 const isSlideoverOpen = ref(false);
@@ -66,7 +68,7 @@ const isSlideoverOpen = ref(false);
             color="primary"
             size="sm"
             class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
-            :href="`/platform/cards/${card.slug}`"
+            :href="`/platform/${route.params.orgSlug}/cards/${card.slug}`"
           />
           <UButton
             icon="i-lucide-trash"
