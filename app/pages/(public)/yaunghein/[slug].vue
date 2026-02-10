@@ -3,13 +3,24 @@ import { useQuery } from '@tanstack/vue-query';
 import { Application } from '@splinetool/runtime';
 import type { ConcreteComponent } from 'vue';
 
+const { trackEvent } = useAnalytics();
+
 const { slug } = useRoute().params;
 const { data: card } = await useFetch<SelectCard>(`/api/cards/${slug}`);
 useSeoMeta({ ...getSeoTitle(`${card.value?.firstName}`) });
-console.log(card.value);
 
 onMounted(async () => {
-  if (!card) return;
+  if (!card || !card.value) return;
+
+  // Track View
+  trackEvent({
+    cardId: card.value.id,
+    organizationId: card.value.organizationId,
+    userId: card.value.userId,
+    type: 'view',
+    metadata: { path: useRoute().path },
+  });
+
   const canvas = document.querySelector('#card') as HTMLCanvasElement;
   const spline = new Application(canvas);
   spline.load(card.value?.splineUrl + `?v=${new Date().getTime()}`).then(() => {
@@ -49,30 +60,38 @@ const onSubmit = async (e: SubmitEvent) => {
   // console.log({ data });
 
   try {
-    await $fetch('/api/email/send', {
+    // await $fetch('/api/email/send', {
+    //   method: 'POST',
+    //   body: {
+    //     name: data.name,
+    //     to: [data.ownerEmail],
+    //     subject: `New Contact Exchange from ${(data.name as string).split(' ')[0]} 👋`,
+    //     template: 'ContactExchange',
+    //     email: data.email,
+    //     phone: data.phone,
+    //     company: data.company,
+    //     position: data.position,
+    //   },
+    // });
+
+    await $fetch('/api/contact-exchange', {
       method: 'POST',
       body: {
         name: data.name,
-        to: [data.ownerEmail],
-        subject: `New Contact Exchange from ${(data.name as string).split(' ')[0]} 👋`,
-        template: 'ContactExchange',
         email: data.email,
         phone: data.phone,
         company: data.company,
         position: data.position,
+        cardId: card.value!.id,
       },
     });
 
-    await $fetch('/api/contact-exchange-before-platform', {
-      method: 'POST',
-      body: {
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        company: data.company,
-        position: data.position,
-        ownerEmail: data.ownerEmail,
-      },
+    trackEvent({
+      cardId: card.value!.id,
+      organizationId: card.value!.organizationId,
+      userId: card.value!.userId,
+      type: 'save_action',
+      metadata: { action: 'contact_exchange' },
     });
 
     isSuccess.value = true;
@@ -230,6 +249,15 @@ const iconMap: Record<string, string | ConcreteComponent> = {
             v-if="isSuccess"
             :download="`${card.id}.vcf`"
             class="cursor-pointer w-full rounded-full border border-white/10 bg-white py-4 text-center text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-white/10 disabled:text-white/20"
+            @click="
+              trackEvent({
+                cardId: card.id,
+                organizationId: card.organizationId,
+                userId: card.userId,
+                type: 'save_action',
+                metadata: { action: 'contact_save' },
+              })
+            "
           >
             Save Contact
           </a>
@@ -327,6 +355,18 @@ const iconMap: Record<string, string | ConcreteComponent> = {
               class="flex shrink-0 flex-col items-center gap-4 transition duration-750"
               :class="isMenuOpen ? 'opacity-100' : 'opacity-0'"
               :style="{ transitionDelay: `${(index + 1) * 100}ms` }"
+              @click="
+                trackEvent({
+                  cardId: card.id,
+                  organizationId: card.organizationId,
+                  userId: card.userId,
+                  type: 'social_click',
+                  metadata: {
+                    platform: link.label.toLowerCase(),
+                    url: link.value,
+                  },
+                })
+              "
             >
               <div
                 class="grid aspect-square w-[4.56rem] overflow-hidden rounded-full bg-white/10"

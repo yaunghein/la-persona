@@ -64,6 +64,13 @@
       "when": 1770142575023,
       "tag": "0008_flippant_shocker",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1770705206103,
+      "tag": "0009_solid_thanos",
+      "breakpoints": true
     }
   ]
 }

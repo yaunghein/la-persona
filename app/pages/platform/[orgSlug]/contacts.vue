@@ -26,8 +26,10 @@ const columns: TableColumn<ContactRow>[] = [
 </script>
 
 <template>
-  <p class="text-sm text-neutral-500">
-    People who exchanged contacts from your cards
-  </p>
+  <h1
+    class="text-[1.75rem] font-medium tracking-[0.17rem] uppercase leading-none"
+  >
+    Exchanged Contacts
+  </h1>
   <UTable :data="contacts" :columns="columns" class="flex-1" />
 </template>

@@ -11,7 +11,7 @@ const links = [
     {
       label: 'Insights',
       icon: 'i-gg:insights',
-      to: ROUTES.PLATFORM.ROOT,
+      to: `/platform/${route.params.orgSlug}`,
       onSelect: () => {
         open.value = false;
       },
@@ -19,7 +19,7 @@ const links = [
     {
       label: 'Cards',
       icon: 'i-material-symbols:cards-stack-outline-sharp',
-      to: ROUTES.PLATFORM.CARDS,
+      to: `/platform/${route.params.orgSlug}/cards`,
       // badge: '4',
       onSelect: () => {
         open.value = false;
@@ -28,7 +28,7 @@ const links = [
     {
       label: 'Contacts',
       icon: 'i-material-symbols:perm-contact-calendar-sharp',
-      to: ROUTES.PLATFORM.CONTACTS,
+      to: `/platform/${route.params.orgSlug}/contacts`,
       onSelect: () => {
         open.value = false;
       },
