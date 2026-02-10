@@ -1,16 +1,51 @@
 <script setup lang="ts">
-definePageMeta({
-  layout: 'platform',
+import { useQuery } from '@tanstack/vue-query';
+
+const router = useRouter();
+const activeOrg = authClient.useActiveOrganization();
+
+const { data: cards, isError } = useQuery({
+  queryKey: ['cards', () => activeOrg.value.data?.slug],
+  queryFn: async () => {
+    return await $fetch('/api/cards', {
+      query: { organizationSlug: activeOrg.value.data?.slug },
+    });
+  },
+  enabled: () => !!activeOrg.value.data?.slug,
 });
+
+watch(
+  [cards, activeOrg],
+  ([newCards, org]) => {
+    if (!newCards || !org) return;
+
+    if (newCards.length === 1) {
+      const card = newCards[0];
+
+      if (card && card.socials && card.socials?.length === 0) {
+        router.push(`/platform/${org.data?.slug}/cards/${card.slug}/setup`);
+      } else {
+        router.push(`/platform/${org.data?.slug}`);
+      }
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
-  <h1
-    class="text-[1.75rem] font-medium tracking-[0.17rem] uppercase leading-none"
-  >
-    Analytics Dashboard
-  </h1>
-  <p class="leading-none text-sm text-muted -mt-2">
-    Track your card performance and engagement metrics
-  </p>
+  <div class="flex items-center justify-center h-dvh">
+    <div class="flex flex-col items-center gap-3">
+      <UIcon
+        name="i-lucide-loader-2"
+        class="w-8 h-8 animate-spin text-primary"
+      />
+      <p v-if="isError" class="text-red-500 text-sm">
+        Failed to load cards. Please refresh.
+      </p>
+      <p v-else class="text-gray-500 text-sm animate-pulse">
+        Syncing your workspace...
+      </p>
+    </div>
+  </div>
 </template>

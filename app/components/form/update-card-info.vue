@@ -5,7 +5,7 @@ import type { FormSubmitEvent } from '#ui/types';
 
 const route = useRoute();
 const queryClient = useQueryClient();
-const cardId = computed(() => route.params.cardId);
+const slug = computed(() => route.params.slug);
 const runtimeConfig = useRuntimeConfig();
 const toast = useToast();
 
@@ -13,8 +13,8 @@ const selectedFile = ref<File | null>(null);
 const localPreviewUrl = ref<string | null>(null);
 
 const { data: card, isLoading } = useQuery<SelectCard>({
-  queryKey: ['cards', cardId],
-  queryFn: () => $fetch(`/api/cards/${cardId.value}`),
+  queryKey: ['cards', slug],
+  queryFn: () => $fetch(`/api/cards/${slug.value}`),
 });
 
 const state = reactive({
@@ -31,18 +31,17 @@ const state = reactive({
 
 watch(
   card,
-  (newCard) => {
-    if (newCard) {
-      state.id = newCard.id ?? '';
-      state.name = newCard.name ?? '';
-      state.position = newCard.position ?? '';
-      state.company = newCard.company ?? '';
-      state.phone = newCard.phone ?? '';
-      state.email = newCard.email ?? '';
-      state.website = newCard.website ?? '';
-      state.avatarUrl = newCard.avatarUrl ?? '';
-      state.socials = JSON.parse(JSON.stringify(newCard.socials || []));
-    }
+  (val) => {
+    if (!val) return;
+    state.id = val.id ?? '';
+    state.name = val.firstName ?? '';
+    state.position = val.position ?? '';
+    state.company = val.company ?? '';
+    state.phone = val.phone ?? '';
+    state.email = val.email ?? '';
+    state.website = val.website ?? '';
+    state.avatarUrl = val.avatarUrl ?? '';
+    state.socials = JSON.parse(JSON.stringify(val.socials || []));
   },
   { immediate: true }
 );
@@ -112,13 +111,13 @@ const { mutate: updateCard, isPending: isSaving } = useMutation({
       body: {
         ...formData,
         avatarUrl: finalAvatarUrl,
-        id: cardId.value,
+        id: card.value?.id,
       },
     });
   },
   onSuccess: () => {
     clearSelection();
-    queryClient.invalidateQueries({ queryKey: ['cards', cardId.value] });
+    queryClient.invalidateQueries({ queryKey: ['cards', slug.value] });
     toast.add({
       title: 'Success',
       description: 'Card updated.',

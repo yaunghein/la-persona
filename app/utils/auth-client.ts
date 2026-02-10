@@ -17,7 +17,7 @@ export const signIn = async () => {
       : ROUTES.PLATFORM.ROOT;
   await authClient.signIn.social({
     provider: 'github',
-    callbackURL: redirectTo,
+    callbackURL: `/platform?redirectTo=${redirectTo}`,
   });
 };
 

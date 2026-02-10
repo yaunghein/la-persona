@@ -1,23 +1,61 @@
-import { z } from 'zod';
-import { and, eq } from 'drizzle-orm';
+import { nanoid } from 'nanoid';
+import { and, eq, isNull } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { card } from '~~/server/db/schema';
-import { findFreeCardByUserId } from '~~/server/db/queries/card';
-import { env } from '~~/server/utils/env';
-import { SelectUser, UpdateCard } from '~~/shared/types';
+import { UpdateCard } from '~~/shared/types';
 
-export const ensureUserHasFreeCard = async (user: SelectUser) => {
-  const existing = await findFreeCardByUserId(user.id);
-  if (existing) return existing;
-  const values = {
-    name: user.name,
-    position: 'Please Edit Position',
-    splineUrl: env.DEFAULT_SPLINE_URL,
-    userId: user.id,
-  };
-  const [inserted] = await db.insert(card).values(values).returning();
-  return inserted;
+import type { User } from 'better-auth';
+
+export const splitName = (fullName: string | null | undefined) => {
+  const name = fullName?.trim() || '';
+  if (!name) {
+    return { firstName: 'My', lastName: 'Card' };
+  }
+
+  const parts = name.split(/\s+/);
+  const firstName = parts[0];
+  const lastName = parts.length > 1 ? parts.slice(1).join(' ') : 'Card';
+
+  return { firstName, lastName };
 };
+
+export async function insertDefaultCard(user: User, organizationId: string) {
+  const { firstName, lastName } = splitName(user.name);
+  const [inserted] = await db
+    .insert(card)
+    .values({
+      firstName,
+      lastName,
+      slug: `${slugify(user.name)}-${nanoid()}`,
+      position: 'Professional',
+      userId: user.id,
+      organizationId,
+    })
+    .returning();
+  return inserted;
+}
+
+export async function claimUnassignedCard({
+  userId,
+  organizationId,
+  email,
+}: {
+  userId: string;
+  organizationId: string;
+  email: string;
+}) {
+  return await db
+    .update(card)
+    .set({ userId, updatedAt: new Date() })
+    .where(
+      and(
+        eq(card.organizationId, organizationId),
+        eq(card.email, email),
+        isNull(card.userId)
+      )
+    )
+    .returning();
+}
 
 export async function updateCard(userId: string, input: UpdateCard) {
   const { id, ...data } = input;

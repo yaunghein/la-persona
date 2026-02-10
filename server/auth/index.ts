@@ -1,10 +1,12 @@
 import { betterAuth } from 'better-auth';
 import { magicLink, admin, organization } from 'better-auth/plugins';
-import { createAuthMiddleware } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '../db';
-import { ensureUserHasFreeCard } from '../services/card';
 import { env } from '../utils/env';
+import {
+  setupDefaultOrganization,
+  getPersonalOrganizationByUserId,
+} from '~~/server/services/auth';
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -25,12 +27,28 @@ export const auth = betterAuth({
     admin(),
     organization(),
   ],
-  // hooks: {
-  //   after: createAuthMiddleware(async (ctx) => {
-  //     if (!ctx.path.startsWith('/callback')) return;
-  //     const session = ctx.context.newSession;
-  //     if (!session) return;
-  //     await ensureUserHasFreeCard(session.user as User); // ensureUserHasStandardCard
-  //   }),
-  // },
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          await setupDefaultOrganization(user);
+        },
+      },
+    },
+    session: {
+      create: {
+        before: async (session) => {
+          const organization = await getPersonalOrganizationByUserId(
+            session.userId
+          );
+          return {
+            data: {
+              ...session,
+              activeOrganizationId: organization?.id,
+            },
+          };
+        },
+      },
+    },
+  },
 });

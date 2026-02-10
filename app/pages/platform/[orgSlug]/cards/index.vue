@@ -66,7 +66,7 @@ const isSlideoverOpen = ref(false);
             color="primary"
             size="sm"
             class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
-            :href="`/platform/cards/${card.id}`"
+            :href="`/platform/cards/${card.slug}`"
           />
           <UButton
             icon="i-lucide-trash"

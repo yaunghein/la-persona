@@ -23,12 +23,12 @@ export const card = pgTable(
     socials: jsonb('socials')
       .$type<{ label: string; value: string }[]>()
       .default([]),
-    wallpaperUrl: text('wallpaper_url'),
-    qrCodeUrl: text('qr_code_url'),
-    organizationId: text().references(() => organization.id, {
-      onDelete: 'cascade',
-    }),
-    userId: text().references(() => user.id, { onDelete: 'cascade' }),
+    wallpaperUrl: text(),
+    qrCodeUrl: text(),
+    organizationId: text()
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    userId: text().references(() => user.id, { onDelete: 'set null' }),
     createdAt: timestamp().defaultNow().notNull(),
     updatedAt: timestamp()
       .defaultNow()
