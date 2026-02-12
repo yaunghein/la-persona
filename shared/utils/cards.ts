@@ -190,4 +190,24 @@ export const cards = [
       },
     ],
   },
+  {
+    id: 'banyarkyawkyaw-personal',
+    name: 'Ba Nyar Kyaw Kyaw',
+    spline: 'https://prod.spline.design/qQc4USf-oPiajKGo/scene.splinecode',
+    vcf: '/vcfs/banyarkyawkyaw-personal.vcf',
+    phone: '+959785596203',
+    email: 'banyarkk2000@gmail.com',
+    links: [
+      {
+        icon: '/images/card/linkedin.png',
+        href: 'https://www.linkedin.com/in/ba-nyar-kyaw-kyaw',
+        label: 'LinkedIn',
+      },
+      {
+        icon: '/images/card/github.png',
+        href: 'https://github.com/BaNyarKyawKyaw',
+        label: 'Github',
+      },
+    ],
+  },
 ];
