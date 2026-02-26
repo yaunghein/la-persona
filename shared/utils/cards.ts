@@ -210,4 +210,29 @@ export const cards = [
       },
     ],
   },
+  {
+    id: 'mattnay',
+    name: 'Matt Nay',
+    spline: 'https://prod.spline.design/IXGNuENXpF9WGEDJ/scene.splinecode',
+    vcf: '/vcfs/mattnay.vcf',
+    phone: '+95981900897',
+    email: 'mattnay.creative@gmail.com',
+    links: [
+      {
+        icon: '/images/card/instagram.png',
+        href: 'https://www.instagram.com/mattnay.creative',
+        label: 'Instagram',
+      },
+      {
+        icon: '/images/card/tiktok.png',
+        href: 'https://www.tiktok.com/@minimattyx',
+        label: 'Tiktok',
+      },
+      {
+        icon: '/images/card/line.png',
+        href: 'https://line.me/ti/p/xozdeyAnV2',
+        label: 'Line',
+      },
+    ],
+  },
 ];
