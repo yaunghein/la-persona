@@ -95,6 +95,7 @@ const toast = useToast();
 const isInfoOpen = ref(false);
 const route = useRoute();
 const router = useRouter();
+const orgSlug = computed(() => String(route.params.orgSlug || ''));
 
 const parseViewMode = (value: unknown): 'list' | 'grid' =>
   value === 'grid' ? 'grid' : 'list';
@@ -178,11 +179,7 @@ const gridContacts = computed<Contact[]>(() =>
 );
 
 const onCreateContact = () => {
-  toast.add({
-    title: 'Coming soon',
-    description: 'Create new contact flow will be wired next.',
-    color: 'neutral',
-  });
+  navigateTo(`/platform/${orgSlug.value}/contacts/add`);
 };
 
 const onExport = () => {

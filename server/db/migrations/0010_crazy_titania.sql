@@ -1,0 +1,1 @@
+ALTER TABLE "contact_exchange" ALTER COLUMN "card_id" DROP NOT NULL;

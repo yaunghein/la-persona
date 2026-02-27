@@ -71,6 +71,13 @@
       "when": 1770705206103,
       "tag": "0009_solid_thanos",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1772206826163,
+      "tag": "0010_crazy_titania",
+      "breakpoints": true
     }
   ]
 }
