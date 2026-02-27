@@ -133,7 +133,7 @@ export const cards = [
   {
     id: 'minhtetdipar',
     name: 'Min Htet Dipar',
-    spline: 'https://prod.spline.design/OGDRhHmEWgT91YFp/scene.splinecode',
+    spline: 'https://prod.spline.design/nSdVVus-r8frQQL4/scene.splinecode',
     vcf: '/vcfs/minhtetdipar.vcf',
     phone: '+66614644220',
     email: 'dipar@thesandstudio.com',
