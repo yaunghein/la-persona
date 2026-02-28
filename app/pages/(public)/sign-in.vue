@@ -1,9 +1,22 @@
 <script setup lang="ts">
 useSeoMeta({ ...getSeoTitle('Sign In - LA PERSONA') });
 
+import { Application } from '@splinetool/runtime';
+
 const toast = useToast();
+const loading = ref(false);
 const email = ref('');
 const isSigningIn = ref(false);
+
+onMounted(async () => {
+  loading.value = true;
+  const canvas = document.querySelector('#login-spline') as HTMLCanvasElement;
+  const spline = new Application(canvas);
+  spline.load(
+    'https://prod.spline.design/szr0-6Srx9EJxnil/scene.splinecode' +
+      `?v=${new Date().getTime()}`
+  );
+});
 
 const onGoogle = async () => {
   isSigningIn.value = true;
@@ -40,7 +53,12 @@ const onMagicLink = () => {
 <template>
   <div class="min-h-screen bg-dark">
     <div class="mx-auto flex min-h-screen">
-      <div class="hidden w-1/2 bg-dark lg:block" />
+      <div class="w-1/2 bg-dark relative overflow-hidden">
+        <canvas
+          id="login-spline"
+          class="h-full w-full absolute inset-0"
+        ></canvas>
+      </div>
 
       <div
         class="relative w-1/2 flex items-center justify-center bg-[#171717] px-6 py-16"
