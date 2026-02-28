@@ -1,90 +1,379 @@
 <script setup lang="ts">
-const phoneModels = ['iPhone 15 Pro Max', 'iPhone 15 / 14'];
+import { useQuery } from '@tanstack/vue-query';
 
-const selectedModel = ref(phoneModels[0]);
+type PhoneModel = {
+  label: string;
+  value: string;
+  width: number;
+  height: number;
+};
+
+const route = useRoute();
+const runtimeConfig = useRuntimeConfig();
+const toast = useToast();
+const slug = computed(() => route.params.slug as string);
+
+const phoneModels: PhoneModel[] = [
+  {
+    label: 'iPhone 15 Pro Max',
+    value: 'iphone-15-pro-max',
+    width: 1290,
+    height: 2796,
+  },
+  {
+    label: 'iPhone 15 / 14 / 13',
+    value: 'iphone-15-14-13',
+    width: 1179,
+    height: 2556,
+  },
+  { label: 'iPhone 15 Pro', value: 'iphone-15-pro', width: 1179, height: 2556 },
+  {
+    label: 'Samsung S24 Ultra',
+    value: 'samsung-s24-ultra',
+    width: 1440,
+    height: 3120,
+  },
+  {
+    label: 'Google Pixel 8 Pro',
+    value: 'pixel-8-pro',
+    width: 344,
+    height: 2992,
+  },
+];
+
+const selectedModel = ref(phoneModels[0]!.value);
 const isGeneratingWallpaper = ref(false);
 const isGeneratingQr = ref(false);
 
-const downloadWallpaper = async () => {
+const { data: card, isLoading } = useQuery<SelectCard>({
+  queryKey: ['cards', slug],
+  queryFn: () => $fetch(`/api/cards/${slug.value}`),
+});
+
+const selectedModelConfig = computed(
+  () =>
+    phoneModels.find((model) => model.value === selectedModel.value) ??
+    phoneModels[0]!
+);
+
+function resolveAssetUrl(path?: string | null) {
+  if (!path) return '';
+  const raw = path.trim();
+  if (!raw) return '';
+
+  // Support absolute URLs and inline image payloads persisted in DB.
+  if (
+    /^(https?:)?\/\//i.test(raw) ||
+    raw.startsWith('data:') ||
+    raw.startsWith('blob:')
+  ) {
+    return raw.startsWith('//') ? `https:${raw}` : raw;
+  }
+
+  // Support s3://bucket/key values.
+  if (raw.startsWith('s3://')) {
+    const withoutScheme = raw.slice(5);
+    const firstSlash = withoutScheme.indexOf('/');
+    if (firstSlash !== -1) {
+      const bucketFromValue = withoutScheme.slice(0, firstSlash);
+      const keyFromValue = withoutScheme.slice(firstSlash + 1);
+      const encodedKey = keyFromValue
+        .split('/')
+        .map((part) => encodeURIComponent(part))
+        .join('/');
+      const region = runtimeConfig.public.awsRegion;
+      return `https://${bucketFromValue}.s3.${region}.amazonaws.com/${encodedKey}`;
+    }
+  }
+
+  const bucket = runtimeConfig.public.awsBucketName;
+  const region = runtimeConfig.public.awsRegion;
+  const normalizedKey = raw.replace(/^\/+/, '');
+  const encodedKey = normalizedKey
+    .split('/')
+    .map((part) => encodeURIComponent(part))
+    .join('/');
+  return `https://${bucket}.s3.${region}.amazonaws.com/${encodedKey}`;
+}
+
+const wallpaperAssetUrl = computed(() =>
+  resolveAssetUrl(card.value?.wallpaperUrl)
+);
+const qrAssetUrl = computed(() => resolveAssetUrl(card.value?.qrCodeUrl));
+
+const previewWallpaperFrameStyle = computed(() => ({
+  aspectRatio: `${selectedModelConfig.value.width} / ${selectedModelConfig.value.height}`,
+}));
+
+function triggerDownloadFromBlob(blob: Blob, fileName: string) {
+  const blobUrl = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(blobUrl);
+}
+
+async function triggerDirectFileDownload(url: string, fileName: string) {
+  const response = await fetch(url, { mode: 'cors' });
+  if (!response.ok) throw new Error('Failed to download file');
+  const blob = await response.blob();
+  triggerDownloadFromBlob(blob, fileName);
+}
+
+function getSafeFileSegment(input?: string) {
+  return (input || 'card').replace(/[^a-z0-9-_]+/gi, '-').toLowerCase();
+}
+
+async function loadImage(url: string) {
+  return await new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('Failed to load image'));
+    image.src = url;
+  });
+}
+
+function getCenterCropRect(
+  sourceWidth: number,
+  sourceHeight: number,
+  targetWidth: number,
+  targetHeight: number
+) {
+  const sourceAspect = sourceWidth / sourceHeight;
+  const targetAspect = targetWidth / targetHeight;
+
+  if (sourceAspect > targetAspect) {
+    const cropWidth = sourceHeight * targetAspect;
+    return {
+      sx: (sourceWidth - cropWidth) / 2,
+      sy: 0,
+      sw: cropWidth,
+      sh: sourceHeight,
+    };
+  }
+
+  const cropHeight = sourceWidth / targetAspect;
+  return {
+    sx: 0,
+    sy: (sourceHeight - cropHeight) / 2,
+    sw: sourceWidth,
+    sh: cropHeight,
+  };
+}
+
+async function downloadWallpaper() {
+  if (!wallpaperAssetUrl.value) {
+    toast.add({
+      title: 'No wallpaper found',
+      description: 'Please upload wallpaper first.',
+      color: 'warning',
+    });
+    return;
+  }
+
   isGeneratingWallpaper.value = true;
   try {
-    console.log('Generating wallpaper for:', selectedModel.value);
+    const image = await loadImage(wallpaperAssetUrl.value);
+    const { width, height, label } = selectedModelConfig.value;
+    const crop = getCenterCropRect(
+      image.naturalWidth,
+      image.naturalHeight,
+      width,
+      height
+    );
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Canvas context unavailable');
+
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    context.drawImage(
+      image,
+      crop.sx,
+      crop.sy,
+      crop.sw,
+      crop.sh,
+      0,
+      0,
+      width,
+      height
+    );
+
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((result) => {
+        if (!result)
+          return reject(new Error('Failed to create wallpaper file'));
+        resolve(result);
+      }, 'image/png');
+    });
+
+    const cardSlug = getSafeFileSegment(card.value?.slug);
+    const modelSlug = getSafeFileSegment(label);
+    triggerDownloadFromBlob(blob, `${cardSlug}-wallpaper-${modelSlug}.png`);
+  } catch (error: any) {
+    toast.add({
+      title: 'Wallpaper download failed',
+      description: error?.message || 'Unable to prepare wallpaper.',
+      color: 'error',
+    });
   } finally {
     isGeneratingWallpaper.value = false;
   }
-};
+}
 
-const downloadQr = async () => {
+async function downloadQr() {
+  if (!qrAssetUrl.value) {
+    toast.add({
+      title: 'No QR code found',
+      description: 'Please generate QR code first.',
+      color: 'warning',
+    });
+    return;
+  }
+
   isGeneratingQr.value = true;
-  // Trigger QR generation or download existing
-  isGeneratingQr.value = false;
-};
+  try {
+    const cardSlug = getSafeFileSegment(card.value?.slug);
+    await triggerDirectFileDownload(qrAssetUrl.value, `${cardSlug}-qr.png`);
+  } catch (error: any) {
+    toast.add({
+      title: 'QR download failed',
+      description: error?.message || 'Unable to download QR code.',
+      color: 'error',
+    });
+  } finally {
+    isGeneratingQr.value = false;
+  }
+}
 </script>
 
 <template>
-  <div class="space-y-4 grid w-full gap-x-5 mt-10">
-    <div>
-      <h2 class="text-xl font-semibold text-white uppercase tracking-tight">
-        QR & Wallpaper
-      </h2>
-      <p class="text-sm text-gray-400 mt-2 max-w-xl">
-        Choose your phone model and download the wallpaper that fits perfectly
-        on your lock screen or download only QR to share your business card
-        wherever you see fit.
-      </p>
+  <div class="rounded-[8px] bg-[#171717] p-8">
+    <div v-if="isLoading" class="space-y-8">
+      <div class="space-y-3">
+        <USkeleton class="h-6 w-52" />
+        <USkeleton class="h-4 w-120" />
+      </div>
+      <div
+        class="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_auto_auto] lg:items-start"
+      >
+        <USkeleton class="h-[80px] w-full" />
+        <USkeleton class="h-[264px] w-[240px]" />
+        <USkeleton class="h-[264px] w-[240px]" />
+      </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-      <div class="lg:col-span-5 space-y-4">
+    <div v-else class="space-y-8">
+      <div class="space-y-4">
+        <h2
+          class="text-[20px] font-medium uppercase tracking-widest text-white"
+        >
+          QR & Wallpaper
+        </h2>
+        <p class="max-w-160 text-sm leading-[21px] text-[#8b8b8b]">
+          Choose your phone model and download the wallpaper that fits perfectly
+          on your lock screen or download only QR to share your business card
+          wherever you see fit.
+        </p>
+      </div>
+
+      <div
+        class="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_auto_auto] lg:items-start"
+      >
         <UFormField
           label="Choose Your Phone Model"
           name="phoneModel"
-          class="text-gray-300"
+          class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
         >
           <USelectMenu
             v-model="selectedModel"
             :items="phoneModels"
-            placeholder="Select a model"
+            value-key="value"
+            label-key="label"
+            :search-input="false"
             class="w-full"
-            size="xl"
+            :ui="{
+              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white',
+              placeholder: 'text-white/50',
+              trailingIcon: 'text-[#8b8b8b]',
+            }"
           />
         </UFormField>
-      </div>
 
-      <div class="lg:col-span-7 flex flex-wrap gap-6">
-        <div class="flex-1 min-w-50 flex flex-col items-center">
+        <div class="flex flex-col items-center gap-6">
           <div
-            class="relative group aspect-square w-full max-w-45 bg-[#1a1a1a] border border-white/10 rounded-xl overflow-hidden flex items-center justify-center mb-3"
+            class="flex h-[240px] w-[240px] flex-col items-center justify-center gap-[6px] overflow-hidden rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4"
           >
-            image
+            <p class="text-sm text-white/50">Preview</p>
+            <div
+              class="flex h-40 w-40 items-center justify-center rounded-[4px] bg-[#1c1c1c]"
+            >
+              <div
+                class="h-full max-w-full overflow-hidden rounded-[4px]"
+                :style="previewWallpaperFrameStyle"
+              >
+                <img
+                  v-if="wallpaperAssetUrl"
+                  :src="wallpaperAssetUrl"
+                  alt="Wallpaper preview"
+                  class="h-full w-full object-cover"
+                />
+                <div
+                  v-else
+                  class="flex h-full w-full items-center justify-center text-xs text-white/50"
+                >
+                  No wallpaper
+                </div>
+              </div>
+            </div>
+            <p class="text-sm text-white">{{ selectedModelConfig.label }}</p>
           </div>
-          <p class="text-xs text-gray-500 mb-4">
-            {{ phoneModels.find((m) => m === selectedModel) }}
-          </p>
+
           <UButton
             label="Download Wallpaper"
             icon="i-lucide-download"
-            color="neutral"
-            variant="solid"
-            class="rounded-full px-6"
+            class="rounded-full bg-white px-6 text-dark hover:bg-white/90"
             :loading="isGeneratingWallpaper"
             @click="downloadWallpaper"
           />
         </div>
 
-        <div class="flex-1 min-w-50 flex flex-col items-center">
-          <div
-            class="relative group aspect-square w-full max-w-45 bg-[#1a1a1a] border border-white/10 rounded-xl overflow-hidden flex items-center justify-center mb-3"
+        <div class="flex flex-col items-center gap-6">
+          <button
+            type="button"
+            class="flex h-[240px] w-[240px] flex-col items-center justify-center gap-[6px] overflow-hidden rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4 text-left transition hover:border-white/30"
+            @click="downloadQr"
           >
-            image
-          </div>
-          <p class="text-xs text-gray-500 mb-4">QR Only</p>
+            <p class="text-sm text-white/50">Preview</p>
+            <div
+              class="flex h-40 w-40 items-center justify-center rounded-[4px] bg-[#1c1c1c] p-1"
+            >
+              <img
+                v-if="qrAssetUrl"
+                :src="qrAssetUrl"
+                alt="QR preview"
+                class="h-full w-full rounded-[2px] object-contain"
+              />
+              <div
+                v-else
+                class="flex h-full w-full items-center justify-center text-xs text-white/50"
+              >
+                No QR
+              </div>
+            </div>
+            <p class="text-sm text-white">QR Only</p>
+          </button>
+
           <UButton
             label="Download QR"
             icon="i-lucide-download"
-            color="neutral"
-            variant="solid"
-            class="rounded-full px-6"
+            class="rounded-full bg-white px-6 text-dark hover:bg-white/90"
             :loading="isGeneratingQr"
             @click="downloadQr"
           />
