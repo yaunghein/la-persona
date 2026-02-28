@@ -19,7 +19,8 @@ const { data: card, isLoading } = useQuery<SelectCard>({
 
 const state = reactive({
   id: '',
-  name: '',
+  firstName: '',
+  lastName: '',
   position: '',
   company: '',
   phone: '',
@@ -34,7 +35,8 @@ watch(
   (val) => {
     if (!val) return;
     state.id = val.id ?? '';
-    state.name = val.firstName ?? '';
+    state.firstName = val.firstName ?? '';
+    state.lastName = val.lastName ?? '';
     state.position = val.position ?? '';
     state.company = val.company ?? '';
     state.phone = val.phone ?? '';
@@ -77,6 +79,11 @@ function clearSelection() {
 function removeCurrentPhoto() {
   clearSelection();
   state.avatarUrl = '';
+}
+
+function triggerFilePicker() {
+  const input = document.getElementById('avatar-input') as HTMLInputElement | null;
+  input?.click();
 }
 
 const { mutate: updateCard, isPending: isSaving } = useMutation({
@@ -156,7 +163,7 @@ const items = ['Facebook', 'Instagram', 'LinkedIn', 'Twitter', 'Website'];
 </script>
 
 <template>
-  <div class="bg-elevated/25 rounded-md mx-auto p-6 mt-3">
+  <div class="rounded-[8px] bg-[#171717] p-8">
     <div v-if="isLoading" class="space-y-8">
       <div class="flex items-center gap-4">
         <USkeleton class="h-24 w-24 rounded-full" />
@@ -174,7 +181,17 @@ const items = ['Facebook', 'Instagram', 'LinkedIn', 'Twitter', 'Website'];
       @error="onFormError"
       class="space-y-8"
     >
-      <div class="flex items-center gap-6 pb-6">
+      <div class="space-y-4">
+        <h2 class="text-[20px] font-medium uppercase tracking-widest text-white">
+          Contact Information
+        </h2>
+        <p class="max-w-160 text-sm leading-[21px] text-[#8b8b8b]">
+          This information will be visible on your public profile page and
+          exchange contact feature. Please share only what you are comfortable.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-6 pt-1">
         <div class="relative">
           <UAvatar
             :src="displayAvatar || undefined"
@@ -193,7 +210,7 @@ const items = ['Facebook', 'Instagram', 'LinkedIn', 'Twitter', 'Website'];
           />
         </div>
 
-        <div class="flex flex-col gap-2">
+        <div class="flex flex-col gap-3">
           <div class="flex items-center gap-2">
             <input
               type="file"
@@ -203,59 +220,129 @@ const items = ['Facebook', 'Instagram', 'LinkedIn', 'Twitter', 'Website'];
               @change="onFileChange"
             />
             <UButton
-              label="Select Photo"
-              icon="i-lucide-image"
+              label="Upload Photo"
+              icon="i-lucide-upload"
               color="neutral"
-              variant="subtle"
+              variant="soft"
               size="sm"
-              @click="
-                () =>
-                  (
-                    $el.querySelector('#avatar-input') as HTMLInputElement
-                  ).click()
-              "
+              class="rounded-full bg-[#232323] px-4 text-white hover:bg-[#2a2a2a]"
+              @click="triggerFilePicker"
             />
             <span
               v-if="selectedFile"
-              class="text-xs text-primary-500 font-medium italic"
+              class="text-xs text-primary-500 font-medium"
               >Ready to upload</span
             >
           </div>
-          <p class="text-xs text-gray-500">JPG, PNG or WebP. Max 800KB.</p>
+          <p class="text-xs text-[#8b8b8b]">JPG, PNG or WebP. Max 800KB.</p>
         </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-        <UFormField label="Full Name" name="name">
-          <UInput v-model="state.name" class="w-full" />
+        <UFormField
+          label="First Name"
+          name="firstName"
+          class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        >
+          <UInput
+            v-model="state.firstName"
+            class="w-full"
+            :ui="{
+              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            }"
+          />
         </UFormField>
-        <UFormField label="Professional Title" name="position">
-          <UInput v-model="state.position" class="w-full" />
+        <UFormField
+          label="Last Name"
+          name="lastName"
+          class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        >
+          <UInput
+            v-model="state.lastName"
+            class="w-full"
+            :ui="{
+              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            }"
+          />
         </UFormField>
-        <UFormField label="Company" name="company">
-          <UInput v-model="state.company" class="w-full" />
+        <UFormField
+          label="Professional Title / Role"
+          name="position"
+          class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        >
+          <UInput
+            v-model="state.position"
+            class="w-full"
+            :ui="{
+              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            }"
+          />
         </UFormField>
-        <UFormField label="Phone" name="phone">
-          <UInput v-model="state.phone" class="w-full" />
+        <UFormField
+          label="Company / Brand Name"
+          name="company"
+          class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        >
+          <UInput
+            v-model="state.company"
+            class="w-full"
+            :ui="{
+              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            }"
+          />
         </UFormField>
-        <UFormField label="Email" name="email">
-          <UInput v-model="state.email" class="w-full" />
+        <UFormField
+          label="Phone Number"
+          name="phone"
+          class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        >
+          <UInput
+            v-model="state.phone"
+            class="w-full"
+            :ui="{
+              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            }"
+          />
         </UFormField>
-        <UFormField label="Website" name="website">
-          <UInput v-model="state.website" class="w-full" />
+        <UFormField
+          label="Email Address"
+          name="email"
+          class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        >
+          <UInput
+            v-model="state.email"
+            class="w-full"
+            :ui="{
+              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            }"
+          />
+        </UFormField>
+        <UFormField
+          label="Personal Website / Portfolio"
+          name="website"
+          class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        >
+          <UInput
+            v-model="state.website"
+            class="w-full"
+            :ui="{
+              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            }"
+          />
         </UFormField>
       </div>
 
       <div class="space-y-4 pt-6">
         <div class="flex items-center justify-between">
-          <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
-            Social Links
+          <h3 class="text-sm font-medium text-white">
+            Social / Professional Links
           </h3>
           <UButton
-            label="Add New"
+            label="Add Link"
             icon="i-lucide-plus"
             size="xs"
-            variant="ghost"
+            variant="soft"
+            class="rounded-full bg-[#232323] px-3 text-white hover:bg-[#2a2a2a]"
             @click="addLink"
           />
         </div>
@@ -270,15 +357,26 @@ const items = ['Facebook', 'Instagram', 'LinkedIn', 'Twitter', 'Website'];
               :items="items"
               class="w-full"
               placeholder="Select Social Media"
+              :ui="{
+                base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white',
+              }"
             />
           </UFormField>
           <UFormField class="flex-1" :name="`socials.${index}.value`">
-            <UInput v-model="link.value" placeholder="URL" class="w-full" />
+            <UInput
+              v-model="link.value"
+              placeholder="URL"
+              class="w-full"
+              :ui="{
+                base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+              }"
+            />
           </UFormField>
           <UButton
             icon="i-lucide-x"
             color="error"
             variant="ghost"
+            class="text-[#8b8b8b] hover:bg-[#232323]"
             @click="removeLink(index)"
           />
         </div>
@@ -286,12 +384,23 @@ const items = ['Facebook', 'Instagram', 'LinkedIn', 'Twitter', 'Website'];
 
       <div class="flex justify-end pt-8">
         <UButton
+          :to="`/yaunghein/${slug}`"
+          target="_blank"
+          color="neutral"
+          variant="ghost"
+          icon="i-lucide-eye"
+          class="mr-3 rounded-full px-4 text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+        >
+          Preview Your Card
+        </UButton>
+        <UButton
           type="submit"
           size="lg"
-          class="px-10 rounded-full"
+          class="rounded-full bg-[#232323] px-6 text-white hover:bg-[#2a2a2a]"
+          icon="i-lucide-square-pen"
           :loading="isSaving"
         >
-          Save Changes
+          Save
         </UButton>
       </div>
     </UForm>
