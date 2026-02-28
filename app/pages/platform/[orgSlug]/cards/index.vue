@@ -6,10 +6,20 @@ definePageMeta({
 useSeoMeta({ ...getSeoTitle('Cards - LA PERSONA') });
 
 const route = useRoute();
+const runtimeConfig = useRuntimeConfig();
 
 const { data: cards, pending, error } = await useFetch<CardDTO[]>('/api/cards');
 
 const isSlideoverOpen = ref(false);
+
+const getS3Url = (path?: string | null) => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+
+  const bucket = runtimeConfig.public.awsBucketName;
+  const region = runtimeConfig.public.awsRegion;
+  return `https://${bucket}.s3.${region}.amazonaws.com/${path}`;
+};
 </script>
 
 <template>
@@ -39,10 +49,21 @@ const isSlideoverOpen = ref(false);
   </div>
 
   <div v-if="cards" class="grid grid-cols-3">
-    <UCard v-for="card in cards" variant="outline" class="bg-white/2">
+    <UCard
+      v-for="card in cards"
+      variant="outline"
+      class="bg-white/2"
+      :ui="{ body: 'p-0 sm:p-0' }"
+    >
       <div class="aspect-5/3 relative">
+        <img
+          v-if="card.cardBackUrl"
+          :src="getS3Url(card.cardBackUrl)"
+          :alt="`${card.firstName} ${card.lastName || ''} card back`"
+          class="h-full w-full object-cover"
+        />
         <UBadge
-          class="absolute -top-4 -right-4 bg-white/10 uppercase text-white font-semibold"
+          class="absolute top-4 right-4 bg-[#232323] uppercase text-white font-semibold"
           color="neutral"
           size="sm"
         >

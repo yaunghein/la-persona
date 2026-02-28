@@ -25,6 +25,7 @@ export const card = pgTable(
       .default([]),
     wallpaperUrl: text(),
     qrCodeUrl: text(),
+    cardBackUrl: text(),
     organizationId: text()
       .notNull()
       .references(() => organization.id, { onDelete: 'cascade' }),

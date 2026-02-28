@@ -78,6 +78,13 @@
       "when": 1772206826163,
       "tag": "0010_crazy_titania",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1772292076296,
+      "tag": "0011_chilly_vengeance",
+      "breakpoints": true
     }
   ]
 }

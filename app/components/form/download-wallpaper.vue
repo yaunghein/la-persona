@@ -36,7 +36,7 @@ const phoneModels: PhoneModel[] = [
   {
     label: 'Google Pixel 8 Pro',
     value: 'pixel-8-pro',
-    width: 344,
+    width: 844,
     height: 2992,
   },
 ];
@@ -56,50 +56,17 @@ const selectedModelConfig = computed(
     phoneModels[0]!
 );
 
-function resolveAssetUrl(path?: string | null) {
+function getS3Url(path?: string | null) {
   if (!path) return '';
-  const raw = path.trim();
-  if (!raw) return '';
-
-  // Support absolute URLs and inline image payloads persisted in DB.
-  if (
-    /^(https?:)?\/\//i.test(raw) ||
-    raw.startsWith('data:') ||
-    raw.startsWith('blob:')
-  ) {
-    return raw.startsWith('//') ? `https:${raw}` : raw;
-  }
-
-  // Support s3://bucket/key values.
-  if (raw.startsWith('s3://')) {
-    const withoutScheme = raw.slice(5);
-    const firstSlash = withoutScheme.indexOf('/');
-    if (firstSlash !== -1) {
-      const bucketFromValue = withoutScheme.slice(0, firstSlash);
-      const keyFromValue = withoutScheme.slice(firstSlash + 1);
-      const encodedKey = keyFromValue
-        .split('/')
-        .map((part) => encodeURIComponent(part))
-        .join('/');
-      const region = runtimeConfig.public.awsRegion;
-      return `https://${bucketFromValue}.s3.${region}.amazonaws.com/${encodedKey}`;
-    }
-  }
+  if (path.startsWith('http')) return path;
 
   const bucket = runtimeConfig.public.awsBucketName;
   const region = runtimeConfig.public.awsRegion;
-  const normalizedKey = raw.replace(/^\/+/, '');
-  const encodedKey = normalizedKey
-    .split('/')
-    .map((part) => encodeURIComponent(part))
-    .join('/');
-  return `https://${bucket}.s3.${region}.amazonaws.com/${encodedKey}`;
+  return `https://${bucket}.s3.${region}.amazonaws.com/${path}`;
 }
 
-const wallpaperAssetUrl = computed(() =>
-  resolveAssetUrl(card.value?.wallpaperUrl)
-);
-const qrAssetUrl = computed(() => resolveAssetUrl(card.value?.qrCodeUrl));
+const wallpaperAssetUrl = computed(() => getS3Url(card.value?.wallpaperUrl));
+const qrAssetUrl = computed(() => getS3Url(card.value?.qrCodeUrl));
 
 const previewWallpaperFrameStyle = computed(() => ({
   aspectRatio: `${selectedModelConfig.value.width} / ${selectedModelConfig.value.height}`,
