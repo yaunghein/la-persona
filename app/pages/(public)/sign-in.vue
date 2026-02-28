@@ -64,13 +64,13 @@ const onMagicLink = () => {
         class="relative w-1/2 flex items-center justify-center bg-[#171717] px-6 py-16"
       >
         <div class="w-full max-w-[485px] space-y-8">
-          <div class="mx-auto max-w-[254px] space-y-8 text-center">
+          <div class="mx-auto max-w-[254px] space-y-6 text-center">
             <h1
-              class="text-[28px] font-medium leading-none tracking-widest text-white uppercase"
+              class="text-[1.75rem] font-medium leading-none tracking-widest text-white uppercase"
             >
               Sign In
             </h1>
-            <p class="text-sm leading-[21px] text-[#8b8b8b]">
+            <p class="text-sm leading-[21px] text-muted">
               Access your cards, manage your contacts, and update your presence.
             </p>
           </div>
@@ -85,7 +85,7 @@ const onMagicLink = () => {
               @click="onGoogle"
             >
               <template #leading>
-                <UIcon name="i-simple-icons-google" class="size-4" />
+                <UIcon name="i-simple-icons-google" class="size-[0.9rem]" />
               </template>
               Continue with Google
             </UButton>
