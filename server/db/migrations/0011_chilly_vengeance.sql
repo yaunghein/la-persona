@@ -1,1 +1,0 @@
-ALTER TABLE "card" ADD COLUMN "card_back_url" text;
