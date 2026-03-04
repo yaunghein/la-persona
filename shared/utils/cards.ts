@@ -219,6 +219,11 @@ export const cards = [
     email: 'mattnay.creative@gmail.com',
     links: [
       {
+        icon: 'world',
+        href: 'https://mattnaycreative.com',
+        label: 'Go to Website',
+      },
+      {
         icon: '/images/card/instagram.png',
         href: 'https://www.instagram.com/mattnay.creative',
         label: 'Instagram',
