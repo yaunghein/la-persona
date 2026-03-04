@@ -94,6 +94,21 @@ export const cards = [
         label: 'Direct Message',
       },
       {
+        icon: 'buyMeCoffee',
+        action: 'buyMeCoffee',
+        label: 'Buy Me Coffee',
+      },
+      {
+        icon: 'saveContact',
+        action: 'saveContact',
+        label: 'Save Contact',
+      },
+      {
+        icon: '/images/card/tiktok.png',
+        href: 'https://www.tiktok.com/@minhtetmess',
+        label: 'Tiktok',
+      },
+      {
         icon: '/images/card/facebook.png',
         href: 'https://www.facebook.com/khris.min.2411/',
         label: 'Facebook',

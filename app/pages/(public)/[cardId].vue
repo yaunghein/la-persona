@@ -90,7 +90,35 @@ const iconMap: Record<string, string | ConcreteComponent> = {
   world: resolveComponent('IconWorld'),
   directMessage: resolveComponent('IconDirectMessage'),
   arrowDown: resolveComponent('IconArrowDown'),
+  buyMeCoffee: resolveComponent('IconBuyMeCoffee'),
+  saveContact: resolveComponent('IconSaveContact'),
 };
+
+function triggerDownload(url: string, fileName: string) {
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = fileName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+}
+
+function onActionClick(link: { action?: string; label: string }) {
+  switch (link.action) {
+    case 'buyMeCoffee':
+      triggerDownload('/images/mhm-laos-qr.jpg', 'mhm-laos-qr.jpg');
+      break;
+    case 'saveContact':
+      if (!card?.vcf) {
+        console.log('[card-action] missing vcf', link);
+        return;
+      }
+      triggerDownload(card.vcf, `${card.id}.vcf`);
+      break;
+    default:
+      console.log('[card-action]', link.action || link.label, link);
+  }
+}
 </script>
 
 <template>
@@ -313,8 +341,30 @@ const iconMap: Record<string, string | ConcreteComponent> = {
           class="hide-scrollbar mt-8 flex justify-start gap-3 overflow-x-scroll px-5"
         >
           <template v-for="(link, index) in card.links" :key="index">
+            <button
+              v-if="link.action && link.icon.includes('.')"
+              type="button"
+              class="flex shrink-0 flex-col items-center gap-4 transition duration-750"
+              :class="isMenuOpen ? 'opacity-100' : 'opacity-0'"
+              :style="{ transitionDelay: `${(index + 1) * 100}ms` }"
+              @click="onActionClick(link)"
+            >
+              <div
+                class="grid aspect-square w-[4.56rem] overflow-hidden rounded-full bg-white/10"
+              >
+                <img
+                  :src="link.icon"
+                  :alt="link.label"
+                  class="aspect-square h-full w-full object-cover"
+                />
+              </div>
+              <div class="max-w-16 text-center text-xs leading-[1.1]">
+                {{ link.label }}
+              </div>
+            </button>
+
             <a
-              v-if="link.icon.includes('.')"
+              v-else-if="link.href && link.icon.includes('.')"
               :href="link.href"
               target="_blank"
               class="flex shrink-0 flex-col items-center gap-4 transition duration-750"
@@ -335,8 +385,28 @@ const iconMap: Record<string, string | ConcreteComponent> = {
               </div>
             </a>
 
+            <button
+              v-else-if="link.action && !link.icon.includes('.')"
+              type="button"
+              class="flex shrink-0 flex-col items-center gap-4 transition duration-750"
+              :class="isMenuOpen ? 'opacity-100' : 'opacity-0'"
+              :style="{ transitionDelay: `${(index + 1) * 100}ms` }"
+              @click="onActionClick(link)"
+            >
+              <div
+                class="grid aspect-square w-[4.56rem] place-items-center rounded-full bg-white/10"
+              >
+                <div class="aspect-square w-8">
+                  <component :is="iconMap[link.icon]" />
+                </div>
+              </div>
+              <div class="max-w-16 text-center text-xs leading-[1.1]">
+                {{ link.label }}
+              </div>
+            </button>
+
             <a
-              v-else
+              v-else-if="link.href && !link.icon.includes('.')"
               :href="link.href"
               target="_blank"
               class="flex shrink-0 flex-col items-center gap-4 transition duration- 750"

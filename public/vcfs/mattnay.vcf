@@ -16,15 +16,15 @@ TEL;TYPE=HOME,FAX:
 TEL;TYPE=WORK,FAX:
 ADR;CHARSET=UTF-8;TYPE=HOME:;;;;;;
 ADR;CHARSET=UTF-8;TYPE=WORK:;;;;;;
-TITLE;CHARSET=UTF-8:
-ORG;CHARSET=UTF-8:F&B Visual Content Creator
-URL;type=WORK;CHARSET=UTF-8:
+TITLE;CHARSET=UTF-8:F&B Visual Content Creator
+ORG;CHARSET=UTF-8:
+URL;type=WORK;CHARSET=UTF-8:https://mattnaycreative.com
 NOTE;CHARSET=UTF-8:
 URL;TYPE=facebook:
 URL;TYPE=twitter:
 URL;TYPE=linkedin:
-URL;TYPE=instagram:www.instagram.com/mattnay.creative
+URL;TYPE=instagram:https://www.instagram.com/mattnay.creative
 URL;TYPE=youtube:
-URL;TYPE=tiktok:www.tiktok.com/@minimattyx
+URL;TYPE=tiktok:https://www.tiktok.com/@minimattyx
 REV:2023-03-27T10:56:19.464Z
 END:VCARD
