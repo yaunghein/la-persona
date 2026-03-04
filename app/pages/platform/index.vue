@@ -2,7 +2,15 @@
 import { useQuery } from '@tanstack/vue-query';
 
 const router = useRouter();
+const route = useRoute();
 const activeOrg = authClient.useActiveOrganization();
+
+const redirectTo = computed(() => {
+  const value = route.query.redirectTo;
+  if (typeof value !== 'string') return null;
+  if (!value.startsWith('/')) return null;
+  return value;
+});
 
 const { data: cards, isError } = useQuery({
   queryKey: ['cards', () => activeOrg.value.data?.slug],
@@ -24,9 +32,9 @@ watch(
 
       if (card && card.socials && card.socials?.length === 0) {
         router.push(`/platform/${org.data?.slug}/cards/${card.slug}/setup`);
-      } else {
-        router.push(`/platform/${org.data?.slug}`);
       }
+    } else {
+      router.push(redirectTo.value || `/platform/${org.data?.slug}`);
     }
   },
   { immediate: true }

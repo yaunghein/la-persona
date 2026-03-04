@@ -1,6 +1,7 @@
 import { auth } from '~~/server/auth';
 import { db } from '~~/server/db';
 import { card } from '~~/server/db/schema';
+import { ensureCardTrialSubscription } from '~~/server/services/subscription';
 import { z } from 'zod';
 
 const CreateCardSchema = z.object({
@@ -46,6 +47,8 @@ export default defineEventHandler(async (event) => {
         type: result.data.type,
       })
       .returning();
+
+    await ensureCardTrialSubscription(newCard.id, newCard.createdAt);
 
     return newCard;
   } catch (e) {

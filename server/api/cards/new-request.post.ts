@@ -1,6 +1,7 @@
 import { auth } from '~~/server/auth';
 import { db } from '~~/server/db';
-import { cardRequest } from '~~/server/db/schema';
+import { card, cardRequest } from '~~/server/db/schema';
+import { and, eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   const session = await auth.api.getSession({ headers: event.headers });
@@ -27,6 +28,35 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
+    if (body.data.type === 'existing_design') {
+      const sourceCardId = body.data.cardData?.sourceCardId;
+      if (!sourceCardId) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: 'Please choose an existing card design.',
+        });
+      }
+
+      const activeOrgId = session.session.activeOrganizationId;
+      if (!activeOrgId) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: 'No active organization selected.',
+        });
+      }
+
+      const sourceCard = await db.query.card.findFirst({
+        where: and(eq(card.id, sourceCardId), eq(card.organizationId, activeOrgId)),
+      });
+
+      if (!sourceCard) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: 'Selected card design is invalid.',
+        });
+      }
+    }
+
     const [inserted] = await db
       .insert(cardRequest)
       .values({

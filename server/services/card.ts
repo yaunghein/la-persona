@@ -3,6 +3,7 @@ import { and, eq, isNull } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { card } from '~~/server/db/schema';
 import { env } from '~~/server/utils/env';
+import { ensureCardTrialSubscription } from '~~/server/services/subscription';
 import type { UpdateCard } from '~~/shared/types';
 
 import type { User } from 'better-auth';
@@ -34,6 +35,7 @@ export async function insertDefaultCard(user: User, organizationId: string) {
       organizationId,
     })
     .returning();
+  await ensureCardTrialSubscription(inserted.id, inserted.createdAt);
   return inserted;
 }
 

@@ -1,0 +1,2 @@
+ALTER TABLE "card_subscription" ADD CONSTRAINT "card_subscription_plan_code_subscription_plan_code_fk" FOREIGN KEY ("plan_code") REFERENCES "public"."subscription_plan"("code") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "subscription_payment_item" ADD CONSTRAINT "subscription_payment_item_plan_code_subscription_plan_code_fk" FOREIGN KEY ("plan_code") REFERENCES "public"."subscription_plan"("code") ON DELETE restrict ON UPDATE no action;

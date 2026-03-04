@@ -74,6 +74,7 @@ const cardRequestDataSchema = z.object({
   email: z.string().email('Invalid email').optional().or(z.literal('')),
   website: z.string().url('Invalid URL').optional().or(z.literal('')),
   socials: z.array(socialLinkSchema).optional(),
+  sourceCardId: z.string().optional(),
 });
 
 export const cardRequestSelectSchema = createSelectSchema(cardRequest);

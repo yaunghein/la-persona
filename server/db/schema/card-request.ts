@@ -21,6 +21,7 @@ export const cardRequest = pgTable(
         email?: string;
         website?: string;
         socials?: { label: string; value: string }[];
+        sourceCardId?: string;
       }>()
       .default({}),
     userId: text()

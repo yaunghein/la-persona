@@ -35,12 +35,17 @@ const getS3Url = (path?: string | null) => {
       side="right"
       inset
       title="REQUEST NEW CARD"
+      :ui="{
+        header: 'border-b-2 border-[#232323] px-6 py-6',
+        title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+        body: 'px-6',
+      }"
     >
       <UButton
-        label="New Card"
-        class="rounded-full font-semibold px-4 cursor-pointer"
+        label="Request New Card"
+        class="rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90 cursor-pointer"
         icon="i-lucide-plus"
-        size="lg"
+        size="md"
       />
       <template #body>
         <FormRequestCard @close="isSlideoverOpen = false" />
@@ -48,22 +53,25 @@ const getS3Url = (path?: string | null) => {
     </USlideover>
   </div>
 
-  <div v-if="cards" class="grid grid-cols-3">
+  <div
+    v-if="cards"
+    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+  >
     <UCard
       v-for="card in cards"
       variant="outline"
       class="bg-white/2"
-      :ui="{ body: 'p-0 sm:p-0' }"
+      :ui="{ body: 'p-14 sm:p-14' }"
     >
       <div class="aspect-5/3 relative">
         <img
           v-if="card.cardBackUrl"
           :src="getS3Url(card.cardBackUrl)"
           :alt="`${card.firstName} ${card.lastName || ''} card back`"
-          class="h-full w-full object-cover"
+          class="h-full w-full object-cover rounded-md"
         />
         <UBadge
-          class="absolute top-4 right-4 bg-[#232323] uppercase text-white font-semibold"
+          class="absolute -top-10 -right-10 bg-[#232323] uppercase text-white font-semibold"
           color="neutral"
           size="sm"
         >
