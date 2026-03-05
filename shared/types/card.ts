@@ -87,6 +87,7 @@ export const cardRequestSelectSchema = createSelectSchema(cardRequest);
 export const cardRequestInsertSchema = createInsertSchema(cardRequest, {
   cardData: cardRequestDataSchema,
   type: z.enum(['new_design', 'existing_design']),
+  paymentReceiptUrl: z.string().trim().min(1, 'Payment receipt is required'),
 }).omit({ userId: true });
 
 export const cardRequestUpdateSchema = createUpdateSchema(cardRequest, {

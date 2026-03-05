@@ -8,9 +8,12 @@ useSeoMeta({ ...getSeoTitle('Cards - LA PERSONA') });
 const route = useRoute();
 const runtimeConfig = useRuntimeConfig();
 
-const { data: cards, pending, error, refresh } = await useFetch<CardDTO[]>(
-  '/api/cards'
-);
+const {
+  data: cards,
+  pending,
+  error,
+  refresh,
+} = await useFetch<CardDTO[]>('/api/cards');
 
 const isSlideoverOpen = ref(false);
 const isPendingInfoOpen = ref(false);
@@ -31,7 +34,8 @@ function openPendingInfo(cardName: string) {
 }
 
 function getCardBadgeLabel(card: CardDTO) {
-  if (card.subscription?.status === 'pending_approval') return 'Pending Approval';
+  if (card.subscription?.status === 'pending_approval')
+    return 'Pending Approval';
   if (card.subscription?.status === 'trial' || card.subscription?.isTrial)
     return 'Standard (Trial)';
 
@@ -100,6 +104,15 @@ function getCardBadgeColor(card: CardDTO) {
           :alt="`${card.firstName} ${card.lastName || ''} card back`"
           class="h-full w-full object-cover rounded-md"
         />
+        <div
+          v-else
+          class="h-full w-full rounded-md bg-[#1f1f1f] border border-[#2a2a2a] flex items-center justify-center"
+        >
+          <UIcon
+            name="i-material-symbols:cards-star-outline-rounded"
+            class="size-8 text-[#8b8b8b]"
+          />
+        </div>
         <UBadge
           class="absolute -top-10 -right-10 uppercase font-semibold"
           :class="{
@@ -112,7 +125,7 @@ function getCardBadgeColor(card: CardDTO) {
           size="sm"
           @click="
             card.subscription?.status === 'pending_approval' &&
-              openPendingInfo(`${card.firstName} ${card.lastName || ''}`.trim())
+            openPendingInfo(`${card.firstName} ${card.lastName || ''}`.trim())
           "
         >
           {{ getCardBadgeLabel(card) }}
@@ -182,7 +195,9 @@ function getCardBadgeColor(card: CardDTO) {
     <template #body>
       <div class="space-y-4 text-sm text-[#bcbcbc] leading-relaxed">
         <p>
-          <span class="text-white font-medium">{{ selectedPendingCardName }}</span>
+          <span class="text-white font-medium">{{
+            selectedPendingCardName
+          }}</span>
           is currently under payment verification.
         </p>
         <p>

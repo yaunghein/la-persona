@@ -44,6 +44,13 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
+    if (!body.data.paymentReceiptUrl?.trim()) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Payment receipt is required.',
+      });
+    }
+
     const activeOrgId = session.session.activeOrganizationId;
     if (!activeOrgId) {
       throw createError({
@@ -101,12 +108,21 @@ export default defineEventHandler(async (event) => {
       status: sourceRow.subscriptionStatus,
       isTrial: sourceRow.subscriptionIsTrial,
     });
-    const plan = await db.query.subscriptionPlan.findFirst({
-      where: and(
-        eq(subscriptionPlan.code, derivedPlanCode),
-        eq(subscriptionPlan.isActive, true)
-      ),
-    });
+    const planRows = await db
+      .select({
+        code: subscriptionPlan.code,
+        priceMinor: subscriptionPlan.priceMinor,
+        currency: subscriptionPlan.currency,
+      })
+      .from(subscriptionPlan)
+      .where(
+        and(
+          eq(subscriptionPlan.code, derivedPlanCode),
+          eq(subscriptionPlan.isActive, true)
+        )
+      )
+      .limit(1);
+    const plan = planRows[0];
 
     if (!plan) {
       throw createError({
