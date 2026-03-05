@@ -2,6 +2,7 @@
 import imageCompression from 'browser-image-compression';
 import { useMutation } from '@tanstack/vue-query';
 import type { FormError, FormErrorEvent, FormSubmitEvent } from '@nuxt/ui';
+import { derivePlanCodeFromSource } from '~~/shared/utils/subscription';
 
 type RequestCardFormState = {
   type: 'new_design' | 'existing_design';
@@ -15,7 +16,7 @@ type RequestCardFormState = {
   socials: { label: string; value: string }[];
 };
 
-const emit = defineEmits<{ close: [] }>();
+const emit = defineEmits<{ close: []; submitted: [] }>();
 
 const toast = useToast();
 const runtimeConfig = useRuntimeConfig();
@@ -39,6 +40,16 @@ const receiptPreviewUrl = ref<string | null>(null);
 const success = ref(false);
 
 const { data: cards } = await useFetch<CardDTO[]>('/api/cards');
+const { data: plans } = await useFetch<
+  {
+    code: string;
+    name: string;
+    priceMinor: number;
+    currency: string;
+    billingCycle: string;
+    isActive: boolean;
+  }[]
+>('/api/subscriptions/plans');
 
 const typeItems = [
   {
@@ -62,6 +73,22 @@ const designItems = computed(() =>
     firstName: designCard.firstName,
   }))
 );
+
+const selectedSourceCard = computed(() =>
+  (cards.value || []).find((card) => card.id === state.sourceCardId)
+);
+
+const derivedPlanCode = computed(() =>
+  derivePlanCodeFromSource(selectedSourceCard.value?.subscription)
+);
+
+const derivedPlan = computed(() =>
+  (plans.value || []).find((plan) => plan.code === derivedPlanCode.value)
+);
+
+function formatCurrency(amountMinor: number, currency: string) {
+  return `${currency} ${amountMinor.toLocaleString()}`;
+}
 
 function getS3Url(path?: string | null) {
   if (!path) return '';
@@ -144,6 +171,8 @@ const { mutate: insertCardRequest, isPending: isLoading } = useMutation({
       description: 'Your new card request is now pending review.',
       color: 'success',
     });
+
+    emit('submitted');
   },
   onError: (err: any) => {
     toast.add({
@@ -365,7 +394,7 @@ function onFormError(event: FormErrorEvent) {
               v-if="item.cardBackUrl"
               :src="getS3Url(item.cardBackUrl)"
               :alt="`${item.firstName} card back`"
-              class="h-[121px] w-[200px] rounded-[4px] object-contain bg-[#1f1f1f]"
+              class="w-56 aspect-[1/0.57] rounded bg-[#1f1f1f]"
             />
             <div
               v-else
@@ -377,6 +406,25 @@ function onFormError(event: FormErrorEvent) {
         </template>
       </URadioGroup>
     </UFormField>
+
+    <div
+      v-if="state.type === 'existing_design' && state.sourceCardId"
+      class="rounded-[6px] border border-[#2a2a2a] bg-[#1f1f1f] p-4 space-y-2"
+    >
+      <div class="text-xs uppercase tracking-wide text-[#8b8b8b]">
+        Calculated Subscription
+      </div>
+      <div class="text-sm text-white font-medium">
+        {{ derivedPlan?.name || derivedPlanCode || 'Unknown Plan' }}
+      </div>
+      <div class="text-sm text-[#8b8b8b]">
+        {{
+          derivedPlan
+            ? `${formatCurrency(derivedPlan.priceMinor, derivedPlan.currency)} / ${derivedPlan.billingCycle}`
+            : 'Price unavailable'
+        }}
+      </div>
+    </div>
 
     <p class="text-sm leading-[21px] text-white">
       Please provide the details you'd like to appear on this card.

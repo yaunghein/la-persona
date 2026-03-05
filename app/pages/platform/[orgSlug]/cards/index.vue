@@ -8,9 +8,13 @@ useSeoMeta({ ...getSeoTitle('Cards - LA PERSONA') });
 const route = useRoute();
 const runtimeConfig = useRuntimeConfig();
 
-const { data: cards, pending, error } = await useFetch<CardDTO[]>('/api/cards');
+const { data: cards, pending, error, refresh } = await useFetch<CardDTO[]>(
+  '/api/cards'
+);
 
 const isSlideoverOpen = ref(false);
+const isPendingInfoOpen = ref(false);
+const selectedPendingCardName = ref('');
 
 const getS3Url = (path?: string | null) => {
   if (!path) return '';
@@ -20,6 +24,11 @@ const getS3Url = (path?: string | null) => {
   const region = runtimeConfig.public.awsRegion;
   return `https://${bucket}.s3.${region}.amazonaws.com/${path}`;
 };
+
+function openPendingInfo(cardName: string) {
+  selectedPendingCardName.value = cardName;
+  isPendingInfoOpen.value = true;
+}
 </script>
 
 <template>
@@ -48,7 +57,10 @@ const getS3Url = (path?: string | null) => {
         size="md"
       />
       <template #body>
-        <FormRequestCard @close="isSlideoverOpen = false" />
+        <FormRequestCard
+          @close="isSlideoverOpen = false"
+          @submitted="refresh()"
+        />
       </template>
     </USlideover>
   </div>
@@ -71,6 +83,16 @@ const getS3Url = (path?: string | null) => {
           class="h-full w-full object-cover rounded-md"
         />
         <UBadge
+          v-if="card.subscription?.status === 'pending_approval'"
+          class="absolute -top-10 -right-10 bg-amber-500/20 text-amber-300 uppercase font-semibold cursor-pointer"
+          color="warning"
+          size="sm"
+          @click="openPendingInfo(`${card.firstName} ${card.lastName || ''}`.trim())"
+        >
+          Pending Approval
+        </UBadge>
+        <UBadge
+          v-else
           class="absolute -top-10 -right-10 bg-[#232323] uppercase text-white font-semibold"
           color="neutral"
           size="sm"
@@ -106,6 +128,36 @@ const getS3Url = (path?: string | null) => {
             class="bg-white/5 text-red-500 hover:bg-white/15 ml-auto active:hover:bg-white/20"
           />
         </div>
+
+  <UModal
+    v-model:open="isPendingInfoOpen"
+    title="Pending Approval"
+    :ui="{
+      content: 'bg-[#171717] border border-[#2a2a2a]',
+      header: 'border-b border-[#2a2a2a]',
+      title: 'text-white',
+    }"
+  >
+    <template #body>
+      <div class="space-y-4 text-sm text-[#bcbcbc] leading-relaxed">
+        <p>
+          <span class="text-white font-medium">{{ selectedPendingCardName }}</span>
+          is currently under payment verification.
+        </p>
+        <p>
+          Your card is created and visible now, but some features may stay
+          limited until the payment is approved by our team.
+        </p>
+        <p>
+          If a payment is identified as invalid or fraudulent, we reserve the
+          right to suspend or remove the card and revoke related access.
+        </p>
+        <p class="text-[#8b8b8b]">
+          Need help? Please contact support for verification updates.
+        </p>
+      </div>
+    </template>
+  </UModal>
       </template>
     </UCard>
   </div>

@@ -14,6 +14,11 @@ export type UpdateCard = Partial<InsertCard>;
 export type CardDTO = Omit<SelectCard, 'createdAt' | 'updatedAt'> & {
   createdAt: string;
   updatedAt: string;
+  subscription?: {
+    status: string;
+    planCode: string | null;
+    isTrial: boolean;
+  } | null;
 };
 
 const socialLinkSchema = z.object({
