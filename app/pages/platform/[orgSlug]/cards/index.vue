@@ -29,6 +29,24 @@ function openPendingInfo(cardName: string) {
   selectedPendingCardName.value = cardName;
   isPendingInfoOpen.value = true;
 }
+
+function getCardBadgeLabel(card: CardDTO) {
+  if (card.subscription?.status === 'pending_approval') return 'Pending Approval';
+  if (card.subscription?.status === 'trial' || card.subscription?.isTrial)
+    return 'Standard (Trial)';
+
+  const planCode = card.subscription?.planCode;
+  if (planCode === 'founder_club') return "Founders' Club";
+  if (planCode === 'premium') return 'Premium';
+  if (planCode === 'standard') return 'Standard';
+  return 'No Plan';
+}
+
+function getCardBadgeColor(card: CardDTO) {
+  if (card.subscription?.status === 'pending_approval') return 'warning';
+  if (card.subscription?.status === 'active') return 'success';
+  return 'neutral';
+}
 </script>
 
 <template>
@@ -83,21 +101,21 @@ function openPendingInfo(cardName: string) {
           class="h-full w-full object-cover rounded-md"
         />
         <UBadge
-          v-if="card.subscription?.status === 'pending_approval'"
-          class="absolute -top-10 -right-10 bg-amber-500/20 text-amber-300 uppercase font-semibold cursor-pointer"
-          color="warning"
+          class="absolute -top-10 -right-10 uppercase font-semibold"
+          :class="{
+            'cursor-pointer bg-amber-500/20 text-amber-300':
+              card.subscription?.status === 'pending_approval',
+            'bg-[#232323] text-white':
+              card.subscription?.status !== 'pending_approval',
+          }"
+          :color="getCardBadgeColor(card)"
           size="sm"
-          @click="openPendingInfo(`${card.firstName} ${card.lastName || ''}`.trim())"
+          @click="
+            card.subscription?.status === 'pending_approval' &&
+              openPendingInfo(`${card.firstName} ${card.lastName || ''}`.trim())
+          "
         >
-          Pending Approval
-        </UBadge>
-        <UBadge
-          v-else
-          class="absolute -top-10 -right-10 bg-[#232323] uppercase text-white font-semibold"
-          color="neutral"
-          size="sm"
-        >
-          Founders' Club Edition
+          {{ getCardBadgeLabel(card) }}
         </UBadge>
       </div>
 
@@ -128,6 +146,29 @@ function openPendingInfo(cardName: string) {
             class="bg-white/5 text-red-500 hover:bg-white/15 ml-auto active:hover:bg-white/20"
           />
         </div>
+      </template>
+    </UCard>
+  </div>
+
+  <UContainer v-else class="h-[calc(100vh-10rem)] min-h-96">
+    <div class="flex flex-col items-center justify-center text-center h-full">
+      <div
+        class="bg-[#232323] w-11 aspect-square flex items-center justify-center rounded-sm"
+      >
+        <UIcon
+          name="i-material-symbols:cards-stack-outline-sharp"
+          class="w-5 h-5"
+        />
+      </div>
+      <h2 class="text-sm tracking-[1.4px] font-semibold uppercase mt-8 mb-4">
+        No cards in here yet
+      </h2>
+      <p class="text-muted max-w-sm text-sm leading-relaxed">
+        It looks like you don't have any card yet.<br />
+        Create one to get started.
+      </p>
+    </div>
+  </UContainer>
 
   <UModal
     v-model:open="isPendingInfoOpen"
@@ -158,27 +199,4 @@ function openPendingInfo(cardName: string) {
       </div>
     </template>
   </UModal>
-      </template>
-    </UCard>
-  </div>
-
-  <UContainer v-else class="h-[calc(100vh-10rem)] min-h-96">
-    <div class="flex flex-col items-center justify-center text-center h-full">
-      <div
-        class="bg-[#232323] w-11 aspect-square flex items-center justify-center rounded-sm"
-      >
-        <UIcon
-          name="i-material-symbols:cards-stack-outline-sharp"
-          class="w-5 h-5"
-        />
-      </div>
-      <h2 class="text-sm tracking-[1.4px] font-semibold uppercase mt-8 mb-4">
-        No cards in here yet
-      </h2>
-      <p class="text-muted max-w-sm text-sm leading-relaxed">
-        It looks like you don't have any card yet.<br />
-        Create one to get started.
-      </p>
-    </div>
-  </UContainer>
 </template>

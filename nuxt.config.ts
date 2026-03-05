@@ -20,6 +20,7 @@ export default defineNuxtConfig({
   routeRules: {
     '/': { prerender: true },
     '/platform/**': { ssr: false },
+    '/thakhin/**': { ssr: false },
   },
   app: {
     head: {
