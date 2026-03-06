@@ -14,7 +14,6 @@ export const card = pgTable(
     slug: text().notNull().unique(),
     position: text().notNull(),
     splineUrl: text(),
-    type: text().default('standard').notNull(),
     company: text(),
     phone: text(),
     email: text(),

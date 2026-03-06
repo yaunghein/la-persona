@@ -4,16 +4,10 @@ useSeoMeta({ ...getSeoTitle('CREATE CARD - LA PERSONA') });
 const toast = useToast();
 const isSubmitting = ref(false);
 
-const typeOptions = [
-  { label: "Founders' Club Edition", value: 'founders_club' },
-  { label: 'Standard Edition', value: 'standard' },
-];
-
 const state = reactive({
   name: '',
   position: '',
   splineUrl: '',
-  type: 'founders_club',
 });
 
 async function onCreate() {
@@ -35,7 +29,7 @@ async function onCreate() {
 
     toast.add({
       title: 'Card Created',
-      description: `"${newCard?.name}" is ready.`,
+      description: `"${newCard?.firstName} ${newCard?.lastName}" is ready.`,
       color: 'success',
     });
 
@@ -87,18 +81,6 @@ async function onCreate() {
           <UInput
             v-model="state.splineUrl"
             placeholder="https://prod.spline.design/..."
-            size="xl"
-            class="w-full"
-          />
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-muted uppercase mb-2">
-            Edition Type
-          </label>
-          <USelect
-            v-model="state.type"
-            :items="typeOptions"
             size="xl"
             class="w-full"
           />

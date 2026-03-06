@@ -124,7 +124,6 @@ export default defineEventHandler(async (event) => {
           splineUrl: env.DEFAULT_SPLINE_URL,
           organizationId: ownerOrg.id,
           userId: existing.userId,
-          type: 'standard',
         })
         .returning();
 

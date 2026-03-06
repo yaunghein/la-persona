@@ -10,6 +10,18 @@ useSeoMeta({ ...getSeoTitle('Edit Card - LA PERSONA') });
 const route = useRoute();
 const router = useRouter();
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
+const slug = computed(() => String(route.params.slug || ''));
+const { data: card } = await useFetch<CardDTO>(`/api/cards/${slug.value}`);
+
+const showUpgradeButton = computed(() => {
+  const planCode = card.value?.subscription?.planCode;
+  const isTrial = card.value?.subscription?.isTrial;
+  const status = card.value?.subscription?.status;
+
+  if (planCode === 'premium' || planCode === 'founder_club') return false;
+  if (isTrial || status === 'trial') return true;
+  return planCode === 'standard';
+});
 
 const items: TabsItem[] = [
   { label: '3D Card Information', value: '3d' },
@@ -59,6 +71,7 @@ const active = computed({
     </div>
 
     <UButton
+      v-if="showUpgradeButton"
       label="Upgrade to Premium"
       icon="i-lucide-chevrons-up"
       color="neutral"

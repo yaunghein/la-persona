@@ -8,7 +8,6 @@ const CreateCardSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   position: z.string().min(1, 'Position is required'),
   splineUrl: z.url().optional().nullable(),
-  type: z.enum(['founders_club', 'standard']).default('standard'),
 });
 
 export default defineEventHandler(async (event) => {
@@ -44,7 +43,6 @@ export default defineEventHandler(async (event) => {
         slug: slugify(result.data.name),
         position: result.data.position,
         splineUrl: result.data.splineUrl,
-        type: result.data.type,
       })
       .returning();
 

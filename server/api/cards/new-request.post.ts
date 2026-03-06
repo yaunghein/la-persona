@@ -155,7 +155,6 @@ export default defineEventHandler(async (event) => {
           wallpaperUrl: sourceCard.wallpaperUrl,
           organizationId: activeOrgId,
           userId: session.user.id,
-          type: sourceCard.type,
         })
         .returning();
 

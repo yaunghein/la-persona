@@ -8,6 +8,26 @@ const emit = defineEmits<{
   edit: [card: CardDTO];
   delete: [card: CardDTO];
 }>();
+
+const planBadge = computed(() => {
+  const planCode = props.card.subscription?.planCode;
+  const isTrial = props.card.subscription?.isTrial;
+  const status = props.card.subscription?.status;
+
+  if (!planCode || isTrial || status === 'trial') {
+    return { label: 'Trial', color: 'neutral' as const };
+  }
+
+  if (planCode === 'founder_club') {
+    return { label: "Founders' Club", color: 'primary' as const };
+  }
+
+  if (planCode === 'premium') {
+    return { label: 'Premium', color: 'primary' as const };
+  }
+
+  return { label: 'Standard', color: 'neutral' as const };
+});
 </script>
 
 <template>
@@ -15,16 +35,16 @@ const emit = defineEmits<{
     <div class="space-y-1">
       <div class="flex items-center justify-between">
         <h3 class="font-semibold">
-          {{ card.name }}
+          {{ card.firstName }} {{ card.lastName ?? '' }}
         </h3>
 
         <UBadge
           size="lg"
           variant="soft"
-          :color="card.type === 'standard' ? 'neutral' : 'primary'"
+          :color="planBadge.color"
           class="capitalize"
         >
-          {{ card.type }}
+          {{ planBadge.label }}
         </UBadge>
       </div>
 

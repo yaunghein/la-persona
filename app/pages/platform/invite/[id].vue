@@ -21,7 +21,7 @@ onMounted(async () => {
     // if (response?.success) {
     //   setTimeout(() => {
     //     navigateTo(
-    //       response.card?.type === 'founders_club'
+    //       response.card?.subscription?.planCode === 'founder_club'
     //         ? '/platform/cards'
     //         : '/platform'
     //     );
@@ -95,13 +95,6 @@ onMounted(async () => {
       </div>
 
       <div v-else class="flex flex-col items-center text-center space-y-6">
-        <div
-          v-if="data?.card?.type === 'founders_club'"
-          class="px-3 py-1 bg-white/5 border border-white/10 rounded text-[10px] font-bold text-white uppercase tracking-widest mb-2"
-        >
-          Founders' Club Edition
-        </div>
-
         <div
           class="w-20 h-20 rounded-full bg-primary-500/10 flex items-center justify-center"
         >
