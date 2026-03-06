@@ -71,10 +71,80 @@ export default defineEventHandler(async (event) => {
     const [approved] = await tx
       .update(cardRequest)
       .set({ status: 'approved', updatedAt: now })
-      .where(and(eq(cardRequest.id, requestId), eq(cardRequest.status, 'pending')))
+      .where(
+        and(eq(cardRequest.id, requestId), eq(cardRequest.status, 'pending'))
+      )
       .returning();
 
     if (existing.type === 'new_design') {
+      const requestNote = `New design request (${requestId})`;
+      const submittedPayments = await tx
+        .select({ id: subscriptionPayment.id })
+        .from(subscriptionPayment)
+        .where(
+          and(
+            eq(subscriptionPayment.note, requestNote),
+            eq(subscriptionPayment.status, 'submitted')
+          )
+        );
+
+      const submittedPaymentIds = submittedPayments.map(
+        (payment) => payment.id
+      );
+      if (submittedPaymentIds.length > 0) {
+        await tx
+          .update(subscriptionPayment)
+          .set({ status: 'approved', updatedAt: now })
+          .where(eq(subscriptionPayment.note, requestNote));
+
+        for (const paymentId of submittedPaymentIds) {
+          const items = await tx
+            .select({
+              id: subscriptionPaymentItem.id,
+              cardId: subscriptionPaymentItem.cardId,
+              planCode: subscriptionPaymentItem.planCode,
+              startAt: subscriptionPaymentItem.startAt,
+              endAt: subscriptionPaymentItem.endAt,
+            })
+            .from(subscriptionPaymentItem)
+            .where(eq(subscriptionPaymentItem.paymentId, paymentId));
+
+          for (const item of items) {
+            await tx
+              .insert(cardSubscription)
+              .values({
+                cardId: item.cardId,
+                planCode: item.planCode,
+                status: 'active',
+                isTrial: false,
+                currentPeriodStartAt: item.startAt,
+                currentPeriodEndAt: item.endAt,
+                lastPaymentItemId: item.id,
+                activatedAt: now,
+                expiredAt: null,
+              })
+              .onConflictDoUpdate({
+                target: cardSubscription.cardId,
+                set: {
+                  planCode: item.planCode,
+                  status: 'active',
+                  isTrial: false,
+                  currentPeriodStartAt: item.startAt,
+                  currentPeriodEndAt: item.endAt,
+                  lastPaymentItemId: item.id,
+                  activatedAt: now,
+                  expiredAt: null,
+                  updatedAt: now,
+                },
+              });
+          }
+        }
+
+        return approved;
+      }
+
+      // Backward compatibility:
+      // old new_design requests may not have created card/payment on submit.
       const ownerOrg = await getPersonalOrganizationByUserId(existing.userId);
       if (!ownerOrg) {
         throw createError({

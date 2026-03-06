@@ -7,6 +7,7 @@ useSeoMeta({ ...getSeoTitle('Cards - LA PERSONA') });
 
 const route = useRoute();
 const runtimeConfig = useRuntimeConfig();
+const toast = useToast();
 
 const {
   data: cards,
@@ -18,6 +19,9 @@ const {
 const isSlideoverOpen = ref(false);
 const isPendingInfoOpen = ref(false);
 const selectedPendingCardName = ref('');
+const isDeleteConfirmOpen = ref(false);
+const isDeleting = ref(false);
+const selectedCardToDelete = ref<CardDTO | null>(null);
 
 const getS3Url = (path?: string | null) => {
   if (!path) return '';
@@ -31,6 +35,45 @@ const getS3Url = (path?: string | null) => {
 function openPendingInfo(cardName: string) {
   selectedPendingCardName.value = cardName;
   isPendingInfoOpen.value = true;
+}
+
+function openDeleteConfirm(card: CardDTO) {
+  selectedCardToDelete.value = card;
+  isDeleteConfirmOpen.value = true;
+}
+
+function closeDeleteConfirm() {
+  isDeleteConfirmOpen.value = false;
+  selectedCardToDelete.value = null;
+}
+
+async function onConfirmDelete() {
+  if (!selectedCardToDelete.value) return;
+
+  isDeleting.value = true;
+  try {
+    await $fetch(`/api/cards/${selectedCardToDelete.value.slug}`, {
+      method: 'DELETE',
+    });
+
+    toast.add({
+      title: 'Card deleted',
+      description: 'The card has been removed successfully.',
+      color: 'success',
+    });
+
+    closeDeleteConfirm();
+    await refresh();
+  } catch (error: any) {
+    toast.add({
+      title: 'Delete failed',
+      description:
+        error?.data?.statusMessage || error?.statusMessage || 'Try again.',
+      color: 'error',
+    });
+  } finally {
+    isDeleting.value = false;
+  }
 }
 
 function getCardBadgeLabel(card: CardDTO) {
@@ -93,6 +136,7 @@ function getCardBadgeColor(card: CardDTO) {
   >
     <UCard
       v-for="card in cards"
+      :key="card.id"
       variant="outline"
       class="bg-white/2"
       :ui="{ body: 'p-14 sm:p-14' }"
@@ -157,6 +201,7 @@ function getCardBadgeColor(card: CardDTO) {
             color="primary"
             size="sm"
             class="bg-white/5 text-red-500 hover:bg-white/15 ml-auto active:hover:bg-white/20"
+            @click="openDeleteConfirm(card)"
           />
         </div>
       </template>
@@ -212,6 +257,46 @@ function getCardBadgeColor(card: CardDTO) {
           Need help? Please contact support for verification updates.
         </p>
       </div>
+    </template>
+  </UModal>
+
+  <UModal
+    v-model:open="isDeleteConfirmOpen"
+    :close="false"
+    :dismissible="!isDeleting"
+    :ui="{
+      content: 'bg-[#171717] max-w-md',
+      title: 'text-white',
+      body: 'pt-4',
+      footer: 'justify-end gap-2',
+    }"
+    title="Delete Card?"
+  >
+    <template #body>
+      <p class="text-sm text-[#bcbcbc] leading-relaxed">
+        This action cannot be undone. The card
+        <span class="text-white font-medium">
+          "{{ selectedCardToDelete?.firstName }}
+          {{ selectedCardToDelete?.lastName || '' }}"
+        </span>
+        and related subscription records will be removed.
+      </p>
+    </template>
+
+    <template #footer>
+      <UButton
+        label="Cancel"
+        color="neutral"
+        variant="ghost"
+        :disabled="isDeleting"
+        @click="closeDeleteConfirm"
+      />
+      <UButton
+        label="Delete"
+        color="error"
+        :loading="isDeleting"
+        @click="onConfirmDelete"
+      />
     </template>
   </UModal>
 </template>

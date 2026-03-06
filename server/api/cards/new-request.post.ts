@@ -12,6 +12,7 @@ import { and, eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { splitName } from '~~/server/services/card';
 import { derivePlanCodeFromSource } from '~~/shared/utils/subscription';
+import { env } from '~~/server/utils/env';
 
 function addYears(base: Date, years: number) {
   const result = new Date(base);
@@ -60,18 +61,126 @@ export default defineEventHandler(async (event) => {
     }
 
     if (body.data.type !== 'existing_design') {
-      const [inserted] = await db
-        .insert(cardRequest)
-        .values({
-          type: body.data.type,
-          cardData: body.data.cardData,
-          paymentReceiptUrl: body.data.paymentReceiptUrl,
-          userId: session.user.id,
-          status: 'pending',
+      const planRows = await db
+        .select({
+          code: subscriptionPlan.code,
+          priceMinor: subscriptionPlan.priceMinor,
+          currency: subscriptionPlan.currency,
         })
-        .returning();
+        .from(subscriptionPlan)
+        .where(
+          and(
+            eq(subscriptionPlan.code, 'standard'),
+            eq(subscriptionPlan.isActive, true)
+          )
+        )
+        .limit(1);
+      const plan = planRows[0];
 
-      return inserted;
+      if (!plan) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: 'Unable to resolve an active subscription plan.',
+        });
+      }
+
+      const now = new Date();
+      const payload = await db.transaction(async (tx) => {
+        const { name, position, company, phone, email, website, socials } =
+          body.data.cardData || {};
+        const { firstName, lastName } = splitName(name);
+
+        const [createdCard] = await tx
+          .insert(card)
+          .values({
+            firstName,
+            lastName,
+            slug: `${slugify(name || `${firstName} ${lastName}`)}-${nanoid(6)}`,
+            position: position || 'Professional',
+            company: company || null,
+            phone: phone || null,
+            email: email || null,
+            website: website || null,
+            socials: socials || [],
+            splineUrl: env.DEFAULT_SPLINE_URL,
+            organizationId: activeOrgId,
+            userId: session.user.id,
+          })
+          .returning();
+
+        const [request] = await tx
+          .insert(cardRequest)
+          .values({
+            type: body.data.type,
+            cardData: body.data.cardData,
+            paymentReceiptUrl: body.data.paymentReceiptUrl,
+            userId: session.user.id,
+            status: 'pending',
+          })
+          .returning();
+
+        const [payment] = await tx
+          .insert(subscriptionPayment)
+          .values({
+            organizationId: activeOrgId,
+            paidByUserId: session.user.id,
+            receiptUrl: body.data.paymentReceiptUrl,
+            status: 'submitted',
+            note: `New design request (${request.id})`,
+          })
+          .returning();
+
+        const [paymentItem] = await tx
+          .insert(subscriptionPaymentItem)
+          .values({
+            paymentId: payment.id,
+            cardId: createdCard.id,
+            planCode: plan.code,
+            termYears: 1,
+            startAt: now,
+            endAt: addYears(now, 1),
+            amountMinor: plan.priceMinor,
+            currency: plan.currency,
+          })
+          .returning();
+
+        await tx
+          .insert(cardSubscription)
+          .values({
+            cardId: createdCard.id,
+            planCode: plan.code,
+            status: 'pending_approval',
+            isTrial: false,
+            currentPeriodStartAt: paymentItem.startAt,
+            currentPeriodEndAt: paymentItem.endAt,
+            lastPaymentItemId: paymentItem.id,
+            activatedAt: null,
+            expiredAt: null,
+          })
+          .onConflictDoUpdate({
+            target: cardSubscription.cardId,
+            set: {
+              planCode: plan.code,
+              status: 'pending_approval',
+              isTrial: false,
+              currentPeriodStartAt: paymentItem.startAt,
+              currentPeriodEndAt: paymentItem.endAt,
+              lastPaymentItemId: paymentItem.id,
+              activatedAt: null,
+              expiredAt: null,
+              updatedAt: now,
+            },
+          });
+
+        return {
+          request,
+          createdCardId: createdCard.id,
+          planCode: plan.code,
+          paymentId: payment.id,
+        };
+      });
+
+      return payload;
     }
 
     const sourceCardId = body.data.cardData?.sourceCardId;
@@ -91,7 +200,9 @@ export default defineEventHandler(async (event) => {
       })
       .from(card)
       .leftJoin(cardSubscription, eq(cardSubscription.cardId, card.id))
-      .where(and(eq(card.id, sourceCardId), eq(card.organizationId, activeOrgId)))
+      .where(
+        and(eq(card.id, sourceCardId), eq(card.organizationId, activeOrgId))
+      )
       .limit(1);
 
     const sourceRow = sourceRows[0];
