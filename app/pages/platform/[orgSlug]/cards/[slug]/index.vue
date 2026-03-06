@@ -84,6 +84,28 @@ const showUpgradeButton = computed(() => {
   return planCode === 'standard';
 });
 
+function getCardBadgeLabel(cardData?: CardDTO | null) {
+  const planCode = cardData?.subscription?.planCode;
+  const isTrial = cardData?.subscription?.isTrial;
+  const status = cardData?.subscription?.status;
+
+  if (!planCode || isTrial || status === 'trial') {
+    return 'Standard (Trial)';
+  }
+
+  if (planCode === 'founder_club') {
+    return "Founders' Club";
+  }
+
+  if (planCode === 'premium') {
+    return 'Premium';
+  }
+
+  return 'Standard';
+}
+
+const cardBadgeLabel = computed(() => getCardBadgeLabel(card.value));
+
 const items: TabsItem[] = [
   { label: '3D Card Information', value: '3d' },
   { label: 'Contact Information', value: 'contact' },
@@ -139,12 +161,12 @@ const active = computed({
         <h1
           class="text-[1.75rem] font-medium tracking-[0.17rem] uppercase leading-none"
         >
-          Personal Card
+          {{ card?.firstName }} {{ card?.lastName }}
         </h1>
         <div
           class="uppercase text-[0.625rem] leading-none font-bold p-2.5 rounded bg-[#232323] ml-3"
         >
-          Founders' Club Edition
+          {{ cardBadgeLabel }}
         </div>
       </div>
       <p class="mt-2 text-sm leading-[20px] text-muted ml-10">
