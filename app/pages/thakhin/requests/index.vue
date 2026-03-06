@@ -28,9 +28,8 @@ type CardRequestRow = {
 const toast = useToast();
 const runtimeConfig = useRuntimeConfig();
 
-const { data, pending, refresh } = await useFetch<CardRequestRow[]>(
-  '/api/card-requests'
-);
+const { data, pending, refresh } =
+  await useFetch<CardRequestRow[]>('/api/card-requests');
 
 const rows = ref<CardRequestRow[]>([]);
 
@@ -146,7 +145,8 @@ async function approveRequest(row: CardRequestRow) {
   } catch (error: any) {
     toast.add({
       title: 'Approve failed',
-      description: error?.data?.statusMessage || error?.message || 'Please try again.',
+      description:
+        error?.data?.statusMessage || error?.message || 'Please try again.',
       color: 'error',
     });
   }
@@ -206,7 +206,9 @@ const columns: TableColumn<CardRequestRow>[] = [
 <template>
   <div class="flex min-h-[calc(100dvh-11rem)] flex-col gap-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <h1 class="text-[1.75rem] font-normal leading-tight tracking-widest uppercase">
+      <h1
+        class="text-[1.75rem] font-normal leading-tight tracking-widest uppercase"
+      >
         Card Requests
       </h1>
       <UButton

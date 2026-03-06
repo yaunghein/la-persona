@@ -30,10 +30,7 @@ const state = reactive({
   email: '',
   website: '',
   sourceCardId: '',
-  socials: [
-    { label: 'LinkedIn', value: '' },
-    { label: 'Facebook', value: '' },
-  ],
+  socials: [{ label: 'LinkedIn', value: '' }],
 });
 const receiptFile = ref<File | null>(null);
 const receiptPreviewUrl = ref<string | null>(null);

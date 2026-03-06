@@ -94,6 +94,10 @@ function getCardBadgeColor(card: CardDTO) {
   if (card.subscription?.status === 'active') return 'success';
   return 'neutral';
 }
+
+function hasSplinePreview(card: CardDTO) {
+  return Boolean(card.splineUrl?.trim());
+}
 </script>
 
 <template>
@@ -182,6 +186,7 @@ function getCardBadgeColor(card: CardDTO) {
         </div>
         <div class="mt-4 flex items-center justify-start gap-2">
           <UButton
+            v-if="hasSplinePreview(card)"
             icon="i-lucide-scan-eye"
             color="primary"
             size="sm"
@@ -189,6 +194,22 @@ function getCardBadgeColor(card: CardDTO) {
             target="_blank"
             :href="`/yaunghein/${card.slug}`"
           />
+          <UPopover
+            v-else
+            :ui="{
+              content:
+                'max-w-[240px] rounded-md border border-[#2a2a2a] bg-[#171717] p-3 text-sm text-white leading-relaxed',
+            }"
+          >
+            <UButton
+              icon="i-lucide-scan-eye"
+              color="primary"
+              size="sm"
+              class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
+            />
+
+            <template #content>3D card is still cooking.</template>
+          </UPopover>
           <UButton
             icon="i-lucide-square-pen"
             color="primary"

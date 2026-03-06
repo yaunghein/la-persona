@@ -12,7 +12,6 @@ import {
 } from '~~/server/db/schema';
 import { splitName } from '~~/server/services/card';
 import { getPersonalOrganizationByUserId } from '~~/server/services/auth';
-import { env } from '~~/server/utils/env';
 
 const NEW_DESIGN_DEFAULT_PLAN_CODE = 'standard';
 
@@ -191,7 +190,6 @@ export default defineEventHandler(async (event) => {
           email: requestCardData.email || null,
           website: requestCardData.website || null,
           socials: requestCardData.socials || [],
-          splineUrl: env.DEFAULT_SPLINE_URL,
           organizationId: ownerOrg.id,
           userId: existing.userId,
         })

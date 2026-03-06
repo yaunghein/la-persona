@@ -12,7 +12,6 @@ import { and, eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { splitName } from '~~/server/services/card';
 import { derivePlanCodeFromSource } from '~~/shared/utils/subscription';
-import { env } from '~~/server/utils/env';
 
 function addYears(base: Date, years: number) {
   const result = new Date(base);
@@ -102,7 +101,6 @@ export default defineEventHandler(async (event) => {
             email: email || null,
             website: website || null,
             socials: socials || [],
-            splineUrl: env.DEFAULT_SPLINE_URL,
             organizationId: activeOrgId,
             userId: session.user.id,
           })
