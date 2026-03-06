@@ -26,6 +26,7 @@ type CardRequestRow = {
 };
 
 const toast = useToast();
+const runtimeConfig = useRuntimeConfig();
 
 const { data, pending, refresh } = await useFetch<CardRequestRow[]>(
   '/api/card-requests'
@@ -49,6 +50,16 @@ const filterStatus = ref<'all' | 'pending' | 'approved' | 'declined'>('all');
 
 const page = ref(1);
 const itemsPerPage = 10;
+
+function getS3Url(path?: string | null) {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+
+  const bucket = runtimeConfig.public.awsBucketName;
+  const region = runtimeConfig.public.awsRegion;
+  const normalizedPath = path.replace(/^\/+/, '');
+  return `https://${bucket}.s3.${region}.amazonaws.com/${normalizedPath}`;
+}
 
 const filteredRows = computed(() => {
   const q = globalQuery.value.trim().toLowerCase();
@@ -185,6 +196,7 @@ const columns: TableColumn<CardRequestRow>[] = [
   { accessorKey: 'requesterEmail', header: 'EMAIL' },
   { accessorKey: 'type', header: 'TYPE' },
   { accessorKey: 'cardData.name', id: 'cardName', header: 'CARD NAME' },
+  { accessorKey: 'paymentReceiptUrl', header: 'RECEIPT' },
   { accessorKey: 'status', header: 'STATUS' },
   { accessorKey: 'createdAt', header: 'CREATED AT' },
   { id: 'actions', header: '' },
@@ -259,6 +271,20 @@ const columns: TableColumn<CardRequestRow>[] = [
 
         <template #cardName-cell="{ row }">
           {{ row.original.cardData?.name || '-' }}
+        </template>
+
+        <template #paymentReceiptUrl-cell="{ row }">
+          <UButton
+            v-if="row.original.paymentReceiptUrl"
+            label="View Receipt"
+            icon="i-lucide-external-link"
+            color="neutral"
+            variant="link"
+            class="px-0"
+            :to="getS3Url(row.original.paymentReceiptUrl)"
+            target="_blank"
+          />
+          <span v-else>-</span>
         </template>
 
         <template #status-cell="{ row }">
