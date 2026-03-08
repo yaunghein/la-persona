@@ -473,7 +473,7 @@ const columns: TableColumn<ContactRow>[] = [
             icon="i-lucide-x"
             color="neutral"
             variant="ghost"
-            class="size-6 rounded-full p-0 text-white hover:bg-[#232323]"
+            class="size-6 flex items-center justify-center rounded-full p-0 text-white hover:bg-[#232323]"
             aria-label="Close info"
             @click="isInfoOpen = false"
           />

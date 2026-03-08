@@ -8,6 +8,7 @@ useSeoMeta({ ...getSeoTitle('Cards - LA PERSONA') });
 const route = useRoute();
 const runtimeConfig = useRuntimeConfig();
 const toast = useToast();
+const isInfoOpen = ref(false);
 
 const {
   data: cards,
@@ -22,6 +23,30 @@ const selectedPendingCardName = ref('');
 const isDeleteConfirmOpen = ref(false);
 const isDeleting = ref(false);
 const selectedCardToDelete = ref<CardDTO | null>(null);
+const infoItems = [
+  {
+    icon: 'i-lucide-eye',
+    title: 'View Your Cards',
+    description: 'See all your cards and each plan status in one place.',
+  },
+  {
+    icon: 'i-lucide-chevrons-up',
+    title: 'Upgrade When Ready',
+    description:
+      'Move from trial or standard to premium with the guided payment flow.',
+  },
+  {
+    icon: 'i-lucide-plus',
+    title: 'Request New Card',
+    description: 'Submit a new card request using fresh or existing designs.',
+  },
+  {
+    icon: 'i-lucide-scan-eye',
+    title: 'Preview & Edit',
+    description:
+      'Open each card to preview, update information, and manage subscriptions.',
+  },
+];
 
 const getS3Url = (path?: string | null) => {
   if (!path) return '';
@@ -102,11 +127,21 @@ function hasSplinePreview(card: CardDTO) {
 
 <template>
   <div class="flex w-full items-center justify-between">
-    <h1
-      class="text-[1.75rem] font-medium tracking-[0.17rem] uppercase leading-none"
-    >
-      Your Persona Cards
-    </h1>
+    <div class="flex items-center gap-2">
+      <h1
+        class="text-[1.75rem] font-medium tracking-[0.17rem] uppercase leading-none"
+      >
+        Your Persona Cards
+      </h1>
+      <UButton
+        icon="material-symbols:info-outline"
+        color="neutral"
+        variant="ghost"
+        class="size-6 flex items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323]"
+        aria-label="Open cards information"
+        @click="isInfoOpen = true"
+      />
+    </div>
 
     <USlideover
       v-model:open="isSlideoverOpen"
@@ -133,6 +168,82 @@ function hasSplinePreview(card: CardDTO) {
       </template>
     </USlideover>
   </div>
+
+  <UModal
+    v-model:open="isInfoOpen"
+    :close="false"
+    :ui="{
+      content:
+        'max-w-[480px] rounded-[8px] border border-[#232323] bg-[#171717]',
+      body: 'p-0',
+    }"
+  >
+    <template #content>
+      <div class="overflow-hidden rounded-[8px] bg-[#171717]">
+        <div
+          class="flex items-center justify-between border-b-2 border-[#232323] px-6 pb-[26px] pt-6"
+        >
+          <h2 class="text-sm font-medium uppercase tracking-widest text-white">
+            What is cards?
+          </h2>
+          <UButton
+            icon="i-lucide-x"
+            color="neutral"
+            variant="ghost"
+            class="size-6 flex items-center justify-center rounded-full p-0 text-white hover:bg-[#232323]"
+            aria-label="Close info"
+            @click="isInfoOpen = false"
+          />
+        </div>
+        <div class="p-6">
+          <div class="space-y-8">
+            <div class="space-y-4">
+              <h3
+                class="text-[20px] font-medium leading-[27px] uppercase tracking-widest text-white"
+              >
+                Your cards, all in one place
+              </h3>
+              <p class="text-sm leading-[21px] text-[#8b8b8b]">
+                Manage your card library and subscription actions quickly.
+              </p>
+            </div>
+
+            <div class="space-y-0">
+              <div
+                v-for="(item, index) in infoItems"
+                :key="item.title"
+                class="px-4 py-3"
+                :class="
+                  index < infoItems.length - 1
+                    ? 'border-b border-[#2a2a2a]'
+                    : ''
+                "
+              >
+                <div class="flex items-start gap-2">
+                  <UIcon :name="item.icon" class="mt-0.5 size-5 text-white" />
+                  <div>
+                    <p class="text-[14px] text-white">{{ item.title }}</p>
+                    <p class="mt-2 text-[14px] text-[#8b8b8b]">
+                      {{ item.description }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end">
+              <UButton
+                label="Understood"
+                color="neutral"
+                class="rounded-full bg-white px-6 text-dark hover:bg-white/90"
+                @click="isInfoOpen = false"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+  </UModal>
 
   <div
     v-if="cards"
