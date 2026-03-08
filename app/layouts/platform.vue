@@ -34,9 +34,10 @@ const links = [
       },
     },
     {
-      label: 'Teams',
+      label: 'Teams (Coming Soon)',
       icon: 'i-ri:team-line',
-      to: '/',
+      disabled: true,
+      // to: '/',
       onSelect: () => {
         open.value = false;
       },

@@ -9,17 +9,38 @@ export const authClient = createAuthClient({
   plugins: [magicLinkClient(), adminClient(), organizationClient()],
 });
 
-export const signIn = async () => {
+type SocialProvider = 'google' | 'linkedin' | 'github';
+
+function getAuthCallbackURL() {
   const route = useRoute();
   const redirectTo =
     typeof route.query.redirectTo === 'string'
       ? route.query.redirectTo
       : ROUTES.PLATFORM.ROOT;
+  return `/platform?redirectTo=${redirectTo}`;
+}
+
+export const signInWithSocial = async (provider: SocialProvider) => {
   await authClient.signIn.social({
-    provider: 'github',
-    callbackURL: `/platform?redirectTo=${redirectTo}`,
+    provider,
+    callbackURL: getAuthCallbackURL(),
   });
 };
+
+export const signInWithGoogle = async () => signInWithSocial('google');
+export const signInWithLinkedIn = async () => signInWithSocial('linkedin');
+
+export const signInWithMagicLink = async (email: string, name?: string) => {
+  return await authClient.signIn.magicLink({
+    email,
+    name,
+    callbackURL: getAuthCallbackURL(),
+    errorCallbackURL: ROUTES.SIGN_IN,
+  });
+};
+
+// Backward-compatible alias for existing usages.
+export const signIn = signInWithGoogle;
 
 export const signOut = async () => {
   const route = useRoute();

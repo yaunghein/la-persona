@@ -4,6 +4,12 @@ import { useQuery } from '@tanstack/vue-query';
 const router = useRouter();
 const route = useRoute();
 const activeOrg = authClient.useActiveOrganization();
+watch(activeOrg, (newOrg) => {
+  if (newOrg.data?.slug) {
+    console.log('newOrg', newOrg.data);
+    // router.push(`/platform/${newOrg.data.slug}`);
+  }
+});
 
 const redirectTo = computed(() => {
   const value = route.query.redirectTo;
@@ -26,12 +32,16 @@ watch(
   [cards, activeOrg],
   ([newCards, org]) => {
     if (!newCards || !org) return;
+    console.log('newCards', newCards.length);
 
     if (newCards.length === 1) {
       const card = newCards[0];
+      console.log('card', card);
 
       if (card && card.socials && card.socials?.length === 0) {
         router.push(`/platform/${org.data?.slug}/cards/${card.slug}/setup`);
+      } else {
+        router.push(redirectTo.value || `/platform/${org.data?.slug}`);
       }
     } else {
       router.push(redirectTo.value || `/platform/${org.data?.slug}`);

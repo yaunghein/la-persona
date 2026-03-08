@@ -6,7 +6,9 @@ import { Application } from '@splinetool/runtime';
 const toast = useToast();
 const loading = ref(false);
 const email = ref('');
-const isSigningIn = ref(false);
+const isGoogleSigningIn = ref(false);
+const isLinkedInSigningIn = ref(false);
+const isMagicLinkSending = ref(false);
 
 onMounted(async () => {
   loading.value = true;
@@ -19,34 +21,74 @@ onMounted(async () => {
 });
 
 const onGoogle = async () => {
-  isSigningIn.value = true;
+  isGoogleSigningIn.value = true;
   try {
-    await signIn();
-  } catch {
+    await signInWithGoogle();
+  } catch (error: any) {
     toast.add({
       title: 'Sign-in failed',
-      description: 'Could not continue with social login. Please try again.',
+      description:
+        error?.message || 'Could not continue with Google login. Please try again.',
       color: 'error',
     });
   } finally {
-    isSigningIn.value = false;
+    isGoogleSigningIn.value = false;
   }
 };
 
-const onLinkedIn = () => {
-  toast.add({
-    title: 'Coming soon',
-    description: 'LinkedIn sign-in is not available yet.',
-    color: 'neutral',
-  });
+const onLinkedIn = async () => {
+  isLinkedInSigningIn.value = true;
+  try {
+    await signInWithLinkedIn();
+  } catch (error: any) {
+    toast.add({
+      title: 'Sign-in failed',
+      description:
+        error?.message || 'Could not continue with LinkedIn login. Please try again.',
+      color: 'error',
+    });
+  } finally {
+    isLinkedInSigningIn.value = false;
+  }
 };
 
-const onMagicLink = () => {
-  toast.add({
-    title: 'Coming soon',
-    description: `Magic link is not configured yet for ${email.value || 'this email'}.`,
-    color: 'neutral',
-  });
+const onMagicLink = async () => {
+  const normalizedEmail = email.value.trim().toLowerCase();
+  if (!normalizedEmail) {
+    toast.add({
+      title: 'Email required',
+      description: 'Please enter your email to receive a magic link.',
+      color: 'warning',
+    });
+    return;
+  }
+
+  isMagicLinkSending.value = true;
+  try {
+    const { error } = await signInWithMagicLink(normalizedEmail);
+    if (error) {
+      toast.add({
+        title: 'Magic link failed',
+        description: error.message || 'Could not send magic link. Please try again.',
+        color: 'error',
+      });
+      return;
+    }
+
+    toast.add({
+      title: 'Magic link sent',
+      description: `We sent a sign-in link to ${normalizedEmail}.`,
+      color: 'success',
+    });
+  } catch (error: any) {
+    toast.add({
+      title: 'Magic link failed',
+      description: error?.message || 'Could not send magic link. Please try again.',
+      color: 'error',
+    });
+  } finally {
+    isMagicLinkSending.value = false;
+  }
 };
 </script>
 
@@ -80,7 +122,7 @@ const onMagicLink = () => {
               block
               size="md"
               color="neutral"
-              :loading="isSigningIn"
+              :loading="isGoogleSigningIn"
               class="h-9 justify-center rounded-full bg-white font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
               @click="onGoogle"
             >
@@ -94,6 +136,7 @@ const onMagicLink = () => {
               block
               size="md"
               color="neutral"
+              :loading="isLinkedInSigningIn"
               class="h-9 justify-center rounded-full bg-white font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
               @click="onLinkedIn"
             >
@@ -132,6 +175,7 @@ const onMagicLink = () => {
               block
               size="md"
               color="neutral"
+              :loading="isMagicLinkSending"
               class="h-9 justify-center rounded-full bg-white font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
               @click="onMagicLink"
             >
