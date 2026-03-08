@@ -12,6 +12,7 @@ export const ROUTES = {
   THAKHIN: {
     ROOT: THAKHIN_ROOT,
     REQUESTS: `${THAKHIN_ROOT}/requests`,
+    PAYMENTS: `${THAKHIN_ROOT}/payments`,
   },
   API: '/api',
 } as const;

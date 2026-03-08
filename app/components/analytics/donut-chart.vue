@@ -7,7 +7,7 @@ const chartData = computed(() => ({
   datasets: [
     {
       data: props.data,
-      backgroundColor: ['#ffffff', 'rgba(255, 255, 255, 0.1)'],
+      backgroundColor: ['#ffffff', '#a8a8a8'],
       borderWidth: 0,
       hoverOffset: 4,
     },
@@ -17,13 +17,13 @@ const chartData = computed(() => ({
 const options = {
   responsive: true,
   maintainAspectRatio: false,
-  cutout: '75%',
+  cutout: '68%',
   plugins: { legend: { display: false } },
 };
 </script>
 
 <template>
-  <div class="w-48 h-48">
+  <div class="h-[220px] w-[220px]">
     <Doughnut :data="chartData" :options="options" />
   </div>
 </template>

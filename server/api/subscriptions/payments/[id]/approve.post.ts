@@ -55,6 +55,19 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    const isLegacyLinkedByNote = /^((New|Existing) design request \([^)]+\))$/.test(
+      payment.note || ''
+    );
+    const isLinkedDesignRequest =
+      Boolean(payment.requestId) || isLegacyLinkedByNote;
+    if (isLinkedDesignRequest) {
+      throw createError({
+        statusCode: 400,
+        statusMessage:
+          'This payment is linked to a card request. Approve it from the Requests page.',
+      });
+    }
+
     const items = await tx.query.subscriptionPaymentItem.findMany({
       where: eq(subscriptionPaymentItem.paymentId, payment.id),
     });

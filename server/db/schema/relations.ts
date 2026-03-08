@@ -5,6 +5,7 @@ import { contactExchange } from './contact-exchange';
 import { cardSubscription } from './card-subscription';
 import { subscriptionPayment, subscriptionPaymentItem } from './subscription-payment';
 import { subscriptionPlan } from './subscription-plan';
+import { cardRequest } from './card-request';
 
 export const userRelations = relations(user, ({ many }) => ({
   cards: many(card),
@@ -66,6 +67,10 @@ export const subscriptionPaymentRelations = relations(
     paidByUser: one(user, {
       fields: [subscriptionPayment.paidByUserId],
       references: [user.id],
+    }),
+    request: one(cardRequest, {
+      fields: [subscriptionPayment.requestId],
+      references: [cardRequest.id],
     }),
     items: many(subscriptionPaymentItem),
   })

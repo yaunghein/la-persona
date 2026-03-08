@@ -21,11 +21,20 @@ const links = [
       open.value = false;
     },
   },
+  {
+    label: 'Payments',
+    icon: 'i-lucide-wallet-cards',
+    to: ROUTES.THAKHIN.PAYMENTS,
+    onSelect: () => {
+      open.value = false;
+    },
+  },
 ] satisfies NavigationMenuItem[];
 
 const pageLabel: Record<string, string> = {
   [ROUTES.THAKHIN.ROOT]: 'Overview',
   [ROUTES.THAKHIN.REQUESTS]: 'Requests',
+  [ROUTES.THAKHIN.PAYMENTS]: 'Payments',
 };
 
 const currentPageLabel = computed(() => {

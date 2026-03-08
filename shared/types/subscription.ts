@@ -60,6 +60,8 @@ export const createSubscriptionPaymentLineSchema = z.object({
   startAt: z.coerce.date().optional(),
   endAt: z.coerce.date().optional(),
   amountMinor: z.coerce.number().int().min(0).optional(),
+  additionalFeeMinor: z.coerce.number().int().min(0).optional(),
+  skipPeriodUpdate: z.boolean().optional(),
   currency: z.string().trim().min(3).optional(),
 });
 
@@ -69,6 +71,7 @@ export const createSubscriptionPaymentBodySchema = z.object({
   paymentMethod: z.string().trim().optional(),
   note: z.string().trim().optional(),
   items: z.array(createSubscriptionPaymentLineSchema).min(1),
+  createPremiumRequest: z.boolean().optional(),
   status: textStatus(['submitted', 'pending_approval']).optional(),
 });
 

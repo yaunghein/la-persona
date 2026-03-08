@@ -1,7 +1,7 @@
 import { and, eq, sql, gte } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { auth } from '~~/server/auth';
-import { analytics, member } from '~~/server/db/schema';
+import { analytics, card, member } from '~~/server/db/schema';
 
 export default defineEventHandler(async (event) => {
   const session = await auth.api.getSession({ headers: event.headers });
@@ -10,30 +10,55 @@ export default defineEventHandler(async (event) => {
   }
 
   const { cardId } = getQuery(event);
+  const selectedCardId = typeof cardId === 'string' ? cardId : 'all';
   const orgId = session.session.activeOrganizationId;
   const userId = session.user.id;
 
-  // 1. Role Check
   const userMemberInfo = await db.query.member.findFirst({
     where: and(eq(member.organizationId, orgId), eq(member.userId, userId)),
   });
 
-  if (!userMemberInfo) throw createError({ statusCode: 403 });
+  if (!userMemberInfo) {
+    throw createError({ statusCode: 403, statusMessage: 'Forbidden' });
+  }
+  const isOwner = userMemberInfo.role === 'owner';
 
-  // 2. Build Conditions
   let conditions = [eq(analytics.organizationId, orgId)];
-  if (userMemberInfo.role !== 'owner' && userMemberInfo.role !== 'admin') {
+  if (!isOwner) {
     conditions.push(eq(analytics.userId, userId as string));
   }
-  if (cardId && cardId !== 'all') {
-    conditions.push(eq(analytics.cardId, cardId as string));
+
+  if (selectedCardId !== 'all') {
+    const accessibleCard = await db.query.card.findFirst({
+      where: and(
+        eq(card.id, selectedCardId),
+        eq(card.organizationId, orgId),
+        ...(isOwner ? [] : [eq(card.userId, userId)])
+      ),
+      columns: { id: true },
+    });
+
+    if (!accessibleCard) {
+      throw createError({
+        statusCode: 403,
+        statusMessage: 'You do not have access to this card analytics.',
+      });
+    }
+
+    conditions.push(eq(analytics.cardId, selectedCardId));
   }
 
   const last7Days = new Date();
   last7Days.setDate(last7Days.getDate() - 7);
 
-  // 3. Parallel Data Fetching
-  const [totalStats, dailyViews, socialClicks, linkClicks, saveActions] =
+  const [
+    totalStats,
+    dailyViews,
+    socialClicks,
+    linkClicks,
+    saveActions,
+    ownerCardOptions,
+  ] =
     await Promise.all([
       db
         .select({ type: analytics.type, count: sql<number>`count(*)` })
@@ -83,7 +108,29 @@ export default defineEventHandler(async (event) => {
         .from(analytics)
         .where(and(...conditions, eq(analytics.type, 'save_action')))
         .groupBy(sql`metadata->>'action'`),
+
+      isOwner
+        ? db
+            .select({
+              id: card.id,
+              firstName: card.firstName,
+              lastName: card.lastName,
+            })
+            .from(card)
+            .where(eq(card.organizationId, orgId))
+        : Promise.resolve([]),
     ]);
 
-  return { totalStats, dailyViews, socialClicks, linkClicks, saveActions };
+  return {
+    isOwner,
+    totalStats,
+    dailyViews,
+    socialClicks,
+    linkClicks,
+    saveActions,
+    cards: ownerCardOptions.map((item) => ({
+      id: item.id,
+      label: `${item.firstName} ${item.lastName || ''}`.trim(),
+    })),
+  };
 });

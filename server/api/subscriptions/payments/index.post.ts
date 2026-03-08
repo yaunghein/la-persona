@@ -3,6 +3,7 @@ import { auth } from '~~/server/auth';
 import { db } from '~~/server/db';
 import {
   card,
+  cardRequest,
   cardSubscription,
   subscriptionPayment,
   subscriptionPaymentItem,
@@ -88,6 +89,32 @@ export default defineEventHandler(async (event) => {
   }
 
   const now = new Date();
+  const existingSubscriptions = await db
+    .select({
+      cardId: cardSubscription.cardId,
+      currentPeriodStartAt: cardSubscription.currentPeriodStartAt,
+      currentPeriodEndAt: cardSubscription.currentPeriodEndAt,
+    })
+    .from(cardSubscription)
+    .where(inArray(cardSubscription.cardId, cardIds));
+  const subscriptionByCardId = new Map(
+    existingSubscriptions.map((item) => [item.cardId, item])
+  );
+  const cardDetails = await db
+    .select({
+      id: card.id,
+      firstName: card.firstName,
+      lastName: card.lastName,
+      position: card.position,
+      company: card.company,
+      phone: card.phone,
+      email: card.email,
+      website: card.website,
+      socials: card.socials,
+    })
+    .from(card)
+    .where(and(eq(card.organizationId, organizationId), inArray(card.id, cardIds)));
+  const cardById = new Map(cardDetails.map((item) => [item.id, item]));
 
   const result = await db.transaction(async (tx) => {
     const [payment] = await tx
@@ -113,22 +140,22 @@ export default defineEventHandler(async (event) => {
       }
 
       const termYears = item.termYears ?? 1;
-      const expectedAmountMinor = plan.priceMinor * termYears;
+      const additionalFeeMinor = item.additionalFeeMinor ?? 0;
+      const baseAmountMinor = plan.priceMinor * termYears;
+      const expectedAmountMinor = baseAmountMinor + additionalFeeMinor;
+      const lineAmountMinor = item.amountMinor ?? expectedAmountMinor;
       const planCurrency = plan.currency.toUpperCase();
       const submittedCurrency = item.currency?.toUpperCase();
+      const existingSubscription = subscriptionByCardId.get(item.cardId);
 
-      if (
-        item.amountMinor !== undefined &&
-        item.amountMinor !== expectedAmountMinor
-      ) {
+      if (lineAmountMinor < 0) {
         throw createError({
           statusCode: 400,
-          statusMessage: 'Submitted amount does not match plan pricing.',
+          statusMessage: 'Submitted amount must be zero or positive.',
           data: {
             cardId: item.cardId,
             planCode: item.planCode,
-            expectedAmountMinor,
-            submittedAmountMinor: item.amountMinor,
+            submittedAmountMinor: lineAmountMinor,
           },
         });
       }
@@ -146,8 +173,33 @@ export default defineEventHandler(async (event) => {
         });
       }
 
-      const startAt = item.startAt ?? now;
-      const endAt = item.endAt ?? addYears(startAt, termYears);
+      let startAt: Date;
+      let endAt: Date;
+
+      if (item.skipPeriodUpdate) {
+        if (
+          !existingSubscription?.currentPeriodStartAt ||
+          !existingSubscription?.currentPeriodEndAt
+        ) {
+          throw createError({
+            statusCode: 400,
+            statusMessage:
+              'Cannot skip period update when the card has no active period.',
+            data: { cardId: item.cardId },
+          });
+        }
+
+        startAt = existingSubscription.currentPeriodStartAt;
+        endAt = existingSubscription.currentPeriodEndAt;
+      } else {
+        const defaultStartAt =
+          existingSubscription?.currentPeriodEndAt &&
+          existingSubscription.currentPeriodEndAt > now
+            ? existingSubscription.currentPeriodEndAt
+            : now;
+        startAt = item.startAt ?? defaultStartAt;
+        endAt = item.endAt ?? addYears(startAt, termYears);
+      }
 
       if (endAt <= startAt) {
         throw createError({
@@ -163,7 +215,7 @@ export default defineEventHandler(async (event) => {
         termYears,
         startAt,
         endAt,
-        amountMinor: expectedAmountMinor,
+        amountMinor: lineAmountMinor,
         currency: planCurrency,
       };
     });
@@ -172,6 +224,53 @@ export default defineEventHandler(async (event) => {
       .insert(subscriptionPaymentItem)
       .values(paymentItemValues)
       .returning();
+
+    let createdRequestId: string | null = null;
+    if (body.data.createPremiumRequest) {
+      if (insertedItems.length !== 1) {
+        throw createError({
+          statusCode: 400,
+          statusMessage:
+            'Premium upgrade request creation supports one card per payment.',
+        });
+      }
+
+      const item = insertedItems[0]!;
+      const sourceCard = cardById.get(item.cardId);
+      const name = sourceCard
+        ? `${sourceCard.firstName} ${sourceCard.lastName || ''}`.trim()
+        : undefined;
+
+      const [request] = await tx
+        .insert(cardRequest)
+        .values({
+          type: 'existing_design',
+          status: 'pending',
+          paymentReceiptUrl: body.data.receiptUrl,
+          userId: session.user.id,
+          cardData: {
+            name,
+            position: sourceCard?.position || undefined,
+            company: sourceCard?.company || undefined,
+            phone: sourceCard?.phone || undefined,
+            email: sourceCard?.email || undefined,
+            website: sourceCard?.website || undefined,
+            socials: sourceCard?.socials || [],
+            sourceCardId: item.cardId,
+          },
+        })
+        .returning({ id: cardRequest.id });
+
+      createdRequestId = request.id;
+      await tx
+        .update(subscriptionPayment)
+        .set({
+          requestId: createdRequestId,
+          note: `Existing design request (${createdRequestId})`,
+          updatedAt: now,
+        })
+        .where(eq(subscriptionPayment.id, payment.id));
+    }
 
     for (const item of insertedItems) {
       await tx
@@ -203,7 +302,13 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    return { payment, items: insertedItems };
+    return {
+      payment: createdRequestId
+        ? { ...payment, note: `Existing design request (${createdRequestId})` }
+        : payment,
+      items: insertedItems,
+      requestId: createdRequestId,
+    };
   });
 
   return result;

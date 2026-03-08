@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, or } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { auth } from '~~/server/auth';
 import { db } from '~~/server/db';
@@ -82,7 +82,10 @@ export default defineEventHandler(async (event) => {
         .from(subscriptionPayment)
         .where(
           and(
-            eq(subscriptionPayment.note, requestNote),
+            or(
+              eq(subscriptionPayment.requestId, requestId),
+              eq(subscriptionPayment.note, requestNote)
+            ),
             eq(subscriptionPayment.status, 'submitted')
           )
         );
@@ -94,7 +97,12 @@ export default defineEventHandler(async (event) => {
         await tx
           .update(subscriptionPayment)
           .set({ status: 'approved', updatedAt: now })
-          .where(eq(subscriptionPayment.note, requestNote));
+          .where(
+            or(
+              eq(subscriptionPayment.requestId, requestId),
+              eq(subscriptionPayment.note, requestNote)
+            )
+          );
 
         for (const paymentId of submittedPaymentIds) {
           const items = await tx
@@ -200,6 +208,7 @@ export default defineEventHandler(async (event) => {
         .values({
           organizationId: ownerOrg.id,
           paidByUserId: existing.userId,
+          requestId,
           receiptUrl: existing.paymentReceiptUrl,
           status: 'approved',
           note: `New design request (${requestId})`,
@@ -257,7 +266,10 @@ export default defineEventHandler(async (event) => {
       .from(subscriptionPayment)
       .where(
         and(
-          eq(subscriptionPayment.note, requestNote),
+          or(
+            eq(subscriptionPayment.requestId, requestId),
+            eq(subscriptionPayment.note, requestNote)
+          ),
           eq(subscriptionPayment.status, 'submitted')
         )
       );
@@ -268,7 +280,12 @@ export default defineEventHandler(async (event) => {
       await tx
         .update(subscriptionPayment)
         .set({ status: 'approved', updatedAt: now })
-        .where(eq(subscriptionPayment.note, requestNote));
+        .where(
+          or(
+            eq(subscriptionPayment.requestId, requestId),
+            eq(subscriptionPayment.note, requestNote)
+          )
+        );
 
       for (const paymentId of paymentIds) {
         const items = await tx

@@ -312,10 +312,10 @@ const columns: TableColumn<ContactRow>[] = [
           People you've connected with
         </h1>
         <UButton
-          icon="i-lucide-circle-alert"
+          icon="material-symbols:info-outline"
           color="neutral"
           variant="ghost"
-          class="size-6 rounded-full p-0 text-muted hover:bg-[#232323]"
+          class="size-6 flex items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323]"
           aria-label="Open contacts information"
           @click="isInfoOpen = true"
         />

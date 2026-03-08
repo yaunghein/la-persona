@@ -122,6 +122,7 @@ export default defineEventHandler(async (event) => {
           .values({
             organizationId: activeOrgId,
             paidByUserId: session.user.id,
+            requestId: request.id,
             receiptUrl: body.data.paymentReceiptUrl,
             status: 'submitted',
             note: `New design request (${request.id})`,
@@ -283,6 +284,7 @@ export default defineEventHandler(async (event) => {
         .values({
           organizationId: activeOrgId,
           paidByUserId: session.user.id,
+          requestId: request.id,
           receiptUrl: body.data.paymentReceiptUrl,
           status: 'submitted',
           note: `Existing design request (${request.id})`,
