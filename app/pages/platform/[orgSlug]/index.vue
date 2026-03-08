@@ -41,6 +41,16 @@ interface DashboardStats {
 const { data: session } = await authClient.useSession(useFetch);
 const selectedCardId = ref('all');
 const isInfoOpen = ref(false);
+const hasSeenInfoPopup = useLocalStorage(
+  `lp-info-popup:analytics:${session.value?.user.id || 'anonymous'}`,
+  false
+);
+
+onMounted(() => {
+  if (hasSeenInfoPopup.value) return;
+  isInfoOpen.value = true;
+  hasSeenInfoPopup.value = true;
+});
 
 const { data: stats } = useQuery<DashboardStats>({
   queryKey: ['analytics', selectedCardId],

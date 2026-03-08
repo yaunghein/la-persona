@@ -96,6 +96,17 @@ const isInfoOpen = ref(false);
 const route = useRoute();
 const router = useRouter();
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
+const { data: session } = await authClient.useSession(useFetch);
+const hasSeenInfoPopup = useLocalStorage(
+  `lp-info-popup:contacts:${session.value?.user.id || 'anonymous'}`,
+  false
+);
+
+onMounted(() => {
+  if (hasSeenInfoPopup.value) return;
+  isInfoOpen.value = true;
+  hasSeenInfoPopup.value = true;
+});
 
 const parseViewMode = (value: unknown): 'list' | 'grid' =>
   value === 'grid' ? 'grid' : 'list';

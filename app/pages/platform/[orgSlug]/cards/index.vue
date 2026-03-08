@@ -9,6 +9,17 @@ const route = useRoute();
 const runtimeConfig = useRuntimeConfig();
 const toast = useToast();
 const isInfoOpen = ref(false);
+const { data: session } = await authClient.useSession(useFetch);
+const hasSeenInfoPopup = useLocalStorage(
+  `lp-info-popup:cards:${session.value?.user.id || 'anonymous'}`,
+  false
+);
+
+onMounted(() => {
+  if (hasSeenInfoPopup.value) return;
+  isInfoOpen.value = true;
+  hasSeenInfoPopup.value = true;
+});
 
 const {
   data: cards,
