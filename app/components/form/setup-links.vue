@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { useQuery, useMutation } from '@tanstack/vue-query';
 import type { FormSubmitEvent } from '#ui/types';
+import {
+  CARD_LINK_SELECT_ITEMS,
+  createEmptyCardLink,
+} from '~~/shared/constants/card-link-options';
 
 const emit = defineEmits<{
   back: [];
@@ -19,7 +23,7 @@ const { data: card } = useQuery<SelectCard>({
 // 1. Initialize with one empty link placeholder
 const state = reactive({
   id: undefined as string | number | undefined,
-  socials: [{ label: 'LinkedIn', value: '' }] as {
+  socials: [createEmptyCardLink()] as {
     label: string;
     value: string;
   }[],
@@ -35,7 +39,7 @@ watch(
     if (val.socials && val.socials.length > 0) {
       state.socials = [...val.socials];
     } else {
-      state.socials = [{ label: 'LinkedIn', value: '' }];
+      state.socials = [createEmptyCardLink()];
     }
   },
   { immediate: true }
@@ -82,7 +86,7 @@ function onSubmit() {
 }
 
 const addLink = () => {
-  state.socials.push({ label: 'LinkedIn', value: '' });
+  state.socials.push(createEmptyCardLink());
 };
 
 const removeLink = (index: number) => {
@@ -133,13 +137,8 @@ const removeLink = (index: number) => {
           <USelectMenu
             v-model="link.label"
             variant="soft"
-            :options="[
-              'LinkedIn',
-              'Twitter',
-              'Instagram',
-              'GitHub',
-              'Portfolio',
-            ]"
+            :items="CARD_LINK_SELECT_ITEMS"
+            :search-input="false"
             class="w-full md:w-40"
             size="xl"
           />
@@ -155,6 +154,7 @@ const removeLink = (index: number) => {
             color="error"
             variant="ghost"
             :disabled="state.socials.length === 1 && !link.value"
+            class="max-h-11.75"
             @click="removeLink(index)"
           />
         </div>

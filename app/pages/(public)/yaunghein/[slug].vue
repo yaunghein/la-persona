@@ -113,7 +113,31 @@ const iconMap: Record<string, string | ConcreteComponent> = {
   world: resolveComponent('IconWorld'),
   directMessage: resolveComponent('IconDirectMessage'),
   arrowDown: resolveComponent('IconArrowDown'),
+  buyMeCoffee: resolveComponent('IconBuyMeCoffee'),
+  saveContact: resolveComponent('IconSaveContact'),
 };
+
+const linkAssetMap: Record<string, string> = {
+  facebook: '/images/card/facebook.png',
+  github: '/images/card/github.png',
+  gmail: '/images/card/gmail.png',
+  instagram: '/images/card/instagram.png',
+  line: '/images/card/line.png',
+  linkedin: '/images/card/linkedin.png',
+  telegram: '/images/card/telegram.png',
+  tiktok: '/images/card/tiktok.png',
+  whatsapp: '/images/card/whatsapp.png',
+  website: 'world',
+  'direct message': 'world',
+  portfolio: 'world',
+  'case studies': 'world',
+  booking: 'world',
+};
+
+function getLinkIcon(label: string) {
+  const key = label.trim().toLowerCase();
+  return linkAssetMap[key] || 'world';
+}
 </script>
 
 <template>
@@ -369,16 +393,22 @@ const iconMap: Record<string, string | ConcreteComponent> = {
               "
             >
               <div
-                class="grid aspect-square w-[4.56rem] overflow-hidden rounded-full bg-white/10"
+                class="grid aspect-square w-[4.56rem] overflow-hidden rounded-full"
               >
-                <div
-                  class="aspect-square h-full w-full object-cover rounded-full bg-white/10 border border-white/20"
-                />
-                <!-- <img
-                  :src="link.icon"
+                <img
+                  v-if="getLinkIcon(link.label).includes('.')"
+                  :src="getLinkIcon(link.label)"
                   :alt="link.label"
                   class="aspect-square h-full w-full object-cover"
-                /> -->
+                />
+                <div
+                  v-else
+                  class="grid aspect-square h-full w-full place-items-center rounded-full bg-white/10"
+                >
+                  <div class="aspect-square w-8">
+                    <component :is="iconMap[getLinkIcon(link.label)]" />
+                  </div>
+                </div>
               </div>
               <div class="max-w-16 text-center text-xs leading-[1.1]">
                 {{ link.label }}

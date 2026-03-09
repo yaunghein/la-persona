@@ -3,6 +3,10 @@ import imageCompression from 'browser-image-compression';
 import { useMutation } from '@tanstack/vue-query';
 import type { FormError, FormErrorEvent, FormSubmitEvent } from '@nuxt/ui';
 import { derivePlanCodeFromSource } from '~~/shared/utils/subscription';
+import {
+  CARD_LINK_SELECT_ITEMS,
+  createEmptyCardLink,
+} from '~~/shared/constants/card-link-options';
 
 type RequestCardFormState = {
   type: 'new_design' | 'existing_design';
@@ -30,7 +34,7 @@ const state = reactive({
   email: '',
   website: '',
   sourceCardId: '',
-  socials: [{ label: 'LinkedIn', value: '' }],
+  socials: [createEmptyCardLink()],
 });
 const receiptFile = ref<File | null>(null);
 const receiptPreviewUrl = ref<string | null>(null);
@@ -97,7 +101,7 @@ function getS3Url(path?: string | null) {
 }
 
 const addLink = () => {
-  state.socials.push({ label: 'LinkedIn', value: '' });
+  state.socials.push(createEmptyCardLink());
 };
 const removeLink = (index: number) => {
   state.socials.splice(index, 1);
@@ -542,7 +546,7 @@ function onFormError(event: FormErrorEvent) {
         <UFormField class="w-40" :name="`socials.${index}.label`">
           <USelectMenu
             v-model="link.label"
-            :items="['LinkedIn', 'Twitter', 'Instagram', 'Facebook']"
+            :items="CARD_LINK_SELECT_ITEMS"
             :search-input="false"
             class="w-full"
             :ui="{
@@ -553,13 +557,19 @@ function onFormError(event: FormErrorEvent) {
         <UFormField class="flex-1" :name="`socials.${index}.value`">
           <UInput
             v-model="link.value"
-            placeholder="https://linkedin.com/in/johndoe"
+            placeholder="https://..."
+            class="w-full"
             :ui="{
               base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
             }"
           />
         </UFormField>
-        <UButton icon="i-lucide-x" variant="ghost" @click="removeLink(index)" />
+        <UButton
+          icon="i-lucide-x"
+          variant="ghost"
+          @click="removeLink(index)"
+          class="max-h-11.75"
+        />
       </div>
     </div>
 

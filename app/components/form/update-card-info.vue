@@ -2,6 +2,11 @@
 import imageCompression from 'browser-image-compression';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import type { FormSubmitEvent } from '#ui/types';
+import { useSortable } from '@vueuse/integrations/useSortable';
+import {
+  CARD_LINK_SELECT_ITEMS,
+  createEmptyCardLink,
+} from '~~/shared/constants/card-link-options';
 
 const route = useRoute();
 const queryClient = useQueryClient();
@@ -29,6 +34,15 @@ const state = reactive({
   avatarUrl: '',
   socials: [] as { label: string; value: string }[],
 });
+const socialsListEl = ref<HTMLElement | null>(null);
+const socialsSortable = computed({
+  get: () => state.socials,
+  set: (value) => {
+    state.socials = value;
+  },
+});
+const socialKeyMap = new WeakMap<object, number>();
+let socialKeySeed = 0;
 
 watch(
   card,
@@ -82,7 +96,9 @@ function removeCurrentPhoto() {
 }
 
 function triggerFilePicker() {
-  const input = document.getElementById('avatar-input') as HTMLInputElement | null;
+  const input = document.getElementById(
+    'avatar-input'
+  ) as HTMLInputElement | null;
   input?.click();
 }
 
@@ -154,12 +170,26 @@ function onFormError(event: any) {
 }
 
 const addLink = () => {
-  state.socials.push({ label: '', value: '' });
+  state.socials.push(createEmptyCardLink());
 };
 const removeLink = (index: number) => {
   state.socials.splice(index, 1);
 };
-const items = ['Facebook', 'Instagram', 'LinkedIn', 'Twitter', 'Website'];
+
+watch(socialsListEl, (el) => {
+  if (!el) return;
+  useSortable(socialsListEl, socialsSortable, {
+    animation: 200,
+    handle: '.drag-handle',
+    draggable: '.sortable-link-row',
+    ghostClass: 'sortable-ghost',
+    chosenClass: 'sortable-chosen',
+    dragClass: 'sortable-drag',
+    fallbackOnBody: true,
+    swapThreshold: 0.65,
+    invertSwap: true,
+  });
+});
 </script>
 
 <template>
@@ -182,7 +212,9 @@ const items = ['Facebook', 'Instagram', 'LinkedIn', 'Twitter', 'Website'];
       class="space-y-8"
     >
       <div class="space-y-4">
-        <h2 class="text-[20px] font-medium uppercase tracking-widest text-white">
+        <h2
+          class="text-[20px] font-medium uppercase tracking-widest text-white"
+        >
           Contact Information
         </h2>
         <p class="max-w-160 text-sm leading-[21px] text-[#8b8b8b]">
@@ -346,39 +378,49 @@ const items = ['Facebook', 'Instagram', 'LinkedIn', 'Twitter', 'Website'];
             @click="addLink"
           />
         </div>
-        <div
-          v-for="(link, index) in state.socials"
-          :key="index"
-          class="flex gap-3"
-        >
-          <UFormField class="w-40" :name="`socials.${index}.label`">
-            <USelectMenu
-              v-model="link.label"
-              :items="items"
-              class="w-full"
-              placeholder="Select Social Media"
-              :ui="{
-                base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white',
-              }"
+        <div ref="socialsListEl" class="relative flex flex-col gap-3">
+          <div
+            v-for="(link, index) in state.socials"
+            :key="link.label"
+            class="sortable-link-row flex items-start gap-3 relative"
+          >
+            <button
+              type="button"
+              class="drag-handle inline-flex w-9 cursor-grab items-center justify-center rounded-[4px] text-[#8b8b8b] hover:bg-[#232323] active:cursor-grabbing h-11.75"
+              aria-label="Drag to reorder link"
+            >
+              <UIcon name="i-lucide-grip-vertical" class="size-5" />
+            </button>
+            <UFormField class="w-40" :name="`socials.${index}.label`">
+              <USelectMenu
+                v-model="link.label"
+                :items="CARD_LINK_SELECT_ITEMS"
+                :search-input="false"
+                class="w-full"
+                placeholder="Select Link Type"
+                :ui="{
+                  base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white',
+                }"
+              />
+            </UFormField>
+            <UFormField class="flex-1" :name="`socials.${index}.value`">
+              <UInput
+                v-model="link.value"
+                placeholder="URL"
+                class="w-full"
+                :ui="{
+                  base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+                }"
+              />
+            </UFormField>
+            <UButton
+              icon="i-lucide-x"
+              color="error"
+              variant="ghost"
+              class="text-[#8b8b8b] hover:bg-[#232323] h-11.75"
+              @click="removeLink(index)"
             />
-          </UFormField>
-          <UFormField class="flex-1" :name="`socials.${index}.value`">
-            <UInput
-              v-model="link.value"
-              placeholder="URL"
-              class="w-full"
-              :ui="{
-                base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
-              }"
-            />
-          </UFormField>
-          <UButton
-            icon="i-lucide-x"
-            color="error"
-            variant="ghost"
-            class="text-[#8b8b8b] hover:bg-[#232323]"
-            @click="removeLink(index)"
-          />
+          </div>
         </div>
       </div>
 
@@ -406,3 +448,17 @@ const items = ['Facebook', 'Instagram', 'LinkedIn', 'Twitter', 'Website'];
     </UForm>
   </div>
 </template>
+
+<style scoped>
+:deep(.sortable-ghost) {
+  opacity: 0.35;
+}
+
+:deep(.sortable-chosen) {
+  background: transparent;
+}
+
+:deep(.sortable-drag) {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+}
+</style>
