@@ -12,6 +12,7 @@ export const contactExchange = pgTable(
     name: text().notNull(),
     phone: text().notNull(),
     email: text(),
+    company: text(),
     position: text(),
     cardId: text().references(() => card.id, { onDelete: 'cascade' }),
     createdAt: timestamp().defaultNow().notNull(),

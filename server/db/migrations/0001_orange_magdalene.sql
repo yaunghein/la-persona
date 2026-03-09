@@ -1,0 +1,1 @@
+ALTER TABLE "contact_exchange" ADD COLUMN "company" text;

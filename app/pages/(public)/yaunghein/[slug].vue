@@ -60,19 +60,19 @@ const onSubmit = async (e: SubmitEvent) => {
   // console.log({ data });
 
   try {
-    // await $fetch('/api/email/send', {
-    //   method: 'POST',
-    //   body: {
-    //     name: data.name,
-    //     to: [data.ownerEmail],
-    //     subject: `New Contact Exchange from ${(data.name as string).split(' ')[0]} 👋`,
-    //     template: 'ContactExchange',
-    //     email: data.email,
-    //     phone: data.phone,
-    //     company: data.company,
-    //     position: data.position,
-    //   },
-    // });
+    await $fetch('/api/email/send', {
+      method: 'POST',
+      body: {
+        name: data.name,
+        to: [data.ownerEmail],
+        subject: `New Contact Exchange from ${(data.name as string).split(' ')[0]} 👋`,
+        template: 'ContactExchange',
+        email: data.email,
+        phone: data.phone,
+        company: data.company,
+        position: data.position,
+      },
+    });
 
     await $fetch('/api/contact-exchange', {
       method: 'POST',

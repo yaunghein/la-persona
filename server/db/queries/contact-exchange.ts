@@ -7,6 +7,9 @@ export async function getAllContactExchangesForUser(userId: string) {
     .select({
       ...getTableColumns(contactExchange),
       cardId: card.id,
+      cardSlug: card.slug,
+      cardFirstName: card.firstName,
+      cardLastName: card.lastName,
     })
     .from(contactExchange)
     .innerJoin(card, eq(contactExchange.cardId, card.id))
