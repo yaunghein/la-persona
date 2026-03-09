@@ -512,7 +512,8 @@ const visibleColumns = computed(() =>
             variant="link"
             class="h-auto p-0 text-sm font-medium text-muted"
           >
-            {{ row.original.origin }}
+            <UIcon name="i-lucide-external-link" class="ml-1 size-4" />
+            <span>{{ row.original.origin }}</span>
           </UButton>
           <span v-else class="text-sm font-medium text-muted">
             {{ row.original.origin }}
