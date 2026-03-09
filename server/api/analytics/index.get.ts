@@ -2,6 +2,19 @@ import { and, eq, sql, gte } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { auth } from '~~/server/auth';
 import { analytics, card, member } from '~~/server/db/schema';
+import {
+  OTHER_LINK_LABELS,
+  SOCIAL_MEDIA_LINK_LABELS,
+} from '~~/shared/constants/card-link-options';
+
+const socialLabelSet = new Set(SOCIAL_MEDIA_LINK_LABELS.map((label) => label.toLowerCase()));
+const otherLabelSet = new Set(OTHER_LINK_LABELS.map((label) => label.toLowerCase()));
+const knownLabelByLower = new Map(
+  [...SOCIAL_MEDIA_LINK_LABELS, ...OTHER_LINK_LABELS].map((label) => [
+    label.toLowerCase(),
+    label,
+  ])
+);
 
 export default defineEventHandler(async (event) => {
   const session = await auth.api.getSession({ headers: event.headers });
@@ -51,6 +64,14 @@ export default defineEventHandler(async (event) => {
   const last7Days = new Date();
   last7Days.setDate(last7Days.getDate() - 7);
 
+  const cardScopeConditions = [eq(card.organizationId, orgId)];
+  if (!isOwner) {
+    cardScopeConditions.push(eq(card.userId, userId as string));
+  }
+  if (selectedCardId !== 'all') {
+    cardScopeConditions.push(eq(card.id, selectedCardId));
+  }
+
   const [
     totalStats,
     dailyViews,
@@ -58,10 +79,11 @@ export default defineEventHandler(async (event) => {
     linkClicks,
     saveActions,
     ownerCardOptions,
+    scopedCardLinks,
   ] =
     await Promise.all([
       db
-        .select({ type: analytics.type, count: sql<number>`count(*)` })
+        .select({ type: analytics.type, count: sql<number>`count(*)::int` })
         .from(analytics)
         .where(and(...conditions))
         .groupBy(analytics.type),
@@ -69,7 +91,7 @@ export default defineEventHandler(async (event) => {
       db
         .select({
           date: sql`DATE_TRUNC('day', ${analytics.createdAt})`.as('day'),
-          count: sql<number>`count(*)`,
+          count: sql<number>`count(*)::int`,
         })
         .from(analytics)
         .where(
@@ -85,7 +107,7 @@ export default defineEventHandler(async (event) => {
       db
         .select({
           platform: sql<string>`metadata->>'platform'`,
-          count: sql<number>`count(*)`,
+          count: sql<number>`count(*)::int`,
         })
         .from(analytics)
         .where(and(...conditions, eq(analytics.type, 'social_click')))
@@ -94,7 +116,7 @@ export default defineEventHandler(async (event) => {
       db
         .select({
           label: sql<string>`metadata->>'label'`,
-          count: sql<number>`count(*)`,
+          count: sql<number>`count(*)::int`,
         })
         .from(analytics)
         .where(and(...conditions, eq(analytics.type, 'link_click')))
@@ -103,7 +125,7 @@ export default defineEventHandler(async (event) => {
       db
         .select({
           action: sql<string>`metadata->>'action'`,
-          count: sql<number>`count(*)`,
+          count: sql<number>`count(*)::int`,
         })
         .from(analytics)
         .where(and(...conditions, eq(analytics.type, 'save_action')))
@@ -119,7 +141,34 @@ export default defineEventHandler(async (event) => {
             .from(card)
             .where(eq(card.organizationId, orgId))
         : Promise.resolve([]),
+
+      db
+        .select({
+          socials: card.socials,
+        })
+        .from(card)
+        .where(and(...cardScopeConditions)),
     ]);
+
+  const configuredSocialLabels = new Set<string>();
+  const configuredOtherLabels = new Set<string>();
+
+  for (const cardData of scopedCardLinks) {
+    const socials = Array.isArray(cardData.socials) ? cardData.socials : [];
+    for (const social of socials) {
+      const rawLabel =
+        social && typeof social === 'object' && 'label' in social
+          ? String((social as { label?: string }).label || '')
+          : '';
+      const normalizedLabel = rawLabel.trim().toLowerCase();
+      if (!normalizedLabel) continue;
+      const canonicalLabel = knownLabelByLower.get(normalizedLabel);
+      if (!canonicalLabel) continue;
+
+      if (socialLabelSet.has(normalizedLabel)) configuredSocialLabels.add(canonicalLabel);
+      if (otherLabelSet.has(normalizedLabel)) configuredOtherLabels.add(canonicalLabel);
+    }
+  }
 
   return {
     isOwner,
@@ -128,6 +177,12 @@ export default defineEventHandler(async (event) => {
     socialClicks,
     linkClicks,
     saveActions,
+    socialConfiguredLabels: SOCIAL_MEDIA_LINK_LABELS.filter((label) =>
+      configuredSocialLabels.has(label)
+    ),
+    otherConfiguredLabels: OTHER_LINK_LABELS.filter((label) =>
+      configuredOtherLabels.has(label)
+    ),
     cards: ownerCardOptions.map((item) => ({
       id: item.id,
       label: `${item.firstName} ${item.lastName || ''}`.trim(),

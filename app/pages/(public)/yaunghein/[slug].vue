@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/vue-query';
 import { Application } from '@splinetool/runtime';
 import type { ConcreteComponent } from 'vue';
+import { SOCIAL_MEDIA_LINK_LABELS } from '~~/shared/constants/card-link-options';
 
 const { trackEvent } = useAnalytics();
 
@@ -116,6 +117,9 @@ const iconMap: Record<string, string | ConcreteComponent> = {
   buyMeCoffee: resolveComponent('IconBuyMeCoffee'),
   saveContact: resolveComponent('IconSaveContact'),
 };
+const socialLinkLabelSet = new Set(
+  SOCIAL_MEDIA_LINK_LABELS.map((label) => label.toLowerCase())
+);
 
 const linkAssetMap: Record<string, string> = {
   facebook: '/images/card/facebook.png',
@@ -137,6 +141,23 @@ const linkAssetMap: Record<string, string> = {
 function getLinkIcon(label: string) {
   const key = label.trim().toLowerCase();
   return linkAssetMap[key] || 'world';
+}
+
+function trackLinkClick(link: { label: string; value: string }) {
+  if (!card.value) return;
+
+  const normalizedLabel = (link.label || '').trim().toLowerCase();
+  const isSocial = socialLinkLabelSet.has(normalizedLabel);
+
+  trackEvent({
+    cardId: card.value.id,
+    organizationId: card.value.organizationId,
+    userId: card.value.userId,
+    type: isSocial ? 'social_click' : 'link_click',
+    metadata: isSocial
+      ? { platform: normalizedLabel, url: link.value }
+      : { label: link.label, url: link.value },
+  });
 }
 </script>
 
@@ -379,18 +400,7 @@ function getLinkIcon(label: string) {
               class="flex shrink-0 flex-col items-center gap-4 transition duration-750"
               :class="isMenuOpen ? 'opacity-100' : 'opacity-0'"
               :style="{ transitionDelay: `${(index + 1) * 100}ms` }"
-              @click="
-                trackEvent({
-                  cardId: card.id,
-                  organizationId: card.organizationId,
-                  userId: card.userId,
-                  type: 'social_click',
-                  metadata: {
-                    platform: link.label.toLowerCase(),
-                    url: link.value,
-                  },
-                })
-              "
+              @click="trackLinkClick(link)"
             >
               <div
                 class="grid aspect-square w-[4.56rem] overflow-hidden rounded-full"

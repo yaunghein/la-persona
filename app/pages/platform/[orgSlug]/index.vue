@@ -12,6 +12,10 @@ import {
   CategoryScale,
   ArcElement,
 } from 'chart.js';
+import {
+  OTHER_LINK_LABELS,
+  SOCIAL_MEDIA_LINK_LABELS,
+} from '~~/shared/constants/card-link-options';
 
 ChartJS.register(
   Title,
@@ -31,6 +35,8 @@ definePageMeta({
 interface DashboardStats {
   isOwner: boolean;
   cards: { id: string; label: string }[];
+  socialConfiguredLabels: string[];
+  otherConfiguredLabels: string[];
   totalStats: { type: string; count: number }[];
   dailyViews: { date: string; count: number }[];
   socialClicks: { platform: string; count: number }[];
@@ -117,6 +123,12 @@ const conversionRate = computed(() =>
     ? ((cardSaves.value / totalViews.value) * 100).toFixed(0)
     : 0
 );
+const socialLabelSet = new Set(
+  SOCIAL_MEDIA_LINK_LABELS.map((label) => label.toLowerCase())
+);
+const otherLabelSet = new Set(
+  OTHER_LINK_LABELS.map((label) => label.toLowerCase())
+);
 
 const exchangeCount = computed(
   () =>
@@ -135,61 +147,61 @@ const hasDonutData = computed(
 const socialCountMap = computed(() => {
   const map = new Map<string, number>();
   for (const item of stats.value?.socialClicks || []) {
-    map.set((item.platform || '').toLowerCase(), item.count);
+    const key = (item.platform || '').trim().toLowerCase();
+    map.set(key, (map.get(key) || 0) + item.count);
+  }
+  // Backward compatibility: old events may have been tracked as link_click.
+  for (const item of stats.value?.linkClicks || []) {
+    const key = (item.label || '').trim().toLowerCase();
+    if (!socialLabelSet.has(key)) continue;
+    map.set(key, (map.get(key) || 0) + item.count);
   }
   return map;
 });
-const socialRows = computed(() => [
-  {
-    platform: 'LinkedIn',
-    icon: 'i-simple-icons-linkedin',
-    count: socialCountMap.value.get('linkedin') || 0,
-  },
-  {
-    platform: 'X (Twitter)',
-    icon: 'i-simple-icons-x',
-    count:
-      socialCountMap.value.get('x') || socialCountMap.value.get('twitter') || 0,
-  },
-  {
-    platform: 'Instagram',
-    icon: 'i-simple-icons-instagram',
-    count: socialCountMap.value.get('instagram') || 0,
-  },
-  {
-    platform: 'Facebook',
-    icon: 'i-simple-icons-facebook',
-    count: socialCountMap.value.get('facebook') || 0,
-  },
-  {
-    platform: 'GitHub',
-    icon: 'i-simple-icons-github',
-    count: socialCountMap.value.get('github') || 0,
-  },
-]);
+const socialIconMap: Record<string, string> = {
+  facebook: 'i-simple-icons-facebook',
+  github: 'i-simple-icons-github',
+  gmail: 'i-simple-icons-gmail',
+  instagram: 'i-simple-icons-instagram',
+  line: 'i-simple-icons-line',
+  linkedin: 'i-simple-icons-linkedin',
+  telegram: 'i-simple-icons-telegram',
+  tiktok: 'i-simple-icons-tiktok',
+  whatsapp: 'i-simple-icons-whatsapp',
+};
+const socialRows = computed(() =>
+  (stats.value?.socialConfiguredLabels || []).map((label) => {
+    const key = label.toLowerCase();
+    return {
+      platform: label,
+      icon: socialIconMap[key] || 'i-lucide-globe',
+      count: socialCountMap.value.get(key) || 0,
+    };
+  })
+);
 
 const linkCountMap = computed(() => {
   const map = new Map<string, number>();
   for (const item of stats.value?.linkClicks || []) {
-    map.set((item.label || '').toLowerCase(), item.count);
+    const key = (item.label || '').trim().toLowerCase();
+    map.set(key, (map.get(key) || 0) + item.count);
+  }
+  // Backward compatibility: old events may have been tracked as social_click.
+  for (const item of stats.value?.socialClicks || []) {
+    const key = (item.platform || '').trim().toLowerCase();
+    if (!otherLabelSet.has(key)) continue;
+    map.set(key, (map.get(key) || 0) + item.count);
   }
   return map;
 });
-const linkRows = computed(() => [
-  {
-    label: 'Personal Website',
-    count: linkCountMap.value.get('personal website') || 0,
-  },
-  {
-    label: 'Calendly Booking',
-    count: linkCountMap.value.get('calendly booking') || 0,
-  },
-  {
-    label: 'Portfolio PDF',
-    count: linkCountMap.value.get('portfolio pdf') || 0,
-  },
-  { label: 'Case Studies', count: linkCountMap.value.get('case studies') || 0 },
-]);
+const linkRows = computed(() =>
+  (stats.value?.otherConfiguredLabels || []).map((label) => ({
+    label,
+    count: linkCountMap.value.get(label.toLowerCase()) || 0,
+  }))
+);
+const hasSocialRows = computed(() => socialRows.value.length > 0);
+const hasLinkRows = computed(() => linkRows.value.length > 0);
 
 const chartData = computed(() => ({
   labels:
@@ -371,7 +383,7 @@ const chartOptions = {
         <p class="mt-1 text-sm text-[#8b8b8b]">
           Which platforms are driving engagement
         </p>
-        <div class="mt-6 space-y-2">
+        <div v-if="hasSocialRows" class="mt-6 space-y-2">
           <div
             v-for="row in socialRows"
             :key="row.platform"
@@ -384,6 +396,16 @@ const chartOptions = {
             <span class="text-sm font-medium">{{ row.count }}</span>
           </div>
         </div>
+        <div
+          v-else
+          class="mt-6 flex min-h-38 flex-col items-center justify-center gap-2 rounded-[4px] bg-[#232323] text-center"
+        >
+          <UIcon
+            name="i-lucide-mouse-pointer-click"
+            class="size-5 text-white/70"
+          />
+          <p class="text-sm text-[#8b8b8b]">No social links configured.</p>
+        </div>
       </div>
 
       <div class="rounded-[8px] bg-[#171717] p-6">
@@ -393,7 +415,7 @@ const chartOptions = {
         <p class="mt-1 text-sm text-[#8b8b8b]">
           External URL engagement tracking
         </p>
-        <div class="mt-6 space-y-2">
+        <div v-if="hasLinkRows" class="mt-6 space-y-2">
           <div
             v-for="row in linkRows"
             :key="row.label"
@@ -405,6 +427,13 @@ const chartOptions = {
             </div>
             <span class="text-sm font-medium">{{ row.count }}</span>
           </div>
+        </div>
+        <div
+          v-else
+          class="mt-6 flex min-h-38 flex-col items-center justify-center gap-2 text-center"
+        >
+          <UIcon name="i-lucide-link-2" class="size-5 text-white/70" />
+          <p class="text-sm text-[#8b8b8b]">No links configured yet.</p>
         </div>
       </div>
     </div>
