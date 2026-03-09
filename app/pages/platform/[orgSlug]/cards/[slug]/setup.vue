@@ -1,13 +1,20 @@
 <script setup lang="ts">
-const form = ref<'contact' | 'link'>('contact');
+const route = useRoute();
+const step = ref<'contact' | 'link' | 'welcome'>('contact');
+
+function goToDashboard() {
+  navigateTo(`/platform/${route.params.orgSlug}/cards`);
+}
 </script>
 
 <template>
-  <section>
+  <section v-if="step !== 'welcome'">
     <div class="w-44 aspect-[1/0.11] mt-9 mx-auto">
       <IconLogo />
     </div>
-    <div class="flex items-start justify-between my-13 w-120 mx-auto relative">
+    <div
+      class="flex items-start justify-between my-13 w-120 mx-auto relative px-5"
+    >
       <div
         class="bg-[#2A2A2A] h-0.5 w-52 left-1/2 top-4.5 -translate-x-1/2 absolute"
       ></div>
@@ -15,7 +22,7 @@ const form = ref<'contact' | 'link'>('contact');
         <div
           class="w-9 aspect-square rounded-full flex relative bg-[#232323]"
           :class="{
-            'bg-white text-dark': form === 'contact',
+            'bg-white text-dark': step === 'contact',
           }"
         >
           <Icon
@@ -30,7 +37,7 @@ const form = ref<'contact' | 'link'>('contact');
         <div
           class="w-9 aspect-square rounded-full flex relative bg-[#232323]"
           :class="{
-            'bg-white text-dark': form === 'link',
+            'bg-white text-dark': step === 'link',
           }"
         >
           <Icon
@@ -43,12 +50,18 @@ const form = ref<'contact' | 'link'>('contact');
       </div>
     </div>
 
-    <div class="h-40 max-w-284 mx-auto">
+    <div class="px-5 pb-5 max-w-284 mx-auto">
       <FormSetupContactInfo
-        v-if="form === 'contact'"
-        @continued="form = 'link'"
+        v-if="step === 'contact'"
+        @continued="step = 'link'"
       />
-      <FormSetupLinks v-if="form === 'link'" @back="form = 'contact'" />
+      <FormSetupLinks
+        v-if="step === 'link'"
+        @back="step = 'contact'"
+        @completed="step = 'welcome'"
+      />
     </div>
   </section>
+
+  <FormSetupWelcome v-else @enter="goToDashboard" />
 </template>

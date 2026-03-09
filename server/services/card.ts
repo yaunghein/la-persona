@@ -28,10 +28,14 @@ export async function insertDefaultCard(user: User, organizationId: string) {
     .values({
       firstName,
       lastName,
+      email: user.email,
       slug: `${slugify(user.name)}-${nanoid()}`,
       position: 'Professional',
       userId: user.id,
       splineUrl: env.DEFAULT_SPLINE_URL,
+      cardBackUrl: env.DEFAULT_CARD_BACK_URL,
+      qrCodeUrl: env.DEFAULT_QR_CODE_URL,
+      wallpaperUrl: env.DEFAULT_WALLPAPER_URL,
       organizationId,
     })
     .returning();

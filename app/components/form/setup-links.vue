@@ -58,7 +58,6 @@ const { mutate: submitRequest, isPending: isSubmitting } = useMutation({
       color: 'success',
     });
     emit('completed');
-    navigateTo(`/platform/${route.params.orgSlug}/cards`);
   },
   onError: (err: any) => {
     toast.add({

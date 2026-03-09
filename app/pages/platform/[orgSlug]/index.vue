@@ -204,7 +204,11 @@ const chartData = computed(() => ({
       backgroundColor: 'transparent',
       tension: 0.35,
       pointRadius: 0,
-      pointHoverRadius: 3,
+      pointHoverRadius: 4,
+      pointHitRadius: 24,
+      pointHoverBackgroundColor: '#ffffff',
+      pointHoverBorderColor: '#ffffff',
+      pointHoverBorderWidth: 0,
     },
   ],
 }));
@@ -212,6 +216,10 @@ const chartData = computed(() => ({
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
+  interaction: {
+    mode: 'index' as const,
+    intersect: false,
+  },
   scales: {
     y: {
       beginAtZero: true,
@@ -225,7 +233,22 @@ const chartOptions = {
       ticks: { color: '#8b8b8b', font: { size: 10 } },
     },
   },
-  plugins: { legend: { display: false } },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      enabled: true,
+      displayColors: false,
+      backgroundColor: '#171717',
+      borderColor: '#2a2a2a',
+      borderWidth: 1,
+      titleColor: '#ffffff',
+      bodyColor: '#ffffff',
+      padding: 10,
+      callbacks: {
+        label: (ctx: any) => `Views: ${ctx?.parsed?.y ?? 0}`,
+      },
+    },
+  },
 };
 </script>
 
