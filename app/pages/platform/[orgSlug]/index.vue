@@ -128,6 +128,9 @@ const vcfCount = computed(
     stats.value?.saveActions.find((a) => a.action === 'vcf_download')?.count ||
     0
 );
+const hasDonutData = computed(
+  () => exchangeCount.value > 0 || vcfCount.value > 0
+);
 
 const socialCountMap = computed(() => {
   const map = new Map<string, number>();
@@ -263,7 +266,7 @@ const chartOptions = {
           icon="material-symbols:info-outline"
           color="neutral"
           variant="ghost"
-          class="size-6 flex items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323]"
+          class="size-6 flex items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323] cursor-pointer"
           aria-label="Open analytics information"
           @click="isInfoOpen = true"
         />
@@ -454,6 +457,7 @@ const chartOptions = {
       </div>
 
       <div
+        v-if="hasDonutData"
         class="flex items-center justify-center rounded-[8px] bg-[#171717] p-6"
       >
         <AnalyticsDonutChart :data="[exchangeCount, vcfCount]" />

@@ -202,8 +202,12 @@ const currentPageLabel = computed(() => {
     >
       <template #header="{ collapsed }">
         <!-- <TeamsMenu :collapsed="collapsed" /> -->
-        <NuxtLink to="/platform" class="w-44 aspect-[1/0.11]">
-          <SvgLogo />
+
+        <NuxtLink v-if="!collapsed" to="/platform" class="w-46 aspect-[1/0.11]">
+          <IconLogo />
+        </NuxtLink>
+        <NuxtLink v-else to="/platform" class="w-20 aspect-square">
+          <IconLogoShort />
         </NuxtLink>
       </template>
 

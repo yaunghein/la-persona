@@ -148,7 +148,7 @@ function hasSplinePreview(card: CardDTO) {
         icon="material-symbols:info-outline"
         color="neutral"
         variant="ghost"
-        class="size-6 flex items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323]"
+        class="size-6 flex items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323] cursor-pointer"
         aria-label="Open cards information"
         @click="isInfoOpen = true"
       />

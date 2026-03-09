@@ -151,7 +151,7 @@ const removeLink = (index: number) => {
             variant="soft"
           />
           <UButton
-            icon="i-heroicons-trash"
+            icon="i-lucide-x"
             color="error"
             variant="ghost"
             :disabled="state.socials.length === 1 && !link.value"
