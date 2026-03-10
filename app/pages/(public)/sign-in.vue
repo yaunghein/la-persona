@@ -28,7 +28,8 @@ const onGoogle = async () => {
     toast.add({
       title: 'Sign-in failed',
       description:
-        error?.message || 'Could not continue with Google login. Please try again.',
+        error?.message ||
+        'Could not continue with Google login. Please try again.',
       color: 'error',
     });
   } finally {
@@ -44,7 +45,8 @@ const onLinkedIn = async () => {
     toast.add({
       title: 'Sign-in failed',
       description:
-        error?.message || 'Could not continue with LinkedIn login. Please try again.',
+        error?.message ||
+        'Could not continue with LinkedIn login. Please try again.',
       color: 'error',
     });
   } finally {
@@ -69,7 +71,8 @@ const onMagicLink = async () => {
     if (error) {
       toast.add({
         title: 'Magic link failed',
-        description: error.message || 'Could not send magic link. Please try again.',
+        description:
+          error.message || 'Could not send magic link. Please try again.',
         color: 'error',
       });
       return;
@@ -83,7 +86,8 @@ const onMagicLink = async () => {
   } catch (error: any) {
     toast.add({
       title: 'Magic link failed',
-      description: error?.message || 'Could not send magic link. Please try again.',
+      description:
+        error?.message || 'Could not send magic link. Please try again.',
       color: 'error',
     });
   } finally {
@@ -94,18 +98,20 @@ const onMagicLink = async () => {
 
 <template>
   <div class="min-h-screen bg-dark">
-    <div class="mx-auto flex min-h-screen">
-      <div class="w-1/2 bg-dark relative overflow-hidden">
+    <div class="mx-auto flex min-h-screen flex-col sm:flex-row p-4 sm:p-0">
+      <div
+        class="w-full sm:w-1/2 bg-dark relative overflow-hidden min-h-[28dvh] flex-1 sm:flex-none sm:min-h-full"
+      >
         <canvas
           id="login-spline"
-          class="h-full w-full absolute inset-0"
+          class="h-full w-full absolute inset-0 scale-120 sm:scale-100"
         ></canvas>
       </div>
 
       <div
-        class="relative w-1/2 flex items-center justify-center bg-[#171717] px-6 py-16"
+        class="relative w-full sm:w-1/2 flex items-center justify-center bg-[#171717] px-6 py-10 sm:py-16 min-h-[58dvh] sm:min-h-full rounded-lg sm:rounded-none"
       >
-        <div class="w-full max-w-[485px] space-y-8">
+        <div class="w-full max-w-[485px] space-y-8 mb-12">
           <div class="mx-auto max-w-[254px] space-y-6 text-center">
             <h1
               class="text-[1.75rem] font-medium leading-none tracking-widest text-white uppercase"
@@ -188,12 +194,12 @@ const onMagicLink = async () => {
         </div>
 
         <p
-          class="absolute bottom-6 left-1/2 w-full max-w-[485px] -translate-x-1/2 px-6 text-center text-sm leading-[21px] text-[#8b8b8b]"
+          class="absolute bottom-6 left-1/2 w-full text-xs max-w-[485px] -translate-x-1/2 px-6 text-center sm:text-sm leading-[21px] text-[#8b8b8b]"
         >
           By continuing, you agree to La Persona's
-          <a href="#" class="underline underline-offset-2">
+          <NuxtLink href="/privacy-policy" class="underline underline-offset-2">
             Terms and Privacy Policy
-          </a>
+          </NuxtLink>
           .
         </p>
       </div>

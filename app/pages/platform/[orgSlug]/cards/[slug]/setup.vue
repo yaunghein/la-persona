@@ -16,7 +16,7 @@ function goToDashboard() {
       class="relative mx-auto my-10 flex w-full max-w-120 items-start justify-between px-5 sm:my-13"
     >
       <div
-        class="absolute left-1/2 top-4.5 h-0.5 w-[calc(100%-5rem)] -translate-x-1/2 bg-[#2A2A2A] sm:w-52"
+        class="absolute left-1/2 top-4.5 h-0.5 w-[calc(100%-15rem)] -translate-x-1/2 bg-[#2A2A2A] sm:w-52"
       ></div>
       <div class="flex flex-col items-center gap-4">
         <div
@@ -31,7 +31,9 @@ function goToDashboard() {
             size="20"
           />
         </div>
-        <div class="max-w-24 text-center text-xs font-semibold sm:max-w-none sm:text-sm">
+        <div
+          class="max-w-24 text-center text-xs font-semibold sm:max-w-none sm:text-sm"
+        >
           Contact Information
         </div>
       </div>
@@ -48,7 +50,9 @@ function goToDashboard() {
             size="20"
           />
         </div>
-        <div class="max-w-24 text-center text-xs font-semibold sm:max-w-none sm:text-sm">
+        <div
+          class="max-w-24 text-center text-xs font-semibold sm:max-w-none sm:text-sm"
+        >
           Social Media & Links
         </div>
       </div>
