@@ -3,7 +3,7 @@ definePageMeta({
   layout: 'platform',
 });
 
-import type { TableColumn } from '@nuxt/ui';
+import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import { useQuery } from '@tanstack/vue-query';
 
 type Contact = {
@@ -49,6 +49,9 @@ type ContactsResponse = {
 
 const toast = useToast();
 const isInfoOpen = ref(false);
+const isDeleteConfirmOpen = ref(false);
+const isDeletingContact = ref(false);
+const selectedContactToDelete = ref<{ id: string; name: string } | null>(null);
 const route = useRoute();
 const router = useRouter();
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
@@ -100,7 +103,11 @@ const infoItems = [
     description: 'Access your card link or QR code whenever you need it.',
   },
 ];
-const { data: contactsResponse, isLoading: isContactsLoading } =
+const {
+  data: contactsResponse,
+  isLoading: isContactsLoading,
+  refetch: refetchContacts,
+} =
   useQuery<ContactsResponse>({
     queryKey: ['contact-exchange', () => selectedCardId.value],
     queryFn: async () =>
@@ -216,13 +223,55 @@ const onExport = () => {
   });
 };
 
-const onRowMenu = (name: string) => {
-  toast.add({
-    title: name,
-    description: 'Row actions coming soon.',
-    color: 'neutral',
-  });
-};
+function openDeleteConfirm(contact: { id: string; name: string }) {
+  selectedContactToDelete.value = contact;
+  isDeleteConfirmOpen.value = true;
+}
+
+function closeDeleteConfirm() {
+  isDeleteConfirmOpen.value = false;
+  selectedContactToDelete.value = null;
+}
+
+async function onConfirmDelete() {
+  if (!selectedContactToDelete.value) return;
+
+  isDeletingContact.value = true;
+  try {
+    await $fetch(`/api/contact-exchange/${selectedContactToDelete.value.id}`, {
+      method: 'DELETE',
+    });
+    await refetchContacts();
+    toast.add({
+      title: 'Contact deleted',
+      description: `"${selectedContactToDelete.value.name}" was removed.`,
+      color: 'success',
+    });
+    closeDeleteConfirm();
+  } catch (error: any) {
+    toast.add({
+      title: 'Delete failed',
+      description:
+        error?.data?.statusMessage || error?.statusMessage || 'Please try again.',
+      color: 'error',
+    });
+  } finally {
+    isDeletingContact.value = false;
+  }
+}
+
+function getActionItems(contact: { id: string; name: string }): DropdownMenuItem[][] {
+  return [
+    [
+      {
+        label: 'Delete Contact',
+        icon: 'i-lucide-trash-2',
+        color: 'error',
+        onSelect: () => openDeleteConfirm(contact),
+      },
+    ],
+  ];
+}
 
 const setViewMode = (mode: 'list' | 'grid') => {
   if (viewMode.value !== mode) {
@@ -482,10 +531,6 @@ const visibleColumns = computed(() =>
       <UTable
         :data="pagedContacts"
         :columns="visibleColumns"
-        @select="
-          (_, row) =>
-            onRowMenu(row.original.nameRole.split('\n')[0] || 'Contact')
-        "
         :ui="{
           th: 'px-4 py-4 border-b border-[#232323]',
           td: 'px-4 py-4 border-b border-[#232323]',
@@ -518,6 +563,16 @@ const visibleColumns = computed(() =>
           <span v-else class="text-sm font-medium text-muted">
             {{ row.original.origin }}
           </span>
+        </template>
+        <template #actions-cell="{ row }">
+          <UDropdownMenu :items="getActionItems(row.original)">
+            <UButton
+              icon="i-mdi-dots-vertical"
+              color="neutral"
+              variant="ghost"
+              class="text-muted"
+            />
+          </UDropdownMenu>
         </template>
       </UTable>
     </div>
@@ -570,13 +625,14 @@ const visibleColumns = computed(() =>
                 <p v-else class="text-sm text-white">{{ contact.origin }}</p>
               </div>
 
-              <UButton
-                icon="i-mdi-dots-vertical"
-                color="neutral"
-                variant="ghost"
-                class="text-muted"
-                @click="onRowMenu(contact.name)"
-              />
+              <UDropdownMenu :items="getActionItems(contact)">
+                <UButton
+                  icon="i-mdi-dots-vertical"
+                  color="neutral"
+                  variant="ghost"
+                  class="text-muted"
+                />
+              </UDropdownMenu>
             </div>
           </template>
         </UCard>
@@ -676,6 +732,44 @@ const visibleColumns = computed(() =>
           </div>
         </div>
       </div>
+    </template>
+  </UModal>
+
+  <UModal
+    v-model:open="isDeleteConfirmOpen"
+    :close="false"
+    :dismissible="!isDeletingContact"
+    :ui="{
+      content: 'bg-[#171717] max-w-md',
+      title: 'text-white',
+      body: 'pt-4',
+      footer: 'justify-end gap-2',
+    }"
+    title="Delete Contact?"
+  >
+    <template #body>
+      <p class="text-sm leading-relaxed text-[#bcbcbc]">
+        This action cannot be undone. The contact
+        <span class="font-medium text-white">
+          "{{ selectedContactToDelete?.name }}"
+        </span>
+        will be removed.
+      </p>
+    </template>
+    <template #footer>
+      <UButton
+        label="Cancel"
+        color="neutral"
+        variant="ghost"
+        :disabled="isDeletingContact"
+        @click="closeDeleteConfirm"
+      />
+      <UButton
+        label="Delete"
+        color="error"
+        :loading="isDeletingContact"
+        @click="onConfirmDelete"
+      />
     </template>
   </UModal>
 </template>

@@ -44,6 +44,7 @@ export default defineEventHandler(async (event) => {
         phone: body.data.phone,
         email: body.data.email || null,
         position: body.data.position,
+        company: body.data.company?.trim() || null,
         cardId: null,
       })
       .returning();

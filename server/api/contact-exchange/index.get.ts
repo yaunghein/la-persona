@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, or } from 'drizzle-orm';
+import { and, desc, eq, ilike, isNull, or } from 'drizzle-orm';
 import { auth } from '~~/server/auth';
 import { db } from '~~/server/db';
 import { card, contactExchange, member } from '~~/server/db/schema';
@@ -28,10 +28,14 @@ export default defineEventHandler(async (event) => {
   }
   const isOwner = userMemberInfo.role === 'owner';
 
-  const conditions = [eq(card.organizationId, orgId)];
-  if (!isOwner) {
-    conditions.push(eq(card.userId, userId));
-  }
+  const conditions = [
+    isOwner
+      ? or(eq(card.organizationId, orgId), isNull(contactExchange.cardId))
+      : or(
+          and(eq(card.organizationId, orgId), eq(card.userId, userId)),
+          isNull(contactExchange.cardId)
+        ),
+  ];
 
   if (selectedCardId !== 'all') {
     const accessibleCard = await db.query.card.findFirst({
@@ -76,13 +80,13 @@ export default defineEventHandler(async (event) => {
         email: contactExchange.email,
         company: contactExchange.company,
         position: contactExchange.position,
-        cardId: card.id,
+        cardId: contactExchange.cardId,
         cardSlug: card.slug,
         cardFirstName: card.firstName,
         cardLastName: card.lastName,
       })
       .from(contactExchange)
-      .innerJoin(card, eq(contactExchange.cardId, card.id))
+      .leftJoin(card, eq(contactExchange.cardId, card.id))
       .where(and(...conditions))
       .orderBy(desc(contactExchange.createdAt)),
     isOwner
