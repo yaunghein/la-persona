@@ -28,9 +28,7 @@ onMounted(async () => {
     if (!card.value) return;
     spline.setVariables({
       firstName: card.value.firstName,
-      // TODO: fix thisupdate schema
-      // @ts-ignore
-      lastName: card.value.lastName,
+      lastName: card.value.lastName || '',
     });
   });
 });

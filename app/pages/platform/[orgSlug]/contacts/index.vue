@@ -57,6 +57,7 @@ type ContactsResponse = {
 
 const toast = useToast();
 const isInfoOpen = ref(false);
+const isCreateContactSlideoverOpen = ref(false);
 const isDeleteConfirmOpen = ref(false);
 const isDeletingContact = ref(false);
 const selectedContactToDelete = ref<{ id: string; name: string } | null>(null);
@@ -219,7 +220,7 @@ const gridContacts = computed<Contact[]>(() =>
 );
 
 const onCreateContact = () => {
-  navigateTo(`/platform/${orgSlug.value}/contacts/add`);
+  isCreateContactSlideoverOpen.value = true;
 };
 
 const onExport = () => {
@@ -570,6 +571,25 @@ const visibleColumns = computed(() =>
         </UFieldGroup>
       </div>
     </div>
+
+    <USlideover
+      v-model:open="isCreateContactSlideoverOpen"
+      side="right"
+      inset
+      title="CREATE NEW CONTACT"
+      :ui="{
+        header: 'border-b-2 border-[#232323] px-6 py-6',
+        title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+        body: 'px-6',
+      }"
+    >
+      <template #body>
+        <FormManualContact
+          @close="isCreateContactSlideoverOpen = false"
+          @submitted="refetchContacts()"
+        />
+      </template>
+    </USlideover>
 
     <div v-if="isContactsLoading" class="flex-1 space-y-3">
       <USkeleton
