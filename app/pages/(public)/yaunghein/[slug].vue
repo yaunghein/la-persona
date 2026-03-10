@@ -40,6 +40,7 @@ const isFormOpen = ref(false);
 const isSuccess = ref(false);
 const isValid = ref(true);
 const isSubmitting = ref(false);
+const isSavingContact = ref(false);
 const error = ref('');
 const toast = useToast();
 
@@ -158,6 +159,144 @@ function trackLinkClick(link: { label: string; value: string }) {
       ? { platform: normalizedLabel, url: link.value }
       : { label: link.label, url: link.value },
   });
+}
+
+function escapeVcfValue(value: string) {
+  return String(value || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/\n/g, '\\n')
+    .replace(/,/g, '\\,')
+    .replace(/;/g, '\\;');
+}
+
+function toBase64(buffer: ArrayBuffer) {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const chunkSize = 0x8000;
+
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+
+  return btoa(binary);
+}
+
+async function getPhotoForVcf() {
+  const candidateUrls = [card.value?.avatarUrl, '/images/favicon.png'].filter(
+    Boolean
+  ) as string[];
+
+  for (const rawUrl of candidateUrls) {
+    try {
+      const response = await fetch(rawUrl, { cache: 'no-store' });
+      if (!response.ok) continue;
+
+      const blob = await response.blob();
+      const arrayBuffer = await blob.arrayBuffer();
+      const mimeType = (blob.type || '').toUpperCase();
+      const imageType = mimeType.includes('PNG') ? 'PNG' : 'JPEG';
+
+      return {
+        base64: toBase64(arrayBuffer),
+        imageType,
+      };
+    } catch {
+      // Try next image source.
+    }
+  }
+
+  return null;
+}
+
+function buildCardVcf(photo: { base64: string; imageType: string } | null) {
+  if (!card.value) return '';
+
+  const firstName = (card.value.firstName || '').trim();
+  const lastName = (card.value.lastName || '').trim();
+  const fullName = [firstName, lastName].filter(Boolean).join(' ').trim();
+  const lines = [
+    'BEGIN:VCARD',
+    'VERSION:3.0',
+    `FN;CHARSET=UTF-8:${escapeVcfValue(fullName)}`,
+    `N;CHARSET=UTF-8:${escapeVcfValue(lastName)};${escapeVcfValue(firstName)};;;`,
+    photo ? `PHOTO;ENCODING=b;TYPE=${photo.imageType}:${photo.base64}` : '',
+    card.value.phone ? `TEL;TYPE=CELL:${escapeVcfValue(card.value.phone)}` : '',
+    card.value.email
+      ? `EMAIL;CHARSET=UTF-8;TYPE=INTERNET:${escapeVcfValue(card.value.email)}`
+      : '',
+    card.value.position
+      ? `TITLE;CHARSET=UTF-8:${escapeVcfValue(card.value.position)}`
+      : '',
+    card.value.company
+      ? `ORG;CHARSET=UTF-8:${escapeVcfValue(card.value.company)}`
+      : '',
+    card.value.website
+      ? `URL;TYPE=WORK:${escapeVcfValue(card.value.website)}`
+      : '',
+    ...(Array.isArray(card.value.socials)
+      ? card.value.socials
+          .filter((link) => link?.label?.trim() && link?.value?.trim())
+          .map(
+            (link) =>
+              `URL;TYPE=${escapeVcfValue(link.label)}:${escapeVcfValue(link.value)}`
+          )
+      : []),
+    `REV:${new Date().toISOString()}`,
+    'END:VCARD',
+  ].filter(Boolean);
+
+  return `${lines.join('\r\n')}\r\n`;
+}
+
+function sanitizeFilename(value: string) {
+  return (
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '') || 'contact'
+  );
+}
+
+async function onSaveContact() {
+  if (!card.value || isSavingContact.value) return;
+
+  isSavingContact.value = true;
+  try {
+    const photo = await getPhotoForVcf();
+    const vcf = buildCardVcf(photo);
+    if (!vcf) throw new Error('Unable to generate VCF.');
+
+    const fileName = `${sanitizeFilename(
+      `${card.value.firstName} ${card.value.lastName || ''}`.trim()
+    )}.vcf`;
+    const blob = new Blob([vcf], { type: 'text/vcard;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+
+    trackEvent({
+      cardId: card.value.id,
+      organizationId: card.value.organizationId,
+      userId: card.value.userId,
+      type: 'save_action',
+      metadata: { action: 'contact_save' },
+    });
+  } catch {
+    toast.add({
+      title: 'Unable to save contact',
+      description: 'Please try again.',
+      color: 'error',
+      icon: 'i-heroicons-x-circle',
+    });
+  } finally {
+    isSavingContact.value = false;
+  }
 }
 </script>
 
@@ -290,22 +429,14 @@ function trackLinkClick(link: { label: string; value: string }) {
         <div
           class="flex flex-col items-center justify-center gap-6 border-t border-white/10 px-5 py-8"
         >
-          <a
+          <button
             v-if="isSuccess"
-            :download="`${card.id}.vcf`"
+            :disabled="isSavingContact"
             class="cursor-pointer w-full rounded-full border border-white/10 bg-white py-4 text-center text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-white/10 disabled:text-white/20"
-            @click="
-              trackEvent({
-                cardId: card.id,
-                organizationId: card.organizationId,
-                userId: card.userId,
-                type: 'save_action',
-                metadata: { action: 'contact_save' },
-              })
-            "
+            @click="onSaveContact"
           >
-            Save Contact
-          </a>
+            {{ isSavingContact ? 'Preparing Contact...' : 'Save Contact' }}
+          </button>
           <!-- <a
             v-if="isSuccess"
             :href="card.vcf"
