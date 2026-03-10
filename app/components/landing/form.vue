@@ -244,10 +244,10 @@ const onSubmit = async (e: SubmitEvent) => {
   </section>
 
   <footer
-    class="mt-10 flex flex-row-reverse flex-wrap-reverse items-center justify-center gap-8 px-18 pb-10 sm:mt-0 sm:flex-row sm:justify-between"
+    class="mt-10 flex flex-row-reverse flex-wrap-reverse items-center justify-center gap-8 px-10 pb-10 sm:mt-0 sm:flex-row sm:justify-between"
   >
     <div
-      class="mr-auto w-full text-xs font-light uppercase leading-normal text-white/30 sm:w-auto"
+      class="mr-auto w-full text-xs font-light text-center sm:text-left uppercase leading-normal text-white/30 sm:w-auto"
     >
       © la persona. All rights reserved.
     </div>
@@ -265,5 +265,11 @@ const onSubmit = async (e: SubmitEvent) => {
     >
       <AnimatedText text="LinkedIn" />
     </a>
+    <NuxtLink
+      to="/privacy-policy"
+      class="group text-xs font-light uppercase leading-normal"
+    >
+      <AnimatedText text="Privacy Policy" />
+    </NuxtLink>
   </footer>
 </template>

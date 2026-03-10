@@ -142,20 +142,20 @@ const privacySections = [
 </script>
 
 <template>
+  <header class="z-30 bg-dark px-4 sm:px-18">
+    <div
+      class="flex items-center justify-center border-b border-white/10 py-7 sm:py-13"
+    >
+      <NuxtLink to="/" class="aspect-[1/0.09] w-32 sm:w-[11.6rem]">
+        <IconLogo />
+      </NuxtLink>
+    </div>
+  </header>
   <div
-    class="min-h-dvh bg-[#111111] px-4 py-10 text-white sm:px-6 sm:py-14 lg:px-8"
+    class="min-h-dvh bg-[#111111] px-4 py-10 text-white sm:px-6 sm:py-11 lg:px-8"
   >
     <UContainer class="max-w-5xl">
       <div class="mx-auto mb-10 max-w-3xl text-center">
-        <NuxtLink
-          to="/"
-          class="mx-auto mb-10 inline-flex px-7 py-4"
-          aria-label="Back to home"
-        >
-          <div class="w-44 text-white">
-            <IconLogo />
-          </div>
-        </NuxtLink>
         <h1 class="text-3xl font-medium uppercase tracking-widest sm:text-4xl">
           Terms & Privacy Policy
         </h1>
@@ -267,4 +267,28 @@ const privacySections = [
       </div>
     </UContainer>
   </div>
+
+  <footer
+    class="mt-2 flex flex-row-reverse flex-wrap-reverse items-center justify-center gap-8 px-18 pb-10 sm:mt-0 sm:flex-row sm:justify-between"
+  >
+    <div
+      class="mr-auto w-full text-xs font-light text-center sm:text-left uppercase leading-normal text-white/30 sm:w-auto"
+    >
+      © la persona. All rights reserved.
+    </div>
+    <a
+      href="https://www.facebook.com/share/15cAByXMcX/"
+      target="_blank"
+      class="group text-xs font-light uppercase leading-normal"
+    >
+      <AnimatedText text="Facebook" />
+    </a>
+    <a
+      href="https://www.linkedin.com/company/la-persona-mm/"
+      target="_blank"
+      class="group text-xs font-light uppercase leading-normal"
+    >
+      <AnimatedText text="LinkedIn" />
+    </a>
+  </footer>
 </template>
