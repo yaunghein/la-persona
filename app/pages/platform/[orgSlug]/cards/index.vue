@@ -3,6 +3,8 @@ definePageMeta({
   layout: 'platform',
 });
 
+import { useQuery } from '@tanstack/vue-query';
+
 useSeoMeta({ ...getSeoTitle('Cards - LA PERSONA') });
 
 const route = useRoute();
@@ -23,10 +25,13 @@ onMounted(() => {
 
 const {
   data: cards,
-  pending,
+  isLoading: pending,
   error,
-  refresh,
-} = await useFetch<CardDTO[]>('/api/cards');
+  refetch: refresh,
+} = useQuery<CardDTO[]>({
+  queryKey: ['cards'],
+  queryFn: async () => $fetch('/api/cards'),
+});
 
 const isSlideoverOpen = ref(false);
 const isPendingInfoOpen = ref(false);
