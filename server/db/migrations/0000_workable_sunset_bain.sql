@@ -176,6 +176,7 @@ CREATE TABLE "contact_exchange" (
 	"name" text NOT NULL,
 	"phone" text NOT NULL,
 	"email" text,
+	"company" text,
 	"position" text,
 	"card_id" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
