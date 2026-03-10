@@ -546,10 +546,10 @@ const visibleColumns = computed(() =>
 
 <template>
   <div class="flex min-h-[calc(100dvh-7rem)] flex-col gap-8">
-    <div class="flex flex-wrap items-center justify-between gap-4 pb-5">
+    <div class="flex flex-col gap-3 pb-5 sm:flex-row sm:items-center sm:justify-between">
       <div class="flex items-center gap-2">
         <h1
-          class="text-[1.75rem] font-normal leading-tight tracking-widest uppercase"
+          class="text-2xl font-medium leading-tight tracking-widest uppercase"
         >
           People you've connected with
         </h1>
@@ -563,7 +563,7 @@ const visibleColumns = computed(() =>
         />
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap">
         <UInput
           v-if="isOwner"
           v-model="ownerSearchQuery"
@@ -592,7 +592,7 @@ const visibleColumns = computed(() =>
           label="Create New Contact"
           leading-icon="i-material-symbols-add"
           color="neutral"
-          class="h-9 cursor-pointer flex items-center justify-center rounded-full border-2 border-[#232323] bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
+          class="h-9 w-full sm:w-auto cursor-pointer flex items-center justify-center rounded-full border-2 border-[#232323] bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
           @click="onCreateContact"
         />
 
@@ -600,7 +600,7 @@ const visibleColumns = computed(() =>
           icon="i-material-symbols-download-sharp"
           color="neutral"
           variant="ghost"
-          class="h-9 w-16 cursor-pointer flex px-5 items-center justify-center rounded-full border-2 border-[#232323] bg-[#232323] p-0 text-white hover:bg-[#2a2a2a] mr-8"
+          class="h-9 w-16 cursor-pointer flex px-5 items-center justify-center rounded-full border-2 border-[#232323] bg-[#232323] p-0 text-white hover:bg-[#2a2a2a]"
           @click="onExport"
         />
 

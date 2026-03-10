@@ -269,9 +269,11 @@ const chartOptions = {
 
 <template>
   <div class="space-y-4">
-    <div class="flex items-center justify-between">
+    <div
+      class="flex flex-col sm:flex-row gap-3 sm:gap-0 items-center justify-between"
+    >
       <h1
-        class="flex items-center gap-3 text-[28px] font-medium uppercase tracking-widest"
+        class="flex items-center gap-3 text-2xl font-medium uppercase tracking-widest"
       >
         {{ analyticsHeading }}
         <UButton
@@ -290,7 +292,7 @@ const chartOptions = {
         value-key="id"
         :items="ownerCardItems"
         :search-input="false"
-        class="w-[180px]"
+        class="w-full sm:w-48"
         :ui="{
           base: 'h-[49px] rounded-[8px] border-none bg-[#171717] px-4 text-white',
           content: 'bg-[#171717] border border-[#2a2a2a]',

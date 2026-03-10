@@ -87,7 +87,7 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
           aria-label="Go back to contacts"
           @click="goBack"
         />
-        <h1 class="text-[1.75rem] font-normal uppercase tracking-widest">
+        <h1 class="text-2xl font-medium uppercase tracking-widest leading-tight">
           Create New Contact
         </h1>
       </div>
@@ -97,7 +97,7 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
     <UCard
       :ui="{
         root: 'rounded-[8px] bg-[#171717] border border-transparent',
-        body: 'p-8',
+        body: 'p-5 sm:p-8',
       }"
     >
       <UForm :schema="schema" :state="state" class="space-y-8" @submit="onSubmit">
@@ -210,7 +210,7 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
             type="submit"
             :loading="submitting"
             color="neutral"
-            class="rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
+            class="w-full sm:w-auto rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
           >
             <template #leading>
               <UIcon name="i-lucide-plus" class="size-4" />

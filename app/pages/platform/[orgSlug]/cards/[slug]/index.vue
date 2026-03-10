@@ -414,9 +414,9 @@ const active = computed({
     </p>
   </div>
 
-  <div class="flex items-start justify-between gap-4">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
     <div>
-      <div class="flex">
+      <div class="flex flex-wrap items-center gap-y-2">
         <UButton
           icon="i-lucide-chevron-left"
           size="md"
@@ -425,17 +425,17 @@ const active = computed({
           :to="`/platform/${orgSlug}/cards`"
         />
         <h1
-          class="text-[1.75rem] font-medium tracking-[0.17rem] uppercase leading-none"
+          class="text-2xl font-medium tracking-widest uppercase leading-tight"
         >
           {{ card?.firstName }} {{ card?.lastName }}
         </h1>
         <div
-          class="uppercase text-[0.625rem] leading-none font-bold p-2.5 rounded bg-[#232323] ml-3"
+          class="uppercase text-[0.625rem] leading-none font-bold p-2.5 rounded bg-[#232323] ml-0 sm:ml-3"
         >
           {{ cardBadgeLabel }}
         </div>
       </div>
-      <p class="mt-2 text-sm leading-[20px] text-muted ml-10">
+      <p class="mt-2 text-sm leading-[20px] text-muted ml-0 sm:ml-10">
         Manage your 3D card information, contact information, QR, and
         wallpapers.
       </p>
@@ -446,7 +446,7 @@ const active = computed({
       :label="upgradeButtonLabel"
       icon="i-lucide-chevrons-up"
       color="neutral"
-      class="rounded-full bg-white px-4 font-medium text-dark hover:bg-white/90"
+      class="w-full sm:w-auto rounded-full bg-white px-4 font-medium text-dark hover:bg-white/90"
       @click="openUpgradeSlideover"
     />
   </div>
@@ -456,7 +456,7 @@ const active = computed({
     :items="items"
     :ui="{
       root: 'items-start mt-6',
-      list: 'bg-[#171717] max-w-[32rem] rounded-[8px] p-1',
+      list: 'bg-[#171717] w-full max-w-[32rem] rounded-[8px] p-1 overflow-x-auto',
       indicator: 'bg-[#232323]',
       trigger: 'data-[state=active]:text-white rounded-[4px] px-4 py-2.5',
       content: 'mt-5',

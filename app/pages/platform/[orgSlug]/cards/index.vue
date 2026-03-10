@@ -142,10 +142,10 @@ function hasSplinePreview(card: CardDTO) {
 </script>
 
 <template>
-  <div class="flex w-full items-center justify-between">
+  <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div class="flex items-center gap-2">
       <h1
-        class="text-[1.75rem] font-medium tracking-[0.17rem] uppercase leading-none"
+        class="text-2xl font-medium uppercase tracking-widest leading-tight"
       >
         Your Persona Cards
       </h1>
@@ -172,7 +172,7 @@ function hasSplinePreview(card: CardDTO) {
     >
       <UButton
         label="Request New Card"
-        class="rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90 cursor-pointer"
+        class="w-full sm:w-auto rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90 cursor-pointer"
         icon="i-lucide-plus"
         size="md"
       />
@@ -263,14 +263,14 @@ function hasSplinePreview(card: CardDTO) {
 
   <div
     v-if="cards"
-    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+    class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 sm:gap-6"
   >
     <UCard
       v-for="card in cards"
       :key="card.id"
       variant="outline"
       class="bg-white/2"
-      :ui="{ body: 'p-14 sm:p-14' }"
+      :ui="{ body: 'p-5 sm:p-8 lg:p-10' }"
     >
       <div class="aspect-5/3 relative">
         <img
@@ -289,7 +289,7 @@ function hasSplinePreview(card: CardDTO) {
           />
         </div>
         <UBadge
-          class="absolute -top-10 -right-10 uppercase font-semibold"
+          class="absolute right-3 top-3 sm:-top-10 sm:-right-10 uppercase font-semibold"
           :class="{
             'cursor-pointer bg-amber-500/20 text-amber-300':
               card.subscription?.status === 'pending_approval',

@@ -9,14 +9,14 @@ function goToDashboard() {
 
 <template>
   <section v-if="step !== 'welcome'">
-    <div class="w-44 aspect-[1/0.11] mt-9 mx-auto">
+    <div class="mt-9 mx-auto aspect-[1/0.11] w-36 sm:w-44">
       <IconLogo />
     </div>
     <div
-      class="flex items-start justify-between my-13 w-120 mx-auto relative px-5"
+      class="relative mx-auto my-10 flex w-full max-w-120 items-start justify-between px-5 sm:my-13"
     >
       <div
-        class="bg-[#2A2A2A] h-0.5 w-52 left-1/2 top-4.5 -translate-x-1/2 absolute"
+        class="absolute left-1/2 top-4.5 h-0.5 w-[calc(100%-5rem)] -translate-x-1/2 bg-[#2A2A2A] sm:w-52"
       ></div>
       <div class="flex flex-col items-center gap-4">
         <div
@@ -31,7 +31,9 @@ function goToDashboard() {
             size="20"
           />
         </div>
-        <div class="text-sm font-semibold">Contact Information</div>
+        <div class="max-w-24 text-center text-xs font-semibold sm:max-w-none sm:text-sm">
+          Contact Information
+        </div>
       </div>
       <div class="flex flex-col items-center gap-4">
         <div
@@ -46,7 +48,9 @@ function goToDashboard() {
             size="20"
           />
         </div>
-        <div class="text-sm font-semibold">Social Media & Links</div>
+        <div class="max-w-24 text-center text-xs font-semibold sm:max-w-none sm:text-sm">
+          Social Media & Links
+        </div>
       </div>
     </div>
 
