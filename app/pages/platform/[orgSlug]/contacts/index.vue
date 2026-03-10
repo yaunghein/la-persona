@@ -16,6 +16,14 @@ type Contact = {
   origin: string;
   originTo?: string;
 };
+type ContactActionItem = {
+  id: string;
+  name: string;
+  role: string;
+  company: string;
+  phone: string;
+  email: string;
+};
 
 type ContactRow = {
   id: string;
@@ -107,16 +115,15 @@ const {
   data: contactsResponse,
   isLoading: isContactsLoading,
   refetch: refetchContacts,
-} =
-  useQuery<ContactsResponse>({
-    queryKey: ['contact-exchange', () => selectedCardId.value],
-    queryFn: async () =>
-      $fetch('/api/contact-exchange', {
-        query: {
-          cardId: selectedCardId.value,
-        },
-      }),
-  });
+} = useQuery<ContactsResponse>({
+  queryKey: ['contact-exchange', () => selectedCardId.value],
+  queryFn: async () =>
+    $fetch('/api/contact-exchange', {
+      query: {
+        cardId: selectedCardId.value,
+      },
+    }),
+});
 const isOwner = computed(() => contactsResponse.value?.isOwner === true);
 const ownerCardItems = computed(() => [
   { id: 'all', label: 'All Cards' },
@@ -223,6 +230,87 @@ const onExport = () => {
   });
 };
 
+function normalizeContactField(value: string) {
+  const normalized = String(value || '').trim();
+  return !normalized || normalized.toUpperCase() === 'N/A' ? '' : normalized;
+}
+
+function escapeVcfValue(value: string) {
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/\n/g, '\\n')
+    .replace(/,/g, '\\,')
+    .replace(/;/g, '\\;');
+}
+
+function splitName(fullName: string) {
+  const normalized = normalizeContactField(fullName);
+  if (!normalized) return { firstName: '', lastName: '' };
+
+  const parts = normalized.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return { firstName: parts[0] || '', lastName: '' };
+
+  return {
+    firstName: parts.slice(0, -1).join(' '),
+    lastName: parts[parts.length - 1] || '',
+  };
+}
+
+function createVcfContent(contact: ContactActionItem) {
+  const fullName = normalizeContactField(contact.name);
+  const phone = normalizeContactField(contact.phone);
+  const email = normalizeContactField(contact.email);
+  const title = normalizeContactField(contact.role);
+  const org = normalizeContactField(contact.company);
+  const { firstName, lastName } = splitName(fullName);
+
+  const lines = [
+    'BEGIN:VCARD',
+    'VERSION:3.0',
+    `FN;CHARSET=UTF-8:${escapeVcfValue(fullName)}`,
+    `N;CHARSET=UTF-8:${escapeVcfValue(lastName)};${escapeVcfValue(firstName)};;;`,
+    phone ? `TEL;TYPE=CELL:${escapeVcfValue(phone)}` : '',
+    email ? `EMAIL;CHARSET=UTF-8;TYPE=INTERNET:${escapeVcfValue(email)}` : '',
+    title ? `TITLE;CHARSET=UTF-8:${escapeVcfValue(title)}` : '',
+    org ? `ORG;CHARSET=UTF-8:${escapeVcfValue(org)}` : '',
+    `REV:${new Date().toISOString()}`,
+    'END:VCARD',
+  ].filter(Boolean);
+
+  return `${lines.join('\r\n')}\r\n`;
+}
+
+function sanitizeVcfFilename(value: string) {
+  return (
+    normalizeContactField(value)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '') || 'contact'
+  );
+}
+
+function saveContactAsVcf(contact: ContactActionItem) {
+  const content = createVcfContent(contact);
+  const fileName = `${sanitizeVcfFilename(contact.name)}.vcf`;
+  const blob = new Blob([content], { type: 'text/vcard;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+
+  anchor.href = url;
+  anchor.download = fileName;
+  anchor.style.display = 'none';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+
+  // toast.add({
+  //   title: 'Contact saved',
+  //   description: `${contact.name} downloaded as VCF.`,
+  //   color: 'success',
+  // });
+}
+
 function openDeleteConfirm(contact: { id: string; name: string }) {
   selectedContactToDelete.value = contact;
   isDeleteConfirmOpen.value = true;
@@ -252,7 +340,9 @@ async function onConfirmDelete() {
     toast.add({
       title: 'Delete failed',
       description:
-        error?.data?.statusMessage || error?.statusMessage || 'Please try again.',
+        error?.data?.statusMessage ||
+        error?.statusMessage ||
+        'Please try again.',
       color: 'error',
     });
   } finally {
@@ -260,8 +350,15 @@ async function onConfirmDelete() {
   }
 }
 
-function getActionItems(contact: { id: string; name: string }): DropdownMenuItem[][] {
+function getActionItems(contact: ContactActionItem): DropdownMenuItem[][] {
   return [
+    [
+      {
+        label: 'Save Contact',
+        icon: 'i-lucide-download',
+        onSelect: () => saveContactAsVcf(contact),
+      },
+    ],
     [
       {
         label: 'Delete Contact',
@@ -452,7 +549,7 @@ const visibleColumns = computed(() =>
         <UFieldGroup>
           <UButton
             icon="i-lucide-table-2"
-            class="size-8 rounded-l-md border-2 border-[#232323] p-0 flex items-center justify-center"
+            class="size-8 rounded-l-md border-2 border-[#232323] hover:bg-[#232323] p-0 flex items-center justify-center"
             aria-label="List view"
             @click="setViewMode('list')"
             :variant="viewMode === 'list' ? 'solid' : 'ghost'"
@@ -462,7 +559,7 @@ const visibleColumns = computed(() =>
           />
           <UButton
             icon="i-lucide-layout-grid"
-            class="size-8 rounded-r-md border-2 border-[#232323] p-0 flex items-center justify-center"
+            class="size-8 rounded-r-md border-2 border-[#232323] hover:bg-[#232323] p-0 flex items-center justify-center"
             aria-label="Grid view"
             @click="setViewMode('grid')"
             :variant="viewMode === 'grid' ? 'solid' : 'ghost'"
@@ -578,11 +675,6 @@ const visibleColumns = computed(() =>
     </div>
 
     <div v-else class="flex-1">
-      <div class="mb-5 flex items-center gap-1 text-sm text-muted">
-        <span>Name</span>
-        <UIcon name="i-lucide-arrow-down-narrow-wide" class="size-4" />
-      </div>
-
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
         <UCard
           v-for="contact in gridContacts"
