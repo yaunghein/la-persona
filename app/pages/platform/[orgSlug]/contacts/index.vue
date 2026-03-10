@@ -223,12 +223,69 @@ const onCreateContact = () => {
   isCreateContactSlideoverOpen.value = true;
 };
 
+function escapeCsvCell(value: string) {
+  const safeValue = String(value ?? '')
+    .replace(/\r?\n/g, ' ')
+    .trim();
+  return `"${safeValue.replace(/"/g, '""')}"`;
+}
+
 const onExport = () => {
-  toast.add({
-    title: 'Export started',
-    description: 'Sample export action triggered.',
-    color: 'success',
+  if (!contacts.value.length) {
+    toast.add({
+      title: 'Nothing to export',
+      description: 'No contacts available in the current table.',
+      color: 'warning',
+    });
+    return;
+  }
+
+  const headers = isOwner.value
+    ? ['Name', 'Role', 'Company', 'Phone', 'Email', 'Origin']
+    : ['Name', 'Role', 'Company', 'Phone', 'Email'];
+
+  const rows = contacts.value.map((contact) =>
+    isOwner.value
+      ? [
+          contact.name,
+          normalizeContactField(contact.role),
+          normalizeContactField(contact.company),
+          normalizeContactField(contact.phone),
+          normalizeContactField(contact.email),
+          normalizeContactField(contact.origin),
+        ]
+      : [
+          contact.name,
+          normalizeContactField(contact.role),
+          normalizeContactField(contact.company),
+          normalizeContactField(contact.phone),
+          normalizeContactField(contact.email),
+        ]
+  );
+
+  const csvContent = [headers, ...rows]
+    .map((row) => row.map((cell) => escapeCsvCell(cell)).join(','))
+    .join('\r\n');
+
+  const blob = new Blob([`\uFEFF${csvContent}`], {
+    type: 'text/csv;charset=utf-8;',
   });
+  const fileName = `contacts-${orgSlug.value || 'org'}-${new Date().toISOString().slice(0, 10)}.csv`;
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+
+  // toast.add({
+  //   title: 'Export complete',
+  //   description: `${contacts.value.length} contact(s) downloaded as CSV.`,
+  //   color: 'success',
+  // });
 };
 
 function normalizeContactField(value: string) {
@@ -535,7 +592,7 @@ const visibleColumns = computed(() =>
           label="Create New Contact"
           leading-icon="i-material-symbols-add"
           color="neutral"
-          class="h-9 rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
+          class="h-9 cursor-pointer flex items-center justify-center rounded-full border-2 border-[#232323] bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
           @click="onCreateContact"
         />
 
@@ -543,14 +600,14 @@ const visibleColumns = computed(() =>
           icon="i-material-symbols-download-sharp"
           color="neutral"
           variant="ghost"
-          class="w-16 h-9 flex items-center justify-center rounded-full border-2 border-[#232323] bg-[#232323] p-0 text-white hover:bg-[#2a2a2a] mr-8"
+          class="h-9 w-16 cursor-pointer flex px-5 items-center justify-center rounded-full border-2 border-[#232323] bg-[#232323] p-0 text-white hover:bg-[#2a2a2a] mr-8"
           @click="onExport"
         />
 
         <UFieldGroup>
           <UButton
             icon="i-lucide-table-2"
-            class="size-8 rounded-l-md border-2 border-[#232323] hover:bg-[#232323] p-0 flex items-center justify-center"
+            class="cursor-pointer size-8 rounded-l-md border-2 border-[#232323] hover:bg-[#232323] p-0 flex items-center justify-center"
             aria-label="List view"
             @click="setViewMode('list')"
             :variant="viewMode === 'list' ? 'solid' : 'ghost'"
@@ -560,7 +617,7 @@ const visibleColumns = computed(() =>
           />
           <UButton
             icon="i-lucide-layout-grid"
-            class="size-8 rounded-r-md border-2 border-[#232323] hover:bg-[#232323] p-0 flex items-center justify-center"
+            class="cursor-pointer size-8 rounded-r-md border-2 border-[#232323] hover:bg-[#232323] p-0 flex items-center justify-center"
             aria-label="Grid view"
             @click="setViewMode('grid')"
             :variant="viewMode === 'grid' ? 'solid' : 'ghost'"
