@@ -96,14 +96,14 @@ const qrCodeOptions = computed(() => ({
     light: '#00000000',
   },
 }));
-const qrCodeDataUrl = useQRCode(publicCardUrl, qrCodeOptions);
+// const qrCodeDataUrl = useQRCode(publicCardUrl, qrCodeOptions);
 
 const previewWallpaperFrameStyle = computed(() => ({
   aspectRatio: `${selectedModelConfig.value.width} / ${selectedModelConfig.value.height}`,
 }));
 
 const QR_SIZE_RATIO = 0.3;
-const QR_PADDING_RATIO = 0;
+const QR_PADDING_RATIO = 0.05;
 
 function triggerDownloadFromBlob(blob: Blob, fileName: string) {
   const blobUrl = URL.createObjectURL(blob);
@@ -183,54 +183,77 @@ function hexToRgb(hex: string) {
   };
 }
 
-function createTransparentQrImage(
-  qrImage: HTMLImageElement,
-  targetSize: number,
-  colorHex: string
-) {
+function isFinderCell(x: number, y: number, matrixSize: number) {
+  const inTopLeft = x <= 6 && y <= 6;
+  const inTopRight = x >= matrixSize - 7 && y <= 6;
+  const inBottomLeft = x <= 6 && y >= matrixSize - 7;
+  return inTopLeft || inTopRight || inBottomLeft;
+}
+
+async function createStyledQrCanvas(targetSize: number, colorHex: string) {
+  if (!publicCardUrl.value) throw new Error('QR URL unavailable');
+
+  const qrModule = await import('qrcode');
+  const qrFactory = (qrModule as any).default || qrModule;
+  const qr = qrFactory.create(publicCardUrl.value, {
+    errorCorrectionLevel: 'H',
+    margin: 0,
+  });
+
+  const matrixSize = qr.modules.size as number;
+  const matrixData = qr.modules.data as ArrayLike<number | boolean>;
+  const moduleSize = targetSize / matrixSize;
+  const dotRadius = moduleSize * 0.42;
+  const { r, g, b } = hexToRgb(colorHex);
+
   const qrCanvas = document.createElement('canvas');
   qrCanvas.width = targetSize;
   qrCanvas.height = targetSize;
   const qrContext = qrCanvas.getContext('2d');
   if (!qrContext) throw new Error('QR canvas context unavailable');
 
-  qrContext.imageSmoothingEnabled = false;
-  qrContext.drawImage(qrImage, 0, 0, targetSize, targetSize);
+  qrContext.fillStyle = `rgba(${r}, ${g}, ${b}, 1)`;
+  qrContext.imageSmoothingEnabled = true;
+  qrContext.imageSmoothingQuality = 'high';
 
-  const imageData = qrContext.getImageData(0, 0, targetSize, targetSize);
-  const pixels = imageData.data;
-  const { r, g, b } = hexToRgb(colorHex);
+  for (let y = 0; y < matrixSize; y += 1) {
+    for (let x = 0; x < matrixSize; x += 1) {
+      const index = y * matrixSize + x;
+      const cell = matrixData[index];
+      const isDark = cell === true || cell === 1;
+      if (!isDark) continue;
 
-  for (let i = 0; i < pixels.length; i += 4) {
-    const pr = pixels[i]!;
-    const pg = pixels[i + 1]!;
-    const pb = pixels[i + 2]!;
-    const pa = pixels[i + 3]!;
+      const drawX = x * moduleSize;
+      const drawY = y * moduleSize;
 
-    const isLightPixel = pr > 245 && pg > 245 && pb > 245;
-    if (isLightPixel) {
-      pixels[i + 3] = 0;
-      continue;
+      if (isFinderCell(x, y, matrixSize)) {
+        qrContext.fillRect(drawX, drawY, moduleSize, moduleSize);
+        continue;
+      }
+
+      qrContext.beginPath();
+      qrContext.arc(
+        drawX + moduleSize / 2,
+        drawY + moduleSize / 2,
+        dotRadius,
+        0,
+        Math.PI * 2
+      );
+      qrContext.fill();
     }
-
-    pixels[i] = r;
-    pixels[i + 1] = g;
-    pixels[i + 2] = b;
-    pixels[i + 3] = pa || 255;
   }
 
-  qrContext.putImageData(imageData, 0, 0);
   return qrCanvas;
 }
 
 async function renderWallpaperCanvas() {
-  if (!wallpaperProxyUrl.value || !qrCodeDataUrl.value) {
+  if (!wallpaperProxyUrl.value || !publicCardUrl.value) {
     throw new Error('Wallpaper preview is incomplete');
   }
 
-  const [image, qrImage] = await Promise.all([
+  const [image, styledQr] = await Promise.all([
     loadImage(wallpaperProxyUrl.value),
-    loadImage(qrCodeDataUrl.value),
+    createStyledQrCanvas(1024, qrColor.value),
   ]);
   const { width, height } = selectedModelConfig.value;
   const crop = getCenterCropRect(
@@ -269,16 +292,10 @@ async function renderWallpaperCanvas() {
   const qrX = (width - qrSize) / 2;
   const qrY = (height - qrSize) / 2;
   const borderWidth = Math.max(2, Math.round(qrFrameSize * 0.015));
-  const transparentQr = createTransparentQrImage(
-    qrImage,
-    qrSize,
-    qrColor.value
-  );
 
   context.fillStyle = hexToRgba(qrLayerBgColor.value, qrLayerBgOpacity.value);
   context.fillRect(qrFrameX, qrFrameY, qrFrameSize, qrFrameSize);
-  context.imageSmoothingEnabled = false;
-  context.drawImage(transparentQr, qrX, qrY, qrSize, qrSize);
+  context.drawImage(styledQr, qrX, qrY, qrSize, qrSize);
   context.imageSmoothingEnabled = true;
   context.strokeStyle = hexToRgba(qrColor.value, qrBorderOpacity.value);
   context.lineWidth = borderWidth;
@@ -293,9 +310,7 @@ async function renderWallpaperCanvas() {
 }
 
 async function renderQrOnlyCanvas() {
-  if (!qrCodeDataUrl.value) throw new Error('QR is not ready');
-
-  const qrImage = await loadImage(qrCodeDataUrl.value);
+  if (!publicCardUrl.value) throw new Error('QR is not ready');
   const canvasSize = 1024;
   const frameInset = Math.round(canvasSize * 0.04);
   const qrFrameX = frameInset;
@@ -306,11 +321,7 @@ async function renderQrOnlyCanvas() {
   const qrX = (canvasSize - qrSize) / 2;
   const qrY = (canvasSize - qrSize) / 2;
   const borderWidth = Math.max(2, Math.round(qrFrameSize * 0.015));
-  const transparentQr = createTransparentQrImage(
-    qrImage,
-    qrSize,
-    qrColor.value
-  );
+  const styledQr = await createStyledQrCanvas(qrSize, qrColor.value);
 
   const canvas = document.createElement('canvas');
   canvas.width = canvasSize;
@@ -320,8 +331,7 @@ async function renderQrOnlyCanvas() {
 
   context.fillStyle = hexToRgba(qrLayerBgColor.value, qrLayerBgOpacity.value);
   context.fillRect(qrFrameX, qrFrameY, qrFrameSize, qrFrameSize);
-  context.imageSmoothingEnabled = false;
-  context.drawImage(transparentQr, qrX, qrY, qrSize, qrSize);
+  context.drawImage(styledQr, qrX, qrY, qrSize, qrSize);
   context.imageSmoothingEnabled = true;
   context.strokeStyle = hexToRgba(qrColor.value, qrBorderOpacity.value);
   context.lineWidth = borderWidth;
@@ -339,7 +349,7 @@ let wallpaperPreviewRenderToken = 0;
 watch(
   [
     wallpaperProxyUrl,
-    qrCodeDataUrl,
+    publicCardUrl,
     selectedModel,
     qrColor,
     qrBorderOpacity,
@@ -347,8 +357,9 @@ watch(
     qrLayerBgOpacity,
   ],
   async () => {
-    if (!wallpaperProxyUrl.value || !qrCodeDataUrl.value) {
+    if (!wallpaperProxyUrl.value || !publicCardUrl.value) {
       wallpaperPreviewDataUrl.value = '';
+      qrOnlyPreviewDataUrl.value = '';
       return;
     }
 
@@ -376,7 +387,7 @@ watch(
 );
 
 async function downloadWallpaper() {
-  if (!wallpaperProxyUrl.value || !qrCodeDataUrl.value) {
+  if (!wallpaperProxyUrl.value || !publicCardUrl.value) {
     toast.add({
       title: 'Wallpaper preview is incomplete',
       description: 'Please ensure wallpaper and QR code are ready.',
@@ -413,7 +424,7 @@ async function downloadWallpaper() {
 }
 
 async function downloadQr() {
-  if (!qrCodeDataUrl.value) {
+  if (!publicCardUrl.value) {
     toast.add({
       title: 'QR is not ready',
       description: 'Please wait for the QR code to render.',
