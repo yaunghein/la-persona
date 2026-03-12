@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query';
 import { useQRCode } from '@vueuse/integrations/useQRCode';
+import { refDebounced, useStorage } from '@vueuse/core';
 
 type PhoneModel = {
   label: string;
@@ -46,12 +47,17 @@ const selectedModel = ref(phoneModels[0]!.value);
 const isGeneratingWallpaper = ref(false);
 const isGeneratingQr = ref(false);
 const isRenderingWallpaperPreview = ref(false);
+const isWallpaperPreviewModalOpen = ref(false);
 const wallpaperPreviewDataUrl = ref('');
 const qrOnlyPreviewDataUrl = ref('');
-const qrColor = ref('#000000');
-const qrBorderOpacity = ref(0);
-const qrLayerBgColor = ref('#ffffff');
-const qrLayerBgOpacity = ref(1);
+const qrColor = useStorage('wallpaper.qrColor', '#000000');
+const qrBorderOpacity = useStorage('wallpaper.qrBorderOpacity', 0);
+const qrLayerBgColor = useStorage('wallpaper.qrLayerBgColor', '#ffffff');
+const qrLayerBgOpacity = useStorage('wallpaper.qrLayerBgOpacity', 1);
+const debouncedQrColor = refDebounced(qrColor, 120);
+const debouncedQrBorderOpacity = refDebounced(qrBorderOpacity, 120);
+const debouncedQrLayerBgColor = refDebounced(qrLayerBgColor, 120);
+const debouncedQrLayerBgOpacity = refDebounced(qrLayerBgOpacity, 120);
 
 const { data: card, isLoading } = useQuery<SelectCard>({
   queryKey: ['cards', slug],
@@ -346,18 +352,21 @@ async function renderQrOnlyCanvas() {
 }
 
 let wallpaperPreviewRenderToken = 0;
+
 watch(
   [
     wallpaperProxyUrl,
     publicCardUrl,
     selectedModel,
-    qrColor,
-    qrBorderOpacity,
-    qrLayerBgColor,
-    qrLayerBgOpacity,
+    debouncedQrColor,
+    debouncedQrBorderOpacity,
+    debouncedQrLayerBgColor,
+    debouncedQrLayerBgOpacity,
   ],
   async () => {
     if (!wallpaperProxyUrl.value || !publicCardUrl.value) {
+      wallpaperPreviewRenderToken += 1;
+      isRenderingWallpaperPreview.value = false;
       wallpaperPreviewDataUrl.value = '';
       qrOnlyPreviewDataUrl.value = '';
       return;
@@ -472,27 +481,25 @@ async function downloadQr() {
       </div>
     </div>
 
-    <div v-else class="space-y-8">
-      <div class="space-y-4">
-        <h2
-          class="text-[20px] font-medium uppercase tracking-widest text-white"
-        >
-          QR & Wallpaper
-        </h2>
-        <p class="max-w-160 text-sm leading-[21px] text-[#8b8b8b]">
-          Choose your phone model and download the wallpaper that fits perfectly
-          on your lock screen or download only QR to share your business card
-          wherever you see fit.
-        </p>
-      </div>
+    <div v-else class="space-y-8 grid sm:grid-cols-2">
+      <div class="space-y-8">
+        <div class="space-y-4">
+          <h2
+            class="text-[20px] font-medium uppercase tracking-widest text-white"
+          >
+            QR & Wallpaper
+          </h2>
+          <p class="max-w-160 text-sm leading-[21px] text-[#8b8b8b]">
+            Choose your phone model and download the wallpaper that fits
+            perfectly on your lock screen or download only QR to share your
+            business card wherever you see fit.
+          </p>
+        </div>
 
-      <div
-        class="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_auto_auto] lg:items-start"
-      >
         <UFormField
           label="Choose Your Phone Model"
           name="phoneModel"
-          class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-2 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
         >
           <USelectMenu
             v-model="selectedModel"
@@ -509,10 +516,86 @@ async function downloadQr() {
           />
         </UFormField>
 
+        <div class="space-y-5">
+          <div class="w-full max-w-[760px] space-y-7">
+            <div class="grid grid-cols-2 gap-5">
+              <div class="space-y-3">
+                <p class="text-sm font-medium text-white">QR Color</p>
+                <UColorPicker
+                  v-model="qrColor"
+                  size="sm"
+                  class="w-full"
+                  aria-label="Pick QR color"
+                />
+              </div>
+              <div class="space-y-3">
+                <p class="text-sm font-medium text-white">Background Color</p>
+                <UColorPicker
+                  v-model="qrLayerBgColor"
+                  size="sm"
+                  class="w-full"
+                  aria-label="Pick QR background color"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-5">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <p class="text-sm font-medium text-white">Border Opacity</p>
+                  <span class="text-xs text-white/60">
+                    {{ Math.round(qrBorderOpacity * 100) }}%
+                  </span>
+                </div>
+                <USlider
+                  v-model="qrBorderOpacity"
+                  :min="0"
+                  :max="1"
+                  :step="0.05"
+                  size="sm"
+                  color="neutral"
+                  class="w-full"
+                />
+              </div>
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <p class="text-sm font-medium text-white">
+                    Background Opacity
+                  </p>
+                  <span class="text-xs text-white/60">
+                    {{ Math.round(qrLayerBgOpacity * 100) }}%
+                  </span>
+                </div>
+                <USlider
+                  v-model="qrLayerBgOpacity"
+                  :min="0"
+                  :max="1"
+                  :step="0.05"
+                  size="sm"
+                  color="neutral"
+                  class="w-full"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="flex items-start justify-center xl:justify-end flex-wrap gap-10 mt-10 sm:mt-0"
+      >
         <div class="flex flex-col items-center gap-6">
           <div
-            class="flex h-[240px] w-[240px] flex-col items-center justify-center gap-[6px] overflow-hidden rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4"
+            class="relative flex sm:scale-100 h-[240px] w-[240px] flex-col items-center justify-center gap-[6px] overflow-hidden rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4"
           >
+            <UButton
+              icon="i-lucide-expand"
+              color="neutral"
+              variant="ghost"
+              class="absolute flex items-center justify-center right-2 top-2 z-10 cursor-pointer rounded-full bg-black/35 p-3 scale-[0.65] origin-top-right text-white hover:bg-black/50"
+              aria-label="Expand wallpaper preview"
+              @click="isWallpaperPreviewModalOpen = true"
+            />
             <p class="text-sm text-white/50">Preview</p>
             <div
               class="flex h-40 w-40 items-center justify-center rounded-[4px] bg-[#1c1c1c]"
@@ -542,72 +625,18 @@ async function downloadQr() {
             <p class="text-sm text-white">{{ selectedModelConfig.label }}</p>
           </div>
 
-          <div class="flex items-center gap-2">
-            <label
-              class="flex items-center gap-2 rounded-full border border-[#2a2a2a] bg-[#232323] px-3 py-2"
-            >
-              <span class="text-xs text-white/70">QR</span>
-              <UColorPicker
-                v-model="qrColor"
-                size="sm"
-                class="min-w-7"
-                aria-label="Pick QR color"
-              />
-            </label>
-            <label
-              class="flex items-center gap-2 rounded-full border border-[#2a2a2a] bg-[#232323] px-3 py-2"
-            >
-              <span class="text-xs text-white/70">BG</span>
-              <UColorPicker
-                v-model="qrLayerBgColor"
-                size="sm"
-                class="min-w-7"
-                aria-label="Pick QR background color"
-              />
-            </label>
-            <label
-              class="flex items-center gap-2 rounded-full border border-[#2a2a2a] bg-[#232323] px-3 py-2"
-            >
-              <span class="text-xs text-white/70">Border</span>
-              <input
-                v-model.number="qrBorderOpacity"
-                type="range"
-                min="0"
-                max="1"
-                step="0.05"
-                class="w-16 accent-white"
-                aria-label="Adjust QR border opacity"
-              />
-            </label>
-            <label
-              class="flex items-center gap-2 rounded-full border border-[#2a2a2a] bg-[#232323] px-3 py-2"
-            >
-              <span class="text-xs text-white/70">Opacity</span>
-              <input
-                v-model.number="qrLayerBgOpacity"
-                type="range"
-                min="0"
-                max="1"
-                step="0.05"
-                class="w-18 accent-white"
-                aria-label="Adjust QR background opacity"
-              />
-            </label>
-            <UButton
-              label="Download Wallpaper"
-              icon="i-lucide-download"
-              class="rounded-full bg-white px-6 text-dark hover:bg-white/90"
-              :loading="isGeneratingWallpaper"
-              @click="downloadWallpaper"
-            />
-          </div>
+          <UButton
+            label="Download Wallpaper"
+            icon="i-lucide-download"
+            class="cursor-pointer rounded-full bg-white px-6 text-dark hover:bg-white/90"
+            :loading="isGeneratingWallpaper"
+            @click="downloadWallpaper"
+          />
         </div>
 
         <div class="flex flex-col items-center gap-6">
-          <button
-            type="button"
-            class="flex h-[240px] w-[240px] flex-col items-center justify-center gap-[6px] overflow-hidden rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4 text-left transition hover:border-white/30"
-            @click="downloadQr"
+          <div
+            class="flex sm:scale-100 h-[240px] w-[240px] flex-col items-center justify-center gap-[6px] overflow-hidden rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4 text-left"
           >
             <p class="text-sm text-white/50">Preview</p>
             <div
@@ -630,12 +659,12 @@ async function downloadQr() {
               {{ publicCardUrl || 'Public URL unavailable' }}
             </p>
             <p class="text-sm text-white">QR Only</p>
-          </button>
+          </div>
 
           <UButton
             label="Download QR"
             icon="i-lucide-download"
-            class="rounded-full bg-white px-6 text-dark hover:bg-white/90"
+            class="cursor-pointer rounded-full bg-white px-6 text-dark hover:bg-white/90"
             :loading="isGeneratingQr"
             @click="downloadQr"
           />
@@ -643,4 +672,61 @@ async function downloadQr() {
       </div>
     </div>
   </div>
+
+  <UModal
+    v-model:open="isWallpaperPreviewModalOpen"
+    :close="false"
+    :ui="{
+      content:
+        'max-w-[560px] rounded-[8px] border border-[#232323] bg-[#171717] max-h-[90vh]',
+      body: 'p-0',
+    }"
+  >
+    <template #content>
+      <div
+        class="flex max-h-[90vh] flex-col overflow-hidden rounded-[8px] bg-[#171717]"
+      >
+        <div
+          class="flex items-center justify-between border-b border-[#232323] p-4"
+        >
+          <h3 class="text-sm font-medium uppercase tracking-widest text-white">
+            Wallpaper Preview
+          </h3>
+          <UButton
+            icon="i-lucide-x"
+            color="neutral"
+            variant="ghost"
+            class="size-7 flex justify-center items-center cursor-pointer rounded-full p-0 text-white hover:bg-[#232323]"
+            aria-label="Close preview"
+            @click="isWallpaperPreviewModalOpen = false"
+          />
+        </div>
+        <div class="flex-1 overflow-y-auto p-6">
+          <div class="mx-auto w-full max-w-[320px]">
+            <div
+              class="w-full overflow-hidden rounded-[8px]"
+              :style="previewWallpaperFrameStyle"
+            >
+              <img
+                v-if="wallpaperPreviewDataUrl"
+                :src="wallpaperPreviewDataUrl"
+                alt="Large wallpaper preview"
+                class="h-full w-full object-cover"
+              />
+              <div
+                v-else
+                class="flex h-full min-h-[520px] w-full items-center justify-center bg-[#1c1c1c] text-sm text-white/50"
+              >
+                {{
+                  isRenderingWallpaperPreview
+                    ? 'Preparing preview...'
+                    : 'No wallpaper'
+                }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+  </UModal>
 </template>
