@@ -38,6 +38,7 @@
     "nuxt-email-renderer": "^2.1.2",
     "nuxt-gtag": "4.1.0",
     "pg": "^8.16.3",
+    "qrcode": "^1",
     "resend": "^6.6.0",
     "sortablejs": "^1",
     "vue": "^3.5.26",

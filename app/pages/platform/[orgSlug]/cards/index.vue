@@ -142,11 +142,11 @@ function hasSplinePreview(card: CardDTO) {
 </script>
 
 <template>
-  <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <div
+    class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+  >
     <div class="flex items-center gap-2">
-      <h1
-        class="text-2xl font-medium uppercase tracking-widest leading-tight"
-      >
+      <h1 class="text-2xl font-medium uppercase tracking-widest leading-tight">
         Your Persona Cards
       </h1>
       <UButton
@@ -289,7 +289,7 @@ function hasSplinePreview(card: CardDTO) {
           />
         </div>
         <UBadge
-          class="absolute right-3 top-3 sm:-top-10 sm:-right-10 uppercase font-semibold"
+          class="absolute right-3 top-3 sm:-top-7.5 sm:-right-7.5 uppercase font-semibold"
           :class="{
             'cursor-pointer bg-amber-500/20 text-amber-300':
               card.subscription?.status === 'pending_approval',

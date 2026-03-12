@@ -1,0 +1,1 @@
+ALTER TABLE "card" DROP COLUMN "qr_code_url";

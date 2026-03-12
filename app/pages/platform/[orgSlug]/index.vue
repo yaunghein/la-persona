@@ -273,7 +273,7 @@ const chartOptions = {
       class="flex flex-col sm:flex-row gap-3 sm:gap-0 items-center justify-between"
     >
       <h1
-        class="flex items-center gap-3 text-2xl font-medium uppercase tracking-widest"
+        class="flex items-center gap-3 text-3xl leading-[1.1] font-medium uppercase tracking-widest"
       >
         {{ analyticsHeading }}
         <UButton
@@ -314,7 +314,7 @@ const chartOptions = {
         >
           Total Views
         </p>
-        <p class="mt-1 text-[32px] font-bold leading-[1.2] text-white">
+        <p class="mt-1 text-3xl font-bold leading-[1.1] text-white">
           {{ totalViews }}
         </p>
       </div>
@@ -329,7 +329,7 @@ const chartOptions = {
         >
           Card Saves (CTR)
         </p>
-        <p class="mt-1 text-[32px] font-bold leading-[1.2] text-white">
+        <p class="mt-1 text-3xl font-bold leading-[1.1] text-white">
           {{ cardSaves }}
         </p>
       </div>
@@ -344,7 +344,7 @@ const chartOptions = {
         >
           Conversion Rate
         </p>
-        <p class="mt-1 text-[32px] font-bold leading-[1.2] text-white">
+        <p class="mt-1 text-3xl font-bold leading-[1.1] text-white">
           {{ conversionRate }}%
         </p>
       </div>
@@ -359,14 +359,14 @@ const chartOptions = {
         >
           Social Clicks
         </p>
-        <p class="mt-1 text-[32px] font-bold leading-[1.2] text-white">
+        <p class="mt-1 text-3xl font-bold leading-[1.1] text-white">
           {{ socialTotal }}
         </p>
       </div>
     </div>
 
     <div class="rounded-[8px] bg-[#171717] p-6">
-      <h2 class="text-[32px] font-medium uppercase tracking-[2px]">
+      <h2 class="text-3xl leading-[1.1] font-medium uppercase tracking-[2px]">
         Views Over Time
       </h2>
       <p class="mt-1 text-sm text-[#8b8b8b]">
@@ -379,7 +379,7 @@ const chartOptions = {
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
       <div class="rounded-[8px] bg-[#171717] p-6">
-        <h3 class="text-[32px] font-medium uppercase tracking-[2px]">
+        <h3 class="text-3xl leading-[1.1] font-medium uppercase tracking-[2px]">
           Social Media Click-Throughs
         </h3>
         <p class="mt-1 text-sm text-[#8b8b8b]">
@@ -411,7 +411,7 @@ const chartOptions = {
       </div>
 
       <div class="rounded-[8px] bg-[#171717] p-6">
-        <h3 class="text-[32px] font-medium uppercase tracking-[2px]">
+        <h3 class="text-3xl leading-[1.1] font-medium uppercase tracking-[2px]">
           Portfolio & Link Clicks
         </h3>
         <p class="mt-1 text-sm text-[#8b8b8b]">
@@ -442,7 +442,7 @@ const chartOptions = {
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
       <div class="rounded-[8px] bg-[#171717] p-6">
-        <h3 class="text-[32px] font-medium uppercase tracking-[2px]">
+        <h3 class="text-3xl leading-[1.1] font-medium uppercase tracking-[2px]">
           Card Save Actions
         </h3>
         <p class="mt-1 text-sm text-[#8b8b8b]">
@@ -466,7 +466,9 @@ const chartOptions = {
                 <p class="text-xs text-[#8b8b8b]">Direct exchange action</p>
               </div>
             </div>
-            <span class="text-[32px] font-bold">{{ exchangeCount }}</span>
+            <span class="text-3xl leading-[1.1] font-bold">{{
+              exchangeCount
+            }}</span>
           </div>
           <div
             class="flex items-center justify-between rounded-[4px] bg-[#232323] p-4"
@@ -482,7 +484,7 @@ const chartOptions = {
                 <p class="text-xs text-[#8b8b8b]">Direct add action</p>
               </div>
             </div>
-            <span class="text-[32px] font-bold">{{ vcfCount }}</span>
+            <span class="text-3xl leading-[1.1] font-bold">{{ vcfCount }}</span>
           </div>
         </div>
       </div>

@@ -11,6 +11,7 @@ export default defineNuxtConfig({
     public: {
       awsRegion: process.env.AWS_REGION,
       awsBucketName: process.env.AWS_BUCKET_NAME,
+      baseUrl: process.env.BASE_URL,
     },
   },
   gtag: {

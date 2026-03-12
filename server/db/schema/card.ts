@@ -23,7 +23,6 @@ export const card = pgTable(
       .$type<{ label: string; value: string }[]>()
       .default([]),
     wallpaperUrl: text(),
-    qrCodeUrl: text(),
     cardBackUrl: text(),
     organizationId: text()
       .notNull()

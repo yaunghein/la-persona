@@ -12,7 +12,6 @@ const EnvSchema = z.object({
   LINKEDIN_CLIENT_SECRET: z.string().optional(),
   DEFAULT_SPLINE_URL: z.string(),
   DEFAULT_CARD_BACK_URL: z.string(),
-  DEFAULT_QR_CODE_URL: z.string(),
   DEFAULT_WALLPAPER_URL: z.string(),
   HUBSPOT_PORTAL_ID: z.string(),
   HUBSPOT_FORM_GUID_LEAD: z.string(),
