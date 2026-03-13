@@ -582,7 +582,7 @@ async function downloadQr() {
       </div>
 
       <div
-        class="flex items-start justify-center xl:justify-end flex-wrap gap-10 mt-10 sm:mt-0"
+        class="flex items-start justify-center flex-wrap gap-10 mt-10 sm:mt-0"
       >
         <div class="flex flex-col items-center gap-6">
           <div
