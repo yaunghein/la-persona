@@ -151,7 +151,7 @@ export default defineEventHandler(async (event) => {
     ]);
 
   const configuredSocialLabels = new Set<string>();
-  const configuredOtherLabels = new Set<string>();
+  const configuredLinkLabelByLower = new Map<string, string>();
 
   for (const cardData of scopedCardLinks) {
     const socials = Array.isArray(cardData.socials) ? cardData.socials : [];
@@ -163,12 +163,29 @@ export default defineEventHandler(async (event) => {
       const normalizedLabel = rawLabel.trim().toLowerCase();
       if (!normalizedLabel) continue;
       const canonicalLabel = knownLabelByLower.get(normalizedLabel);
-      if (!canonicalLabel) continue;
 
-      if (socialLabelSet.has(normalizedLabel)) configuredSocialLabels.add(canonicalLabel);
-      if (otherLabelSet.has(normalizedLabel)) configuredOtherLabels.add(canonicalLabel);
+      if (socialLabelSet.has(normalizedLabel)) {
+        configuredSocialLabels.add(canonicalLabel || rawLabel.trim());
+        continue;
+      }
+
+      // Include both predefined "other" labels and custom labels.
+      configuredLinkLabelByLower.set(
+        normalizedLabel,
+        canonicalLabel || rawLabel.trim()
+      );
     }
   }
+
+  const knownOtherConfiguredLabels = OTHER_LINK_LABELS.filter((label) =>
+    configuredLinkLabelByLower.has(label.toLowerCase())
+  );
+  const customConfiguredLabels = Array.from(
+    configuredLinkLabelByLower.entries()
+  )
+    .filter(([normalizedLabel]) => !otherLabelSet.has(normalizedLabel))
+    .map(([, label]) => label)
+    .sort((a, b) => a.localeCompare(b));
 
   return {
     isOwner,
@@ -180,9 +197,10 @@ export default defineEventHandler(async (event) => {
     socialConfiguredLabels: SOCIAL_MEDIA_LINK_LABELS.filter((label) =>
       configuredSocialLabels.has(label)
     ),
-    otherConfiguredLabels: OTHER_LINK_LABELS.filter((label) =>
-      configuredOtherLabels.has(label)
-    ),
+    otherConfiguredLabels: [
+      ...knownOtherConfiguredLabels,
+      ...customConfiguredLabels,
+    ],
     cards: ownerCardOptions.map((item) => ({
       id: item.id,
       label: `${item.firstName} ${item.lastName || ''}`.trim(),
