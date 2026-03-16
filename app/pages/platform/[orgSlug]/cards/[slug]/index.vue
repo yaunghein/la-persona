@@ -17,6 +17,8 @@ const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 const queryClient = useQueryClient();
+const isPendingInfoOpen = ref(false);
+const selectedPendingCardName = ref('');
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
 const slug = computed(() => String(route.params.slug || ''));
 const { data: card } = useQuery<CardDTO>({
@@ -105,6 +107,10 @@ function getCardBadgeLabel(cardData?: CardDTO | null) {
   const isTrial = cardData?.subscription?.isTrial;
   const status = cardData?.subscription?.status;
 
+  if (status === 'pending_approval' || status === 'submitted') {
+    return 'Pending';
+  }
+
   if (!planCode || isTrial || status === 'trial') {
     return 'Standard (Trial)';
   }
@@ -121,6 +127,37 @@ function getCardBadgeLabel(cardData?: CardDTO | null) {
 }
 
 const cardBadgeLabel = computed(() => getCardBadgeLabel(card.value));
+function getCardBadgeColor(cardData?: CardDTO | null) {
+  const status = cardData?.subscription?.status;
+  const planCode = cardData?.subscription?.planCode;
+  const isTrial = cardData?.subscription?.isTrial;
+
+  if (status === 'pending_approval' || status === 'submitted') {
+    return 'bg-amber-500/20 text-amber-300';
+  }
+
+  if (!planCode || isTrial || status === 'trial') {
+    return 'bg-[#232323] text-white';
+  }
+
+  if (planCode === 'premium' || planCode === 'founder_club') {
+    return 'bg-emerald-500/20 text-emerald-300';
+  }
+
+  return 'bg-[#232323] text-white';
+}
+const cardBadgeColor = computed(() => getCardBadgeColor(card.value));
+const isPendingBadge = computed(() => {
+  const status = card.value?.subscription?.status;
+  return status === 'pending_approval' || status === 'submitted';
+});
+
+function openPendingInfo() {
+  selectedPendingCardName.value =
+    `${card.value?.firstName || ''} ${card.value?.lastName || ''}`.trim() ||
+    'This card';
+  isPendingInfoOpen.value = true;
+}
 
 type PaymentScenario =
   | 'trial_to_standard_renewal'
@@ -333,9 +370,9 @@ const { mutate: submitPayment, isPending: isSubmittingPayment } = useMutation({
     return await $fetch<CreateSubscriptionPaymentResponse, string>(
       '/api/subscriptions/payments',
       {
-      method: 'POST',
-      body: payload,
-      },
+        method: 'POST',
+        body: payload,
+      }
     );
   },
   onSuccess: async () => {
@@ -414,7 +451,9 @@ const active = computed({
     </p>
   </div>
 
-  <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+  <div
+    class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+  >
     <div>
       <div class="flex flex-wrap items-center gap-y-2">
         <UButton
@@ -429,11 +468,14 @@ const active = computed({
         >
           {{ card?.firstName }} {{ card?.lastName }}
         </h1>
-        <div
-          class="uppercase text-[0.625rem] leading-none font-bold p-2.5 rounded bg-[#232323] ml-0 sm:ml-3"
+        <UBadge
+          class="uppercase font-semibold ml-3"
+          :class="[cardBadgeColor, isPendingBadge ? 'cursor-pointer' : '']"
+          size="sm"
+          @click="isPendingBadge && openPendingInfo()"
         >
           {{ cardBadgeLabel }}
-        </div>
+        </UBadge>
       </div>
       <p class="mt-2 text-sm leading-[20px] text-muted ml-0 sm:ml-10">
         Manage your 3D card information, contact information, QR, and
@@ -571,4 +613,9 @@ const active = computed({
       </div>
     </template>
   </USlideover>
+
+  <PendingApprovalInfo
+    v-model:open="isPendingInfoOpen"
+    :card-name="selectedPendingCardName"
+  />
 </template>

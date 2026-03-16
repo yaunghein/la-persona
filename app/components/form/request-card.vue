@@ -7,6 +7,12 @@ import {
   CARD_LINK_SELECT_ITEMS,
   createEmptyCardLink,
 } from '~~/shared/constants/card-link-options';
+import {
+  createLinkTypeItemsWithCustom,
+  getCustomSocialLabelMissingIndexes,
+  resolveSocialLinksForSubmission,
+  type SocialFormLink,
+} from '~~/shared/utils/social-links';
 
 type RequestCardFormState = {
   type: 'new_design' | 'existing_design';
@@ -17,7 +23,7 @@ type RequestCardFormState = {
   email: string;
   website: string;
   sourceCardId: string;
-  socials: { label: string; value: string }[];
+  socials: SocialFormLink[];
 };
 
 const emit = defineEmits<{ close: []; submitted: [] }>();
@@ -25,7 +31,7 @@ const emit = defineEmits<{ close: []; submitted: [] }>();
 const toast = useToast();
 const runtimeConfig = useRuntimeConfig();
 
-const state = reactive({
+const state = reactive<RequestCardFormState>({
   type: 'new_design' as 'new_design' | 'existing_design',
   name: '',
   position: '',
@@ -34,7 +40,7 @@ const state = reactive({
   email: '',
   website: '',
   sourceCardId: '',
-  socials: [createEmptyCardLink()],
+  socials: [{ ...createEmptyCardLink(), customLabel: '' }],
 });
 const receiptFile = ref<File | null>(null);
 const receiptPreviewUrl = ref<string | null>(null);
@@ -86,6 +92,9 @@ const derivedPlanCode = computed(() =>
 const derivedPlan = computed(() =>
   (plans.value || []).find((plan) => plan.code === derivedPlanCode.value)
 );
+const linkTypeItems = computed<string[][]>(() =>
+  createLinkTypeItemsWithCustom(CARD_LINK_SELECT_ITEMS)
+);
 
 function formatCurrency(amountMinor: number, currency: string) {
   return `${currency} ${amountMinor.toLocaleString()}`;
@@ -101,7 +110,7 @@ function getS3Url(path?: string | null) {
 }
 
 const addLink = () => {
-  state.socials.push(createEmptyCardLink());
+  state.socials.push({ ...createEmptyCardLink(), customLabel: '' });
 };
 const removeLink = (index: number) => {
   state.socials.splice(index, 1);
@@ -149,12 +158,16 @@ const { mutate: insertCardRequest, isPending: isLoading } = useMutation({
     });
 
     const { type, sourceCardId, ...cardData } = formData;
+    const socials = resolveSocialLinksForSubmission(state.socials).filter(
+      (social) => social.label || social.value
+    );
     return await $fetch('/api/cards/new-request', {
       method: 'POST',
       body: {
         type,
         cardData: {
           ...cardData,
+          socials: socials.length > 0 ? socials : undefined,
           sourceCardId: type === 'existing_design' ? sourceCardId : undefined,
         },
         paymentReceiptUrl: fileKey,
@@ -203,12 +216,9 @@ function getIssueKey(path: PropertyKey[]) {
 }
 
 function buildPayloadForValidation(formData: RequestCardFormState) {
-  const socials = formData.socials
-    .map((social) => ({
-      label: social.label.trim(),
-      value: social.value.trim(),
-    }))
-    .filter((social) => social.label || social.value);
+  const socials = resolveSocialLinksForSubmission(formData.socials).filter(
+    (social) => social.label || social.value
+  );
 
   return {
     type: formData.type,
@@ -277,6 +287,19 @@ function validate(formData: Partial<RequestCardFormState>): FormError[] {
       message: 'Please upload a payment receipt',
     });
   }
+
+  const missingCustomIndexes = getCustomSocialLabelMissingIndexes(
+    state.socials
+  );
+  missingCustomIndexes.forEach((index) => {
+    if (errors.some((error) => error.name === `socials.${index}.customLabel`)) {
+      return;
+    }
+    errors.push({
+      name: `socials.${index}.customLabel`,
+      message: 'Custom label is required.',
+    });
+  });
 
   return errors;
 }
@@ -541,12 +564,12 @@ function onFormError(event: FormErrorEvent) {
       <div
         v-for="(link, index) in state.socials"
         :key="index"
-        class="flex gap-3"
+        class="flex gap-3 overflow-x-scroll hide-scrollbar"
       >
-        <UFormField class="w-40" :name="`socials.${index}.label`">
+        <UFormField class="w-32 shrink-0" :name="`socials.${index}.label`">
           <USelectMenu
             v-model="link.label"
-            :items="CARD_LINK_SELECT_ITEMS"
+            :items="linkTypeItems"
             :search-input="false"
             class="w-full"
             :ui="{
@@ -554,7 +577,24 @@ function onFormError(event: FormErrorEvent) {
             }"
           />
         </UFormField>
-        <UFormField class="flex-1" :name="`socials.${index}.value`">
+        <UFormField
+          v-if="link.label === 'Custom'"
+          class="w-32 shrink-0"
+          :name="`socials.${index}.customLabel`"
+        >
+          <UInput
+            v-model="link.customLabel"
+            placeholder="Custom Label"
+            class="w-full"
+            :ui="{
+              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            }"
+          />
+        </UFormField>
+        <UFormField
+          class="flex-1 min-w-52 shrink-0"
+          :name="`socials.${index}.value`"
+        >
           <UInput
             v-model="link.value"
             placeholder="https://..."
@@ -611,7 +651,7 @@ function onFormError(event: FormErrorEvent) {
     <div class="flex items-center justify-end pt-2">
       <UButton
         type="submit"
-        label="Proceed to Payment"
+        label="Send Request"
         :loading="isLoading"
         icon="i-material-symbols:keyboard-double-arrow-right"
         class="rounded-full bg-white px-6 text-dark hover:bg-white/90"

@@ -1,12 +1,20 @@
 <script setup lang="ts">
 import imageCompression from 'browser-image-compression';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
+import type { FormError } from '@nuxt/ui';
 import type { FormSubmitEvent } from '#ui/types';
 import { useSortable } from '@vueuse/integrations/useSortable';
 import {
   CARD_LINK_SELECT_ITEMS,
   createEmptyCardLink,
 } from '~~/shared/constants/card-link-options';
+import {
+  createLinkTypeItemsWithCustom,
+  getCustomSocialLabelMissingIndexes,
+  normalizeSocialLinksForForm,
+  resolveSocialLinksForSubmission,
+  type SocialFormLink,
+} from '~~/shared/utils/social-links';
 
 const route = useRoute();
 const queryClient = useQueryClient();
@@ -32,7 +40,7 @@ const state = reactive({
   email: '',
   website: '',
   avatarUrl: '',
-  socials: [] as { label: string; value: string }[],
+  socials: [] as SocialFormLink[],
 });
 const socialsListEl = ref<HTMLElement | null>(null);
 const socialsSortable = computed({
@@ -41,8 +49,9 @@ const socialsSortable = computed({
     state.socials = value;
   },
 });
-const socialKeyMap = new WeakMap<object, number>();
-let socialKeySeed = 0;
+const linkTypeItems = computed<string[][]>(() =>
+  createLinkTypeItemsWithCustom(CARD_LINK_SELECT_ITEMS)
+);
 
 watch(
   card,
@@ -57,7 +66,10 @@ watch(
     state.email = val.email ?? '';
     state.website = val.website ?? '';
     state.avatarUrl = val.avatarUrl ?? '';
-    state.socials = JSON.parse(JSON.stringify(val.socials || []));
+    const incomingSocials = JSON.parse(JSON.stringify(val.socials || [])) as
+      | SocialFormLink[]
+      | [];
+    state.socials = normalizeSocialLinksForForm(incomingSocials);
   },
   { immediate: true }
 );
@@ -129,12 +141,15 @@ const { mutate: updateCard, isPending: isSaving } = useMutation({
       finalAvatarUrl = fileKey;
     }
 
+    const normalizedSocials = resolveSocialLinksForSubmission(state.socials);
+
     return await $fetch('/api/cards', {
       method: 'PATCH',
       body: {
         ...formData,
         avatarUrl: finalAvatarUrl,
         id: card.value?.id,
+        socials: normalizedSocials,
       },
     });
   },
@@ -160,6 +175,20 @@ function onSubmit(event: FormSubmitEvent<UpdateCard>) {
   updateCard(event.data);
 }
 
+function validate(formData: Partial<UpdateCard>): FormError[] {
+  const errors: FormError[] = [];
+
+  const missingIndexes = getCustomSocialLabelMissingIndexes(state.socials);
+  missingIndexes.forEach((index) => {
+    errors.push({
+      name: `socials.${index}.customLabel`,
+      message: 'Custom label is required.',
+    });
+  });
+
+  return errors;
+}
+
 function onFormError(event: any) {
   console.error('Form validation failed:', event.errors);
   toast.add({
@@ -170,7 +199,10 @@ function onFormError(event: any) {
 }
 
 const addLink = () => {
-  state.socials.push(createEmptyCardLink());
+  state.socials.push({
+    ...createEmptyCardLink(),
+    customLabel: '',
+  });
 };
 const removeLink = (index: number) => {
   state.socials.splice(index, 1);
@@ -197,7 +229,7 @@ watch(socialsListEl, (el) => {
     <div v-if="isLoading" class="space-y-8">
       <div class="flex items-center gap-4">
         <USkeleton class="h-24 w-24 rounded-full" />
-        <USkeleton class="h-10 w-40" />
+        <USkeleton class="h-10 w-40 sm:w-56" />
       </div>
       <div class="grid grid-cols-2 gap-6">
         <USkeleton v-for="i in 6" :key="i" class="h-12 w-full" />
@@ -207,6 +239,7 @@ watch(socialsListEl, (el) => {
       v-else
       :state="state"
       :schema="cardUpdateSchema"
+      :validate="validate"
       @submit="onSubmit"
       @error="onFormError"
       class="space-y-8"
@@ -381,7 +414,7 @@ watch(socialsListEl, (el) => {
         <div ref="socialsListEl" class="relative flex flex-col gap-3">
           <div
             v-for="(link, index) in state.socials"
-            :key="link.label"
+            :key="`${index}-${link.label}-${link.value}`"
             class="sortable-link-row flex items-start gap-3 relative"
           >
             <button
@@ -391,15 +424,29 @@ watch(socialsListEl, (el) => {
             >
               <UIcon name="i-lucide-grip-vertical" class="size-5" />
             </button>
-            <UFormField class="w-40" :name="`socials.${index}.label`">
+            <UFormField class="w-40 sm:w-56" :name="`socials.${index}.label`">
               <USelectMenu
                 v-model="link.label"
-                :items="CARD_LINK_SELECT_ITEMS"
+                :items="linkTypeItems"
                 :search-input="false"
                 class="w-full"
                 placeholder="Select Link Type"
                 :ui="{
                   base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white',
+                }"
+              />
+            </UFormField>
+            <UFormField
+              v-if="link.label === 'Custom'"
+              class="w-40 sm:w-56"
+              :name="`socials.${index}.customLabel`"
+            >
+              <UInput
+                v-model="link.customLabel"
+                placeholder="Custom Label"
+                class="w-full"
+                :ui="{
+                  base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
                 }"
               />
             </UFormField>
@@ -438,7 +485,7 @@ watch(socialsListEl, (el) => {
         <UButton
           type="submit"
           size="lg"
-          class="rounded-full bg-[#232323] px-6 text-white hover:bg-[#2a2a2a]"
+          class="rounded-full bg-[#232323] px-6 text-white hover:bg-[#2a2a2a] disabled:bg-white/20 active:bg-[#2a2a2a] cursor-pointer"
           icon="i-lucide-square-pen"
           :loading="isSaving"
         >

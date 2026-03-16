@@ -5,6 +5,13 @@ import {
   CARD_LINK_SELECT_ITEMS,
   createEmptyCardLink,
 } from '~~/shared/constants/card-link-options';
+import {
+  createLinkTypeItemsWithCustom,
+  getCustomSocialLabelMissingIndexes,
+  normalizeSocialLinksForForm,
+  resolveSocialLinksForSubmission,
+  type SocialFormLink,
+} from '~~/shared/utils/social-links';
 
 const emit = defineEmits<{
   back: [];
@@ -14,6 +21,9 @@ const emit = defineEmits<{
 const route = useRoute();
 const toast = useToast();
 const slug = computed(() => route.params.slug as string);
+const linkTypeItems = computed<string[][]>(() =>
+  createLinkTypeItemsWithCustom(CARD_LINK_SELECT_ITEMS)
+);
 
 const { data: card } = useQuery<SelectCard>({
   queryKey: ['cards', slug],
@@ -23,10 +33,7 @@ const { data: card } = useQuery<SelectCard>({
 // 1. Initialize with one empty link placeholder
 const state = reactive({
   id: undefined as string | number | undefined,
-  socials: [createEmptyCardLink()] as {
-    label: string;
-    value: string;
-  }[],
+  socials: [{ ...createEmptyCardLink(), customLabel: '' }] as SocialFormLink[],
 });
 
 watch(
@@ -37,9 +44,9 @@ watch(
 
     // 2. If card has socials, use them; otherwise, keep the default one
     if (val.socials && val.socials.length > 0) {
-      state.socials = [...val.socials];
+      state.socials = normalizeSocialLinksForForm(val.socials);
     } else {
-      state.socials = [createEmptyCardLink()];
+      state.socials = [{ ...createEmptyCardLink(), customLabel: '' }];
     }
   },
   { immediate: true }
@@ -47,10 +54,15 @@ watch(
 
 const { mutate: submitRequest, isPending: isSubmitting } = useMutation({
   mutationFn: async (formData: typeof state) => {
+    const socials = resolveSocialLinksForSubmission(state.socials).filter(
+      (item) => item.label || item.value
+    );
+
     return await $fetch(`/api/cards`, {
       method: 'PATCH',
       body: {
         ...formData,
+        socials,
         id: state.id,
       },
     });
@@ -73,8 +85,10 @@ const { mutate: submitRequest, isPending: isSubmitting } = useMutation({
 });
 
 function onSubmit() {
-  // Simple validation: ensure the first link isn't empty
-  if (state.socials.length === 0 || !state.socials?.[0]?.value) {
+  const hasAtLeastOneLink = state.socials.some(
+    (item) => String(item.value || '').trim().length > 0
+  );
+  if (!hasAtLeastOneLink) {
     toast.add({
       title: 'Input Required',
       description: 'Please add at least one link.',
@@ -82,11 +96,21 @@ function onSubmit() {
     });
     return;
   }
+
+  if (getCustomSocialLabelMissingIndexes(state.socials).length > 0) {
+    toast.add({
+      title: 'Custom label required',
+      description: 'Please fill custom label for every custom link.',
+      color: 'warning',
+    });
+    return;
+  }
+
   submitRequest(state);
 }
 
 const addLink = () => {
-  state.socials.push(createEmptyCardLink());
+  state.socials.push({ ...createEmptyCardLink(), customLabel: '' });
 };
 
 const removeLink = (index: number) => {
@@ -96,6 +120,7 @@ const removeLink = (index: number) => {
   } else if (state.socials?.[0]) {
     // 2. If it's the last one, clear it instead of deleting
     state.socials[0].value = '';
+    state.socials[0].customLabel = '';
     toast.add({
       title: 'Notice',
       description: 'At least one link is required.',
@@ -137,10 +162,18 @@ const removeLink = (index: number) => {
           <USelectMenu
             v-model="link.label"
             variant="soft"
-            :items="CARD_LINK_SELECT_ITEMS"
+            :items="linkTypeItems"
             :search-input="false"
             class="w-full md:w-40"
             size="xl"
+          />
+          <UInput
+            v-if="link.label === 'Custom'"
+            v-model="link.customLabel"
+            placeholder="Custom Label"
+            class="w-full md:w-52"
+            size="xl"
+            variant="soft"
           />
           <UInput
             v-model="link.value"

@@ -189,7 +189,7 @@ function onSubmit(event: FormSubmitEvent<Partial<UpdateCard>>) {
         </UButton>
         <UButton
           type="submit"
-          class="rounded-full bg-[#232323] px-4 text-white hover:bg-[#2a2a2a]"
+          class="rounded-full bg-[#232323] px-4 text-white hover:bg-[#2a2a2a] disabled:bg-white/20 active:bg-[#2a2a2a] cursor-pointer"
           icon="i-lucide-square-pen"
           :loading="isSubmitting"
         >
