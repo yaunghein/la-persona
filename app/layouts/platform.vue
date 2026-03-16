@@ -34,6 +34,14 @@ const links = [
       },
     },
     {
+      label: 'Billing',
+      icon: 'uil:bill',
+      to: `/platform/${route.params.orgSlug}/billing`,
+      onSelect: () => {
+        open.value = false;
+      },
+    },
+    {
       label: 'Teams (Coming Soon)',
       icon: 'i-ri:team-line',
       disabled: true,
@@ -153,40 +161,24 @@ import type { Period, Range } from '~/types';
 
 // const { isNotificationsSlideoverOpen } = useDashboard()
 
-const items = [
-  [
-    {
-      label: 'Request New Card',
-      icon: 'i-lucide-send',
-      to: ROUTES.PLATFORM.CARDS,
-    },
-    // {
-    //   label: 'New customer',
-    //   icon: 'i-lucide-user-plus',
-    //   to: '/customers',
-    // },
-  ],
-] satisfies DropdownMenuItem[][];
-
 const range = shallowRef<Range>({
   start: sub(new Date(), { days: 14 }),
   end: new Date(),
 });
 const period = ref<Period>('daily');
 
-const pageLabel: Record<string, string> = {
-  [ROUTES.PLATFORM.ROOT]: 'Insights',
-  [ROUTES.PLATFORM.CARDS]: 'Cards',
-  [ROUTES.PLATFORM.CONTACTS]: 'Contacts',
-} as const;
-
 const currentPageLabel = computed(() => {
   const path = route.path;
-  const specificMatch = Object.entries(pageLabel).find(
-    ([key]) => key !== '/platform' && path.startsWith(key)
-  );
-  if (specificMatch) return specificMatch[1];
-  return path === ROUTES.PLATFORM.ROOT ? pageLabel[ROUTES.PLATFORM.ROOT] : '';
+  const orgSlug = String(route.params.orgSlug || '');
+  if (!orgSlug) return path === ROUTES.PLATFORM.ROOT ? 'Insights' : '';
+
+  const basePath = `${ROUTES.PLATFORM.ROOT}/${orgSlug}`;
+  if (path === basePath) return 'Insights';
+  if (path.startsWith(`${basePath}/cards`)) return 'Cards';
+  if (path.startsWith(`${basePath}/contacts`)) return 'Contacts';
+  if (path.startsWith(`${basePath}/billing`)) return 'Billing';
+
+  return '';
 });
 </script>
 
