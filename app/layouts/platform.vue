@@ -44,8 +44,7 @@ const links = [
     {
       label: 'Teams (Coming Soon)',
       icon: 'i-ri:team-line',
-      disabled: true,
-      // to: '/',
+      to: `/platform/${route.params.orgSlug}/teams`,
       onSelect: () => {
         open.value = false;
       },
@@ -177,6 +176,7 @@ const currentPageLabel = computed(() => {
   if (path.startsWith(`${basePath}/cards`)) return 'Cards';
   if (path.startsWith(`${basePath}/contacts`)) return 'Contacts';
   if (path.startsWith(`${basePath}/billing`)) return 'Billing';
+  if (path.startsWith(`${basePath}/teams`)) return 'Teams';
 
   return '';
 });
