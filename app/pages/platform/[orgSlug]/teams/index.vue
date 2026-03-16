@@ -44,7 +44,7 @@ const onContactClick = () => {
 <template>
   <div class="flex min-h-[calc(100dvh-7rem)] items-center justify-center py-6">
     <div
-      class="w-full max-w-[820px] overflow-hidden rounded-[8px] border border-[#232323] bg-[#171717]"
+      class="w-full max-w-164 overflow-hidden rounded-[8px] border border-[#232323] bg-[#171717]"
     >
       <div
         class="flex items-center justify-between border-b-2 border-[#232323] px-6 pb-[26px] pt-6"

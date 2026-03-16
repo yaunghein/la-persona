@@ -147,7 +147,7 @@ function hasSplinePreview(card: CardDTO) {
   >
     <div class="flex items-center gap-2">
       <h1 class="text-2xl font-medium uppercase tracking-widest leading-tight">
-        Your Persona Cards
+        Your Cards
       </h1>
       <UButton
         icon="material-symbols:info-outline"

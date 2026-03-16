@@ -13,6 +13,8 @@ import { nanoid } from 'nanoid';
 import { splitName } from '~~/server/services/card';
 import { derivePlanCodeFromSource } from '~~/shared/utils/subscription';
 
+const NEW_DESIGN_PLAN_CODE = 'premium';
+
 function addYears(base: Date, years: number) {
   const result = new Date(base);
   result.setFullYear(result.getFullYear() + years);
@@ -69,7 +71,7 @@ export default defineEventHandler(async (event) => {
         .from(subscriptionPlan)
         .where(
           and(
-            eq(subscriptionPlan.code, 'standard'),
+            eq(subscriptionPlan.code, NEW_DESIGN_PLAN_CODE),
             eq(subscriptionPlan.isActive, true)
           )
         )

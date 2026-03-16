@@ -13,7 +13,7 @@ import {
 import { splitName } from '~~/server/services/card';
 import { getPersonalOrganizationByUserId } from '~~/server/services/auth';
 
-const NEW_DESIGN_DEFAULT_PLAN_CODE = 'standard';
+const NEW_DESIGN_DEFAULT_PLAN_CODE = 'premium';
 
 function addYears(base: Date, years: number) {
   const result = new Date(base);
