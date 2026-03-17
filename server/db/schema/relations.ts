@@ -6,16 +6,19 @@ import { cardSubscription } from './card-subscription';
 import { subscriptionPayment, subscriptionPaymentItem } from './subscription-payment';
 import { subscriptionPlan } from './subscription-plan';
 import { cardRequest } from './card-request';
+import { feedbackSubmission } from './feedback-submission';
 
 export const userRelations = relations(user, ({ many }) => ({
   cards: many(card),
   submittedSubscriptionPayments: many(subscriptionPayment),
+  feedbackSubmissions: many(feedbackSubmission),
 }));
 
 export const organizationSubscriptionRelations = relations(
   organization,
   ({ many }) => ({
     subscriptionPayments: many(subscriptionPayment),
+    feedbackSubmissions: many(feedbackSubmission),
   })
 );
 
@@ -108,3 +111,17 @@ export const cardSubscriptionRelations = relations(cardSubscription, ({ one }) =
     references: [subscriptionPlan.code],
   }),
 }));
+
+export const feedbackSubmissionRelations = relations(
+  feedbackSubmission,
+  ({ one }) => ({
+    organization: one(organization, {
+      fields: [feedbackSubmission.organizationId],
+      references: [organization.id],
+    }),
+    user: one(user, {
+      fields: [feedbackSubmission.userId],
+      references: [user.id],
+    }),
+  })
+);

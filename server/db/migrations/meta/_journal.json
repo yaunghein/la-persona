@@ -15,6 +15,13 @@
       "when": 1773312799404,
       "tag": "0001_stormy_moonstone",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773745462950,
+      "tag": "0002_tearful_misty_knight",
+      "breakpoints": true
     }
   ]
 }

@@ -8,5 +8,6 @@ export * from './analytics';
 export * from './subscription-plan';
 export * from './subscription-payment';
 export * from './card-subscription';
+export * from './feedback-submission';
 
 import './relations';

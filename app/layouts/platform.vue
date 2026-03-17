@@ -157,6 +157,8 @@ onMounted(async () => {
 import { sub } from 'date-fns';
 import type { DropdownMenuItem } from '@nuxt/ui';
 import type { Period, Range } from '~/types';
+import type { FeedbackKind } from '~~/shared/types/feedback';
+import { FEEDBACK_KIND_LABELS } from '~~/shared/types/feedback';
 
 // const { isNotificationsSlideoverOpen } = useDashboard()
 
@@ -165,6 +167,18 @@ const range = shallowRef<Range>({
   end: new Date(),
 });
 const period = ref<Period>('daily');
+const isFeedbackSlideoverOpen = ref(false);
+const feedbackKind = ref<FeedbackKind>('feedback');
+
+function openFeedbackSlideover(kind: FeedbackKind) {
+  feedbackKind.value = kind;
+  isFeedbackSlideoverOpen.value = true;
+  open.value = false;
+}
+
+const feedbackHeaderLabel = computed(
+  () => FEEDBACK_KIND_LABELS[feedbackKind.value]
+);
 
 const currentPageLabel = computed(() => {
   const path = route.path;
@@ -229,10 +243,16 @@ const currentPageLabel = computed(() => {
           tooltip
           class="mt-auto"
         />
+        <HelpFeedbackMenu
+          :collapsed="collapsed"
+          @open-feedback="openFeedbackSlideover"
+        />
       </template>
 
       <template #footer="{ collapsed }">
-        <UserMenu :collapsed="collapsed" />
+        <div class="w-full space-y-1">
+          <UserMenu :collapsed="collapsed" />
+        </div>
       </template>
     </UDashboardSidebar>
 
@@ -287,6 +307,26 @@ const currentPageLabel = computed(() => {
         <slot />
       </template>
     </UDashboardPanel>
+
+    <USlideover
+      v-model:open="isFeedbackSlideoverOpen"
+      side="right"
+      inset
+      :title="feedbackHeaderLabel"
+      :ui="{
+        content: 'bg-[#171717]',
+        header: 'border-b-2 border-[#232323] px-6 py-6',
+        title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+        body: 'px-6 pt-6 pb-8',
+      }"
+    >
+      <template #body>
+        <FormFeedbackSubmission
+          :kind="feedbackKind"
+          @close="isFeedbackSlideoverOpen = false"
+        />
+      </template>
+    </USlideover>
 
     <!-- <NotificationsSlideover /> -->
   </UDashboardGroup>
