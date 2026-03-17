@@ -158,23 +158,23 @@ const socialCountMap = computed(() => {
   }
   return map;
 });
-const socialIconMap: Record<string, string> = {
-  facebook: 'i-simple-icons-facebook',
-  github: 'i-simple-icons-github',
-  gmail: 'i-simple-icons-gmail',
-  instagram: 'i-simple-icons-instagram',
-  line: 'i-simple-icons-line',
-  linkedin: 'i-simple-icons-linkedin',
-  telegram: 'i-simple-icons-telegram',
-  tiktok: 'i-simple-icons-tiktok',
-  whatsapp: 'i-simple-icons-whatsapp',
+const socialImageMap: Record<string, string> = {
+  facebook: '/images/card/facebook.png',
+  github: '/images/card/github.png',
+  gmail: '/images/card/gmail.png',
+  instagram: '/images/card/instagram.png',
+  line: '/images/card/line.png',
+  linkedin: '/images/card/linkedin.png',
+  telegram: '/images/card/telegram.png',
+  tiktok: '/images/card/tiktok.png',
+  whatsapp: '/images/card/whatsapp.png',
 };
 const socialRows = computed(() =>
   (stats.value?.socialConfiguredLabels || []).map((label) => {
     const key = label.toLowerCase();
     return {
       platform: label,
-      icon: socialIconMap[key] || 'i-lucide-globe',
+      image: socialImageMap[key] || '',
       count: socialCountMap.value.get(key) || 0,
     };
   })
@@ -392,7 +392,13 @@ const chartOptions = {
             class="flex items-center justify-between rounded-[4px] bg-[#232323] px-3 py-2"
           >
             <div class="flex items-center gap-2 text-sm">
-              <UIcon :name="row.icon" class="size-4 text-white" />
+              <img
+                v-if="row.image"
+                :src="row.image"
+                :alt="`${row.platform} icon`"
+                class="size-4 object-contain"
+              />
+              <UIcon v-else name="i-lucide-globe" class="size-4 text-white" />
               <span>{{ row.platform }}</span>
             </div>
             <span class="text-sm font-medium">{{ row.count }}</span>
