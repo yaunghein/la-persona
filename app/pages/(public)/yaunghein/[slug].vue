@@ -7,7 +7,7 @@ import { SOCIAL_MEDIA_LINK_LABELS } from '~~/shared/constants/card-link-options'
 const { trackEvent } = useAnalytics();
 
 const { slug } = useRoute().params;
-const { data: card } = await useFetch<SelectCard>(`/api/cards/${slug}`);
+const { data: card } = await useFetch<SelectCard>(`/api/public/cards/${slug}`);
 useSeoMeta({ ...getSeoTitle(`${card.value?.firstName}`) });
 
 onMounted(async () => {

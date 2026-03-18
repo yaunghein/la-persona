@@ -43,6 +43,34 @@ export const findCardsByUserId = async (userId: string) => {
   }));
 };
 
+export const findCardsByUserIdAndOrganization = async (
+  userId: string,
+  organizationId: string
+) => {
+  const rows = await db
+    .select({
+      card,
+      subscriptionStatus: cardSubscription.status,
+      subscriptionPlanCode: cardSubscription.planCode,
+      subscriptionIsTrial: cardSubscription.isTrial,
+    })
+    .from(card)
+    .leftJoin(cardSubscription, eq(cardSubscription.cardId, card.id))
+    .where(and(eq(card.userId, userId), eq(card.organizationId, organizationId)))
+    .orderBy(desc(card.createdAt));
+
+  return rows.map((row) => ({
+    ...row.card,
+    subscription: row.subscriptionStatus
+      ? {
+          status: row.subscriptionStatus,
+          planCode: row.subscriptionPlanCode,
+          isTrial: row.subscriptionIsTrial ?? false,
+        }
+      : null,
+  }));
+};
+
 export const findCardsBySlug = async (slug: string) => {
   const rows = await db
     .select({
@@ -54,6 +82,44 @@ export const findCardsBySlug = async (slug: string) => {
     .from(card)
     .leftJoin(cardSubscription, eq(cardSubscription.cardId, card.id))
     .where(eq(card.slug, slug))
+    .limit(1);
+
+  const row = rows[0];
+  if (!row) return null;
+
+  return {
+    ...row.card,
+    subscription: row.subscriptionStatus
+      ? {
+          status: row.subscriptionStatus,
+          planCode: row.subscriptionPlanCode,
+          isTrial: row.subscriptionIsTrial ?? false,
+        }
+      : null,
+  };
+};
+
+export const findCardBySlugForUserAndOrganization = async (
+  slug: string,
+  userId: string,
+  organizationId: string
+) => {
+  const rows = await db
+    .select({
+      card,
+      subscriptionStatus: cardSubscription.status,
+      subscriptionPlanCode: cardSubscription.planCode,
+      subscriptionIsTrial: cardSubscription.isTrial,
+    })
+    .from(card)
+    .leftJoin(cardSubscription, eq(cardSubscription.cardId, card.id))
+    .where(
+      and(
+        eq(card.slug, slug),
+        eq(card.userId, userId),
+        eq(card.organizationId, organizationId)
+      )
+    )
     .limit(1);
 
   const row = rows[0];

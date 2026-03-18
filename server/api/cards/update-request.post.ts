@@ -1,18 +1,18 @@
-import { auth } from '~~/server/auth';
+import { and, eq } from 'drizzle-orm';
 import { db } from '~~/server/db';
-import { cardUpdateRequest } from '~~/server/db/schema';
+import { card, cardUpdateRequest } from '~~/server/db/schema';
 import { cardUpdateRequestInsertSchema } from '~~/shared/types';
+import {
+  hasOrganizationPermission,
+  requireOrganizationPermission,
+} from '~~/server/utils/organization-permissions';
+import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
 
 export default defineEventHandler(async (event) => {
-  const session = await auth.api.getSession({
-    headers: event.headers,
-  });
-  if (!session) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Unauthorized',
-    });
-  }
+  const session = await requireOrganizationPermission(
+    event,
+    ORGANIZATION_PERMISSIONS.CARD_REQUEST_UPDATE
+  );
 
   const result = await readValidatedBody(
     event,
@@ -28,6 +28,28 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
+    const organizationId = session.session.activeOrganizationId;
+    const userId = session.user.id;
+    const canReadAllCards = await hasOrganizationPermission(
+      event,
+      ORGANIZATION_PERMISSIONS.CARD_READ_ALL
+    );
+
+    const targetCard = await db.query.card.findFirst({
+      where: and(
+        eq(card.id, result.data.cardId),
+        eq(card.organizationId, organizationId),
+        ...(canReadAllCards ? [] : [eq(card.userId, userId)])
+      ),
+      columns: { id: true },
+    });
+    if (!targetCard) {
+      throw createError({
+        statusCode: 403,
+        statusMessage: 'You do not have access to this card.',
+      });
+    }
+
     const [inserted] = await db
       .insert(cardUpdateRequest)
       .values({

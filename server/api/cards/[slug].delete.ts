@@ -1,5 +1,4 @@
 import { and, eq, inArray } from 'drizzle-orm';
-import { auth } from '~~/server/auth';
 import { db } from '~~/server/db';
 import {
   card,
@@ -8,16 +7,14 @@ import {
   subscriptionPayment,
   subscriptionPaymentItem,
 } from '~~/server/db/schema';
+import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
+import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
 
 export default defineEventHandler(async (event) => {
-  const session = await auth.api.getSession({ headers: event.headers });
-
-  if (!session || !session.session.activeOrganizationId) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Unauthorized',
-    });
-  }
+  const session = await requireOrganizationPermission(
+    event,
+    ORGANIZATION_PERMISSIONS.CARD_DELETE
+  );
 
   const slug = getRouterParam(event, 'slug');
   if (!slug) {

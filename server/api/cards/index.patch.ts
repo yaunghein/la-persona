@@ -1,19 +1,15 @@
-import { auth } from '~~/server/auth';
 import { updateCard } from '~~/server/services/card';
+import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
+import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
 
 export default defineEventHandler(async (event) => {
-  const session = await auth.api.getSession({
-    headers: event.headers,
-  });
-  if (!session) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Unauthorized',
-    });
-  }
+  const session = await requireOrganizationPermission(
+    event,
+    ORGANIZATION_PERMISSIONS.CARD_UPDATE
+  );
+  const organizationId = session.session.activeOrganizationId;
 
   const result = await readValidatedBody(event, cardUpdateSchema.safeParse);
-  console.log(JSON.stringify(result, null, 2));
 
   if (!result.success) {
     throw createError({
@@ -23,7 +19,7 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    return await updateCard(session.user.id, result.data);
+    return await updateCard(session.user.id, organizationId, result.data);
   } catch (e) {
     handleApiError(e, {
       statusMessage: 'Failed to update card',

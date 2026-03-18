@@ -21,11 +21,18 @@ const isPendingInfoOpen = ref(false);
 const selectedPendingCardName = ref('');
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
 const slug = computed(() => String(route.params.slug || ''));
-const { data: card } = useQuery<CardDTO>({
+const {
+  data: card,
+  isPending: isCardPending,
+  error: cardError,
+} = useQuery<CardDTO>({
   queryKey: ['cards', slug],
   queryFn: () => $fetch<CardDTO>(`/api/cards/${slug.value}`),
   enabled: () => !!slug.value,
 });
+const showCardUnavailable = computed(
+  () => !isCardPending.value && (!!cardError.value || !card.value)
+);
 
 type CardSubscriptionSummary = {
   daysLeft: number | null;
@@ -61,10 +68,19 @@ const bannerDaysLabel = computed(() => {
 const bannerEffectiveStatus = computed(
   () => cardSubscriptionSummary.value?.subscription?.effectiveStatus ?? null
 );
+const isTrialPlan = computed(() => {
+  const subscription = card.value?.subscription;
+  if (!subscription) return false;
+  return (
+    subscription.isTrial ||
+    subscription.status === 'trial' ||
+    !subscription.planCode
+  );
+});
 const isTrialEndingSoon = computed(() => {
   if (bannerEffectiveStatus.value !== 'trial') return false;
   if (bannerDaysLeft.value === null) return false;
-  return bannerDaysLeft.value <= 15 && bannerDaysLeft.value >= 0;
+  return bannerDaysLeft.value >= 0;
 });
 const isSubscriptionEndingSoon = computed(() => {
   const status = bannerEffectiveStatus.value;
@@ -79,8 +95,20 @@ const isSubscriptionEndingSoon = computed(() => {
   if (bannerDaysLeft.value === null) return false;
   return bannerDaysLeft.value <= 15 && bannerDaysLeft.value >= 0;
 });
+const isTrialExpired = computed(
+  () => isSubscriptionExpired.value && isTrialPlan.value
+);
+const isPaidSubscriptionExpired = computed(
+  () => isSubscriptionExpired.value && !isTrialPlan.value
+);
 const showEndingBanner = computed(
-  () => isTrialEndingSoon.value || isSubscriptionEndingSoon.value
+  () =>
+    isTrialEndingSoon.value ||
+    isSubscriptionEndingSoon.value ||
+    isSubscriptionExpired.value
+);
+const bannerActionText = computed(() =>
+  isTrialEndingSoon.value || isTrialExpired.value ? 'extend' : 'renew'
 );
 const isSubscriptionExpired = computed(
   () => bannerEffectiveStatus.value === 'expired' || bannerDaysLeft.value === 0
@@ -138,10 +166,6 @@ function getCardBadgeColor(cardData?: CardDTO | null) {
 
   if (!planCode || isTrial || status === 'trial') {
     return 'bg-[#232323] text-white';
-  }
-
-  if (planCode === 'premium' || planCode === 'founder_club') {
-    return 'bg-emerald-500/20 text-emerald-300';
   }
 
   return 'bg-[#232323] text-white';
@@ -274,7 +298,7 @@ function formatMMK(amountMinor: number) {
 function openRenewSlideover() {
   if (!card.value) return;
 
-  if (isTrialEndingSoon.value) {
+  if (isTrialPlan.value) {
     paymentScenario.value = 'trial_to_standard_renewal';
   } else if (
     card.value.subscription?.planCode === 'premium' ||
@@ -424,198 +448,247 @@ const active = computed({
 
 <template>
   <div
-    v-if="showEndingBanner"
-    class="mb-8 flex items-center justify-center bg-[#232323] px-8 py-4 -mx-6 -mt-4 sm:-mt-6"
+    v-if="isCardPending"
+    class="flex min-h-[calc(100vh-7rem)] items-center justify-center"
   >
-    <p
-      class="text-center text-sm font-medium uppercase tracking-widest text-white"
-    >
-      <template v-if="isTrialEndingSoon">
-        Your trial period is going to end in
-        <span class="font-bold">{{ bannerDaysLeft }}</span>
-        {{ bannerDaysLabel }}. Click
-        <button class="underline" type="button" @click="openRenewSlideover">
-          HERE
-        </button>
-        to extend.
-      </template>
-      <template v-else>
-        Your subscription is going to end in
-        <span class="font-bold">{{ bannerDaysLeft }}</span>
-        {{ bannerDaysLabel }}. Click
-        <button class="underline" type="button" @click="openRenewSlideover">
-          HERE
-        </button>
-        to renew.
-      </template>
-    </p>
+    <UIcon name="i-lucide-loader-2" class="size-8 animate-spin text-white/70" />
   </div>
 
   <div
-    class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+    v-else-if="showCardUnavailable"
+    class="flex min-h-[calc(100vh-7rem)] flex-col items-center justify-center gap-4"
   >
-    <div>
-      <div class="flex flex-wrap items-center gap-y-2">
-        <UButton
-          icon="i-lucide-chevron-left"
-          size="md"
-          color="primary"
-          class="bg-transparent mr-2 text-white -mt-[0.15rem] hover:bg-white/10 active:hover:bg-white/20"
-          :to="`/platform/${orgSlug}/cards`"
-        />
-        <h1
-          class="text-2xl font-medium tracking-widest uppercase leading-tight"
-        >
-          {{ card?.firstName }} {{ card?.lastName }}
-        </h1>
-        <UBadge
-          class="uppercase font-semibold ml-3"
-          :class="[cardBadgeColor, isPendingBadge ? 'cursor-pointer' : '']"
-          size="sm"
-          @click="isPendingBadge && openPendingInfo()"
-        >
-          {{ cardBadgeLabel }}
-        </UBadge>
-      </div>
-      <p class="mt-2 text-sm leading-[20px] text-muted ml-0 sm:ml-10">
-        Manage your 3D card information, contact information, QR, and
-        wallpapers.
-      </p>
-    </div>
-
+    <UIcon
+      name="i-material-symbols:cards-stack-outline-sharp"
+      class="size-8 text-muted"
+    />
+    <h2 class="text-base font-medium uppercase tracking-widest text-white">
+      Card not found
+    </h2>
+    <p class="max-w-[20rem] text-center text-sm text-muted">
+      This card does not exist or you do not have permission to access it.
+    </p>
     <UButton
-      v-if="showUpgradeButton"
-      :label="upgradeButtonLabel"
-      icon="i-lucide-chevrons-up"
+      label="Back to Cards"
+      icon="i-lucide-arrow-left"
       color="neutral"
-      class="w-full sm:w-auto rounded-full bg-white px-4 font-medium text-dark hover:bg-white/90"
-      @click="openUpgradeSlideover"
+      class="mt-2 rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+      :to="`/platform/${orgSlug}/cards`"
     />
   </div>
 
-  <UTabs
-    v-model="active"
-    :items="items"
-    :ui="{
-      root: 'items-start mt-6',
-      list: 'bg-[#171717] w-full max-w-[32rem] rounded-[8px] p-1 overflow-x-auto',
-      indicator: 'bg-[#232323]',
-      trigger: 'data-[state=active]:text-white rounded-[4px] px-4 py-2.5',
-      content: 'mt-5',
-    }"
-  >
-    <template #content="{ item }">
-      <FormRequestCardInfoChange v-if="item.value === '3d'" />
-      <FormUpdateCardInfo v-if="item.value === 'contact'" />
-      <FormDownloadWallpaper v-if="item.value === 'wallpaper'" />
-    </template>
-  </UTabs>
+  <template v-else>
+    <div
+      v-if="showEndingBanner"
+      class="mb-8 flex items-center justify-center bg-[#232323] px-8 py-4 -mx-6 -mt-4 sm:-mt-6"
+    >
+      <p
+        class="text-center text-sm font-medium uppercase tracking-widest text-white"
+      >
+        <template v-if="isTrialEndingSoon">
+          Your trial period is going to end in
+          <span class="font-bold">{{ bannerDaysLeft }}</span>
+          {{ bannerDaysLabel }}. Click
+          <button class="underline" type="button" @click="openRenewSlideover">
+            HERE
+          </button>
+          to {{ bannerActionText }}.
+        </template>
+        <template v-else-if="isTrialExpired">
+          Your trial period has already ended. Click
+          <button class="underline" type="button" @click="openRenewSlideover">
+            HERE
+          </button>
+          to {{ bannerActionText }}.
+        </template>
+        <template v-else-if="isPaidSubscriptionExpired">
+          Your subscription has already ended. Click
+          <button class="underline" type="button" @click="openRenewSlideover">
+            HERE
+          </button>
+          to {{ bannerActionText }}.
+        </template>
+        <template v-else>
+          Your subscription is going to end in
+          <span class="font-bold">{{ bannerDaysLeft }}</span>
+          {{ bannerDaysLabel }}. Click
+          <button class="underline" type="button" @click="openRenewSlideover">
+            HERE
+          </button>
+          to renew.
+        </template>
+      </p>
+    </div>
 
-  <USlideover
-    v-model:open="isPaymentSlideoverOpen"
-    side="right"
-    inset
-    :dismissible="!isSubmittingPayment"
-    :ui="{
-      content: 'w-full max-w-[480px] bg-[#171717]',
-      header: 'border-b-2 border-[#232323] px-6 py-6',
-      title: 'text-sm font-medium tracking-[1.4px] uppercase text-white',
-      body: 'px-6 pt-6 pb-8',
-    }"
-    :title="paymentHeaderLabel"
-  >
-    <template #body>
-      <div class="space-y-8">
-        <div class="space-y-4">
-          <h3
-            class="text-[20px] font-medium uppercase tracking-[2px] text-white"
-          >
-            {{ paymentTitle }}
-          </h3>
-          <p class="text-sm leading-[21px] text-[#8b8b8b]">
-            {{ paymentDescription }}
-          </p>
-
-          <div class="rounded-[4px] border-b border-[#2a2a2a] px-4 py-3">
-            <div class="flex items-center justify-between text-sm text-white">
-              <span>Duration</span>
-              <span class="font-bold">1 Year</span>
-            </div>
-          </div>
-          <div
-            v-for="row in paymentFeeRows"
-            :key="row.label"
-            class="rounded-[4px] px-4 py-3"
-          >
-            <div class="flex items-center justify-between text-sm text-white">
-              <span>{{ row.label }}</span>
-              <span class="font-bold">{{ formatMMK(row.amountMinor) }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="space-y-8">
-          <p class="text-sm leading-[21px] text-white">
-            Please scan the QR code below to complete your payment.
-          </p>
-
-          <div class="space-y-3">
-            <p class="text-sm font-medium text-white">KBZ Pay QR Code</p>
-            <div
-              class="rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4 text-center"
-            >
-              <p class="text-sm text-white/50">Scan to Pay</p>
-              <div class="mx-auto my-3 size-40 bg-[#d9d9d9]" />
-              <p class="text-sm font-bold text-white">
-                {{ formatMMK(paymentTotalAmountMinor) }}
-              </p>
-            </div>
-          </div>
-
-          <div class="space-y-3">
-            <p class="text-sm font-medium text-white">Upload Payment Receipt</p>
-            <label
-              class="flex h-[132px] cursor-pointer flex-col items-center justify-center gap-2 rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4"
-            >
-              <input
-                type="file"
-                class="hidden"
-                accept="image/*"
-                @change="onReceiptChange"
-              />
-              <UIcon name="i-lucide-upload" class="size-5 text-white" />
-              <p class="text-sm text-white">
-                {{ receiptFile ? receiptFile.name : 'Upload Image' }}
-              </p>
-              <p class="text-sm text-white/50">
-                SVG, JPG, PNG or GIF (max.2MB)
-              </p>
-            </label>
-          </div>
-
-          <p class="text-sm leading-[21px] text-white">
-            Once submitted, our team will review your request and reach out
-            within 24 hours to confirm the request and schedule the next steps.
-          </p>
-        </div>
-
-        <div class="flex justify-end">
+    <div
+      class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+    >
+      <div>
+        <div class="flex flex-wrap items-center gap-y-2">
           <UButton
-            label="Confirm Payment"
-            icon="i-lucide-check"
-            color="neutral"
-            :loading="isSubmittingPayment"
-            :disabled="!receiptFile"
-            class="rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90 disabled:opacity-60"
-            @click="submitPayment()"
+            icon="i-lucide-chevron-left"
+            size="md"
+            color="primary"
+            class="bg-transparent mr-2 text-white -mt-[0.15rem] hover:bg-white/10 active:hover:bg-white/20"
+            :to="`/platform/${orgSlug}/cards`"
           />
+          <h1
+            class="text-2xl font-medium tracking-widest uppercase leading-tight"
+          >
+            {{ card?.firstName }} {{ card?.lastName }}
+          </h1>
+          <UBadge
+            class="uppercase font-semibold ml-3"
+            :class="[cardBadgeColor, isPendingBadge ? 'cursor-pointer' : '']"
+            size="sm"
+            @click="isPendingBadge && openPendingInfo()"
+          >
+            {{ cardBadgeLabel }}
+          </UBadge>
         </div>
+        <p class="mt-2 text-sm leading-[20px] text-muted ml-0 sm:ml-10">
+          Manage your 3D card information, contact information, QR, and
+          wallpapers.
+        </p>
       </div>
-    </template>
-  </USlideover>
 
-  <PendingApprovalInfo
-    v-model:open="isPendingInfoOpen"
-    :card-name="selectedPendingCardName"
-  />
+      <UButton
+        v-if="showUpgradeButton"
+        :label="upgradeButtonLabel"
+        icon="i-lucide-chevrons-up"
+        color="neutral"
+        class="w-full sm:w-auto rounded-full bg-white px-4 font-medium text-dark hover:bg-white/90"
+        @click="openUpgradeSlideover"
+      />
+    </div>
+
+    <UTabs
+      v-model="active"
+      :items="items"
+      :ui="{
+        root: 'items-start mt-6',
+        list: 'bg-[#171717] w-full max-w-[32rem] rounded-[8px] p-1 overflow-x-auto',
+        indicator: 'bg-[#232323]',
+        trigger: 'data-[state=active]:text-white rounded-[4px] px-4 py-2.5',
+        content: 'mt-5',
+      }"
+    >
+      <template #content="{ item }">
+        <FormRequestCardInfoChange v-if="item.value === '3d'" />
+        <FormUpdateCardInfo v-if="item.value === 'contact'" />
+        <FormDownloadWallpaper v-if="item.value === 'wallpaper'" />
+      </template>
+    </UTabs>
+
+    <USlideover
+      v-model:open="isPaymentSlideoverOpen"
+      side="right"
+      inset
+      :dismissible="!isSubmittingPayment"
+      :ui="{
+        content: 'w-full max-w-[480px] bg-[#171717]',
+        header: 'border-b-2 border-[#232323] px-6 py-6',
+        title: 'text-sm font-medium tracking-[1.4px] uppercase text-white',
+        body: 'px-6 pt-6 pb-8',
+      }"
+      :title="paymentHeaderLabel"
+    >
+      <template #body>
+        <div class="space-y-8">
+          <div class="space-y-4">
+            <h3
+              class="text-[20px] font-medium uppercase tracking-[2px] text-white"
+            >
+              {{ paymentTitle }}
+            </h3>
+            <p class="text-sm leading-[21px] text-[#8b8b8b]">
+              {{ paymentDescription }}
+            </p>
+
+            <div class="rounded-[4px] border-b border-[#2a2a2a] px-4 py-3">
+              <div class="flex items-center justify-between text-sm text-white">
+                <span>Duration</span>
+                <span class="font-bold">1 Year</span>
+              </div>
+            </div>
+            <div
+              v-for="row in paymentFeeRows"
+              :key="row.label"
+              class="rounded-[4px] px-4 py-3"
+            >
+              <div class="flex items-center justify-between text-sm text-white">
+                <span>{{ row.label }}</span>
+                <span class="font-bold">{{ formatMMK(row.amountMinor) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-8">
+            <p class="text-sm leading-[21px] text-white">
+              Please scan the QR code below to complete your payment.
+            </p>
+
+            <div class="space-y-3">
+              <p class="text-sm font-medium text-white">KBZ Pay QR Code</p>
+              <div
+                class="rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4 text-center"
+              >
+                <p class="text-sm text-white/50">Scan to Pay</p>
+                <div class="mx-auto my-3 size-40 bg-[#d9d9d9]" />
+                <p class="text-sm font-bold text-white">
+                  {{ formatMMK(paymentTotalAmountMinor) }}
+                </p>
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <p class="text-sm font-medium text-white">
+                Upload Payment Receipt
+              </p>
+              <label
+                class="flex h-[132px] cursor-pointer flex-col items-center justify-center gap-2 rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4"
+              >
+                <input
+                  type="file"
+                  class="hidden"
+                  accept="image/*"
+                  @change="onReceiptChange"
+                />
+                <UIcon name="i-lucide-upload" class="size-5 text-white" />
+                <p class="text-sm text-white">
+                  {{ receiptFile ? receiptFile.name : 'Upload Image' }}
+                </p>
+                <p class="text-sm text-white/50">
+                  SVG, JPG, PNG or GIF (max.2MB)
+                </p>
+              </label>
+            </div>
+
+            <p class="text-sm leading-[21px] text-white">
+              Once submitted, our team will review your request and reach out
+              within 24 hours to confirm the request and schedule the next
+              steps.
+            </p>
+          </div>
+
+          <div class="flex justify-end">
+            <UButton
+              label="Confirm Payment"
+              icon="i-lucide-check"
+              color="neutral"
+              :loading="isSubmittingPayment"
+              :disabled="!receiptFile"
+              class="rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90 disabled:opacity-60"
+              @click="submitPayment()"
+            />
+          </div>
+        </div>
+      </template>
+    </USlideover>
+
+    <PendingApprovalInfo
+      v-model:open="isPendingInfoOpen"
+      :card-name="selectedPendingCardName"
+    />
+  </template>
 </template>

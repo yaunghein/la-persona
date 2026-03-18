@@ -4,6 +4,10 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '../db';
 import { env } from '../utils/env';
 import {
+  organizationAccessControl,
+  organizationRoles,
+} from '~~/shared/permissions/organization';
+import {
   setupDefaultOrganization,
   getPersonalOrganizationByUserId,
 } from '~~/server/services/auth';
@@ -92,7 +96,10 @@ export const auth = betterAuth({
       },
     }),
     admin(),
-    organization(),
+    organization({
+      ac: organizationAccessControl,
+      roles: organizationRoles,
+    }),
   ],
   databaseHooks: {
     user: {

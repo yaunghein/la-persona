@@ -1,18 +1,17 @@
-import { and, desc, eq, ilike, isNull, or } from 'drizzle-orm';
-import { auth } from '~~/server/auth';
+import { and, desc, eq, ilike, or } from 'drizzle-orm';
 import { db } from '~~/server/db';
-import { card, contactExchange, member } from '~~/server/db/schema';
+import { card, contactExchange } from '~~/server/db/schema';
+import {
+  hasOrganizationPermission,
+  requireOrganizationPermission,
+} from '~~/server/utils/organization-permissions';
+import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
 
 export default defineEventHandler(async (event) => {
-  const session = await auth.api.getSession({
-    headers: event.headers,
-  });
-  if (!session || !session.session.activeOrganizationId) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Unauthorized',
-    });
-  }
+  const session = await requireOrganizationPermission(
+    event,
+    ORGANIZATION_PERMISSIONS.CONTACT_EXCHANGE_READ
+  );
 
   const { cardId, q } = getQuery(event);
   const selectedCardId = typeof cardId === 'string' ? cardId : 'all';
@@ -20,21 +19,15 @@ export default defineEventHandler(async (event) => {
   const orgId = session.session.activeOrganizationId;
   const userId = session.user.id;
 
-  const userMemberInfo = await db.query.member.findFirst({
-    where: and(eq(member.organizationId, orgId), eq(member.userId, userId)),
-  });
-  if (!userMemberInfo) {
-    throw createError({ statusCode: 403, statusMessage: 'Forbidden' });
-  }
-  const isOwner = userMemberInfo.role === 'owner';
+  const canReadAllContacts = await hasOrganizationPermission(
+    event,
+    ORGANIZATION_PERMISSIONS.CONTACT_EXCHANGE_READ_ALL
+  );
 
   const conditions = [
-    isOwner
-      ? or(eq(card.organizationId, orgId), isNull(contactExchange.cardId))
-      : or(
-          and(eq(card.organizationId, orgId), eq(card.userId, userId)),
-          isNull(contactExchange.cardId)
-        ),
+    canReadAllContacts
+      ? eq(card.organizationId, orgId)
+      : and(eq(card.organizationId, orgId), eq(card.userId, userId)),
   ];
 
   if (selectedCardId !== 'all') {
@@ -42,7 +35,7 @@ export default defineEventHandler(async (event) => {
       where: and(
         eq(card.id, selectedCardId),
         eq(card.organizationId, orgId),
-        ...(isOwner ? [] : [eq(card.userId, userId)])
+        ...(canReadAllContacts ? [] : [eq(card.userId, userId)])
       ),
       columns: { id: true },
     });
@@ -89,7 +82,7 @@ export default defineEventHandler(async (event) => {
       .leftJoin(card, eq(contactExchange.cardId, card.id))
       .where(and(...conditions))
       .orderBy(desc(contactExchange.createdAt)),
-    isOwner
+    canReadAllContacts
       ? db
           .select({
             id: card.id,
@@ -102,7 +95,7 @@ export default defineEventHandler(async (event) => {
   ]);
 
   return {
-    isOwner,
+    isOwner: canReadAllContacts,
     cards: ownerCardOptions.map((item) => ({
       id: item.id,
       label: `${item.firstName} ${item.lastName || ''}`.trim(),

@@ -64,7 +64,11 @@ export async function claimUnassignedCard({
     .returning();
 }
 
-export async function updateCard(userId: string, input: UpdateCard) {
+export async function updateCard(
+  userId: string,
+  organizationId: string,
+  input: UpdateCard
+) {
   const { id, ...data } = input;
 
   if (!id) {
@@ -77,7 +81,9 @@ export async function updateCard(userId: string, input: UpdateCard) {
   const [updated] = await db
     .update(card)
     .set({ ...data, updatedAt: new Date() })
-    .where(and(eq(card.id, id), eq(card.userId, userId)))
+    .where(
+      and(eq(card.id, id), eq(card.userId, userId), eq(card.organizationId, organizationId))
+    )
     .returning();
   if (!updated) {
     throw createError({

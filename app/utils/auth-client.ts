@@ -4,9 +4,20 @@ import {
   adminClient,
   organizationClient,
 } from 'better-auth/client/plugins';
+import {
+  organizationAccessControl,
+  organizationRoles,
+} from '~~/shared/permissions/organization';
 
 export const authClient = createAuthClient({
-  plugins: [magicLinkClient(), adminClient(), organizationClient()],
+  plugins: [
+    magicLinkClient(),
+    adminClient(),
+    organizationClient({
+      ac: organizationAccessControl,
+      roles: organizationRoles,
+    }),
+  ],
 });
 
 type SocialProvider = 'google' | 'linkedin' | 'github';
