@@ -1,5 +1,4 @@
 import { and, eq } from 'drizzle-orm';
-import { auth } from '~~/server/auth';
 import { db } from '~~/server/db';
 import {
   cardSubscription,
@@ -8,9 +7,10 @@ import {
 } from '~~/server/db/schema';
 import { assertOrganizationOwner } from '~~/server/services/subscription';
 import { approveSubscriptionPaymentBodySchema } from '~~/shared/types/subscription';
+import { requireAdminSession } from '~~/server/utils/admin-permissions';
 
 export default defineEventHandler(async (event) => {
-  const session = await auth.api.getSession({ headers: event.headers });
+  const session = await requireAdminSession(event);
   if (!session || !session.session.activeOrganizationId) {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
   }

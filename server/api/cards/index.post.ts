@@ -1,7 +1,7 @@
-import { auth } from '~~/server/auth';
 import { db } from '~~/server/db';
 import { card } from '~~/server/db/schema';
 import { ensureCardTrialSubscription } from '~~/server/services/subscription';
+import { requireAdminSession } from '~~/server/utils/admin-permissions';
 import { z } from 'zod';
 
 const CreateCardSchema = z.object({
@@ -11,16 +11,7 @@ const CreateCardSchema = z.object({
 });
 
 export default defineEventHandler(async (event) => {
-  const session = await auth.api.getSession({
-    headers: event.headers,
-  });
-
-  if (!session) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Unauthorized',
-    });
-  }
+  await requireAdminSession(event);
 
   // Validate the body
   const result = await readValidatedBody(event, CreateCardSchema.safeParse);

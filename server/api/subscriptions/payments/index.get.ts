@@ -1,7 +1,7 @@
 import { desc, eq, inArray } from 'drizzle-orm';
-import { auth } from '~~/server/auth';
 import { db } from '~~/server/db';
 import { cardRequest, subscriptionPayment, subscriptionPaymentItem, user } from '~~/server/db/schema';
+import { requireAdminSession } from '~~/server/utils/admin-permissions';
 
 function extractLinkedRequestId(note?: string | null) {
   if (!note) return null;
@@ -10,10 +10,7 @@ function extractLinkedRequestId(note?: string | null) {
 }
 
 export default defineEventHandler(async (event) => {
-  const session = await auth.api.getSession({ headers: event.headers });
-  if (!session) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
-  }
+  await requireAdminSession(event);
 
   const payments = await db
     .select({

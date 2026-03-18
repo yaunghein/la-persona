@@ -1,13 +1,10 @@
 import { desc, eq } from 'drizzle-orm';
-import { auth } from '~~/server/auth';
 import { db } from '~~/server/db';
 import { cardRequest, user } from '~~/server/db/schema';
+import { requireAdminSession } from '~~/server/utils/admin-permissions';
 
 export default defineEventHandler(async (event) => {
-  const session = await auth.api.getSession({ headers: event.headers });
-  if (!session) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
-  }
+  await requireAdminSession(event);
 
   const rows = await db
     .select({

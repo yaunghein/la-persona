@@ -1,5 +1,4 @@
 import { and, eq, inArray } from 'drizzle-orm';
-import { auth } from '~~/server/auth';
 import { db } from '~~/server/db';
 import {
   card,
@@ -11,6 +10,7 @@ import {
 } from '~~/server/db/schema';
 import { assertOrganizationOwner } from '~~/server/services/subscription';
 import { createSubscriptionPaymentBodySchema } from '~~/shared/types/subscription';
+import { requireAdminSession } from '~~/server/utils/admin-permissions';
 
 function addYears(base: Date, years: number) {
   const result = new Date(base);
@@ -19,7 +19,7 @@ function addYears(base: Date, years: number) {
 }
 
 export default defineEventHandler(async (event) => {
-  const session = await auth.api.getSession({ headers: event.headers });
+  const session = await requireAdminSession(event);
   if (!session || !session.session.activeOrganizationId) {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
   }

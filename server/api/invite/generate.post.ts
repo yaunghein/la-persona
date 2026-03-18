@@ -1,9 +1,13 @@
+import { requireAdminSession } from '~~/server/utils/admin-permissions';
+
 // TODO: delete later: this is an attampt before knowing better-auth's organization plugin
 // import { auth } from '~~/server/auth';
 // import { db } from '~~/server/db';
 // import { invitation } from '~~/server/db/schema';
 
 export default defineEventHandler(async (event) => {
+  await requireAdminSession(event);
+
   // const { cardId, minutes } = await readBody(event);
   // console.log({ cardId, minutes });
   // const session = await auth.api.getSession({ headers: event.headers });

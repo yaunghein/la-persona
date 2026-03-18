@@ -1,6 +1,5 @@
 import { and, eq, or } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
-import { auth } from '~~/server/auth';
 import { db } from '~~/server/db';
 import {
   card,
@@ -12,6 +11,7 @@ import {
 } from '~~/server/db/schema';
 import { splitName } from '~~/server/services/card';
 import { getPersonalOrganizationByUserId } from '~~/server/services/auth';
+import { requireAdminSession } from '~~/server/utils/admin-permissions';
 
 const NEW_DESIGN_DEFAULT_PLAN_CODE = 'premium';
 
@@ -22,10 +22,7 @@ function addYears(base: Date, years: number) {
 }
 
 export default defineEventHandler(async (event) => {
-  const session = await auth.api.getSession({ headers: event.headers });
-  if (!session) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
-  }
+  await requireAdminSession(event);
 
   const requestId = getRouterParam(event, 'id');
   if (!requestId) {
