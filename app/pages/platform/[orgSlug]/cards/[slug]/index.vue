@@ -444,11 +444,6 @@ const { mutate: submitPayment, isPending: isSubmittingPayment } = useMutation({
   },
 });
 
-function onReceiptChange(event: Event) {
-  const input = event.target as HTMLInputElement;
-  receiptFile.value = input.files?.[0] || null;
-}
-
 const items: TabsItem[] = [
   { label: '3D Card Information', value: '3d' },
   { label: 'Contact Information', value: 'contact' },
@@ -667,23 +662,20 @@ const active = computed({
               <p class="text-sm font-medium text-white">
                 Upload Payment Receipt
               </p>
-              <label
-                class="flex h-[132px] cursor-pointer flex-col items-center justify-center gap-2 rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4"
-              >
-                <input
-                  type="file"
-                  class="hidden"
-                  accept="image/*"
-                  @change="onReceiptChange"
-                />
-                <UIcon name="i-lucide-upload" class="size-5 text-white" />
-                <p class="text-sm text-white">
-                  {{ receiptFile ? receiptFile.name : 'Upload Image' }}
-                </p>
-                <p class="text-sm text-white/50">
-                  SVG, JPG, PNG or GIF (max.2MB)
-                </p>
-              </label>
+              <UFileUpload
+                v-model="receiptFile"
+                accept="image/*"
+                icon="i-lucide-upload"
+                label="Drop your receipt here"
+                description="PNG, JPG or WebP"
+                class="w-full min-h-42"
+                :ui="{
+                  root: '[&_img]:object-contain',
+                  base: 'rounded-[4px] border-[#2a2a2a] bg-[#232323]',
+                  label: 'text-sm text-white',
+                  description: 'text-xs text-[#8b8b8b]',
+                }"
+              />
             </div>
 
             <p class="text-sm leading-[21px] text-white">

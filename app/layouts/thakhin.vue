@@ -57,10 +57,19 @@ const currentPageLabel = computed(() => {
       class="bg-elevated/25"
       :ui="{ footer: 'lg:border-t lg:border-default' }"
     >
-      <template #header>
-        <NuxtLink to="/thakhin" class="w-44 aspect-[1/0.11]">
-          <SvgLogo />
-        </NuxtLink>
+      <template #header="{ collapsed }">
+        <div class="flex w-full items-center justify-between gap-2">
+          <NuxtLink
+            v-if="!collapsed"
+            to="/thakhin"
+            class="w-44 aspect-[1/0.11]"
+          >
+            <SvgLogo />
+          </NuxtLink>
+          <NuxtLink v-else to="/thakhin" class="w-10 aspect-square">
+            <IconLogoShort />
+          </NuxtLink>
+        </div>
       </template>
 
       <template #default="{ collapsed }">

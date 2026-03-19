@@ -626,27 +626,13 @@ function onFormError(event: FormErrorEvent) {
         description="PNG, JPG or WebP"
         class="w-full min-h-42"
         :ui="{
+          root: '[&_img]:object-contain',
           base: 'rounded-[4px] border-[#2a2a2a] bg-[#232323]',
           label: 'text-sm text-white',
           description: 'text-xs text-[#8b8b8b]',
         }"
       />
-      <div
-        v-if="receiptPreviewUrl"
-        class="mt-3 flex h-52 w-full items-center justify-center overflow-hidden rounded-[4px] border border-[#2a2a2a] bg-[#232323]"
-      >
-        <img
-          :src="receiptPreviewUrl"
-          alt="Payment receipt preview"
-          class="h-full w-full object-contain p-2"
-        />
-      </div>
     </UFormField>
-
-    <p class="text-sm leading-[21px] text-[#8b8b8b]">
-      Your request will be saved as pending by default. We'll implement the
-      admin approval step next.
-    </p>
 
     <div class="flex items-center justify-end pt-2">
       <UButton

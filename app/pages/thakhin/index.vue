@@ -2,20 +2,46 @@
 definePageMeta({
   layout: 'thakhin',
 });
+
+type PaymentRow = {
+  status: string;
+  totalAmountMinor: number;
+  currency: string | null;
+};
+
+const { data, pending } = await useFetch<PaymentRow[]>(
+  '/api/subscriptions/payments'
+);
+
+const rows = computed(() => data.value || []);
+
+const totalReceivedMinor = computed(() =>
+  rows.value
+    .filter((row) => row.status === 'approved')
+    .reduce((sum, row) => sum + (row.totalAmountMinor || 0), 0)
+);
+
+const approvedCount = computed(
+  () => rows.value.filter((row) => row.status === 'approved').length
+);
+
+const submittedCount = computed(
+  () => rows.value.filter((row) => row.status === 'submitted').length
+);
+
+const paymentCurrency = computed(
+  () => rows.value.find((row) => row.currency)?.currency || 'MMK'
+);
+
+function formatMoney(amountMinor: number, currency: string) {
+  return `${amountMinor.toLocaleString()} ${currency}`;
+}
 </script>
 
 <template>
-  <div class="rounded-lg border border-[#232323] bg-[#171717] p-8">
-    <h1 class="text-xl font-semibold text-white">Thakhin Overview</h1>
-    <p class="mt-2 text-sm text-[#8b8b8b]">
-      Use the sidebar to review incoming card requests.
-    </p>
-    <UButton
-      to="/thakhin/requests"
-      label="Go to Requests"
-      icon="i-lucide-arrow-right"
-      class="mt-6 rounded-full"
-      color="neutral"
-    />
+  <div
+    class="min-h-[calc(100dvh-7rem)] flex items-center justify-center text-3xl font-bold tracking-tight text-white md:text-5xl"
+  >
+    {{ formatMoney(totalReceivedMinor, paymentCurrency) }}
   </div>
 </template>
