@@ -192,9 +192,13 @@ type PaymentScenario =
   | 'standard_to_premium_upgrade_expired';
 
 const MMK = 'MMK';
-const HOSTING_STANDARD_FEE_MINOR = 48000;
-const HOSTING_UPGRADE_FEE_MINOR = 49000;
-const CUSTOM_DESIGN_FEE_MINOR = 120000;
+
+type CardPaymentPricingConfig = {
+  currency: string;
+  standardPlanPriceMinor: number;
+  premiumPlanPriceMinor: number;
+  customDesignFeeMinor: number;
+};
 
 type CreateSubscriptionPaymentPayload = {
   receiptUrl: string;
@@ -220,6 +224,10 @@ const paymentScenario = ref<PaymentScenario | null>(null);
 const isPaymentSlideoverOpen = ref(false);
 const receiptFile = ref<File | null>(null);
 const receiptPreviewUrl = ref<string | null>(null);
+const { data: paymentPricing } = useQuery<CardPaymentPricingConfig>({
+  queryKey: ['subscription-card-payment-pricing'],
+  queryFn: () => $fetch('/api/subscriptions/pricing/card-payment'),
+});
 
 const isPremiumUpgradeScenario = computed(
   () =>
@@ -256,9 +264,10 @@ const paymentDescription = computed(() => {
 });
 const paymentFeeRows = computed(() => {
   const currentScenario = paymentScenario.value;
-  if (!currentScenario) return [];
+  const pricing = paymentPricing.value;
+  if (!currentScenario || !pricing) return [];
 
-  const rows: { label: string; amountMinor: number }[] = [];
+  const rows: { label: string; amountMinor: number; isFree?: boolean }[] = [];
 
   if (
     currentScenario === 'trial_to_standard_renewal' ||
@@ -267,21 +276,25 @@ const paymentFeeRows = computed(() => {
   ) {
     rows.push({
       label: 'Hosting Fee',
-      amountMinor: HOSTING_STANDARD_FEE_MINOR,
+      amountMinor:
+        currentScenario === 'premium_renewal'
+          ? pricing.premiumPlanPriceMinor
+          : pricing.standardPlanPriceMinor,
     });
   }
 
   if (
     currentScenario === 'trial_to_premium_upgrade' ||
+    currentScenario === 'standard_to_premium_upgrade_active' ||
     currentScenario === 'standard_to_premium_upgrade_expired'
   ) {
-    rows.push({ label: 'Hosting Fee', amountMinor: HOSTING_UPGRADE_FEE_MINOR });
+    rows.push({ label: 'Hosting Fee', amountMinor: 0, isFree: true });
   }
 
   if (isPremiumUpgradeScenario.value) {
     rows.push({
       label: 'Custom Design Fee',
-      amountMinor: CUSTOM_DESIGN_FEE_MINOR,
+      amountMinor: pricing.customDesignFeeMinor,
     });
   }
 
@@ -292,7 +305,13 @@ const paymentTotalAmountMinor = computed(() =>
 );
 
 function formatMMK(amountMinor: number) {
-  return `${amountMinor.toLocaleString()} ${MMK}`;
+  const currency = paymentPricing.value?.currency || MMK;
+  return `${amountMinor.toLocaleString()} ${currency}`;
+}
+
+function formatFeeRowAmount(row: { amountMinor: number; isFree?: boolean }) {
+  if (row.isFree) return 'Free of charge';
+  return formatMMK(row.amountMinor);
 }
 
 function openRenewSlideover() {
@@ -352,6 +371,9 @@ const { mutate: submitPayment, isPending: isSubmittingPayment } = useMutation({
     if (!receiptFile.value) {
       throw new Error('Please upload a payment receipt.');
     }
+    if (!paymentPricing.value) {
+      throw new Error('Pricing is not available yet. Please try again.');
+    }
 
     const compressed = await imageCompression(receiptFile.value, {
       maxSizeMB: 0.8,
@@ -383,10 +405,10 @@ const { mutate: submitPayment, isPending: isSubmittingPayment } = useMutation({
           termYears: 1,
           amountMinor: paymentTotalAmountMinor.value,
           additionalFeeMinor: isPremiumUpgradeScenario.value
-            ? CUSTOM_DESIGN_FEE_MINOR
+            ? paymentPricing.value.customDesignFeeMinor
             : 0,
           skipPeriodUpdate: shouldSkipPeriodUpdate.value,
-          currency: MMK,
+          currency: paymentPricing.value.currency as typeof MMK,
         },
       ],
     };
@@ -618,7 +640,7 @@ const active = computed({
             >
               <div class="flex items-center justify-between text-sm text-white">
                 <span>{{ row.label }}</span>
-                <span class="font-bold">{{ formatMMK(row.amountMinor) }}</span>
+                <span class="font-bold">{{ formatFeeRowAmount(row) }}</span>
               </div>
             </div>
           </div>

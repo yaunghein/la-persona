@@ -22,6 +22,7 @@ const EnvSchema = z.object({
   AWS_BUCKET_NAME: z.string(),
   BASE_URL: z.string(),
   GTAG_ID: z.string(),
+  CUSTOM_DESIGN_FEE: z.coerce.number().int().min(0),
 });
 
 export type EnvSchema = z.infer<typeof EnvSchema>;

@@ -11,6 +11,7 @@ import {
 import { assertOrganizationOwner } from '~~/server/services/subscription';
 import { createSubscriptionPaymentBodySchema } from '~~/shared/types/subscription';
 import { requireAdminSession } from '~~/server/utils/admin-permissions';
+import { env } from '~~/server/utils/env';
 
 function addYears(base: Date, years: number) {
   const result = new Date(base);
@@ -20,11 +21,10 @@ function addYears(base: Date, years: number) {
 
 export default defineEventHandler(async (event) => {
   const session = await requireAdminSession(event);
-  if (!session || !session.session.activeOrganizationId) {
+  const organizationId = session.session.activeOrganizationId ?? null;
+  if (!organizationId) {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
   }
-
-  const organizationId = session.session.activeOrganizationId;
   await assertOrganizationOwner(session.user.id, organizationId);
 
   const body = await readValidatedBody(
@@ -140,13 +140,28 @@ export default defineEventHandler(async (event) => {
       }
 
       const termYears = item.termYears ?? 1;
-      const additionalFeeMinor = item.additionalFeeMinor ?? 0;
-      const baseAmountMinor = plan.priceMinor * termYears;
+      const isPremiumUpgradePayment =
+        body.data.createPremiumRequest === true && item.planCode === 'premium';
+      if (body.data.createPremiumRequest === true && item.planCode !== 'premium') {
+        throw createError({
+          statusCode: 400,
+          statusMessage: 'Premium upgrade requests must use premium plan.',
+          data: {
+            cardId: item.cardId,
+            planCode: item.planCode,
+          },
+        });
+      }
+
+      const additionalFeeMinor = isPremiumUpgradePayment ? env.CUSTOM_DESIGN_FEE : 0;
+      const baseAmountMinor = isPremiumUpgradePayment ? 0 : plan.priceMinor * termYears;
       const expectedAmountMinor = baseAmountMinor + additionalFeeMinor;
-      const lineAmountMinor = item.amountMinor ?? expectedAmountMinor;
+      const lineAmountMinor = expectedAmountMinor;
       const planCurrency = plan.currency.toUpperCase();
       const submittedCurrency = item.currency?.toUpperCase();
       const existingSubscription = subscriptionByCardId.get(item.cardId);
+      const submittedAmountMinor =
+        typeof item.amountMinor === 'number' ? item.amountMinor : undefined;
 
       if (lineAmountMinor < 0) {
         throw createError({
@@ -156,6 +171,22 @@ export default defineEventHandler(async (event) => {
             cardId: item.cardId,
             planCode: item.planCode,
             submittedAmountMinor: lineAmountMinor,
+          },
+        });
+      }
+
+      if (
+        typeof submittedAmountMinor === 'number' &&
+        submittedAmountMinor !== expectedAmountMinor
+      ) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: 'Submitted amount does not match expected pricing.',
+          data: {
+            cardId: item.cardId,
+            planCode: item.planCode,
+            submittedAmountMinor,
+            expectedAmountMinor,
           },
         });
       }
