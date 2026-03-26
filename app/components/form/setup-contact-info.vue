@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useQuery, useMutation } from '@tanstack/vue-query';
-import type { FormSubmitEvent } from '#ui/types';
+import type { FormError, FormSubmitEvent } from '#ui/types';
 
 const emit = defineEmits<{
   continued: [];
@@ -43,21 +43,23 @@ watch(
 
 const { mutate: submitRequest, isPending: isSubmitting } = useMutation({
   mutationFn: async (formData: UpdateCardUpdateRequest) => {
+    // dont remove this early return for now, its for testing
+    // return true;
     return await $fetch(`/api/cards`, {
       method: 'PATCH',
       body: {
         ...formData,
-        id: formData.cardId, //TODO: this is fk up lol refactor
+        id: formData.cardId,
       },
     });
   },
   onSuccess: () => {
     emit('continued');
-    toast.add({
-      title: 'Updated Successfully',
-      description: 'Changes have been requested and are pending review.',
-      color: 'success',
-    });
+    // toast.add({
+    //   title: 'Updated Successfully',
+    //   description: 'Changes have been requested and are pending review.',
+    //   color: 'success',
+    // });
   },
   onError: (err: any) => {
     toast.add({
@@ -67,6 +69,44 @@ const { mutate: submitRequest, isPending: isSubmitting } = useMutation({
     });
   },
 });
+
+function validate(formData: Partial<UpdateCardUpdateRequest>): FormError[] {
+  const errors: FormError[] = [];
+
+  if (!formData.firstName?.trim()) {
+    errors.push({
+      name: 'firstName',
+      message: 'First Name is required.',
+    });
+  }
+
+  if (!formData.position?.trim()) {
+    errors.push({
+      name: 'position',
+      message: 'Professional Title / Role is required.',
+    });
+  }
+
+  if (!formData.email?.trim()) {
+    errors.push({
+      name: 'email',
+      message: 'Email is required.',
+    });
+  } else {
+    const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+      formData.email.trim()
+    );
+
+    if (!isEmailValid) {
+      errors.push({
+        name: 'email',
+        message: 'Please enter a valid email address.',
+      });
+    }
+  }
+
+  return errors;
+}
 
 function onSubmit(event: FormSubmitEvent<UpdateCardUpdateRequest>) {
   submitRequest(event.data);
@@ -89,12 +129,14 @@ function onSubmit(event: FormSubmitEvent<UpdateCardUpdateRequest>) {
     <UForm
       :state="state"
       :schema="cardUpdateRequestInsertSchema"
+      :validate="validate"
       @submit="onSubmit"
       class="space-y-4 grid grid-cols-1 md:grid-cols-2 w-full gap-x-5"
     >
       <UFormField
         label="First Name"
         name="firstName"
+        required
         class="text-sm font-semibold"
       >
         <UInput
@@ -114,9 +156,10 @@ function onSubmit(event: FormSubmitEvent<UpdateCardUpdateRequest>) {
         />
       </UFormField>
 
-      <UFormField label="Professional Title / Role" name="position">
+      <UFormField label="Professional Title / Role" name="position" required>
         <UInput
           v-model="state.position"
+          placeholder="e.g. Engineer, Designer, etc."
           variant="soft"
           class="w-full"
           size="xl"
@@ -127,11 +170,11 @@ function onSubmit(event: FormSubmitEvent<UpdateCardUpdateRequest>) {
         <UInput v-model="state.phone" variant="soft" class="w-full" size="xl" />
       </UFormField>
 
-      <UFormField label="Email Address" name="email">
+      <UFormField label="Email Address" name="email" required>
         <UInput v-model="state.email" variant="soft" class="w-full" size="xl" />
       </UFormField>
 
-      <UFormField label="Personal Website / Portfolio" name="website">
+      <UFormField label="Website" name="website">
         <UInput
           v-model="state.website"
           variant="soft"
@@ -140,7 +183,7 @@ function onSubmit(event: FormSubmitEvent<UpdateCardUpdateRequest>) {
         />
       </UFormField>
 
-      <UFormField label="Note (Optional)" name="note" class="md:col-span-2">
+      <!-- <UFormField label="Note" name="note" class="md:col-span-2">
         <UTextarea
           v-model="state.note"
           class="w-full"
@@ -148,7 +191,7 @@ function onSubmit(event: FormSubmitEvent<UpdateCardUpdateRequest>) {
           variant="soft"
           size="xl"
         />
-      </UFormField>
+      </UFormField> -->
 
       <div class="md:col-span-2 flex justify-end pt-4">
         <UButton

@@ -30,6 +30,8 @@ const emit = defineEmits<{ close: []; submitted: [] }>();
 
 const toast = useToast();
 const runtimeConfig = useRuntimeConfig();
+const { normalizeUrlWithHttps, normalizeLinkValuesWithHttps, isValidPublicWebUrl } =
+  useUrlNormalization();
 
 const state = reactive<RequestCardFormState>({
   type: 'new_design' as 'new_design' | 'existing_design',
@@ -158,15 +160,16 @@ const { mutate: insertCardRequest, isPending: isLoading } = useMutation({
     });
 
     const { type, sourceCardId, ...cardData } = formData;
-    const socials = resolveSocialLinksForSubmission(state.socials).filter(
-      (social) => social.label || social.value
-    );
+    const socials = normalizeLinkValuesWithHttps(
+      resolveSocialLinksForSubmission(state.socials)
+    ).filter((social) => social.label || social.value);
     return await $fetch('/api/cards/new-request', {
       method: 'POST',
       body: {
         type,
         cardData: {
           ...cardData,
+          website: normalizeUrlWithHttps(cardData.website),
           socials: socials.length > 0 ? socials : undefined,
           sourceCardId: type === 'existing_design' ? sourceCardId : undefined,
         },
@@ -216,9 +219,9 @@ function getIssueKey(path: PropertyKey[]) {
 }
 
 function buildPayloadForValidation(formData: RequestCardFormState) {
-  const socials = resolveSocialLinksForSubmission(formData.socials).filter(
-    (social) => social.label || social.value
-  );
+  const socials = normalizeLinkValuesWithHttps(
+    resolveSocialLinksForSubmission(formData.socials)
+  ).filter((social) => social.label || social.value);
 
   return {
     type: formData.type,
@@ -229,7 +232,7 @@ function buildPayloadForValidation(formData: RequestCardFormState) {
       company: formData.company.trim(),
       phone: formData.phone.trim(),
       email: formData.email.trim(),
-      website: formData.website.trim(),
+      website: normalizeUrlWithHttps(formData.website),
       sourceCardId:
         formData.type === 'existing_design'
           ? formData.sourceCardId.trim() || undefined
@@ -289,7 +292,7 @@ function validate(formData: Partial<RequestCardFormState>): FormError[] {
   }
 
   const missingCustomIndexes = getCustomSocialLabelMissingIndexes(
-    state.socials
+    normalized.socials
   );
   missingCustomIndexes.forEach((index) => {
     if (errors.some((error) => error.name === `socials.${index}.customLabel`)) {
@@ -298,6 +301,32 @@ function validate(formData: Partial<RequestCardFormState>): FormError[] {
     errors.push({
       name: `socials.${index}.customLabel`,
       message: 'Custom label is required.',
+    });
+  });
+
+  const normalizedWebsite = normalizeUrlWithHttps(normalized.website);
+  if (
+    normalized.website.trim() &&
+    !isValidPublicWebUrl(normalizedWebsite) &&
+    !errors.some((error) => error.name === 'website')
+  ) {
+    errors.push({
+      name: 'website',
+      message: 'Please enter a valid URL.',
+    });
+  }
+
+  const normalizedSocials = normalizeLinkValuesWithHttps(
+    resolveSocialLinksForSubmission(normalized.socials)
+  );
+  normalizedSocials.forEach((social, index) => {
+    if (!String(social.value || '').trim()) return;
+    if (isValidPublicWebUrl(social.value)) return;
+    if (errors.some((error) => error.name === `socials.${index}.value`)) return;
+
+    errors.push({
+      name: `socials.${index}.value`,
+      message: 'Please enter a valid URL.',
     });
   });
 
@@ -597,7 +626,7 @@ function onFormError(event: FormErrorEvent) {
         >
           <UInput
             v-model="link.value"
-            placeholder="https://..."
+            placeholder="www.example.com"
             class="w-full"
             :ui="{
               base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',

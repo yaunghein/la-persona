@@ -21,6 +21,8 @@ const queryClient = useQueryClient();
 const slug = computed(() => route.params.slug);
 const runtimeConfig = useRuntimeConfig();
 const toast = useToast();
+const { normalizeUrlWithHttps, normalizeLinkValuesWithHttps, isValidPublicWebUrl } =
+  useUrlNormalization();
 
 const selectedFile = ref<File | null>(null);
 const localPreviewUrl = ref<string | null>(null);
@@ -141,12 +143,15 @@ const { mutate: updateCard, isPending: isSaving } = useMutation({
       finalAvatarUrl = fileKey;
     }
 
-    const normalizedSocials = resolveSocialLinksForSubmission(state.socials);
+    const normalizedSocials = normalizeLinkValuesWithHttps(
+      resolveSocialLinksForSubmission(state.socials)
+    );
 
     return await $fetch('/api/cards', {
       method: 'PATCH',
       body: {
         ...formData,
+        website: normalizeUrlWithHttps(formData.website),
         avatarUrl: finalAvatarUrl,
         id: card.value?.id,
         socials: normalizedSocials,
@@ -184,6 +189,26 @@ function validate(formData: Partial<UpdateCard>): FormError[] {
       name: `socials.${index}.customLabel`,
       message: 'Custom label is required.',
     });
+  });
+
+  const website = String(formData.website || '').trim();
+  if (website && !isValidPublicWebUrl(website)) {
+    errors.push({
+      name: 'website',
+      message: 'Please enter a valid URL.',
+    });
+  }
+
+  state.socials.forEach((social, index) => {
+    const value = String(social.value || '').trim();
+    if (!value) return;
+
+    if (!isValidPublicWebUrl(value)) {
+      errors.push({
+        name: `socials.${index}.value`,
+        message: 'Please enter a valid URL.',
+      });
+    }
   });
 
   return errors;
@@ -453,7 +478,7 @@ watch(socialsListEl, (el) => {
             <UFormField class="flex-1" :name="`socials.${index}.value`">
               <UInput
                 v-model="link.value"
-                placeholder="URL"
+                placeholder="www.example.com"
                 class="w-full"
                 :ui="{
                   base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',

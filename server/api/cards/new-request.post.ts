@@ -97,7 +97,7 @@ export default defineEventHandler(async (event) => {
             firstName,
             lastName,
             slug: `${slugify(name || `${firstName} ${lastName}`)}-${nanoid(6)}`,
-            position: position || 'Professional',
+            position: position || '',
             company: company || null,
             phone: phone || null,
             email: email || null,

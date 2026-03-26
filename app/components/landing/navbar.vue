@@ -5,11 +5,20 @@ const { isHeaderVisible, currentSection } = inject(LandingContextKey)!;
 <template>
   <header class="z-30 bg-dark px-4 sm:px-18">
     <div
-      class="flex items-center justify-center border-b border-white/10 py-7 sm:py-13"
+      class="flex items-center justify-between border-b border-white/10 py-5 sm:py-10"
     >
       <div class="aspect-[1/0.09] w-32 sm:w-[11.6rem]">
         <IconLogo />
       </div>
+      <UButton
+        to="/sign-in"
+        color="primary"
+        class="rounded-full font-semibold"
+        size="lg"
+        icon="material-symbols:person"
+      >
+        Sign In
+      </UButton>
     </div>
   </header>
 

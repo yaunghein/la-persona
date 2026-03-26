@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useQuery, useMutation } from '@tanstack/vue-query';
-import type { FormSubmitEvent } from '#ui/types';
+import type { FormError, FormErrorEvent, FormSubmitEvent } from '#ui/types';
 import {
   CARD_LINK_SELECT_ITEMS,
   createEmptyCardLink,
@@ -21,6 +21,8 @@ const emit = defineEmits<{
 const route = useRoute();
 const toast = useToast();
 const slug = computed(() => route.params.slug as string);
+const { normalizeLinkValuesWithHttps, isValidPublicWebUrl } =
+  useUrlNormalization();
 const linkTypeItems = computed<string[][]>(() =>
   createLinkTypeItemsWithCustom(CARD_LINK_SELECT_ITEMS)
 );
@@ -54,9 +56,9 @@ watch(
 
 const { mutate: submitRequest, isPending: isSubmitting } = useMutation({
   mutationFn: async (formData: typeof state) => {
-    const socials = resolveSocialLinksForSubmission(state.socials).filter(
-      (item) => item.label || item.value
-    );
+    const socials = normalizeLinkValuesWithHttps(
+      resolveSocialLinksForSubmission(state.socials)
+    ).filter((item) => item.label || item.value);
 
     return await $fetch(`/api/cards`, {
       method: 'PATCH',
@@ -97,16 +99,42 @@ function onSubmit() {
     return;
   }
 
-  if (getCustomSocialLabelMissingIndexes(state.socials).length > 0) {
-    toast.add({
-      title: 'Custom label required',
-      description: 'Please fill custom label for every custom link.',
-      color: 'warning',
-    });
-    return;
-  }
-
   submitRequest(state);
+}
+
+function validate(formData: typeof state): FormError[] {
+  const errors: FormError[] = [];
+
+  getCustomSocialLabelMissingIndexes(formData.socials).forEach((index) => {
+    errors.push({
+      name: `socials.${index}.customLabel`,
+      message: 'Custom label is required.',
+    });
+  });
+
+  formData.socials.forEach((social, index) => {
+    const value = String(social.value || '').trim();
+    if (!value) return;
+
+    if (!isValidPublicWebUrl(value)) {
+      errors.push({
+        name: `socials.${index}.value`,
+        message: 'Please enter a valid URL.',
+      });
+    }
+  });
+
+  return errors;
+}
+
+function onFormError(event: FormErrorEvent) {
+  if (!event.errors.length) return;
+
+  toast.add({
+    title: 'Please check your links',
+    description: 'Fix the highlighted fields and try again.',
+    color: 'error',
+  });
 }
 
 const addLink = () => {
@@ -139,11 +167,17 @@ const removeLink = (index: number) => {
       Create your La Persona business card in two steps.
     </p>
 
-    <UForm :state="state" @submit="onSubmit" class="space-y-6">
+    <UForm
+      :state="state"
+      :validate="validate"
+      @submit="onSubmit"
+      @error="onFormError"
+      class="space-y-6"
+    >
       <div class="space-y-4">
         <div class="flex justify-between items-center">
           <p class="text-sm font-medium text-gray-200">
-            Social / Professional Links (Required)
+            Social / Professional Links <span class="text-red-500">*</span>
           </p>
           <UButton
             icon="i-heroicons-plus-circle"
@@ -167,24 +201,30 @@ const removeLink = (index: number) => {
             class="w-full md:w-40"
             size="xl"
           />
-          <UInput
+          <UFormField
             v-if="link.label === 'Custom'"
-            v-model="link.customLabel"
-            placeholder="Custom Label"
+            :name="`socials.${index}.customLabel`"
             class="w-full md:w-52"
-            size="xl"
-            variant="soft"
-          />
-          <UInput
-            v-model="link.value"
-            placeholder="https://..."
-            class="flex-1 w-full"
-            size="xl"
-            variant="soft"
-          />
+          >
+            <UInput
+              v-model="link.customLabel"
+              placeholder="Custom Label"
+              class="w-full"
+              size="xl"
+              variant="soft"
+            />
+          </UFormField>
+          <UFormField :name="`socials.${index}.value`" class="flex-1 w-full">
+            <UInput
+              v-model="link.value"
+              placeholder="www.example.com"
+              class="w-full"
+              size="xl"
+              variant="soft"
+            />
+          </UFormField>
           <UButton
             icon="i-lucide-x"
-            color="error"
             variant="ghost"
             :disabled="state.socials.length === 1 && !link.value"
             class="max-h-11.75"
