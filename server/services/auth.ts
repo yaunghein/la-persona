@@ -1,7 +1,11 @@
 import { nanoid } from 'nanoid';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, gt } from 'drizzle-orm';
 import { db } from '~~/server/db';
-import { organization, member } from '~~/server/db/schema';
+import {
+  organization,
+  member,
+  onboardingInvitation,
+} from '~~/server/db/schema';
 import { getMembersByUserId } from '~~/server/db/queries/auth';
 import { insertDefaultCard } from '~~/server/services/card';
 import type { User } from 'better-auth';
@@ -17,6 +21,13 @@ export async function insertOrganization(name: string, isPersonal = false) {
       createdAt: new Date(),
     })
     .returning();
+
+  if (!inserted) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Failed to create organization',
+    });
+  }
 
   return inserted;
 }
@@ -39,6 +50,13 @@ export async function insertMember(
 }
 
 export async function setupDefaultOrganization(user: User) {
+  const pendingInvitation = await getPendingOnboardingInvitationByEmail(
+    user.email
+  );
+  if (pendingInvitation) {
+    return;
+  }
+
   const existingMemberships = await getMembersByUserId(user.id);
 
   if (existingMemberships.length > 0) {
@@ -51,6 +69,21 @@ export async function setupDefaultOrganization(user: User) {
   await insertDefaultCard(user, newOrg.id);
 }
 
+export async function getPendingOnboardingInvitationByEmail(email: string) {
+  const normalizedEmail = String(email || '')
+    .trim()
+    .toLowerCase();
+  if (!normalizedEmail) return null;
+
+  return await db.query.onboardingInvitation.findFirst({
+    where: and(
+      eq(onboardingInvitation.email, normalizedEmail),
+      eq(onboardingInvitation.status, 'pending'),
+      gt(onboardingInvitation.expiresAt, new Date())
+    ),
+  });
+}
+
 export async function getPersonalOrganizationByUserId(userId: string) {
   const result = await db
     .select({ organization: organization })
@@ -58,5 +91,6 @@ export async function getPersonalOrganizationByUserId(userId: string) {
     .innerJoin(member, eq(member.organizationId, organization.id))
     .where(and(eq(member.userId, userId), eq(organization.isPersonal, true)))
     .limit(1);
-  return result.length > 0 ? result[0].organization : null;
+  const first = result[0];
+  return first ? first.organization : null;
 }

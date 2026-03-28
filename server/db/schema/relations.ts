@@ -7,11 +7,18 @@ import { subscriptionPayment, subscriptionPaymentItem } from './subscription-pay
 import { subscriptionPlan } from './subscription-plan';
 import { cardRequest } from './card-request';
 import { feedbackSubmission } from './feedback-submission';
+import { onboardingInvitation } from './onboarding-invitation';
 
 export const userRelations = relations(user, ({ many }) => ({
   cards: many(card),
   submittedSubscriptionPayments: many(subscriptionPayment),
   feedbackSubmissions: many(feedbackSubmission),
+  createdOnboardingInvitations: many(onboardingInvitation, {
+    relationName: 'onboarding_invitation_created_by',
+  }),
+  acceptedOnboardingInvitations: many(onboardingInvitation, {
+    relationName: 'onboarding_invitation_accepted_by',
+  }),
 }));
 
 export const organizationSubscriptionRelations = relations(
@@ -19,6 +26,7 @@ export const organizationSubscriptionRelations = relations(
   ({ many }) => ({
     subscriptionPayments: many(subscriptionPayment),
     feedbackSubmissions: many(feedbackSubmission),
+    onboardingInvitations: many(onboardingInvitation),
   })
 );
 
@@ -44,6 +52,7 @@ export const cardRelations = relations(card, ({ one, many }) => ({
     references: [cardSubscription.cardId],
   }),
   subscriptionPaymentItems: many(subscriptionPaymentItem),
+  onboardingInvitations: many(onboardingInvitation),
 }));
 
 export const contactExchangeRelations = relations(
@@ -58,6 +67,7 @@ export const contactExchangeRelations = relations(
 
 export const subscriptionPlanRelations = relations(subscriptionPlan, ({ many }) => ({
   cardSubscriptions: many(cardSubscription),
+  onboardingInvitations: many(onboardingInvitation),
 }));
 
 export const subscriptionPaymentRelations = relations(
@@ -122,6 +132,34 @@ export const feedbackSubmissionRelations = relations(
     user: one(user, {
       fields: [feedbackSubmission.userId],
       references: [user.id],
+    }),
+  })
+);
+
+export const onboardingInvitationRelations = relations(
+  onboardingInvitation,
+  ({ one }) => ({
+    organization: one(organization, {
+      fields: [onboardingInvitation.organizationId],
+      references: [organization.id],
+    }),
+    card: one(card, {
+      fields: [onboardingInvitation.cardId],
+      references: [card.id],
+    }),
+    subscriptionPlan: one(subscriptionPlan, {
+      fields: [onboardingInvitation.subscriptionPlanCode],
+      references: [subscriptionPlan.code],
+    }),
+    createdByUser: one(user, {
+      fields: [onboardingInvitation.createdByUserId],
+      references: [user.id],
+      relationName: 'onboarding_invitation_created_by',
+    }),
+    acceptedByUser: one(user, {
+      fields: [onboardingInvitation.acceptedByUserId],
+      references: [user.id],
+      relationName: 'onboarding_invitation_accepted_by',
     }),
   })
 );

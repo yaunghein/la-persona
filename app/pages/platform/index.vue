@@ -4,12 +4,6 @@ import { useQuery } from '@tanstack/vue-query';
 const router = useRouter();
 const route = useRoute();
 const activeOrg = authClient.useActiveOrganization();
-watch(activeOrg, (newOrg) => {
-  if (newOrg.data?.slug) {
-    console.log('newOrg', newOrg.data);
-    // router.push(`/platform/${newOrg.data.slug}`);
-  }
-});
 
 const redirectTo = computed(() => {
   const value = route.query.redirectTo;
@@ -31,7 +25,9 @@ const { data: cards, isError } = useQuery({
 watch(
   [cards, activeOrg],
   ([newCards, org]) => {
+    console.log('1');
     if (!newCards || !org) return;
+    console.log('2');
     console.log('newCards', newCards.length);
 
     if (newCards.length === 1) {

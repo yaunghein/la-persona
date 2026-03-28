@@ -9,5 +9,6 @@ export * from './subscription-plan';
 export * from './subscription-payment';
 export * from './card-subscription';
 export * from './feedback-submission';
+export * from './onboarding-invitation';
 
 import './relations';

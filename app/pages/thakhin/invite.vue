@@ -23,7 +23,10 @@ async function handleGenerate() {
     const res = await $fetch('/api/invite/generate', {
       method: 'POST',
       body: {
-        cardId: state.cardId.id,
+        cardId:
+          typeof state.cardId === 'object' && state.cardId && 'id' in state.cardId
+            ? (state.cardId as { id: string }).id
+            : String(state.cardId),
         minutes: state.minutes,
       },
     });
@@ -77,7 +80,12 @@ const copyLink = () => {
           </label>
           <USelectMenu
             v-model="state.cardId"
-            :items="cards?.map((card) => ({ label: card.name, id: card.id }))"
+            :items="
+              cards?.map((c) => ({
+                label: c.subtitle ? `${c.label} — ${c.subtitle}` : c.label,
+                id: c.id,
+              }))
+            "
             placeholder="Search unclaimed cards..."
             size="xl"
             class="w-full"

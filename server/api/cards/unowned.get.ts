@@ -6,12 +6,21 @@ import { requireAdminSession } from '~~/server/utils/admin-permissions';
 export default defineEventHandler(async (event) => {
   await requireAdminSession(event);
 
-  return await db.query.card.findMany({
+  const rows = await db.query.card.findMany({
     where: isNull(card.userId),
     columns: {
       id: true,
-      name: true,
-      type: true,
+      firstName: true,
+      lastName: true,
+      position: true,
+      slug: true,
     },
   });
+
+  return rows.map((row) => ({
+    id: row.id,
+    slug: row.slug,
+    label: `${row.firstName} ${row.lastName || ''}`.trim(),
+    subtitle: row.position || '',
+  }));
 });

@@ -29,12 +29,30 @@ const links = [
       open.value = false;
     },
   },
+  {
+    label: 'Cards',
+    icon: 'i-lucide-credit-card',
+    to: ROUTES.THAKHIN.CARDS,
+    onSelect: () => {
+      open.value = false;
+    },
+  },
+  {
+    label: 'Invitations',
+    icon: 'i-lucide-user-plus',
+    to: ROUTES.THAKHIN.INVITATIONS,
+    onSelect: () => {
+      open.value = false;
+    },
+  },
 ] satisfies NavigationMenuItem[];
 
 const pageLabel: Record<string, string> = {
   [ROUTES.THAKHIN.ROOT]: 'Overview',
   [ROUTES.THAKHIN.REQUESTS]: 'Requests',
   [ROUTES.THAKHIN.PAYMENTS]: 'Payments',
+  [ROUTES.THAKHIN.CARDS]: 'Cards',
+  [ROUTES.THAKHIN.INVITATIONS]: 'Invitations',
 };
 
 const currentPageLabel = computed(() => {
