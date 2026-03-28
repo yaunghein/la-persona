@@ -149,15 +149,6 @@ async function onSubmitForm() {
     });
     return;
   }
-  if (!editingId.value && !form.organizationId) {
-    toast.add({
-      title: 'Missing organization',
-      description: 'Select an organization for the new card.',
-      color: 'warning',
-    });
-    return;
-  }
-
   isSaving.value = true;
   try {
     const body: Record<string, unknown> = {
@@ -175,7 +166,6 @@ async function onSubmitForm() {
     };
 
     if (!editingId.value) {
-      body.organizationId = form.organizationId;
       await $fetch('/api/cards/admin', { method: 'POST', body });
       toast.add({
         title: 'Card created',
@@ -388,7 +378,12 @@ const selectUi = {
       <template #body>
         <div class="py-2">
           <div class="flex flex-col gap-4">
-            <UFormField label="Organization" required :class="formFieldClass">
+            <UFormField
+              v-if="editingId"
+              label="Organization"
+              required
+              :class="formFieldClass"
+            >
               <USelect
                 v-model="form.organizationId"
                 :items="orgSelectItems"
@@ -502,8 +497,9 @@ const selectUi = {
           </div>
 
           <p v-if="!editingId" class="mt-1 text-xs text-[#8b8b8b]">
-            User stays unlinked until the recipient accepts an onboarding
-            invitation.
+            New cards are stored under the placeholder org until you create an
+            onboarding invitation (which creates the customer org and moves the
+            card). User stays unlinked until the recipient accepts.
           </p>
 
           <div class="mt-6 flex justify-end gap-2 border-t border-[#232323] pt-6">

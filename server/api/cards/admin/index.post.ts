@@ -5,6 +5,7 @@ import { db } from '~~/server/db';
 import { card, organization } from '~~/server/db/schema';
 import { ensureCardTrialSubscription } from '~~/server/services/subscription';
 import { requireAdminSession } from '~~/server/utils/admin-permissions';
+import { env } from '~~/server/utils/env';
 
 const optionalUrl = z
   .union([z.string().url(), z.literal('')])
@@ -13,7 +14,8 @@ const optionalUrl = z
   .transform((v) => (v === '' || v === undefined ? null : v));
 
 const adminCreateCardSchema = z.object({
-  organizationId: z.string().min(1),
+  /** Omit to use `PLACEHOLDER_ORGANIZATION_ID` (Thakhin “create card” flow). */
+  organizationId: z.string().min(1).optional(),
   firstName: z.string().trim().min(1),
   lastName: z.string().trim().optional().nullable(),
   position: z.string().trim().min(1),
@@ -34,7 +36,10 @@ const adminCreateCardSchema = z.object({
 export default defineEventHandler(async (event) => {
   await requireAdminSession(event);
 
-  const result = await readValidatedBody(event, adminCreateCardSchema.safeParse);
+  const result = await readValidatedBody(
+    event,
+    adminCreateCardSchema.safeParse
+  );
   if (!result.success) {
     throw createError({
       statusCode: 400,
@@ -43,12 +48,18 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  const organizationId =
+    result.data.organizationId?.trim() || env.PLACEHOLDER_ORGANIZATION_ID;
+
   const org = await db.query.organization.findFirst({
-    where: eq(organization.id, result.data.organizationId),
+    where: eq(organization.id, organizationId),
     columns: { id: true },
   });
   if (!org) {
-    throw createError({ statusCode: 400, statusMessage: 'Organization not found' });
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Organization not found',
+    });
   }
 
   const lastName = result.data.lastName?.trim() || null;
@@ -71,13 +82,16 @@ export default defineEventHandler(async (event) => {
         avatarUrl: result.data.avatarUrl,
         wallpaperUrl: result.data.wallpaperUrl,
         cardBackUrl: result.data.cardBackUrl,
-        organizationId: result.data.organizationId,
+        organizationId,
         userId: null,
       })
       .returning();
 
     if (!newCard) {
-      throw createError({ statusCode: 500, statusMessage: 'Failed to create card' });
+      throw createError({
+        statusCode: 500,
+        statusMessage: 'Failed to create card',
+      });
     }
 
     await ensureCardTrialSubscription(newCard.id, newCard.createdAt);

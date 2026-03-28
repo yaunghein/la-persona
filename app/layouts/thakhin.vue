@@ -30,6 +30,14 @@ const links = [
     },
   },
   {
+    label: 'Organizations',
+    icon: 'i-lucide-building',
+    to: ROUTES.THAKHIN.ORGANIZATIONS,
+    onSelect: () => {
+      open.value = false;
+    },
+  },
+  {
     label: 'Cards',
     icon: 'i-lucide-credit-card',
     to: ROUTES.THAKHIN.CARDS,
@@ -51,6 +59,7 @@ const pageLabel: Record<string, string> = {
   [ROUTES.THAKHIN.ROOT]: 'Overview',
   [ROUTES.THAKHIN.REQUESTS]: 'Requests',
   [ROUTES.THAKHIN.PAYMENTS]: 'Payments',
+  [ROUTES.THAKHIN.ORGANIZATIONS]: 'Organizations',
   [ROUTES.THAKHIN.CARDS]: 'Cards',
   [ROUTES.THAKHIN.INVITATIONS]: 'Invitations',
 };

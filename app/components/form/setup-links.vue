@@ -29,7 +29,7 @@ const linkTypeItems = computed<string[][]>(() =>
 
 const { data: card } = useQuery<SelectCard>({
   queryKey: ['cards', slug],
-  queryFn: () => $fetch(`/api/cards/${slug.value}` as string),
+  queryFn: () => $fetch(`/api/cards/${slug.value}`),
 });
 
 // 1. Initialize with one empty link placeholder

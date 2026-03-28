@@ -50,6 +50,7 @@ export async function insertMember(
 }
 
 export async function setupDefaultOrganization(user: User) {
+  // TODO: probabily need to revisit later, because if we just early return here, then what
   const pendingInvitation = await getPendingOnboardingInvitationByEmail(
     user.email
   );

@@ -23,6 +23,8 @@ const EnvSchema = z.object({
   BASE_URL: z.string(),
   GTAG_ID: z.string(),
   CUSTOM_DESIGN_FEE: z.coerce.number().int().min(0),
+  /** Unclaimed Thakhin-created cards live here until an onboarding invite assigns a real org. */
+  PLACEHOLDER_ORGANIZATION_ID: z.string().min(1),
 });
 
 export type EnvSchema = z.infer<typeof EnvSchema>;

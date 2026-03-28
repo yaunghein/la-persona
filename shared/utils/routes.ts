@@ -13,8 +13,9 @@ export const ROUTES = {
     ROOT: THAKHIN_ROOT,
     REQUESTS: `${THAKHIN_ROOT}/requests`,
     PAYMENTS: `${THAKHIN_ROOT}/payments`,
-    INVITATIONS: `${THAKHIN_ROOT}/invitations`,
+    ORGANIZATIONS: `${THAKHIN_ROOT}/organizations`,
     CARDS: `${THAKHIN_ROOT}/cards`,
+    INVITATIONS: `${THAKHIN_ROOT}/invitations`,
   },
   API: '/api',
 } as const;

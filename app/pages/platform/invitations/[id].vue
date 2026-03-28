@@ -11,6 +11,7 @@ type InvitationDetails = {
   expiresAt: string;
   acceptedAt: string | null;
   organizationName: string;
+  organizationSlug: string;
   cardFirstName: string;
   cardLastName: string | null;
   planName: string;
@@ -41,6 +42,7 @@ async function onAccept() {
 
   isAccepting.value = true;
   try {
+    const orgSlug = invitation.value?.organizationSlug;
     await $fetch(`/api/onboarding-invitation/${invitationId.value}/accept`, {
       method: 'POST',
     });
@@ -51,7 +53,11 @@ async function onAccept() {
       description: 'Your workspace is now ready.',
       color: 'success',
     });
-    await navigateTo('/platform');
+    const cardsPath =
+      orgSlug && orgSlug.length > 0
+        ? `${ROUTES.PLATFORM.ROOT}/${orgSlug}/cards`
+        : ROUTES.PLATFORM.ROOT;
+    await navigateTo(cardsPath);
   } catch (acceptError: any) {
     toast.add({
       title: 'Accept failed',
@@ -69,7 +75,9 @@ async function onAccept() {
 </script>
 
 <template>
-  <section class="mx-auto flex min-h-[calc(100dvh-7rem)] w-full max-w-3xl items-center px-5 py-12">
+  <section
+    class="mx-auto flex min-h-[calc(100dvh-7rem)] w-full max-w-3xl items-center px-5 py-12"
+  >
     <UCard
       class="w-full"
       :ui="{
@@ -98,17 +106,21 @@ async function onAccept() {
             You are invited
           </h1>
           <p class="text-sm text-muted">
-            Join <span class="text-white">{{ invitation.organizationName }}</span> with
-            card
+            Join
+            <span class="text-white">{{ invitation.organizationName }}</span>
+            with card
             <span class="text-white">
-              {{ `${invitation.cardFirstName} ${invitation.cardLastName || ''}`.trim() }}
+              {{
+                `${invitation.cardFirstName} ${invitation.cardLastName || ''}`.trim()
+              }}
             </span>
             on
             <span class="text-white">{{ invitation.planName }}</span
             >.
           </p>
           <p class="text-sm text-muted">
-            Free period: <span class="text-white">{{ invitation.freeMonths }}</span> month(s)
+            Free period:
+            <span class="text-white">{{ invitation.freeMonths }}</span> month(s)
           </p>
         </div>
 
