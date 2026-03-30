@@ -14,7 +14,7 @@ const { isHeaderVisible, currentSection } = inject(LandingContextKey)!;
         to="/sign-in"
         color="primary"
         class="rounded-full font-semibold"
-        size="lg"
+        size="xl"
         icon="material-symbols:person"
       >
         Sign In

@@ -22,7 +22,7 @@ const emit = defineEmits<{
         Everything you need to make a lasting first impression in one place.
       </p>
 
-      <UButton
+      <UButton size="xl"
         color="neutral"
         class="rounded-full bg-white px-6 text-sm font-medium text-dark hover:bg-white/90"
         icon="material-symbols:keyboard-double-arrow-right"

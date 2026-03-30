@@ -136,7 +136,7 @@ function clearServerError() {
       <UButton
         label="Back to Dashboard"
         class="rounded-full font-semibold px-8 cursor-pointer"
-        size="lg"
+        size="xl"
         @click="emit('close')"
       />
     </div>
@@ -163,7 +163,7 @@ function clearServerError() {
           {{ serverErrorMessage }}
         </p>
       </div>
-      <UButton
+      <UButton size="xl"
         label="Back"
         class="rounded-full bg-white px-6 text-dark hover:bg-white/90 cursor-pointer"
         @click="clearServerError"
@@ -205,7 +205,7 @@ function clearServerError() {
     </UFormField>
 
     <div class="mt-auto flex justify-end pt-2">
-      <UButton
+      <UButton size="xl"
         type="submit"
         :label="submitLabelByKind[state.kind]"
         :loading="isSubmitting"

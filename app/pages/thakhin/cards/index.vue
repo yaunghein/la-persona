@@ -280,7 +280,7 @@ const selectUi = {
         Cards
       </h1>
       <div class="flex flex-wrap items-center gap-2">
-        <UButton
+        <UButton size="xl"
           label="Refresh"
           icon="i-lucide-refresh-cw"
           color="neutral"
@@ -289,7 +289,7 @@ const selectUi = {
           :loading="pending"
           @click="refresh()"
         />
-        <UButton
+        <UButton size="xl"
           label="Create Card"
           icon="i-lucide-plus"
           color="neutral"
@@ -341,7 +341,7 @@ const selectUi = {
         </template>
         <template #actions-cell="{ row }">
           <UDropdownMenu :items="getActionItems(row.original)">
-            <UButton
+            <UButton size="xl"
               icon="i-mdi-dots-vertical"
               color="neutral"
               variant="ghost"
@@ -503,14 +503,14 @@ const selectUi = {
           </p>
 
           <div class="mt-6 flex justify-end gap-2 border-t border-[#232323] pt-6">
-            <UButton
+            <UButton size="xl"
               label="Cancel"
               color="neutral"
               variant="ghost"
               class="rounded-full px-5 text-white hover:bg-[#232323]"
               @click="isFormOpen = false"
             />
-            <UButton
+            <UButton size="xl"
               :label="editingId ? 'Save changes' : 'Create card'"
               color="neutral"
               :loading="isSaving"
@@ -544,7 +544,7 @@ const selectUi = {
         </p>
       </template>
       <template #footer>
-        <UButton
+        <UButton size="xl"
           label="Cancel"
           color="neutral"
           variant="ghost"
@@ -552,7 +552,7 @@ const selectUi = {
           :disabled="isDeleting"
           @click="closeDelete"
         />
-        <UButton
+        <UButton size="xl"
           label="Delete"
           color="error"
           :loading="isDeleting"

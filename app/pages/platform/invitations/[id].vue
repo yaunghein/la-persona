@@ -153,7 +153,7 @@ async function onAccept() {
           <p class="text-sm text-muted">
             Expires at: {{ new Date(invitation.expiresAt).toLocaleString() }}
           </p>
-          <UButton
+          <UButton size="xl"
             label="Accept Invitation"
             color="neutral"
             class="rounded-full"

@@ -553,7 +553,7 @@ const visibleColumns = computed(() =>
         >
           People you've connected with
         </h1>
-        <UButton
+        <UButton size="xl"
           icon="material-symbols:info-outline"
           color="neutral"
           variant="ghost"
@@ -588,7 +588,7 @@ const visibleColumns = computed(() =>
             value: 'text-white',
           }"
         />
-        <UButton
+        <UButton size="xl"
           label="Create New Contact"
           leading-icon="i-material-symbols-add"
           color="neutral"
@@ -596,7 +596,7 @@ const visibleColumns = computed(() =>
           @click="onCreateContact"
         />
 
-        <UButton
+        <UButton size="xl"
           icon="i-material-symbols-download-sharp"
           color="neutral"
           variant="ghost"
@@ -605,7 +605,7 @@ const visibleColumns = computed(() =>
         />
 
         <UFieldGroup>
-          <UButton
+          <UButton size="xl"
             icon="i-lucide-table-2"
             class="cursor-pointer size-8 rounded-l-md border-2 border-[#232323] hover:bg-[#232323] p-0 flex items-center justify-center"
             aria-label="List view"
@@ -615,7 +615,7 @@ const visibleColumns = computed(() =>
               viewMode === 'list' ? 'bg-[#232323] text-white' : 'text-muted'
             "
           />
-          <UButton
+          <UButton size="xl"
             icon="i-lucide-layout-grid"
             class="cursor-pointer size-8 rounded-r-md border-2 border-[#232323] hover:bg-[#232323] p-0 flex items-center justify-center"
             aria-label="Grid view"
@@ -667,7 +667,7 @@ const visibleColumns = computed(() =>
       <p class="max-w-52 text-center text-sm text-muted">
         No contacts match your search. Try another keyword.
       </p>
-      <UButton
+      <UButton size="xl"
         label="Clear Search"
         color="neutral"
         class="mt-2 rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
@@ -689,7 +689,7 @@ const visibleColumns = computed(() =>
       <p class="max-w-[20rem] text-center text-sm text-muted">
         Once people exchange contacts with your card, they will appear here.
       </p>
-      <UButton
+      <UButton size="xl"
         label="Create New Contact"
         leading-icon="i-material-symbols-add"
         color="neutral"
@@ -724,7 +724,7 @@ const visibleColumns = computed(() =>
           </div>
         </template>
         <template v-if="isOwner" #origin-cell="{ row }">
-          <UButton
+          <UButton size="xl"
             v-if="row.original.originTo"
             :to="row.original.originTo"
             color="neutral"
@@ -740,7 +740,7 @@ const visibleColumns = computed(() =>
         </template>
         <template #actions-cell="{ row }">
           <UDropdownMenu :items="getActionItems(row.original)">
-            <UButton
+            <UButton size="xl"
               icon="i-mdi-dots-vertical"
               color="neutral"
               variant="ghost"
@@ -782,7 +782,7 @@ const visibleColumns = computed(() =>
             >
               <div v-if="isOwner">
                 <p class="text-xs text-muted">Origin</p>
-                <UButton
+                <UButton size="xl"
                   v-if="contact.originTo"
                   :to="contact.originTo"
                   color="neutral"
@@ -795,7 +795,7 @@ const visibleColumns = computed(() =>
               </div>
 
               <UDropdownMenu :items="getActionItems(contact)">
-                <UButton
+                <UButton size="xl"
                   icon="i-mdi-dots-vertical"
                   color="neutral"
                   variant="ghost"
@@ -844,7 +844,7 @@ const visibleColumns = computed(() =>
           <h2 class="text-sm font-medium uppercase tracking-widest text-white">
             What is cards?
           </h2>
-          <UButton
+          <UButton size="xl"
             icon="i-lucide-x"
             color="neutral"
             variant="ghost"
@@ -891,7 +891,7 @@ const visibleColumns = computed(() =>
             </div>
 
             <div class="flex justify-end">
-              <UButton
+              <UButton size="xl"
                 label="Understood"
                 color="neutral"
                 class="rounded-full bg-white px-6 text-dark hover:bg-white/90"
@@ -926,14 +926,14 @@ const visibleColumns = computed(() =>
       </p>
     </template>
     <template #footer>
-      <UButton
+      <UButton size="xl"
         label="Cancel"
         color="neutral"
         variant="ghost"
         :disabled="isDeletingContact"
         @click="closeDeleteConfirm"
       />
-      <UButton
+      <UButton size="xl"
         label="Delete"
         color="error"
         :loading="isDeletingContact"

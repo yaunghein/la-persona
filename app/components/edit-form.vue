@@ -110,7 +110,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             />
           </UFormField>
 
-          <UButton
+          <UButton size="xl"
             type="submit"
             block
             icon="i-lucide-square-pen"

@@ -57,7 +57,7 @@ const planBadge = computed(() => {
       <div class="flex items-center gap-1">
         <UButton
           icon="i-heroicons-eye"
-          size="xs"
+          size="xl"
           color="neutral"
           variant="ghost"
           target="_black"
@@ -65,14 +65,14 @@ const planBadge = computed(() => {
         />
         <UButton
           icon="i-heroicons-pencil-square"
-          size="xs"
+          size="xl"
           color="primary"
           variant="ghost"
           :to="`/platform/cards/${card.id}`"
         />
         <UButton
           icon="i-heroicons-trash"
-          size="xs"
+          size="xl"
           color="error"
           variant="ghost"
           @click="emit('delete', card)"

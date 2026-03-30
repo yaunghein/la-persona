@@ -294,7 +294,7 @@ watch(socialsListEl, (el) => {
             color="error"
             variant="solid"
             icon="i-lucide-trash-2"
-            size="xs"
+            size="xl"
             class="absolute -bottom-1 -right-1 rounded-full border-2 border-white dark:border-gray-900"
             @click="selectedFile ? clearSelection() : removeCurrentPhoto()"
           />
@@ -314,7 +314,7 @@ watch(socialsListEl, (el) => {
               icon="i-lucide-upload"
               color="neutral"
               variant="soft"
-              size="sm"
+              size="xl"
               class="rounded-full bg-[#232323] px-4 text-white hover:bg-[#2a2a2a]"
               @click="triggerFilePicker"
             />
@@ -430,7 +430,7 @@ watch(socialsListEl, (el) => {
           <UButton
             label="Add Link"
             icon="i-lucide-plus"
-            size="xs"
+            size="xl"
             variant="soft"
             class="rounded-full bg-[#232323] px-3 text-white hover:bg-[#2a2a2a]"
             @click="addLink"
@@ -485,7 +485,7 @@ watch(socialsListEl, (el) => {
                 }"
               />
             </UFormField>
-            <UButton
+            <UButton size="xl"
               icon="i-lucide-x"
               color="error"
               variant="ghost"
@@ -497,7 +497,7 @@ watch(socialsListEl, (el) => {
       </div>
 
       <div class="flex justify-end pt-8">
-        <UButton
+        <UButton size="xl"
           :to="`/yaunghein/${slug}`"
           target="_blank"
           color="neutral"
@@ -509,7 +509,7 @@ watch(socialsListEl, (el) => {
         </UButton>
         <UButton
           type="submit"
-          size="lg"
+          size="xl"
           class="rounded-full bg-[#232323] px-6 text-white hover:bg-[#2a2a2a] disabled:bg-white/20 active:bg-[#2a2a2a] cursor-pointer"
           icon="i-lucide-square-pen"
           :loading="isSaving"

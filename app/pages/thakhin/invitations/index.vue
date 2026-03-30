@@ -208,7 +208,7 @@ const selectUi = {
       <h1 class="text-[1.75rem] font-normal leading-tight tracking-widest uppercase">
         Onboarding Invitations
       </h1>
-      <UButton
+      <UButton size="xl"
         label="Create Invitation"
         icon="i-lucide-plus"
         color="neutral"
@@ -255,7 +255,7 @@ const selectUi = {
         </template>
         <template #actions-cell="{ row }">
           <UDropdownMenu :items="getActionItems(row.original)">
-            <UButton
+            <UButton size="xl"
               icon="i-mdi-dots-vertical"
               color="neutral"
               variant="ghost"
@@ -364,14 +364,14 @@ const selectUi = {
           </div>
 
           <div class="mt-6 flex justify-end gap-2 border-t border-[#232323] pt-6">
-            <UButton
+            <UButton size="xl"
               label="Cancel"
               color="neutral"
               variant="ghost"
               class="rounded-full px-5 text-white hover:bg-[#232323]"
               @click="isCreateOpen = false"
             />
-            <UButton
+            <UButton size="xl"
               label="Create Invitation"
               color="neutral"
               :loading="isCreating"

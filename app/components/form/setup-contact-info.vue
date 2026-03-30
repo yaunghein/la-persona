@@ -194,7 +194,7 @@ function onSubmit(event: FormSubmitEvent<UpdateCardUpdateRequest>) {
       </UFormField> -->
 
       <div class="md:col-span-2 flex justify-end pt-4">
-        <UButton
+        <UButton size="xl"
           type="submit"
           class="rounded-full px-4 font-semibold"
           icon="material-symbols:keyboard-double-arrow-right"

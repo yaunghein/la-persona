@@ -79,7 +79,7 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
   <div class="flex min-h-[calc(100dvh-11rem)] flex-col gap-8">
     <div class="space-y-3">
       <div class="flex items-center gap-2">
-        <UButton
+        <UButton size="xl"
           icon="i-lucide-chevron-left"
           color="neutral"
           variant="ghost"
@@ -206,7 +206,7 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
         </div>
 
         <div class="flex justify-end">
-          <UButton
+          <UButton size="xl"
             type="submit"
             :loading="submitting"
             color="neutral"

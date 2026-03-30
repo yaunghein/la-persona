@@ -265,6 +265,7 @@ const paymentDescription = computed(() => {
 const paymentFeeRows = computed(() => {
   const currentScenario = paymentScenario.value;
   const pricing = paymentPricing.value;
+  console.log({ currentScenario, pricing });
   if (!currentScenario || !pricing) return [];
 
   const rows: { label: string; amountMinor: number; isFree?: boolean }[] = [];
@@ -485,7 +486,7 @@ const active = computed({
     <p class="max-w-[20rem] text-center text-sm text-muted">
       This card does not exist or you do not have permission to access it.
     </p>
-    <UButton
+    <UButton size="xl"
       label="Back to Cards"
       icon="i-lucide-arrow-left"
       color="neutral"
@@ -497,7 +498,7 @@ const active = computed({
   <template v-else>
     <div
       v-if="showEndingBanner"
-      class="mb-8 flex items-center justify-center bg-[#232323] px-8 py-4 -mx-6 -mt-4 sm:-mt-6"
+      class="mb-8 flex items-center justify-center bg-[#232323] px-8 py-2 -mx-6 -mt-4 sm:-mt-6"
     >
       <p
         class="text-center text-sm font-medium uppercase tracking-widest text-white"
@@ -544,7 +545,7 @@ const active = computed({
         <div class="flex flex-wrap items-center gap-y-2">
           <UButton
             icon="i-lucide-chevron-left"
-            size="md"
+            size="xl"
             color="primary"
             class="bg-transparent mr-2 text-white -mt-[0.15rem] hover:bg-white/10 active:hover:bg-white/20"
             :to="`/platform/${orgSlug}/cards`"
@@ -569,12 +570,12 @@ const active = computed({
         </p>
       </div>
 
-      <UButton
+      <UButton size="xl"
         v-if="showUpgradeButton"
         :label="upgradeButtonLabel"
         icon="i-lucide-chevrons-up"
         color="neutral"
-        class="w-full sm:w-auto rounded-full bg-white px-4 font-medium text-dark hover:bg-white/90"
+        class="fixed z-20 sm:static bottom-5 left-1/2 -translate-x-1/2 sm:translate-x-0 rounded-full bg-white px-4 font-medium text-dark hover:bg-white/90"
         @click="openUpgradeSlideover"
       />
     </div>
@@ -603,7 +604,7 @@ const active = computed({
       inset
       :dismissible="!isSubmittingPayment"
       :ui="{
-        content: 'w-full max-w-[480px] bg-[#171717]',
+        content: 'max-w-[480px] bg-[#171717]',
         header: 'border-b-2 border-[#232323] px-6 py-6',
         title: 'text-sm font-medium tracking-[1.4px] uppercase text-white',
         body: 'px-6 pt-6 pb-8',
@@ -631,7 +632,7 @@ const active = computed({
             <div
               v-for="row in paymentFeeRows"
               :key="row.label"
-              class="rounded-[4px] px-4 py-3"
+              class="rounded-[4px] px-4 py-0"
             >
               <div class="flex items-center justify-between text-sm text-white">
                 <span>{{ row.label }}</span>
@@ -651,7 +652,13 @@ const active = computed({
                 class="rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4 text-center"
               >
                 <p class="text-sm text-white/50">Scan to Pay</p>
-                <div class="mx-auto my-3 size-40 bg-[#d9d9d9]" />
+                <div class="mx-auto my-3 size-40 bg-[#d9d9d9] overflow-hidden">
+                  <img
+                    src="/images/kpay.jpg"
+                    alt="KBZ Pay QR Code"
+                    class="w-full h-full object-contain"
+                  />
+                </div>
                 <p class="text-sm font-bold text-white">
                   {{ formatMMK(paymentTotalAmountMinor) }}
                 </p>
@@ -692,6 +699,7 @@ const active = computed({
               color="neutral"
               :loading="isSubmittingPayment"
               :disabled="!receiptFile"
+              size="xl"
               class="rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90 disabled:opacity-60"
               @click="submitPayment()"
             />

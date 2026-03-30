@@ -374,7 +374,7 @@ function onFormError(event: FormErrorEvent) {
       <UButton
         label="Back to Dashboard"
         class="rounded-full font-semibold px-8 cursor-pointer"
-        size="lg"
+        size="xl"
         @click="emit('close')"
       />
     </div>
@@ -582,7 +582,7 @@ function onFormError(event: FormErrorEvent) {
         </h3>
         <UButton
           icon="i-lucide-plus"
-          size="xs"
+          size="xl"
           variant="soft"
           label="Add Link"
           class="rounded-full bg-[#232323] text-white hover:bg-[#2a2a2a]"
@@ -633,7 +633,7 @@ function onFormError(event: FormErrorEvent) {
             }"
           />
         </UFormField>
-        <UButton
+        <UButton size="xl"
           icon="i-lucide-x"
           variant="ghost"
           @click="removeLink(index)"
@@ -664,7 +664,7 @@ function onFormError(event: FormErrorEvent) {
     </UFormField>
 
     <div class="flex items-center justify-end pt-2">
-      <UButton
+      <UButton size="xl"
         type="submit"
         label="Send Request"
         :loading="isLoading"

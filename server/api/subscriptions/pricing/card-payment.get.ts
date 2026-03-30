@@ -2,12 +2,12 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { subscriptionPlan } from '~~/server/db/schema';
 import { env } from '~~/server/utils/env';
-import { requireAdminSession } from '~~/server/utils/admin-permissions';
+import { requireOrganizationSession } from '~~/server/utils/organization-permissions';
 
 const REQUIRED_PLAN_CODES = ['standard', 'premium'] as const;
 
 export default defineEventHandler(async (event) => {
-  await requireAdminSession(event);
+  await requireOrganizationSession(event);
 
   const plans = await db
     .select({

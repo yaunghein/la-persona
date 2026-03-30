@@ -271,7 +271,7 @@ const currentPageLabel = computed(() => {
 
           <template #right>
             <!-- <UTooltip text="Notifications" :shortcuts="['N']">
-            <UButton
+            <UButton size="xl"
               color="neutral"
               variant="ghost"
               square
@@ -284,7 +284,7 @@ const currentPageLabel = computed(() => {
           </UTooltip> -->
 
             <!-- <UDropdownMenu :items="items">
-              <UButton icon="i-lucide-plus" size="md" class="rounded-full" />
+              <UButton icon="i-lucide-plus" size="xl" class="rounded-full" />
             </UDropdownMenu> -->
           </template>
         </UDashboardNavbar>

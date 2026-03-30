@@ -181,7 +181,7 @@ const removeLink = (index: number) => {
           </p>
           <UButton
             icon="i-heroicons-plus-circle"
-            size="sm"
+            size="xl"
             variant="soft"
             label="Add Link"
             @click="addLink"
@@ -223,7 +223,7 @@ const removeLink = (index: number) => {
               variant="soft"
             />
           </UFormField>
-          <UButton
+          <UButton size="xl"
             icon="i-lucide-x"
             variant="ghost"
             :disabled="state.socials.length === 1 && !link.value"
@@ -234,7 +234,7 @@ const removeLink = (index: number) => {
       </div>
 
       <div class="flex justify-end pt-6 gap-4 border-t border-white/10">
-        <UButton
+        <UButton size="xl"
           type="button"
           class="rounded-full px-6 font-semibold"
           variant="ghost"
@@ -242,7 +242,7 @@ const removeLink = (index: number) => {
         >
           Back
         </UButton>
-        <UButton
+        <UButton size="xl"
           type="submit"
           class="rounded-full px-6 font-semibold"
           color="primary"

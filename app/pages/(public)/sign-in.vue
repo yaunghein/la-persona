@@ -126,7 +126,7 @@ const onMagicLink = async () => {
           <div class="space-y-4">
             <UButton
               block
-              size="md"
+              size="xl"
               color="neutral"
               :loading="isGoogleSigningIn"
               class="h-9 justify-center rounded-full bg-white font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
@@ -140,7 +140,7 @@ const onMagicLink = async () => {
 
             <UButton
               block
-              size="md"
+              size="xl"
               color="neutral"
               :loading="isLinkedInSigningIn"
               class="h-9 justify-center rounded-full bg-white font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
@@ -179,7 +179,7 @@ const onMagicLink = async () => {
 
             <UButton
               block
-              size="md"
+              size="xl"
               color="neutral"
               :loading="isMagicLinkSending"
               class="h-9 justify-center rounded-full bg-white font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"

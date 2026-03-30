@@ -77,7 +77,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           </p>
         </div>
 
-        <UButton
+        <UButton size="xl"
           v-if="isDone"
           block
           class="font-bold"
@@ -113,7 +113,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             />
           </UFormField>
 
-          <UButton
+          <UButton size="xl"
             type="submit"
             block
             icon="i-heroicons-arrow-right"

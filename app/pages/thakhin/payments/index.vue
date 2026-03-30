@@ -210,7 +210,7 @@ const columns: TableColumn<PaymentRow>[] = [
       >
         Subscription Payments
       </h1>
-      <UButton
+      <UButton size="xl"
         label="Refresh"
         icon="i-lucide-refresh-cw"
         color="neutral"
@@ -275,7 +275,7 @@ const columns: TableColumn<PaymentRow>[] = [
         </template>
 
         <template #receiptUrl-cell="{ row }">
-          <UButton
+          <UButton size="xl"
             v-if="row.original.receiptUrl"
             label="View Receipt"
             icon="i-lucide-external-link"
@@ -314,7 +314,7 @@ const columns: TableColumn<PaymentRow>[] = [
 
         <template #actions-cell="{ row }">
           <UDropdownMenu :items="getActionItems(row.original)">
-            <UButton
+            <UButton size="xl"
               icon="i-mdi-dots-vertical"
               color="neutral"
               variant="ghost"

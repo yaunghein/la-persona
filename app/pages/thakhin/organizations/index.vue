@@ -137,7 +137,7 @@ const inputUi = {
       >
         Organizations
       </h1>
-      <UButton
+      <UButton size="xl"
         label="Refresh"
         icon="i-lucide-refresh-cw"
         color="neutral"
@@ -187,7 +187,7 @@ const inputUi = {
         </template>
         <template #actions-cell="{ row }">
           <UDropdownMenu :items="getActionItems(row.original)">
-            <UButton
+            <UButton size="xl"
               icon="i-mdi-dots-vertical"
               color="neutral"
               variant="ghost"
@@ -250,14 +250,14 @@ const inputUi = {
           </div>
 
           <div class="mt-6 flex justify-end gap-2 border-t border-[#232323] pt-6">
-            <UButton
+            <UButton size="xl"
               label="Cancel"
               color="neutral"
               variant="ghost"
               class="rounded-full px-5 text-white hover:bg-[#232323]"
               @click="closeEdit"
             />
-            <UButton
+            <UButton size="xl"
               label="Save"
               color="neutral"
               :loading="isSaving"

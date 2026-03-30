@@ -66,7 +66,7 @@ function onSubmit(event: FormSubmitEvent<Partial<UpdateCard>>) {
 </script>
 
 <template>
-  <div class="rounded-[8px] bg-[#171717] p-8">
+  <div class="rounded-[8px] bg-[#171717] p-8 mb-16 sm:mb-0">
     <div v-if="isLoading" class="grid grid-cols-2 gap-5">
       <USkeleton v-for="i in 6" :key="i" class="h-12 w-full" />
       <USkeleton class="h-20 col-span-2 w-full" />
@@ -177,7 +177,7 @@ function onSubmit(event: FormSubmitEvent<Partial<UpdateCard>>) {
       </UFormField>
 
       <div class="md:col-span-2 flex justify-end gap-3 pt-2">
-        <UButton
+        <UButton size="xl"
           :to="previewUrl"
           target="_blank"
           color="neutral"
@@ -187,7 +187,7 @@ function onSubmit(event: FormSubmitEvent<Partial<UpdateCard>>) {
         >
           Preview Your Card
         </UButton>
-        <UButton
+        <UButton size="xl"
           type="submit"
           class="rounded-full bg-[#232323] px-4 text-white hover:bg-[#2a2a2a] disabled:bg-white/20 active:bg-[#2a2a2a] cursor-pointer"
           icon="i-lucide-square-pen"

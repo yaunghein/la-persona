@@ -143,7 +143,7 @@ const copyLink = () => {
                   variant="none"
                   color="neutral"
                 />
-                <UButton
+                <UButton size="xl"
                   icon="i-heroicons-clipboard-document"
                   color="neutral"
                   variant="ghost"
