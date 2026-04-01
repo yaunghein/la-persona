@@ -74,20 +74,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 <template>
   <UForm :schema="schema" :state="state" class="space-y-8" @submit="onSubmit">
-    <div class="space-y-4">
-      <h2 class="text-[20px] font-medium uppercase tracking-widest text-white">
-        New Contact
-      </h2>
-      <p class="text-sm text-[#8b8b8b]">
-        Manually add a contact to your contacts list.
-      </p>
-    </div>
-
-    <div class="grid grid-cols-1 gap-6">
+    <div class="grid grid-cols-1 gap-5">
       <UFormField
         label="First Name"
         name="firstName"
-        class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
       >
         <UInput
           v-model="state.firstName"
@@ -102,7 +93,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       <UFormField
         label="Last Name"
         name="lastName"
-        class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
       >
         <UInput
           v-model="state.lastName"
@@ -117,7 +108,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       <UFormField
         label="Professional Title / Role"
         name="position"
-        class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
       >
         <UInput
           v-model="state.position"
@@ -132,7 +123,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       <UFormField
         label="Company / Brand Name"
         name="company"
-        class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
       >
         <UInput
           v-model="state.company"
@@ -147,7 +138,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       <UFormField
         label="Phone Number"
         name="phone"
-        class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
       >
         <UInput
           v-model="state.phone"
@@ -162,7 +153,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       <UFormField
         label="Email Address"
         name="email"
-        class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
       >
         <UInput
           v-model="state.email"
@@ -176,13 +167,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       </UFormField>
     </div>
 
-    <div class="flex justify-end gap-2">
+    <div class="flex justify-end gap-2 mb-3 sm:mb-0">
       <UButton
-        size="xl"
         type="submit"
         :loading="submitting"
         color="neutral"
-        class="rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
+        class="rounded-full h-10 bg-white px-5 font-medium text-dark hover:bg-white/90"
       >
         <template #leading>
           <UIcon name="i-lucide-plus" class="size-4" />

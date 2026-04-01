@@ -435,6 +435,10 @@ const setViewMode = (mode: 'list' | 'grid') => {
   }
 };
 
+const toggleViewMode = () => {
+  setViewMode(viewMode.value === 'list' ? 'grid' : 'list');
+};
+
 watch(
   () => route.query,
   (query) => {
@@ -545,9 +549,12 @@ const visibleColumns = computed(() =>
 </script>
 
 <template>
-  <div class="flex min-h-[calc(100dvh-7rem)] flex-col gap-8">
+  <div
+    class="flex flex-col gap-5 sm:gap-8 pb-20 sm:pb-0"
+    :class="!hasContacts && 'min-h-[calc(100dvh-7rem)]'"
+  >
     <div
-      class="flex flex-col gap-3 pb-5 sm:flex-row sm:items-center sm:justify-between"
+      class="flex flex-col gap-3 sm:pb-0 sm:flex-row sm:items-center sm:justify-between"
     >
       <div class="flex items-center gap-2">
         <h1
@@ -556,13 +563,31 @@ const visibleColumns = computed(() =>
           People you've connected with
         </h1>
         <UButton
-          size="xl"
+          size="lg"
           icon="material-symbols:info-outline"
           color="neutral"
           variant="ghost"
-          class="size-6 flex items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323] cursor-pointer"
+          class="flex items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323] cursor-pointer"
           aria-label="Open contacts information"
           @click="isInfoOpen = true"
+        />
+      </div>
+
+      <div class="flex items-center gap-2 sm:hidden fixed top-3.75 right-4">
+        <UButton
+          icon="material-symbols:list-alt-outline-sharp"
+          color="neutral"
+          variant="ghost"
+          class="flex items-center justify-center cursor-pointer text-muted"
+          @click="toggleViewMode"
+        />
+        <UButton
+          v-if="hasContacts"
+          icon="material-symbols:download-sharp"
+          color="neutral"
+          variant="ghost"
+          class="flex items-center justify-center cursor-pointer text-muted"
+          @click="onExport"
         />
       </div>
 
@@ -587,35 +612,33 @@ const visibleColumns = computed(() =>
           :search-input="false"
           class="w-48 hidden"
           :ui="{
-            base: 'h-9 rounded-full border-[#232323] bg-[#171717] px-3 text-white',
+            base: 'h-10 rounded-full border-[#232323] bg-[#171717] px-3 text-white',
             content: 'border border-[#2a2a2a] bg-[#171717]',
             item: 'text-white data-[highlighted]:bg-[#232323]',
             value: 'text-white',
           }"
         />
         <UButton
-          size="xl"
+          v-if="hasContacts"
           label="Create New Contact"
           leading-icon="i-material-symbols-add"
           color="neutral"
-          class="h-9 w-full sm:w-auto cursor-pointer flex items-center justify-center rounded-full border-2 border-[#232323] bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
+          class="fixed z-20 bottom-5 left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:static h-10 cursor-pointer flex items-center justify-center rounded-full border-2 border-[#232323] bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
           @click="onCreateContact"
         />
 
         <UButton
-          size="xl"
           icon="i-material-symbols-download-sharp"
           color="neutral"
           variant="ghost"
-          class="h-9 w-16 cursor-pointer flex px-5 items-center justify-center rounded-full border-2 border-[#232323] bg-[#232323] p-0 text-white hover:bg-[#2a2a2a]"
+          class="hidden h-10 w-16 cursor-pointer sm:flex px-5 items-center justify-center rounded-full border-2 border-[#232323] bg-[#232323] p-0 text-white hover:bg-[#2a2a2a]"
           @click="onExport"
         />
 
-        <UFieldGroup>
+        <UFieldGroup class="hidden sm:flex">
           <UButton
-            size="xl"
             icon="i-lucide-table-2"
-            class="cursor-pointer size-8 rounded-l-md border-2 border-[#232323] hover:bg-[#232323] p-0 flex items-center justify-center"
+            class="cursor-pointer size-9 rounded-l-md border-2 border-[#232323] hover:bg-[#232323] p-0 flex items-center justify-center"
             aria-label="List view"
             @click="setViewMode('list')"
             :variant="viewMode === 'list' ? 'solid' : 'ghost'"
@@ -626,7 +649,7 @@ const visibleColumns = computed(() =>
           <UButton
             size="xl"
             icon="i-lucide-layout-grid"
-            class="cursor-pointer size-8 rounded-r-md border-2 border-[#232323] hover:bg-[#232323] p-0 flex items-center justify-center"
+            class="cursor-pointer size-9 rounded-r-md border-2 border-[#232323] hover:bg-[#232323] p-0 flex items-center justify-center"
             aria-label="Grid view"
             @click="setViewMode('grid')"
             :variant="viewMode === 'grid' ? 'solid' : 'ghost'"
@@ -700,25 +723,24 @@ const visibleColumns = computed(() =>
         Once people exchange contacts with your card, they will appear here.
       </p>
       <UButton
-        size="xl"
         label="Create New Contact"
         leading-icon="i-material-symbols-add"
         color="neutral"
-        class="mt-2 rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+        class="h-10 mt-2 rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
         @click="onCreateContact"
       />
     </div>
 
     <div
       v-else-if="viewMode === 'list'"
-      class="hide-scrollbar flex-1 overflow-x-auto overflow-y-hidden"
+      class="hide-scrollbar flex-1 overflow-x-auto overflow-y-hidden -mx-4 sm:mx-0 px-4 sm:px-0"
     >
       <UTable
         :data="pagedContacts"
         :columns="visibleColumns"
         :ui="{
           th: 'px-4 py-4 border-b border-[#232323]',
-          td: 'px-4 py-4 border-b border-[#232323]',
+          td: 'px-4 py-3 border-b border-[#232323]',
           tr: 'bg-transparent',
           empty: 'py-16 text-center text-sm text-muted',
         }"
@@ -823,11 +845,15 @@ const visibleColumns = computed(() =>
       </div>
     </div>
 
-    <div v-if="hasContacts" class="mt-auto flex items-center justify-end pt-4">
+    <div
+      v-if="hasContacts"
+      class="mt-auto flex items-center justify-center sm:justify-end pt-4 sm:pt-0"
+    >
       <UPagination
         v-model:page="page"
         :total="total"
         :items-per-page="itemsPerPage"
+        :sibling-count="0"
         show-controls
         show-edges
         color="neutral"
