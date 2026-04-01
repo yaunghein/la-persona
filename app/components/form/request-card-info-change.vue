@@ -177,7 +177,8 @@ function onSubmit(event: FormSubmitEvent<Partial<UpdateCard>>) {
       </UFormField>
 
       <div class="md:col-span-2 flex justify-end gap-3 pt-2">
-        <UButton size="xl"
+        <UButton
+          size="xl"
           :to="previewUrl"
           target="_blank"
           color="neutral"
@@ -187,7 +188,8 @@ function onSubmit(event: FormSubmitEvent<Partial<UpdateCard>>) {
         >
           Preview Your Card
         </UButton>
-        <UButton size="xl"
+        <UButton
+          size="xl"
           type="submit"
           class="rounded-full bg-[#232323] px-4 text-white hover:bg-[#2a2a2a] disabled:bg-white/20 active:bg-[#2a2a2a] cursor-pointer"
           icon="i-lucide-square-pen"

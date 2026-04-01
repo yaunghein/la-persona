@@ -98,7 +98,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             />
           </UFormField>
 
-          <UButton size="xl"
+          <UButton
+            size="xl"
             type="submit"
             block
             icon="i-heroicons-paper-airplane"

@@ -30,8 +30,11 @@ const emit = defineEmits<{ close: []; submitted: [] }>();
 
 const toast = useToast();
 const runtimeConfig = useRuntimeConfig();
-const { normalizeUrlWithHttps, normalizeLinkValuesWithHttps, isValidPublicWebUrl } =
-  useUrlNormalization();
+const {
+  normalizeUrlWithHttps,
+  normalizeLinkValuesWithHttps,
+  isValidPublicWebUrl,
+} = useUrlNormalization();
 
 const state = reactive<RequestCardFormState>({
   type: 'new_design' as 'new_design' | 'existing_design',
@@ -633,7 +636,8 @@ function onFormError(event: FormErrorEvent) {
             }"
           />
         </UFormField>
-        <UButton size="xl"
+        <UButton
+          size="xl"
           icon="i-lucide-x"
           variant="ghost"
           @click="removeLink(index)"
@@ -664,7 +668,8 @@ function onFormError(event: FormErrorEvent) {
     </UFormField>
 
     <div class="flex items-center justify-end pt-2">
-      <UButton size="xl"
+      <UButton
+        size="xl"
         type="submit"
         label="Send Request"
         :loading="isLoading"

@@ -76,7 +76,8 @@ const items = computed<DropdownMenuItem[][]>(() => [
       item: 'py-2',
     }"
   >
-    <UButton size="xl"
+    <UButton
+      size="xl"
       :label="collapsed ? undefined : 'Help & Feedback'"
       icon="i-material-symbols:help-outline"
       color="neutral"

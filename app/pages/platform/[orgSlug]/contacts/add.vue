@@ -79,7 +79,8 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
   <div class="flex min-h-[calc(100dvh-11rem)] flex-col gap-8">
     <div class="space-y-3">
       <div class="flex items-center gap-2">
-        <UButton size="xl"
+        <UButton
+          size="xl"
           icon="i-lucide-chevron-left"
           color="neutral"
           variant="ghost"
@@ -87,7 +88,9 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
           aria-label="Go back to contacts"
           @click="goBack"
         />
-        <h1 class="text-2xl font-medium uppercase tracking-widest leading-tight">
+        <h1
+          class="text-2xl font-medium uppercase tracking-widest leading-tight"
+        >
           Create New Contact
         </h1>
       </div>
@@ -100,9 +103,16 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
         body: 'p-5 sm:p-8',
       }"
     >
-      <UForm :schema="schema" :state="state" class="space-y-8" @submit="onSubmit">
+      <UForm
+        :schema="schema"
+        :state="state"
+        class="space-y-8"
+        @submit="onSubmit"
+      >
         <div class="space-y-4">
-          <h2 class="text-[20px] font-medium uppercase tracking-widest text-white">
+          <h2
+            class="text-[20px] font-medium uppercase tracking-widest text-white"
+          >
             New Contact
           </h2>
           <p class="text-sm text-[#8b8b8b]">
@@ -206,7 +216,8 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
         </div>
 
         <div class="flex justify-end">
-          <UButton size="xl"
+          <UButton
+            size="xl"
             type="submit"
             :loading="submitting"
             color="neutral"

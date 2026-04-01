@@ -142,7 +142,10 @@ function clearServerError() {
     </div>
   </div>
 
-  <div v-else-if="serverErrorMessage" class="h-full flex items-center justify-center">
+  <div
+    v-else-if="serverErrorMessage"
+    class="h-full flex items-center justify-center"
+  >
     <div
       class="text-center flex flex-col items-center justify-center max-w-76 mx-auto gap-8"
     >
@@ -163,7 +166,8 @@ function clearServerError() {
           {{ serverErrorMessage }}
         </p>
       </div>
-      <UButton size="xl"
+      <UButton
+        size="xl"
         label="Back"
         class="rounded-full bg-white px-6 text-dark hover:bg-white/90 cursor-pointer"
         @click="clearServerError"
@@ -205,7 +209,8 @@ function clearServerError() {
     </UFormField>
 
     <div class="mt-auto flex justify-end pt-2">
-      <UButton size="xl"
+      <UButton
+        size="xl"
         type="submit"
         :label="submitLabelByKind[state.kind]"
         :loading="isSubmitting"

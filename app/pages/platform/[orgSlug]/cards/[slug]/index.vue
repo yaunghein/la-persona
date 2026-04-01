@@ -486,7 +486,8 @@ const active = computed({
     <p class="max-w-[20rem] text-center text-sm text-muted">
       This card does not exist or you do not have permission to access it.
     </p>
-    <UButton size="xl"
+    <UButton
+      size="xl"
       label="Back to Cards"
       icon="i-lucide-arrow-left"
       color="neutral"
@@ -570,7 +571,8 @@ const active = computed({
         </p>
       </div>
 
-      <UButton size="xl"
+      <UButton
+        size="xl"
         v-if="showUpgradeButton"
         :label="upgradeButtonLabel"
         icon="i-lucide-chevrons-up"

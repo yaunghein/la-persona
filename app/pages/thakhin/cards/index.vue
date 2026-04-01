@@ -106,9 +106,14 @@ function closeDelete() {
   cardToDelete.value = null;
 }
 
-const { data: cardsData, pending, refresh } =
-  await useFetch<CardRow[]>('/api/cards/admin');
-const { data: orgOptions } = await useFetch<OrgOption[]>('/api/cards/admin/options');
+const {
+  data: cardsData,
+  pending,
+  refresh,
+} = await useFetch<CardRow[]>('/api/cards/admin');
+const { data: orgOptions } = await useFetch<OrgOption[]>(
+  '/api/cards/admin/options'
+);
 
 const rows = computed(() => cardsData.value || []);
 const orgSelectItems = computed(() =>
@@ -192,7 +197,9 @@ async function onSubmitForm() {
     toast.add({
       title: editingId.value ? 'Update failed' : 'Create failed',
       description:
-        error?.data?.statusMessage || error?.statusMessage || 'Please try again.',
+        error?.data?.statusMessage ||
+        error?.statusMessage ||
+        'Please try again.',
       color: 'error',
     });
   } finally {
@@ -218,7 +225,9 @@ async function onConfirmDelete() {
     toast.add({
       title: 'Delete failed',
       description:
-        error?.data?.statusMessage || error?.statusMessage || 'Please try again.',
+        error?.data?.statusMessage ||
+        error?.statusMessage ||
+        'Please try again.',
       color: 'error',
     });
   } finally {
@@ -280,7 +289,8 @@ const selectUi = {
         Cards
       </h1>
       <div class="flex flex-wrap items-center gap-2">
-        <UButton size="xl"
+        <UButton
+          size="xl"
           label="Refresh"
           icon="i-lucide-refresh-cw"
           color="neutral"
@@ -289,7 +299,8 @@ const selectUi = {
           :loading="pending"
           @click="refresh()"
         />
-        <UButton size="xl"
+        <UButton
+          size="xl"
           label="Create Card"
           icon="i-lucide-plus"
           color="neutral"
@@ -341,7 +352,8 @@ const selectUi = {
         </template>
         <template #actions-cell="{ row }">
           <UDropdownMenu :items="getActionItems(row.original)">
-            <UButton size="xl"
+            <UButton
+              size="xl"
               icon="i-mdi-dots-vertical"
               color="neutral"
               variant="ghost"
@@ -412,7 +424,11 @@ const selectUi = {
                 :ui="inputUi"
               />
             </UFormField>
-            <UFormField label="Position / role" required :class="formFieldClass">
+            <UFormField
+              label="Position / role"
+              required
+              :class="formFieldClass"
+            >
               <UInput
                 v-model="form.position"
                 placeholder="e.g. Designer"
@@ -502,15 +518,19 @@ const selectUi = {
             card). User stays unlinked until the recipient accepts.
           </p>
 
-          <div class="mt-6 flex justify-end gap-2 border-t border-[#232323] pt-6">
-            <UButton size="xl"
+          <div
+            class="mt-6 flex justify-end gap-2 border-t border-[#232323] pt-6"
+          >
+            <UButton
+              size="xl"
               label="Cancel"
               color="neutral"
               variant="ghost"
               class="rounded-full px-5 text-white hover:bg-[#232323]"
               @click="isFormOpen = false"
             />
-            <UButton size="xl"
+            <UButton
+              size="xl"
               :label="editingId ? 'Save changes' : 'Create card'"
               color="neutral"
               :loading="isSaving"
@@ -544,7 +564,8 @@ const selectUi = {
         </p>
       </template>
       <template #footer>
-        <UButton size="xl"
+        <UButton
+          size="xl"
           label="Cancel"
           color="neutral"
           variant="ghost"
@@ -552,7 +573,8 @@ const selectUi = {
           :disabled="isDeleting"
           @click="closeDelete"
         />
-        <UButton size="xl"
+        <UButton
+          size="xl"
           label="Delete"
           color="error"
           :loading="isDeleting"

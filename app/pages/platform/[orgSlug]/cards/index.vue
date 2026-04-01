@@ -148,7 +148,8 @@ function hasSplinePreview(card: CardDTO) {
       <h1 class="text-2xl font-medium uppercase tracking-widest leading-tight">
         Your Cards
       </h1>
-      <UButton size="xl"
+      <UButton
+        size="xl"
         icon="material-symbols:info-outline"
         color="neutral"
         variant="ghost"
@@ -201,7 +202,8 @@ function hasSplinePreview(card: CardDTO) {
           <h2 class="text-sm font-medium uppercase tracking-widest text-white">
             What is cards?
           </h2>
-          <UButton size="xl"
+          <UButton
+            size="xl"
             icon="i-lucide-x"
             color="neutral"
             variant="ghost"
@@ -247,7 +249,8 @@ function hasSplinePreview(card: CardDTO) {
             </div>
 
             <div class="flex justify-end">
-              <UButton size="xl"
+              <UButton
+                size="xl"
                 label="Understood"
                 color="neutral"
                 class="rounded-full bg-white px-6 text-dark hover:bg-white/90"
@@ -315,7 +318,7 @@ function hasSplinePreview(card: CardDTO) {
             v-if="hasSplinePreview(card)"
             icon="i-lucide-scan-eye"
             color="primary"
-            size="xl"
+            size="md"
             class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
             target="_blank"
             :href="`/yaunghein/${card.slug}`"
@@ -330,7 +333,7 @@ function hasSplinePreview(card: CardDTO) {
             <UButton
               icon="i-lucide-scan-eye"
               color="primary"
-              size="xl"
+              size="md"
               class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
             />
 
@@ -339,14 +342,14 @@ function hasSplinePreview(card: CardDTO) {
           <UButton
             icon="i-lucide-square-pen"
             color="primary"
-            size="xl"
+            size="md"
             class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
             :href="`/platform/${route.params.orgSlug}/cards/${card.slug}`"
           />
           <UButton
             icon="i-lucide-trash"
             color="primary"
-            size="xl"
+            size="md"
             class="bg-white/5 text-red-500 hover:bg-white/15 ml-auto active:hover:bg-white/20"
             @click="openDeleteConfirm(card)"
           />
@@ -404,14 +407,16 @@ function hasSplinePreview(card: CardDTO) {
     </template>
 
     <template #footer>
-      <UButton size="xl"
+      <UButton
+        size="xl"
         label="Cancel"
         color="neutral"
         variant="ghost"
         :disabled="isDeleting"
         @click="closeDeleteConfirm"
       />
-      <UButton size="xl"
+      <UButton
+        size="xl"
         label="Delete"
         color="error"
         :loading="isDeleting"

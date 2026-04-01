@@ -588,7 +588,8 @@ async function downloadQr() {
           <div
             class="relative flex sm:scale-100 h-[240px] w-[240px] flex-col items-center justify-center gap-[6px] overflow-hidden rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4"
           >
-            <UButton size="xl"
+            <UButton
+              size="xl"
               icon="i-lucide-expand"
               color="neutral"
               variant="ghost"
@@ -625,7 +626,8 @@ async function downloadQr() {
             <p class="text-sm text-white">{{ selectedModelConfig.label }}</p>
           </div>
 
-          <UButton size="xl"
+          <UButton
+            size="xl"
             label="Download Wallpaper"
             icon="i-lucide-download"
             class="cursor-pointer rounded-full bg-white px-6 text-dark hover:bg-white/90"
@@ -661,7 +663,8 @@ async function downloadQr() {
             <p class="text-sm text-white">QR Only</p>
           </div>
 
-          <UButton size="xl"
+          <UButton
+            size="xl"
             label="Download QR"
             icon="i-lucide-download"
             class="cursor-pointer rounded-full bg-white px-6 text-dark hover:bg-white/90"
@@ -692,7 +695,8 @@ async function downloadQr() {
           <h3 class="text-sm font-medium uppercase tracking-widest text-white">
             Wallpaper Preview
           </h3>
-          <UButton size="xl"
+          <UButton
+            size="xl"
             icon="i-lucide-x"
             color="neutral"
             variant="ghost"

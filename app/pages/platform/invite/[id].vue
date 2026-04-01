@@ -84,7 +84,8 @@ onMounted(async () => {
             }}
           </p>
         </div>
-        <UButton size="xl"
+        <UButton
+          size="xl"
           to="/platform"
           color="neutral"
           variant="outline"

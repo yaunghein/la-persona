@@ -60,7 +60,8 @@ const items = computed<DropdownMenuItem[][]>(() => {
       content: collapsed ? 'w-40' : 'w-(--reka-dropdown-menu-trigger-width)',
     }"
   >
-    <UButton size="xl"
+    <UButton
+      size="xl"
       v-bind="{
         ...selectedTeam,
         label: collapsed ? undefined : selectedTeam?.label,

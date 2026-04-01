@@ -264,7 +264,8 @@ function getStatusLabel(status: string) {
         /> -->
 
         <UFieldGroup>
-          <UButton size="xl"
+          <UButton
+            size="xl"
             icon="i-lucide-table-2"
             class="cursor-pointer size-8 rounded-l-md border-2 border-[#232323] p-0 flex items-center justify-center hover:bg-[#232323]"
             aria-label="List view"
@@ -274,7 +275,8 @@ function getStatusLabel(status: string) {
             "
             @click="setViewMode('list')"
           />
-          <UButton size="xl"
+          <UButton
+            size="xl"
             icon="i-lucide-layout-grid"
             class="cursor-pointer size-8 rounded-r-md border-2 border-[#232323] p-0 flex items-center justify-center hover:bg-[#232323]"
             aria-label="Grid view"
@@ -327,7 +329,8 @@ function getStatusLabel(status: string) {
           class="w-full min-w-[980px]"
         >
           <template #action-cell>
-            <UButton size="xl"
+            <UButton
+              size="xl"
               icon="i-material-symbols-download-sharp"
               color="neutral"
               variant="ghost"
@@ -341,7 +344,8 @@ function getStatusLabel(status: string) {
       <div v-else class="flex-1">
         <div class="mb-4 hidden">
           <UDropdownMenu :items="sortMenuItems">
-            <UButton size="xl"
+            <UButton
+              size="xl"
               :label="`Date: ${sortLabel}`"
               icon="i-lucide-calendar-days"
               trailing-icon="i-lucide-chevron-down"
@@ -381,7 +385,8 @@ function getStatusLabel(status: string) {
                   </p>
                 </div>
 
-                <UButton size="xl"
+                <UButton
+                  size="xl"
                   icon="i-material-symbols-download-sharp"
                   color="neutral"
                   variant="ghost"

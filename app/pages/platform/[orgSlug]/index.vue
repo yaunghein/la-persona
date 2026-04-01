@@ -276,7 +276,8 @@ const chartOptions = {
         class="flex items-center gap-3 text-3xl leading-[1.1] font-medium uppercase tracking-widest"
       >
         {{ analyticsHeading }}
-        <UButton size="xl"
+        <UButton
+          size="xl"
           icon="material-symbols:info-outline"
           color="neutral"
           variant="ghost"
@@ -521,7 +522,8 @@ const chartOptions = {
           <h2 class="text-sm font-medium uppercase tracking-widest text-white">
             What is analytics?
           </h2>
-          <UButton size="xl"
+          <UButton
+            size="xl"
             icon="i-lucide-x"
             color="neutral"
             variant="ghost"
@@ -567,7 +569,8 @@ const chartOptions = {
             </div>
 
             <div class="flex justify-end">
-              <UButton size="xl"
+              <UButton
+                size="xl"
                 label="Understood"
                 color="neutral"
                 class="rounded-full bg-white px-6 text-dark hover:bg-white/90"

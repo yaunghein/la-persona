@@ -43,8 +43,11 @@ const createState = reactive({
   sendNow: true,
 });
 
-const { data: invitationsData, pending, refresh } =
-  await useFetch<InvitationRow[]>('/api/onboarding-invitation');
+const {
+  data: invitationsData,
+  pending,
+  refresh,
+} = await useFetch<InvitationRow[]>('/api/onboarding-invitation');
 const { data: optionsData } = await useFetch<OptionsResponse>(
   '/api/onboarding-invitation/options'
 );
@@ -112,7 +115,9 @@ async function onCreateInvitation() {
     toast.add({
       title: 'Create failed',
       description:
-        error?.data?.statusMessage || error?.statusMessage || 'Please try again.',
+        error?.data?.statusMessage ||
+        error?.statusMessage ||
+        'Please try again.',
       color: 'error',
     });
   } finally {
@@ -123,7 +128,9 @@ async function onCreateInvitation() {
 async function onSendInvitation(row: InvitationRow) {
   isSendingById.value = { ...isSendingById.value, [row.id]: true };
   try {
-    await $fetch(`/api/onboarding-invitation/${row.id}/send`, { method: 'POST' });
+    await $fetch(`/api/onboarding-invitation/${row.id}/send`, {
+      method: 'POST',
+    });
     await refresh();
     toast.add({
       title: row.resendCount > 0 ? 'Invitation resent' : 'Invitation sent',
@@ -134,7 +141,9 @@ async function onSendInvitation(row: InvitationRow) {
     toast.add({
       title: 'Send failed',
       description:
-        error?.data?.statusMessage || error?.statusMessage || 'Please try again.',
+        error?.data?.statusMessage ||
+        error?.statusMessage ||
+        'Please try again.',
       color: 'error',
     });
   } finally {
@@ -205,10 +214,13 @@ const selectUi = {
 <template>
   <div class="flex min-h-[calc(100dvh-11rem)] flex-col gap-6">
     <div class="flex items-center justify-between gap-3">
-      <h1 class="text-[1.75rem] font-normal leading-tight tracking-widest uppercase">
+      <h1
+        class="text-[1.75rem] font-normal leading-tight tracking-widest uppercase"
+      >
         Onboarding Invitations
       </h1>
-      <UButton size="xl"
+      <UButton
+        size="xl"
         label="Create Invitation"
         icon="i-lucide-plus"
         color="neutral"
@@ -255,7 +267,8 @@ const selectUi = {
         </template>
         <template #actions-cell="{ row }">
           <UDropdownMenu :items="getActionItems(row.original)">
-            <UButton size="xl"
+            <UButton
+              size="xl"
               icon="i-mdi-dots-vertical"
               color="neutral"
               variant="ghost"
@@ -303,7 +316,11 @@ const selectUi = {
                 :ui="inputUi"
               />
             </UFormField>
-            <UFormField label="Organization Name" required :class="formFieldClass">
+            <UFormField
+              label="Organization Name"
+              required
+              :class="formFieldClass"
+            >
               <UInput
                 v-model="createState.organizationName"
                 placeholder="Organization name"
@@ -322,7 +339,11 @@ const selectUi = {
                 :ui="selectUi"
               />
             </UFormField>
-            <UFormField label="Subscription Plan" required :class="formFieldClass">
+            <UFormField
+              label="Subscription Plan"
+              required
+              :class="formFieldClass"
+            >
               <USelect
                 v-model="createState.subscriptionPlanCode"
                 :items="planItems"
@@ -342,7 +363,11 @@ const selectUi = {
                 :ui="inputUi"
               />
             </UFormField>
-            <UFormField label="Expiration (minutes)" required :class="formFieldClass">
+            <UFormField
+              label="Expiration (minutes)"
+              required
+              :class="formFieldClass"
+            >
               <UInput
                 v-model.number="createState.expirationMinutes"
                 type="number"
@@ -363,15 +388,19 @@ const selectUi = {
             </div>
           </div>
 
-          <div class="mt-6 flex justify-end gap-2 border-t border-[#232323] pt-6">
-            <UButton size="xl"
+          <div
+            class="mt-6 flex justify-end gap-2 border-t border-[#232323] pt-6"
+          >
+            <UButton
+              size="xl"
               label="Cancel"
               color="neutral"
               variant="ghost"
               class="rounded-full px-5 text-white hover:bg-[#232323]"
               @click="isCreateOpen = false"
             />
-            <UButton size="xl"
+            <UButton
+              size="xl"
               label="Create Invitation"
               color="neutral"
               :loading="isCreating"

@@ -28,8 +28,9 @@ type PaymentRow = {
 const toast = useToast();
 const runtimeConfig = useRuntimeConfig();
 
-const { data, pending, refresh } =
-  await useFetch<PaymentRow[]>('/api/subscriptions/payments');
+const { data, pending, refresh } = await useFetch<PaymentRow[]>(
+  '/api/subscriptions/payments'
+);
 
 const rows = ref<PaymentRow[]>([]);
 
@@ -81,18 +82,14 @@ const filteredRows = computed(() => {
       payerName.includes(filterPayer.value.trim().toLowerCase()) ||
       payerEmail.includes(filterPayer.value.trim().toLowerCase());
 
-    const matchesStatus = filterStatus.value === 'all' || row.status === filterStatus.value;
+    const matchesStatus =
+      filterStatus.value === 'all' || row.status === filterStatus.value;
     const matchesLink =
       filterLink.value === 'all' ||
       (filterLink.value === 'linked' && Boolean(row.linkedRequestId)) ||
       (filterLink.value === 'standalone' && !row.linkedRequestId);
 
-    return (
-      matchesGlobal &&
-      matchesPayer &&
-      matchesStatus &&
-      matchesLink
-    );
+    return matchesGlobal && matchesPayer && matchesStatus && matchesLink;
   });
 });
 
@@ -210,7 +207,8 @@ const columns: TableColumn<PaymentRow>[] = [
       >
         Subscription Payments
       </h1>
-      <UButton size="xl"
+      <UButton
+        size="xl"
         label="Refresh"
         icon="i-lucide-refresh-cw"
         color="neutral"
@@ -271,11 +269,14 @@ const columns: TableColumn<PaymentRow>[] = [
         </template>
 
         <template #totalAmountMinor-cell="{ row }">
-          {{ formatMoney(row.original.totalAmountMinor, row.original.currency) }}
+          {{
+            formatMoney(row.original.totalAmountMinor, row.original.currency)
+          }}
         </template>
 
         <template #receiptUrl-cell="{ row }">
-          <UButton size="xl"
+          <UButton
+            size="xl"
             v-if="row.original.receiptUrl"
             label="View Receipt"
             icon="i-lucide-external-link"
@@ -292,7 +293,10 @@ const columns: TableColumn<PaymentRow>[] = [
           <span v-if="row.original.linkedRequestId" class="text-white">
             {{ row.original.linkedRequestId }}
           </span>
-          <span v-if="row.original.linkedRequestStatus" class="ml-2 text-[#8b8b8b]">
+          <span
+            v-if="row.original.linkedRequestStatus"
+            class="ml-2 text-[#8b8b8b]"
+          >
             ({{ row.original.linkedRequestStatus }})
           </span>
           <span v-else>-</span>
@@ -314,7 +318,8 @@ const columns: TableColumn<PaymentRow>[] = [
 
         <template #actions-cell="{ row }">
           <UDropdownMenu :items="getActionItems(row.original)">
-            <UButton size="xl"
+            <UButton
+              size="xl"
               icon="i-mdi-dots-vertical"
               color="neutral"
               variant="ghost"

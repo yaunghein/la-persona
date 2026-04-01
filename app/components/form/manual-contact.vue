@@ -177,7 +177,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     </div>
 
     <div class="flex justify-end gap-2">
-      <UButton size="xl"
+      <UButton
+        size="xl"
         type="submit"
         :loading="submitting"
         color="neutral"

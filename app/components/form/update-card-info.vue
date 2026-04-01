@@ -21,8 +21,11 @@ const queryClient = useQueryClient();
 const slug = computed(() => route.params.slug);
 const runtimeConfig = useRuntimeConfig();
 const toast = useToast();
-const { normalizeUrlWithHttps, normalizeLinkValuesWithHttps, isValidPublicWebUrl } =
-  useUrlNormalization();
+const {
+  normalizeUrlWithHttps,
+  normalizeLinkValuesWithHttps,
+  isValidPublicWebUrl,
+} = useUrlNormalization();
 
 const selectedFile = ref<File | null>(null);
 const localPreviewUrl = ref<string | null>(null);
@@ -485,7 +488,8 @@ watch(socialsListEl, (el) => {
                 }"
               />
             </UFormField>
-            <UButton size="xl"
+            <UButton
+              size="xl"
               icon="i-lucide-x"
               color="error"
               variant="ghost"
@@ -497,7 +501,8 @@ watch(socialsListEl, (el) => {
       </div>
 
       <div class="flex justify-end pt-8">
-        <UButton size="xl"
+        <UButton
+          size="xl"
           :to="`/yaunghein/${slug}`"
           target="_blank"
           color="neutral"

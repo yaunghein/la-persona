@@ -28,8 +28,11 @@ const editForm = reactive({
   slug: '',
 });
 
-const { data: orgsData, pending, refresh } =
-  await useFetch<OrgRow[]>('/api/organizations/admin');
+const {
+  data: orgsData,
+  pending,
+  refresh,
+} = await useFetch<OrgRow[]>('/api/organizations/admin');
 
 const rows = computed(() => orgsData.value || []);
 
@@ -91,7 +94,9 @@ async function onSaveEdit() {
     toast.add({
       title: 'Update failed',
       description:
-        error?.data?.statusMessage || error?.statusMessage || 'Please try again.',
+        error?.data?.statusMessage ||
+        error?.statusMessage ||
+        'Please try again.',
       color: 'error',
     });
   } finally {
@@ -137,7 +142,8 @@ const inputUi = {
       >
         Organizations
       </h1>
-      <UButton size="xl"
+      <UButton
+        size="xl"
         label="Refresh"
         icon="i-lucide-refresh-cw"
         color="neutral"
@@ -187,7 +193,8 @@ const inputUi = {
         </template>
         <template #actions-cell="{ row }">
           <UDropdownMenu :items="getActionItems(row.original)">
-            <UButton size="xl"
+            <UButton
+              size="xl"
               icon="i-mdi-dots-vertical"
               color="neutral"
               variant="ghost"
@@ -225,8 +232,10 @@ const inputUi = {
         <div class="py-2">
           <p class="mb-4 text-sm leading-relaxed text-[#8b8b8b]">
             Changing the slug updates platform URLs that use
-            <span class="font-mono text-white/80">/platform/{{ editForm.slug || '…' }}/…</span>.
-            Bookmarks and shared links with the old slug will stop working until updated.
+            <span class="font-mono text-white/80"
+              >/platform/{{ editForm.slug || '…' }}/…</span
+            >. Bookmarks and shared links with the old slug will stop working
+            until updated.
           </p>
           <div class="flex flex-col gap-4">
             <UFormField label="Name" required :class="formFieldClass">
@@ -249,15 +258,19 @@ const inputUi = {
             </UFormField>
           </div>
 
-          <div class="mt-6 flex justify-end gap-2 border-t border-[#232323] pt-6">
-            <UButton size="xl"
+          <div
+            class="mt-6 flex justify-end gap-2 border-t border-[#232323] pt-6"
+          >
+            <UButton
+              size="xl"
               label="Cancel"
               color="neutral"
               variant="ghost"
               class="rounded-full px-5 text-white hover:bg-[#232323]"
               @click="closeEdit"
             />
-            <UButton size="xl"
+            <UButton
+              size="xl"
               label="Save"
               color="neutral"
               :loading="isSaving"

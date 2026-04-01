@@ -24,7 +24,9 @@ async function handleGenerate() {
       method: 'POST',
       body: {
         cardId:
-          typeof state.cardId === 'object' && state.cardId && 'id' in state.cardId
+          typeof state.cardId === 'object' &&
+          state.cardId &&
+          'id' in state.cardId
             ? (state.cardId as { id: string }).id
             : String(state.cardId),
         minutes: state.minutes,
@@ -143,7 +145,8 @@ const copyLink = () => {
                   variant="none"
                   color="neutral"
                 />
-                <UButton size="xl"
+                <UButton
+                  size="xl"
                   icon="i-heroicons-clipboard-document"
                   color="neutral"
                   variant="ghost"

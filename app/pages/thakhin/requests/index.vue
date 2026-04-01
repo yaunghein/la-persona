@@ -211,7 +211,8 @@ const columns: TableColumn<CardRequestRow>[] = [
       >
         Card Requests
       </h1>
-      <UButton size="xl"
+      <UButton
+        size="xl"
         label="Refresh"
         icon="i-lucide-refresh-cw"
         color="neutral"
@@ -276,7 +277,8 @@ const columns: TableColumn<CardRequestRow>[] = [
         </template>
 
         <template #paymentReceiptUrl-cell="{ row }">
-          <UButton size="xl"
+          <UButton
+            size="xl"
             v-if="row.original.paymentReceiptUrl"
             label="View Receipt"
             icon="i-lucide-external-link"
@@ -305,7 +307,8 @@ const columns: TableColumn<CardRequestRow>[] = [
 
         <template #actions-cell="{ row }">
           <UDropdownMenu :items="getActionItems(row.original)">
-            <UButton size="xl"
+            <UButton
+              size="xl"
               icon="i-mdi-dots-vertical"
               color="neutral"
               variant="ghost"
