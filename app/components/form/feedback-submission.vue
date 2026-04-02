@@ -181,7 +181,7 @@ function clearServerError() {
     :schema="feedbackSubmissionInsertSchema"
     @submit="onSubmit"
     @error="onFormError"
-    class="space-y-8 pb-6 h-full flex flex-col"
+    class="space-y-4 pb-6 h-full flex flex-col"
   >
     <!-- <div class="space-y-4">
       <h1 class="text-[20px] font-medium uppercase tracking-widest text-white">

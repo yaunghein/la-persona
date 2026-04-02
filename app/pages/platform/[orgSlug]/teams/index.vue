@@ -42,29 +42,30 @@ const onContactClick = () => {
 </script>
 
 <template>
-  <div class="flex min-h-[calc(100dvh-7rem)] items-center justify-center py-6">
+  <div class="flex sm:min-h-[calc(100dvh-7rem)] items-center justify-center">
     <div
-      class="w-full max-w-164 overflow-hidden rounded-[8px] border border-[#232323] bg-[#171717]"
+      class="w-full max-w-106 overflow-hidden rounded-[8px] border border-[#232323] bg-[#171717]"
     >
       <div
-        class="flex items-center justify-between border-b-2 border-[#232323] px-6 pb-[26px] pt-6"
+        class="flex items-center justify-between border-b-2 border-[#232323] p-4 sm:p-6"
       >
         <h2 class="text-sm font-medium uppercase tracking-widest text-white">
           What is teams?
         </h2>
         <UBadge
           label="Coming Soon"
+          size="sm"
           color="neutral"
           variant="soft"
           class="uppercase tracking-wide"
         />
       </div>
 
-      <div class="p-6">
-        <div class="space-y-8">
-          <div class="space-y-4">
+      <div class="p-4 sm:p-6">
+        <div class="space-y-4 sm:space-y-8">
+          <div class="space-y-2">
             <h3
-              class="text-[20px] font-medium leading-[27px] uppercase tracking-widest text-white"
+              class="text-md sm:text-xl font-medium uppercase tracking-widest text-white"
             >
               Collaborate across your organization
             </h3>
@@ -78,7 +79,7 @@ const onContactClick = () => {
             <div
               v-for="(item, index) in teaserItems"
               :key="item.title"
-              class="px-4 py-3"
+              class="px-2 sm:px-4 py-3"
               :class="
                 index < teaserItems.length - 1
                   ? 'border-b border-[#2a2a2a]'
@@ -86,7 +87,10 @@ const onContactClick = () => {
               "
             >
               <div class="flex items-start gap-2">
-                <UIcon :name="item.icon" class="mt-0.5 size-5 text-white" />
+                <UIcon
+                  :name="item.icon"
+                  class="shrink-0 mt-0.5 size-5 text-white"
+                />
                 <div>
                   <p class="text-[14px] text-white">{{ item.title }}</p>
                   <p class="mt-2 text-[14px] text-muted">

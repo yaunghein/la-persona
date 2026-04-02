@@ -315,9 +315,7 @@ const currentPageLabel = computed(() => {
       :title="feedbackHeaderLabel"
       :ui="{
         content: 'bg-[#171717]',
-        header: 'border-b-2 border-[#232323] px-6 py-6',
         title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
-        body: 'px-6 pt-6 pb-8',
       }"
     >
       <template #body>
