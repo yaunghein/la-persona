@@ -611,7 +611,7 @@ watch(isSocialSlideoverOpen, (open) => {
         </div>
       </div>
 
-      <div class="flex justify-end pt-4 sm:pt-8">
+      <div class="flex justify-end pt-4 sm:pt-3">
         <UButton
           :to="`/yaunghein/${slug}`"
           target="_blank"

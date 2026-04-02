@@ -54,6 +54,9 @@ const qrColor = useStorage('wallpaper.qrColor', '#000000');
 const qrBorderOpacity = useStorage('wallpaper.qrBorderOpacity', 0);
 const qrLayerBgColor = useStorage('wallpaper.qrLayerBgColor', '#ffffff');
 const qrLayerBgOpacity = useStorage('wallpaper.qrLayerBgOpacity', 1);
+
+qrBorderOpacity.value = 0;
+qrLayerBgOpacity.value = 1;
 const debouncedQrColor = refDebounced(qrColor, 120);
 const debouncedQrBorderOpacity = refDebounced(qrBorderOpacity, 120);
 const debouncedQrLayerBgColor = refDebounced(qrLayerBgColor, 120);
@@ -466,7 +469,7 @@ async function downloadQr() {
 </script>
 
 <template>
-  <div class="rounded-[8px] bg-[#171717] p-8">
+  <div class="rounded-[8px] bg-[#171717] p-5 sm:p-8 mb-17 sm:mb-0">
     <div v-if="isLoading" class="space-y-8">
       <div class="space-y-3">
         <USkeleton class="h-6 w-52" />
@@ -485,7 +488,7 @@ async function downloadQr() {
       <div class="space-y-8">
         <div class="space-y-4">
           <h2
-            class="text-[20px] font-medium uppercase tracking-widest text-white"
+            class="text-md sm:text-xl font-medium uppercase tracking-widest text-white"
           >
             QR & Wallpaper
           </h2>
@@ -499,7 +502,7 @@ async function downloadQr() {
         <UFormField
           label="Choose Your Phone Model"
           name="phoneModel"
-          class="[&_label]:mb-2 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
         >
           <USelectMenu
             v-model="selectedModel"
@@ -512,34 +515,39 @@ async function downloadQr() {
               base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white',
               placeholder: 'text-white/50',
               trailingIcon: 'text-[#8b8b8b]',
+              content: 'bg-[#171717] border border-[#2a2a2a]',
             }"
           />
         </UFormField>
 
         <div class="space-y-5">
           <div class="w-full max-w-[760px] space-y-7">
-            <div class="grid grid-cols-2 gap-5">
-              <div class="space-y-3">
+            <div class="grid sm:grid-cols-2 gap-5">
+              <div
+                class="space-y-3 flex sm:static flex-col items-center text-center sm:items-start"
+              >
                 <p class="text-sm font-medium text-white">QR Color</p>
                 <UColorPicker
                   v-model="qrColor"
                   size="sm"
-                  class="w-full"
+                  class="sm:w-full"
                   aria-label="Pick QR color"
                 />
               </div>
-              <div class="space-y-3">
+              <div
+                class="space-y-3 flex sm:static flex-col items-center text-center sm:items-start"
+              >
                 <p class="text-sm font-medium text-white">Background Color</p>
                 <UColorPicker
                   v-model="qrLayerBgColor"
                   size="sm"
-                  class="w-full"
+                  class="sm:w-full"
                   aria-label="Pick QR background color"
                 />
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-5">
+            <div class="griddd sm:grid-cols-2 gap-5 hidden">
               <div class="space-y-3">
                 <div class="flex items-center justify-between">
                   <p class="text-sm font-medium text-white">Border Opacity</p>
@@ -581,9 +589,7 @@ async function downloadQr() {
         </div>
       </div>
 
-      <div
-        class="flex items-start justify-center flex-wrap gap-10 mt-10 sm:mt-0"
-      >
+      <div class="flex items-start justify-center flex-wrap gap-10">
         <div class="flex flex-col items-center gap-6">
           <div
             class="relative flex sm:scale-100 h-[240px] w-[240px] flex-col items-center justify-center gap-[6px] overflow-hidden rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4"
@@ -627,10 +633,10 @@ async function downloadQr() {
           </div>
 
           <UButton
-            size="xl"
             label="Download Wallpaper"
             icon="i-lucide-download"
-            class="cursor-pointer rounded-full bg-white px-6 text-dark hover:bg-white/90"
+            class="h-10 cursor-pointer rounded-full px-5"
+            variant="soft"
             :loading="isGeneratingWallpaper"
             @click="downloadWallpaper"
           />
@@ -664,10 +670,10 @@ async function downloadQr() {
           </div>
 
           <UButton
-            size="xl"
+            variant="soft"
             label="Download QR"
             icon="i-lucide-download"
-            class="cursor-pointer rounded-full bg-white px-6 text-dark hover:bg-white/90"
+            class="h-10 cursor-pointer rounded-full px-5"
             :loading="isGeneratingQr"
             @click="downloadQr"
           />
