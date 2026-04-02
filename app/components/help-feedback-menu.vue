@@ -14,35 +14,37 @@ const items = computed<DropdownMenuItem[][]>(() => [
   [
     {
       label: 'Facebook',
-      to: 'https://facebook.com',
+      to: 'https://www.facebook.com/share/1BBTr3Emyh/',
       target: '_blank',
     },
     {
       label: 'Instagram',
-      to: 'https://instagram.com',
+      to: 'https://www.instagram.com/lapersona.mm',
       target: '_blank',
     },
     {
       label: 'LinkedIn',
-      to: 'https://linkedin.com',
+      to: 'https://www.linkedin.com/company/la-persona-mm/',
       target: '_blank',
     },
     {
       label: 'Tiktok',
-      to: 'https://tiktok.com',
+      to: 'https://www.tiktok.com/@lapersona.mm',
       target: '_blank',
     },
   ],
   [
     {
-      label: 'La Persona Docs',
+      label: 'La Persona Docs (Coming Soon)',
       to: 'https://ui.nuxt.com',
       target: '_blank',
+      disabled: true,
     },
     {
-      label: 'Tutorials',
+      label: 'Tutorials (Coming Soon)',
       to: 'https://nuxt.com/docs',
       target: '_blank',
+      disabled: true,
     },
   ],
   [
@@ -72,12 +74,11 @@ const items = computed<DropdownMenuItem[][]>(() => [
       collisionPadding: 12,
     }"
     :ui="{
-      content: collapsed ? 'w-48' : 'w-48',
+      content: 'bg-[#171717] border border-[#2a2a2a]',
       item: 'py-2',
     }"
   >
     <UButton
-      size="xl"
       :label="collapsed ? undefined : 'Help & Feedback'"
       icon="i-material-symbols:help-outline"
       color="neutral"

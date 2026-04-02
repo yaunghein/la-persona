@@ -183,19 +183,19 @@ function clearServerError() {
     @error="onFormError"
     class="space-y-8 pb-6 h-full flex flex-col"
   >
-    <div class="space-y-4">
+    <!-- <div class="space-y-4">
       <h1 class="text-[20px] font-medium uppercase tracking-widest text-white">
         {{ titleLabel }}
       </h1>
       <p class="text-sm leading-[21px] text-[#8b8b8b]">
         Please fill in the form below.
       </p>
-    </div>
+    </div> -->
 
     <UFormField
-      label="Feedback"
+      label="Message"
       name="message"
-      class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+      class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
     >
       <UTextarea
         v-model="state.message"
@@ -208,14 +208,13 @@ function clearServerError() {
       />
     </UFormField>
 
-    <div class="mt-auto flex justify-end pt-2">
+    <div class="flex justify-end pt-2">
       <UButton
-        size="xl"
         type="submit"
         :label="submitLabelByKind[state.kind]"
         :loading="isSubmitting"
         icon="i-lucide-check"
-        class="rounded-full bg-white px-6 text-dark hover:bg-white/90 cursor-pointer"
+        class="h-10 rounded-full bg-white px-5 text-dark hover:bg-white/90 cursor-pointer"
       />
     </div>
   </UForm>
