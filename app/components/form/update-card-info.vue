@@ -415,16 +415,16 @@ watch(isSocialSlideoverOpen, (open) => {
         <div class="relative">
           <UAvatar
             :src="displayAvatar || undefined"
-            size="3xl"
             icon="i-lucide-user"
-            class="object-cover"
+            class="size-16 sm:size-20 rounded-full object-cover"
           />
           <UButton
             v-if="displayAvatar"
             color="error"
             variant="solid"
+            size="sm"
             icon="i-lucide-trash-2"
-            class="absolute -bottom-1 -right-1 rounded-full border-2 border-white dark:border-gray-900"
+            class="scale-80 sm:scale-100 absolute -bottom-1 sm:bottom-0 -right-1 sm:right-0 rounded-full border-2 border-white dark:border-gray-900"
             @click="selectedFile ? clearSelection() : removeCurrentPhoto()"
           />
         </div>
@@ -446,12 +446,12 @@ watch(isSocialSlideoverOpen, (open) => {
               class="rounded-full bg-[#232323] px-4 text-white hover:bg-[#2a2a2a]"
               @click="triggerFilePicker"
             />
-            <span
+            <!-- <span
               v-if="selectedFile"
               class="text-xs text-primary-500 font-medium"
             >
               Ready to upload
-            </span>
+            </span> -->
           </div>
           <p class="text-xs text-[#8b8b8b]">JPG, PNG or WebP. Max 800KB.</p>
         </div>
