@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Application } from '@splinetool/runtime';
 import imageCompression from 'browser-image-compression';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import type { FormError } from '@nuxt/ui';
@@ -56,6 +57,10 @@ const socialEditorMode = ref<'create' | 'edit'>('create');
 const editingSocialIndex = ref<number | null>(null);
 const pendingDeleteSocialIndex = ref<number | null>(null);
 const isDeleteSocialConfirmOpen = ref(false);
+const isPreviewModalOpen = ref(false);
+const isPreviewLoading = ref(false);
+const previewCanvasEl = ref<HTMLCanvasElement | null>(null);
+const previewSpline = ref<Application | null>(null);
 const socialDraft = reactive<SocialFormLink>({
   ...createEmptyCardLink(),
   customLabel: '',
@@ -470,6 +475,66 @@ function confirmRemoveLink() {
   closeDeleteSocialConfirm();
 }
 
+function updatePreviewSplineVariables() {
+  if (!previewSpline.value) return;
+
+  previewSpline.value.setVariables({
+    firstName: state.firstName || card.value?.firstName || '',
+    lastName: state.lastName || card.value?.lastName || '',
+  });
+}
+
+function disposePreviewSpline() {
+  previewSpline.value?.dispose();
+  previewSpline.value = null;
+}
+
+function openPreviewModal() {
+  if (!card.value?.splineUrl) {
+    toast.add({
+      title: 'Preview unavailable',
+      description: 'This card does not have a Spline scene to preview yet.',
+      color: 'warning',
+      icon: 'i-lucide-triangle-alert',
+    });
+    return;
+  }
+
+  isPreviewModalOpen.value = true;
+}
+
+async function loadPreviewSpline() {
+  if (!import.meta.client || !isPreviewModalOpen.value) return;
+
+  const splineUrl = card.value?.splineUrl;
+  if (!splineUrl) return;
+
+  await nextTick();
+
+  const canvas = previewCanvasEl.value;
+  if (!canvas) return;
+
+  disposePreviewSpline();
+  isPreviewLoading.value = true;
+
+  const spline = new Application(canvas);
+  previewSpline.value = spline;
+
+  try {
+    await spline.load(`${splineUrl}?v=${Date.now()}`);
+    updatePreviewSplineVariables();
+  } catch {
+    toast.add({
+      title: 'Unable to load preview',
+      description: 'Please try again in a moment.',
+      color: 'error',
+      icon: 'i-heroicons-x-circle',
+    });
+  } finally {
+    isPreviewLoading.value = false;
+  }
+}
+
 watch(
   () => socialDraft.label,
   (label) => {
@@ -499,6 +564,37 @@ watch(isSocialSlideoverOpen, (open) => {
     editingSocialIndex.value = null;
     resetSocialDraft();
   }
+});
+
+watch(isPreviewModalOpen, async (open) => {
+  if (open) {
+    await loadPreviewSpline();
+    return;
+  }
+
+  isPreviewLoading.value = false;
+  disposePreviewSpline();
+});
+
+watch([() => state.firstName, () => state.lastName], () => {
+  updatePreviewSplineVariables();
+});
+
+watch(
+  () => card.value?.splineUrl,
+  async (nextSplineUrl, previousSplineUrl) => {
+    if (
+      isPreviewModalOpen.value &&
+      nextSplineUrl &&
+      nextSplineUrl !== previousSplineUrl
+    ) {
+      await loadPreviewSpline();
+    }
+  }
+);
+
+onBeforeUnmount(() => {
+  disposePreviewSpline();
 });
 </script>
 
@@ -755,12 +851,12 @@ watch(isSocialSlideoverOpen, (open) => {
 
       <div class="flex justify-end pt-2 sm:pt-3">
         <UButton
-          :to="`/c/${previewCardSlug}`"
-          target="_blank"
+          type="button"
           color="neutral"
           variant="ghost"
           icon="i-lucide-eye"
           class="mr-3 h-10 rounded-full px-4 text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          @click="openPreviewModal"
         >
           Preview Your Card
         </UButton>
@@ -893,6 +989,39 @@ watch(isSocialSlideoverOpen, (open) => {
         color="error"
         @click="confirmRemoveLink"
       />
+    </template>
+  </UModal>
+
+  <UModal
+    v-model:open="isPreviewModalOpen"
+    title="Card Preview"
+    :ui="{
+      content: 'max-w-md bg-[#171717] overflow-hidden',
+      header: 'border-b border-[#232323] px-4 py-4 sm:px-6',
+      title: 'text-white',
+      body: 'p-4 sm:p-6',
+    }"
+  >
+    <template #body>
+      <div class="space-y-4">
+        <div
+          class="relative h-[50vh] min-h-[420px] overflow-hidden rounded-lg border border-white/10 bg-[#0b0b0b]"
+        >
+          <canvas ref="previewCanvasEl" class="h-full w-full"></canvas>
+
+          <div
+            v-if="isPreviewLoading"
+            class="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          >
+            <div class="flex items-center gap-3 text-sm text-white">
+              <UIcon
+                name="i-lucide-loader-circle"
+                class="size-5 animate-spin"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </template>
   </UModal>
 </template>
