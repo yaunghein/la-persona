@@ -94,7 +94,7 @@ const publicCardUrl = computed(() => {
   const origin =
     runtimeConfig.public.baseUrl ||
     (process.client ? window.location.origin : '');
-  return `${origin}/yaunghein/${cardSlug}`;
+  return `${origin}/c/${cardSlug}`;
 });
 const qrCodeOptions = computed(() => ({
   width: 1024,

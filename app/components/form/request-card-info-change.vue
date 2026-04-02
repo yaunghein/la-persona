@@ -5,7 +5,7 @@ import type { FormSubmitEvent } from '#ui/types';
 const route = useRoute();
 const toast = useToast();
 const slug = computed(() => route.params.slug as string);
-const previewUrl = computed(() => `/yaunghein/${slug.value}`);
+const previewUrl = computed(() => `/c/${slug.value}`);
 
 const { data: card, isLoading } = useQuery<SelectCard>({
   queryKey: ['cards', slug],

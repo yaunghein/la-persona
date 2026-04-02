@@ -14,6 +14,7 @@ export default defineEventHandler(async (event) => {
   if (!result.success) {
     throw createError({
       statusCode: 400,
+      statusMessage: 'Please review the card details and try again.',
       data: result.error.issues,
     });
   }

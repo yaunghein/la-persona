@@ -1,10 +1,11 @@
 import { nanoid } from 'nanoid';
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, isNull, ne } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { card } from '~~/server/db/schema';
 import { env } from '~~/server/utils/env';
 import { ensureCardTrialSubscription } from '~~/server/services/subscription';
 import type { UpdateCard } from '~~/shared/types';
+import { slugify } from '~~/shared/utils/slugify';
 
 import type { User } from 'better-auth';
 
@@ -20,6 +21,8 @@ export const splitName = (fullName: string | null | undefined) => {
 
   return { firstName, lastName };
 };
+
+const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export async function insertDefaultCard(user: User, organizationId: string) {
   const { firstName, lastName } = splitName(user.name);
@@ -70,6 +73,7 @@ export async function updateCard(
   input: UpdateCard
 ) {
   const { id, ...data } = input;
+  const nextData = { ...data };
 
   if (!id) {
     throw createError({
@@ -78,9 +82,43 @@ export async function updateCard(
     });
   }
 
+  if (typeof data.slug === 'string') {
+    const normalizedSlug = slugify(data.slug.replace(/_/g, '-'));
+
+    if (!normalizedSlug) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Please enter a card URL slug.',
+      });
+    }
+
+    if (!SLUG_PATTERN.test(normalizedSlug)) {
+      throw createError({
+        statusCode: 400,
+        statusMessage:
+          'Card URL slugs can only include lowercase letters, numbers, and hyphens.',
+      });
+    }
+
+    const existingCard = await db.query.card.findFirst({
+      where: and(eq(card.slug, normalizedSlug), ne(card.id, id)),
+      columns: { id: true },
+    });
+
+    if (existingCard) {
+      throw createError({
+        statusCode: 409,
+        statusMessage:
+          'That card URL is already taken. Please choose a different slug.',
+      });
+    }
+
+    nextData.slug = normalizedSlug;
+  }
+
   const [updated] = await db
     .update(card)
-    .set({ ...data, updatedAt: new Date() })
+    .set({ ...nextData, updatedAt: new Date() })
     .where(
       and(eq(card.id, id), eq(card.userId, userId), eq(card.organizationId, organizationId))
     )

@@ -312,7 +312,7 @@ const cardFooterActionSize = computed(() => (isSmUp.value ? 'md' : 'sm'));
               :size="cardFooterActionSize"
               class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
               target="_blank"
-              :href="`/yaunghein/${card.slug}`"
+              :href="`/c/${card.slug}`"
             />
             <UPopover
               v-else

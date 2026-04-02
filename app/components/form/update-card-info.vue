@@ -15,10 +15,12 @@ import {
   resolveSocialLinksForSubmission,
   type SocialFormLink,
 } from '~~/shared/utils/social-links';
+import { slugify } from '~~/shared/utils/slugify';
 
 const route = useRoute();
+const router = useRouter();
 const queryClient = useQueryClient();
-const slug = computed(() => route.params.slug);
+const slug = computed(() => String(route.params.slug || ''));
 const runtimeConfig = useRuntimeConfig();
 const toast = useToast();
 const {
@@ -37,6 +39,7 @@ const { data: card, isLoading } = useQuery<SelectCard>({
 
 const state = reactive({
   id: '',
+  slug: '',
   firstName: '',
   lastName: '',
   position: '',
@@ -67,12 +70,98 @@ const updateCardFormSchema = cardUpdateSchema.omit({ socials: true });
 const linkTypeItems = computed<string[][]>(() =>
   createLinkTypeItemsWithCustom(CARD_LINK_SELECT_ITEMS)
 );
+const previewCardSlug = computed(() => state.slug || slug.value);
+const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+function normalizeSlugInput(value: string | null | undefined) {
+  return slugify(String(value || '').replace(/_/g, '-'));
+}
+
+function normalizeSlugField() {
+  state.slug = normalizeSlugInput(state.slug);
+}
+
+const FIELD_LABELS: Record<string, string> = {
+  slug: 'Card URL slug',
+  firstName: 'First name',
+  lastName: 'Last name',
+  position: 'Professional title / role',
+  company: 'Company / brand name',
+  phone: 'Phone number',
+  email: 'Email address',
+  website: 'Personal website / portfolio',
+  'socialDraft.label': 'Link type',
+  'socialDraft.customLabel': 'Custom label',
+  'socialDraft.value': 'Link URL',
+};
+
+function getErrorFieldLabel(name?: string) {
+  if (!name) return 'This field';
+  if (name.startsWith('socials.')) return 'Social link';
+  return FIELD_LABELS[name] || 'This field';
+}
+
+function buildHelpfulFormErrorMessage(
+  errors: Array<Pick<FormError, 'name' | 'message'>> = []
+) {
+  const messages = errors
+    .map((error) => {
+      const label = getErrorFieldLabel(error.name);
+      return error.message ? `${label}: ${error.message}` : '';
+    })
+    .filter(Boolean);
+
+  return (
+    [...new Set(messages)].join(' ') ||
+    'Please review the highlighted fields and try again.'
+  );
+}
+
+type ValidationIssue = {
+  path?: Array<string | number>;
+  message?: string;
+};
+
+function buildHelpfulApiErrorMessage(error: any) {
+  const issues = error?.data?.data as ValidationIssue[] | undefined;
+  if (Array.isArray(issues) && issues.length > 0) {
+    const messages = issues
+      .map((issue) => {
+        const fieldName = Array.isArray(issue.path)
+          ? issue.path.join('.')
+          : undefined;
+        const label = getErrorFieldLabel(fieldName);
+        return issue.message ? `${label}: ${issue.message}` : '';
+      })
+      .filter(Boolean);
+
+    if (messages.length > 0) {
+      return [...new Set(messages)].join(' ');
+    }
+  }
+
+  const statusMessage = error?.data?.statusMessage || error?.statusMessage;
+  if (
+    typeof statusMessage === 'string' &&
+    statusMessage &&
+    !['Error', 'Bad Request', 'Internal Server Error'].includes(statusMessage)
+  ) {
+    return statusMessage;
+  }
+
+  if (typeof error?.data?.message === 'string' && error.data.message) {
+    return error.data.message;
+  }
+
+  return 'We could not update your card. Please try again.';
+}
 
 watch(
   card,
   (val) => {
     if (!val) return;
     state.id = val.id ?? '';
+    state.slug = val.slug ?? '';
     state.firstName = val.firstName ?? '';
     state.lastName = val.lastName ?? '';
     state.position = val.position ?? '';
@@ -159,11 +248,13 @@ const { mutate: updateCard, isPending: isSaving } = useMutation({
     const normalizedSocials = normalizeLinkValuesWithHttps(
       resolveSocialLinksForSubmission(state.socials)
     );
+    const normalizedSlug = normalizeSlugInput(formData.slug);
 
     return await $fetch('/api/cards', {
       method: 'PATCH',
       body: {
         ...formData,
+        slug: normalizedSlug,
         website: normalizeUrlWithHttps(formData.website),
         avatarUrl: finalAvatarUrl,
         id: card.value?.id,
@@ -171,19 +262,36 @@ const { mutate: updateCard, isPending: isSaving } = useMutation({
       },
     });
   },
-  onSuccess: () => {
+  onSuccess: async (updatedCard) => {
     clearSelection();
-    queryClient.invalidateQueries({ queryKey: ['cards', slug.value] });
+    if (!updatedCard) {
+      toast.add({
+        title: 'Card updated',
+        description: 'Your card details were updated successfully.',
+        color: 'success',
+      });
+      return;
+    }
+
+    state.slug = updatedCard.slug ?? state.slug;
+    await queryClient.invalidateQueries({ queryKey: ['cards'] });
+
+    if (updatedCard.slug && updatedCard.slug !== slug.value) {
+      await router.replace(
+        `/platform/${route.params.orgSlug}/cards/${updatedCard.slug}`
+      );
+    }
+
     toast.add({
       title: 'Success',
-      description: 'Card updated.',
+      description: 'Your card details were updated successfully.',
       color: 'success',
     });
   },
   onError: (err: any) => {
     toast.add({
-      title: 'Error',
-      description: err.data?.statusMessage || 'Action failed',
+      title: 'Unable to update card',
+      description: buildHelpfulApiErrorMessage(err),
       color: 'error',
     });
   },
@@ -195,6 +303,21 @@ function onSubmit(event: FormSubmitEvent<UpdateCard>) {
 
 function validate(formData: Partial<UpdateCard>): FormError[] {
   const errors: FormError[] = [];
+  const slugValue = String(formData.slug || '').trim();
+  const normalizedSlug = normalizeSlugInput(slugValue);
+
+  if (!normalizedSlug) {
+    errors.push({
+      name: 'slug',
+      message: 'Please enter a card URL slug.',
+    });
+  } else if (!SLUG_PATTERN.test(normalizedSlug)) {
+    errors.push({
+      name: 'slug',
+      message:
+        'Use lowercase letters, numbers, and hyphens only, like john-smith.',
+    });
+  }
 
   const missingIndexes = getCustomSocialLabelMissingIndexes(state.socials);
   missingIndexes.forEach((index) => {
@@ -218,8 +341,8 @@ function validate(formData: Partial<UpdateCard>): FormError[] {
 function onFormError(event: any) {
   console.error('Form validation failed:', event.errors);
   toast.add({
-    title: 'Validation Error',
-    description: 'Please check the required fields.',
+    title: 'Please review the form',
+    description: buildHelpfulFormErrorMessage(event.errors),
     color: 'error',
   });
 }
@@ -305,8 +428,8 @@ function saveSocialDraft() {
 
   if (errors.length > 0) {
     toast.add({
-      title: 'Validation Error',
-      description: errors[0]?.message || 'Please check the link details.',
+      title: 'Please fix the link details',
+      description: buildHelpfulFormErrorMessage(errors),
       color: 'error',
     });
     return;
@@ -485,6 +608,25 @@ watch(isSocialSlideoverOpen, (open) => {
           />
         </UFormField>
         <UFormField
+          label="URL Slug"
+          name="slug"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        >
+          <UInput
+            v-model="state.slug"
+            placeholder="john-smith"
+            autocomplete="off"
+            class="w-full"
+            :ui="{
+              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            }"
+            @blur="normalizeSlugField"
+          />
+          <p class="mt-2 text-xs text-[#8b8b8b]">
+            Your public link will be `/c/{{ previewCardSlug || 'your-slug' }}`.
+          </p>
+        </UFormField>
+        <UFormField
           label="Professional Title / Role"
           name="position"
           class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
@@ -613,7 +755,7 @@ watch(isSocialSlideoverOpen, (open) => {
 
       <div class="flex justify-end pt-2 sm:pt-3">
         <UButton
-          :to="`/yaunghein/${slug}`"
+          :to="`/c/${previewCardSlug}`"
           target="_blank"
           color="neutral"
           variant="ghost"
