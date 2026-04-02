@@ -263,7 +263,7 @@ const currentPageLabel = computed(() => {
         <UDashboardNavbar
           :title="currentPageLabel"
           :ui="{ right: 'gap-3' }"
-          class="uppercase text-sm tracking-[1.4px]"
+          class="uppercase text-sm tracking-[1.4px] border-b border-[#232323] bg-[#171717]"
         >
           <template #leading>
             <UDashboardSidebarCollapse />

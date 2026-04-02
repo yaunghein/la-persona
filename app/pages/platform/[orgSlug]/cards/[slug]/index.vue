@@ -446,9 +446,9 @@ const { mutate: submitPayment, isPending: isSubmittingPayment } = useMutation({
 });
 
 const items: TabsItem[] = [
-  { label: '3D Card Information', value: '3d' },
-  { label: 'Contact Information', value: 'contact' },
-  { label: 'QR & Wallpapers', value: 'wallpaper' },
+  { label: '3D Card', value: '3d' },
+  { label: 'Contact', value: 'contact' },
+  { label: 'QR', value: 'wallpaper' },
 ];
 
 const active = computed({
@@ -498,7 +498,7 @@ const active = computed({
   <template v-else>
     <div
       v-if="showEndingBanner"
-      class="mb-8 flex items-center justify-center bg-[#232323] px-8 py-2 -mx-6 -mt-4 sm:-mt-6"
+      class="mb-8 flex items-center justify-center bg-[#232323] px-8 py-2 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6"
     >
       <p
         class="text-center text-xs sm:text-sm font-medium uppercase tracking-widest text-white"
@@ -539,18 +539,20 @@ const active = computed({
     </div>
 
     <div
-      class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+      class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between -mt-4 sm:mt-0"
     >
       <div>
-        <div class="flex flex-wrap items-center gap-y-2">
+        <div
+          class="flex flex-wrap items-center gap-y-2 -translate-x-2 sm:translate-x-0"
+        >
           <UButton
             icon="i-lucide-chevron-left"
             color="primary"
-            class="h-10 bg-transparent mr-2 text-white -mt-[0.15rem] hover:bg-white/10 active:hover:bg-white/20"
+            class="h-10 bg-transparent mr-1 sm:mr-2 text-white sm:-mt-[0.15rem] hover:bg-white/10 active:hover:bg-white/20"
             :to="`/platform/${orgSlug}/cards`"
           />
           <h1
-            class="text-2xl font-medium tracking-widest uppercase leading-tight"
+            class="text-lg sm:text-2xl font-medium tracking-widest uppercase leading-tight"
           >
             {{ card?.firstName }} {{ card?.lastName }}
           </h1>
@@ -583,7 +585,7 @@ const active = computed({
       v-model="active"
       :items="items"
       :ui="{
-        root: 'items-start mt-6',
+        root: 'items-start mt-2 sm:mt-6',
         list: 'bg-[#171717] w-full max-w-[32rem] rounded-[8px] p-1 overflow-x-auto',
         indicator: 'bg-[#232323]',
         trigger: 'data-[state=active]:text-white rounded-[4px] px-4 py-2.5',

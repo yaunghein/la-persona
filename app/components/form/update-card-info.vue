@@ -48,12 +48,22 @@ const state = reactive({
   socials: [] as SocialFormLink[],
 });
 const socialsListEl = ref<HTMLElement | null>(null);
+const isSocialSlideoverOpen = ref(false);
+const socialEditorMode = ref<'create' | 'edit'>('create');
+const editingSocialIndex = ref<number | null>(null);
+const pendingDeleteSocialIndex = ref<number | null>(null);
+const isDeleteSocialConfirmOpen = ref(false);
+const socialDraft = reactive<SocialFormLink>({
+  ...createEmptyCardLink(),
+  customLabel: '',
+});
 const socialsSortable = computed({
   get: () => state.socials,
   set: (value) => {
     state.socials = value;
   },
 });
+const updateCardFormSchema = cardUpdateSchema.omit({ socials: true });
 const linkTypeItems = computed<string[][]>(() =>
   createLinkTypeItemsWithCustom(CARD_LINK_SELECT_ITEMS)
 );
@@ -202,18 +212,6 @@ function validate(formData: Partial<UpdateCard>): FormError[] {
     });
   }
 
-  state.socials.forEach((social, index) => {
-    const value = String(social.value || '').trim();
-    if (!value) return;
-
-    if (!isValidPublicWebUrl(value)) {
-      errors.push({
-        name: `socials.${index}.value`,
-        message: 'Please enter a valid URL.',
-      });
-    }
-  });
-
   return errors;
 }
 
@@ -226,15 +224,137 @@ function onFormError(event: any) {
   });
 }
 
-const addLink = () => {
-  state.socials.push({
-    ...createEmptyCardLink(),
-    customLabel: '',
-  });
-};
-const removeLink = (index: number) => {
-  state.socials.splice(index, 1);
-};
+function resetSocialDraft() {
+  socialDraft.label = createEmptyCardLink().label;
+  socialDraft.value = '';
+  socialDraft.customLabel = '';
+}
+
+function openCreateLinkSlideover() {
+  socialEditorMode.value = 'create';
+  editingSocialIndex.value = null;
+  resetSocialDraft();
+  isSocialSlideoverOpen.value = true;
+}
+
+function openEditLinkSlideover(index: number) {
+  const link = state.socials[index];
+  if (!link) return;
+
+  socialEditorMode.value = 'edit';
+  editingSocialIndex.value = index;
+  socialDraft.label = link.label || createEmptyCardLink().label;
+  socialDraft.value = link.value || '';
+  socialDraft.customLabel = link.customLabel || '';
+  isSocialSlideoverOpen.value = true;
+}
+
+function closeSocialSlideover() {
+  isSocialSlideoverOpen.value = false;
+  editingSocialIndex.value = null;
+  resetSocialDraft();
+}
+
+function resolveSocialLabel(link: SocialFormLink) {
+  return link.label === 'Custom' ? link.customLabel || 'Custom' : link.label;
+}
+
+function validateSocialDraft(): FormError[] {
+  const errors: FormError[] = [];
+  const normalizedValue = normalizeLinkValuesWithHttps([
+    {
+      label: socialDraft.label,
+      value: socialDraft.value,
+    },
+  ])[0]?.value;
+
+  if (!String(socialDraft.label || '').trim()) {
+    errors.push({
+      name: 'socialDraft.label',
+      message: 'Please choose a link type.',
+    });
+  }
+
+  if (
+    socialDraft.label === 'Custom' &&
+    !String(socialDraft.customLabel || '').trim()
+  ) {
+    errors.push({
+      name: 'socialDraft.customLabel',
+      message: 'Custom label is required.',
+    });
+  }
+
+  if (!String(socialDraft.value || '').trim()) {
+    errors.push({
+      name: 'socialDraft.value',
+      message: 'Please enter a link.',
+    });
+  } else if (!isValidPublicWebUrl(normalizedValue || '')) {
+    errors.push({
+      name: 'socialDraft.value',
+      message: 'Please enter a valid URL.',
+    });
+  }
+
+  return errors;
+}
+
+function saveSocialDraft() {
+  const errors = validateSocialDraft();
+
+  if (errors.length > 0) {
+    toast.add({
+      title: 'Validation Error',
+      description: errors[0]?.message || 'Please check the link details.',
+      color: 'error',
+    });
+    return;
+  }
+
+  const nextLink: SocialFormLink = {
+    label: socialDraft.label,
+    value: String(socialDraft.value || '').trim(),
+    customLabel: String(socialDraft.customLabel || '').trim(),
+  };
+
+  if (
+    socialEditorMode.value === 'edit' &&
+    editingSocialIndex.value !== null &&
+    state.socials[editingSocialIndex.value]
+  ) {
+    state.socials.splice(editingSocialIndex.value, 1, nextLink);
+  } else {
+    state.socials.push(nextLink);
+  }
+
+  closeSocialSlideover();
+}
+
+function requestRemoveLink(index: number) {
+  pendingDeleteSocialIndex.value = index;
+  isDeleteSocialConfirmOpen.value = true;
+}
+
+function closeDeleteSocialConfirm() {
+  pendingDeleteSocialIndex.value = null;
+  isDeleteSocialConfirmOpen.value = false;
+}
+
+function confirmRemoveLink() {
+  if (pendingDeleteSocialIndex.value === null) return;
+  state.socials.splice(pendingDeleteSocialIndex.value, 1);
+  closeDeleteSocialConfirm();
+}
+
+watch(
+  () => socialDraft.label,
+  (label) => {
+    if (label !== 'Custom') {
+      socialDraft.customLabel = '';
+    }
+  }
+);
 
 watch(socialsListEl, (el) => {
   if (!el) return;
@@ -250,10 +370,17 @@ watch(socialsListEl, (el) => {
     invertSwap: true,
   });
 });
+
+watch(isSocialSlideoverOpen, (open) => {
+  if (!open) {
+    editingSocialIndex.value = null;
+    resetSocialDraft();
+  }
+});
 </script>
 
 <template>
-  <div class="rounded-[8px] bg-[#171717] p-8">
+  <div class="rounded-[8px] bg-[#171717] p-5 sm:p-8 mb-17 sm:mb-0">
     <div v-if="isLoading" class="space-y-8">
       <div class="flex items-center gap-4">
         <USkeleton class="h-24 w-24 rounded-full" />
@@ -266,7 +393,7 @@ watch(socialsListEl, (el) => {
     <UForm
       v-else
       :state="state"
-      :schema="cardUpdateSchema"
+      :schema="updateCardFormSchema"
       :validate="validate"
       @submit="onSubmit"
       @error="onFormError"
@@ -274,7 +401,7 @@ watch(socialsListEl, (el) => {
     >
       <div class="space-y-4">
         <h2
-          class="text-[20px] font-medium uppercase tracking-widest text-white"
+          class="text-md sm:text-xl font-medium uppercase tracking-widest text-white"
         >
           Contact Information
         </h2>
@@ -297,7 +424,6 @@ watch(socialsListEl, (el) => {
             color="error"
             variant="solid"
             icon="i-lucide-trash-2"
-            size="xl"
             class="absolute -bottom-1 -right-1 rounded-full border-2 border-white dark:border-gray-900"
             @click="selectedFile ? clearSelection() : removeCurrentPhoto()"
           />
@@ -317,25 +443,25 @@ watch(socialsListEl, (el) => {
               icon="i-lucide-upload"
               color="neutral"
               variant="soft"
-              size="xl"
               class="rounded-full bg-[#232323] px-4 text-white hover:bg-[#2a2a2a]"
               @click="triggerFilePicker"
             />
             <span
               v-if="selectedFile"
               class="text-xs text-primary-500 font-medium"
-              >Ready to upload</span
             >
+              Ready to upload
+            </span>
           </div>
           <p class="text-xs text-[#8b8b8b]">JPG, PNG or WebP. Max 800KB.</p>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 sm:gap-y-6">
         <UFormField
           label="First Name"
           name="firstName"
-          class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
         >
           <UInput
             v-model="state.firstName"
@@ -348,7 +474,7 @@ watch(socialsListEl, (el) => {
         <UFormField
           label="Last Name"
           name="lastName"
-          class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
         >
           <UInput
             v-model="state.lastName"
@@ -361,7 +487,7 @@ watch(socialsListEl, (el) => {
         <UFormField
           label="Professional Title / Role"
           name="position"
-          class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
         >
           <UInput
             v-model="state.position"
@@ -374,7 +500,7 @@ watch(socialsListEl, (el) => {
         <UFormField
           label="Company / Brand Name"
           name="company"
-          class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
         >
           <UInput
             v-model="state.company"
@@ -387,7 +513,7 @@ watch(socialsListEl, (el) => {
         <UFormField
           label="Phone Number"
           name="phone"
-          class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
         >
           <UInput
             v-model="state.phone"
@@ -400,7 +526,7 @@ watch(socialsListEl, (el) => {
         <UFormField
           label="Email Address"
           name="email"
-          class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
         >
           <UInput
             v-model="state.email"
@@ -413,7 +539,7 @@ watch(socialsListEl, (el) => {
         <UFormField
           label="Personal Website / Portfolio"
           name="website"
-          class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
         >
           <UInput
             v-model="state.website"
@@ -425,97 +551,80 @@ watch(socialsListEl, (el) => {
         </UFormField>
       </div>
 
-      <div class="space-y-4 pt-6">
+      <div class="space-y-4 pt-3 sm:pt-6">
         <div class="flex items-center justify-between">
           <h3 class="text-sm font-medium text-white">
             Social / Professional Links
           </h3>
           <UButton
+            type="button"
             label="Add Link"
             icon="i-lucide-plus"
-            size="xl"
             variant="soft"
-            class="rounded-full bg-[#232323] px-3 text-white hover:bg-[#2a2a2a]"
-            @click="addLink"
+            size="sm"
+            class="rounded-full bg-[#232323] text-xs px-3 text-white hover:bg-[#2a2a2a]"
+            @click="openCreateLinkSlideover"
           />
         </div>
         <div ref="socialsListEl" class="relative flex flex-col gap-3">
           <div
             v-for="(link, index) in state.socials"
             :key="`${index}-${link.label}-${link.value}`"
-            class="sortable-link-row flex items-start gap-3 relative"
+            class="sortable-link-row relative flex items-center gap-3 rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-3"
           >
             <button
               type="button"
-              class="drag-handle inline-flex w-9 cursor-grab items-center justify-center rounded-[4px] text-[#8b8b8b] hover:bg-[#232323] active:cursor-grabbing h-11.75"
+              class="drag-handle inline-flex h-10 w-9 cursor-grab items-center justify-center rounded-[4px] text-[#8b8b8b] hover:bg-[#171717] active:cursor-grabbing"
               aria-label="Drag to reorder link"
             >
               <UIcon name="i-lucide-grip-vertical" class="size-5" />
             </button>
-            <UFormField class="w-40 sm:w-56" :name="`socials.${index}.label`">
-              <USelectMenu
-                v-model="link.label"
-                :items="linkTypeItems"
-                :search-input="false"
-                class="w-full"
-                placeholder="Select Link Type"
-                :ui="{
-                  base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white',
-                }"
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-medium text-white">
+                {{ resolveSocialLabel(link) || 'Untitled Link' }}
+              </p>
+              <p class="truncate text-sm text-[#8b8b8b]">
+                {{ link.value || 'No URL added yet' }}
+              </p>
+            </div>
+            <div class="flex items-center gap-1">
+              <UButton
+                type="button"
+                size="sm"
+                icon="i-lucide-pen-square"
+                color="neutral"
+                variant="ghost"
+                class="text-[#8b8b8b] hover:bg-[#171717] hover:text-white"
+                @click="openEditLinkSlideover(index)"
               />
-            </UFormField>
-            <UFormField
-              v-if="link.label === 'Custom'"
-              class="w-40 sm:w-56"
-              :name="`socials.${index}.customLabel`"
-            >
-              <UInput
-                v-model="link.customLabel"
-                placeholder="Custom Label"
-                class="w-full"
-                :ui="{
-                  base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
-                }"
+              <UButton
+                type="button"
+                size="sm"
+                icon="i-lucide-trash-2"
+                color="error"
+                variant="ghost"
+                class="text-[#8b8b8b] hover:bg-[#171717]"
+                @click="requestRemoveLink(index)"
               />
-            </UFormField>
-            <UFormField class="flex-1" :name="`socials.${index}.value`">
-              <UInput
-                v-model="link.value"
-                placeholder="www.example.com"
-                class="w-full"
-                :ui="{
-                  base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
-                }"
-              />
-            </UFormField>
-            <UButton
-              size="xl"
-              icon="i-lucide-x"
-              color="error"
-              variant="ghost"
-              class="text-[#8b8b8b] hover:bg-[#232323] h-11.75"
-              @click="removeLink(index)"
-            />
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="flex justify-end pt-8">
+      <div class="flex justify-end pt-4 sm:pt-8">
         <UButton
-          size="xl"
           :to="`/yaunghein/${slug}`"
           target="_blank"
           color="neutral"
           variant="ghost"
           icon="i-lucide-eye"
-          class="mr-3 rounded-full px-4 text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          class="mr-3 h-10 rounded-full px-4 text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
         >
           Preview Your Card
         </UButton>
         <UButton
           type="submit"
-          size="xl"
-          class="rounded-full bg-[#232323] px-6 text-white hover:bg-[#2a2a2a] disabled:bg-white/20 active:bg-[#2a2a2a] cursor-pointer"
+          class="h-10 rounded-full bg-[#232323] px-6 text-white hover:bg-[#2a2a2a] disabled:bg-white/20 active:bg-[#2a2a2a] cursor-pointer"
           icon="i-lucide-square-pen"
           :loading="isSaving"
         >
@@ -524,6 +633,126 @@ watch(socialsListEl, (el) => {
       </div>
     </UForm>
   </div>
+
+  <USlideover
+    v-model:open="isSocialSlideoverOpen"
+    side="right"
+    inset
+    :title="
+      socialEditorMode === 'create' ? 'ADD SOCIAL LINK' : 'EDIT SOCIAL LINK'
+    "
+    :ui="{
+      content: 'bg-[#171717] overflow-hidden',
+      header: 'border-b-2 border-[#232323] px-6 py-6',
+      title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+      body: 'bg-[#171717] px-6 py-6',
+    }"
+  >
+    <template #body>
+      <div class="space-y-6">
+        <UFormField
+          label="Link Type"
+          name="socialDraft.label"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        >
+          <USelectMenu
+            v-model="socialDraft.label"
+            :items="linkTypeItems"
+            :search-input="false"
+            class="w-full"
+            placeholder="Select Link Type"
+            :ui="{
+              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white',
+            }"
+          />
+        </UFormField>
+
+        <UFormField
+          v-if="socialDraft.label === 'Custom'"
+          label="Custom Label"
+          name="socialDraft.customLabel"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        >
+          <UInput
+            v-model="socialDraft.customLabel"
+            placeholder="Custom Label"
+            class="w-full"
+            :ui="{
+              base: 'h-12 border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            }"
+          />
+        </UFormField>
+
+        <UFormField
+          label="Link"
+          name="socialDraft.value"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        >
+          <UInput
+            v-model="socialDraft.value"
+            placeholder="www.example.com"
+            class="w-full"
+            :ui="{
+              base: 'h-12 border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            }"
+          />
+        </UFormField>
+
+        <div class="flex justify-end gap-3 pt-2">
+          <UButton
+            type="button"
+            size="xl"
+            label="Cancel"
+            color="neutral"
+            variant="ghost"
+            class="rounded-full px-4 text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+            @click="closeSocialSlideover"
+          />
+          <UButton
+            type="button"
+            :label="socialEditorMode === 'create' ? 'Add Link' : 'Save Link'"
+            icon="i-lucide-check"
+            class="h-10 rounded-full bg-[#232323] px-5 text-white hover:bg-[#2a2a2a]"
+            @click="saveSocialDraft"
+          />
+        </div>
+      </div>
+    </template>
+  </USlideover>
+
+  <UModal
+    v-model:open="isDeleteSocialConfirmOpen"
+    title="Delete Link?"
+    :ui="{
+      content: 'bg-[#171717] max-w-md',
+      title: 'text-white',
+      body: 'pt-4',
+      footer: 'justify-end gap-2',
+    }"
+  >
+    <template #body>
+      <p class="text-sm leading-relaxed text-[#bcbcbc]">
+        This action cannot be undone. The selected social link will be removed.
+      </p>
+    </template>
+    <template #footer>
+      <UButton
+        type="button"
+        size="xl"
+        label="Cancel"
+        color="neutral"
+        variant="ghost"
+        @click="closeDeleteSocialConfirm"
+      />
+      <UButton
+        type="button"
+        size="xl"
+        label="Delete"
+        color="error"
+        @click="confirmRemoveLink"
+      />
+    </template>
+  </UModal>
 </template>
 
 <style scoped>
