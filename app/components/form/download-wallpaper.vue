@@ -469,7 +469,7 @@ async function downloadQr() {
 </script>
 
 <template>
-  <div class="rounded-[8px] bg-[#171717] p-5 sm:p-8 mb-17 sm:mb-0">
+  <div class="rounded-[8px] bg-[#171717] p-4 sm:p-8 mb-17 sm:mb-0">
     <div v-if="isLoading" class="space-y-8">
       <div class="space-y-3">
         <USkeleton class="h-6 w-52" />

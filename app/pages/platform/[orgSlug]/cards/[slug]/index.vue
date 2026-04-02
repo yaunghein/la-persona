@@ -446,14 +446,14 @@ const { mutate: submitPayment, isPending: isSubmittingPayment } = useMutation({
 });
 
 const items: TabsItem[] = [
-  { label: '3D Card', value: '3d' },
-  { label: 'Contact', value: 'contact' },
-  { label: 'QR', value: 'wallpaper' },
+  // { label: '3D Card', value: '3d' },
+  { label: 'Contact Info', value: 'contact' },
+  { label: 'QR & Wallpaper', value: 'wallpaper' },
 ];
 
 const active = computed({
   get() {
-    return (route.query.tab as string) || '3d';
+    return (route.query.tab as string) || 'contact';
   },
   set(tab) {
     router.push({
@@ -593,7 +593,7 @@ const active = computed({
       }"
     >
       <template #content="{ item }">
-        <FormRequestCardInfoChange v-if="item.value === '3d'" />
+        <!-- <FormRequestCardInfoChange v-if="item.value === '3d'" /> -->
         <FormUpdateCardInfo v-if="item.value === 'contact'" />
         <FormDownloadWallpaper v-if="item.value === 'wallpaper'" />
       </template>
