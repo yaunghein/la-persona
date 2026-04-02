@@ -114,15 +114,17 @@ function onSubmit(event: FormSubmitEvent<UpdateCardUpdateRequest>) {
 </script>
 
 <template>
-  <div class="bg-elevated/25 rounded-md p-8">
+  <div class="bg-elevated/25 rounded-md p-4 sm:p-8">
     <!-- <div v-if="isLoading" class="grid grid-cols-2 gap-5">
       <USkeleton v-for="i in 6" :key="i" class="h-12 w-full" />
       <USkeleton class="h-20 col-span-2 w-full" />
     </div> -->
-    <h1 class="text-xl font-semibold tracking-[2px] uppercase leading-none">
+    <h1
+      class="text-md sm:text-xl font-medium uppercase tracking-widest text-white"
+    >
       Let's get started
     </h1>
-    <p class="mt-4 mb-8 text-sm text-muted">
+    <p class="mt-2 sm:mt-4 mb-8 text-sm text-muted">
       Create your La Persona business card in two steps.
     </p>
 
@@ -195,9 +197,8 @@ function onSubmit(event: FormSubmitEvent<UpdateCardUpdateRequest>) {
 
       <div class="md:col-span-2 flex justify-end pt-4">
         <UButton
-          size="xl"
           type="submit"
-          class="rounded-full px-4 font-semibold"
+          class="h-10 rounded-full px-5 font-semibold"
           icon="material-symbols:keyboard-double-arrow-right"
           :loading="isSubmitting"
         >

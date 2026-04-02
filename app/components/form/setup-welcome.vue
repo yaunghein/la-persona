@@ -23,9 +23,8 @@ const emit = defineEmits<{
       </p>
 
       <UButton
-        size="xl"
         color="neutral"
-        class="rounded-full bg-white px-6 text-sm font-medium text-dark hover:bg-white/90"
+        class="h-10 rounded-full px-5 font-semibold"
         icon="material-symbols:keyboard-double-arrow-right"
         @click="emit('enter')"
       >

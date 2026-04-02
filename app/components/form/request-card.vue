@@ -2,6 +2,7 @@
 import imageCompression from 'browser-image-compression';
 import { useMutation } from '@tanstack/vue-query';
 import type { FormError, FormErrorEvent, FormSubmitEvent } from '@nuxt/ui';
+import { useSortable } from '@vueuse/integrations/useSortable';
 import { derivePlanCodeFromSource } from '~~/shared/utils/subscription';
 import {
   CARD_LINK_SELECT_ITEMS,
@@ -45,7 +46,23 @@ const state = reactive<RequestCardFormState>({
   email: '',
   website: '',
   sourceCardId: '',
-  socials: [{ ...createEmptyCardLink(), customLabel: '' }],
+  socials: [],
+});
+const socialsListEl = ref<HTMLElement | null>(null);
+const isSocialSlideoverOpen = ref(false);
+const socialEditorMode = ref<'create' | 'edit'>('create');
+const editingSocialIndex = ref<number | null>(null);
+const pendingDeleteSocialIndex = ref<number | null>(null);
+const isDeleteSocialConfirmOpen = ref(false);
+const socialDraft = reactive<SocialFormLink>({
+  ...createEmptyCardLink(),
+  customLabel: '',
+});
+const socialsSortable = computed({
+  get: () => state.socials,
+  set: (value) => {
+    state.socials = value;
+  },
 });
 const receiptFile = ref<File | null>(null);
 const receiptPreviewUrl = ref<string | null>(null);
@@ -168,12 +185,128 @@ function getS3Url(path?: string | null) {
   return `https://${bucket}.s3.${region}.amazonaws.com/${path}`;
 }
 
-const addLink = () => {
-  state.socials.push({ ...createEmptyCardLink(), customLabel: '' });
-};
-const removeLink = (index: number) => {
-  state.socials.splice(index, 1);
-};
+function resetSocialDraft() {
+  socialDraft.label = createEmptyCardLink().label;
+  socialDraft.value = '';
+  socialDraft.customLabel = '';
+}
+
+function openCreateLinkSlideover() {
+  socialEditorMode.value = 'create';
+  editingSocialIndex.value = null;
+  resetSocialDraft();
+  isSocialSlideoverOpen.value = true;
+}
+
+function openEditLinkSlideover(index: number) {
+  const link = state.socials[index];
+  if (!link) return;
+
+  socialEditorMode.value = 'edit';
+  editingSocialIndex.value = index;
+  socialDraft.label = link.label || createEmptyCardLink().label;
+  socialDraft.value = link.value || '';
+  socialDraft.customLabel = link.customLabel || '';
+  isSocialSlideoverOpen.value = true;
+}
+
+function closeSocialSlideover() {
+  isSocialSlideoverOpen.value = false;
+  editingSocialIndex.value = null;
+  resetSocialDraft();
+}
+
+function resolveSocialLabel(link: SocialFormLink) {
+  return link.label === 'Custom' ? link.customLabel || 'Custom' : link.label;
+}
+
+function validateSocialDraft(): FormError[] {
+  const errors: FormError[] = [];
+  const normalizedValue = normalizeLinkValuesWithHttps([
+    {
+      label: socialDraft.label,
+      value: socialDraft.value,
+    },
+  ])[0]?.value;
+
+  if (!String(socialDraft.label || '').trim()) {
+    errors.push({
+      name: 'socialDraft.label',
+      message: 'Please choose a link type.',
+    });
+  }
+
+  if (
+    socialDraft.label === 'Custom' &&
+    !String(socialDraft.customLabel || '').trim()
+  ) {
+    errors.push({
+      name: 'socialDraft.customLabel',
+      message: 'Custom label is required.',
+    });
+  }
+
+  if (!String(socialDraft.value || '').trim()) {
+    errors.push({
+      name: 'socialDraft.value',
+      message: 'Please enter a link.',
+    });
+  } else if (!isValidPublicWebUrl(normalizedValue || '')) {
+    errors.push({
+      name: 'socialDraft.value',
+      message: 'Please enter a valid URL.',
+    });
+  }
+
+  return errors;
+}
+
+function saveSocialDraft() {
+  const errors = validateSocialDraft();
+
+  if (errors.length > 0) {
+    toast.add({
+      title: 'Validation Error',
+      description: errors[0]?.message || 'Please check the link details.',
+      color: 'error',
+    });
+    return;
+  }
+
+  const nextLink: SocialFormLink = {
+    label: socialDraft.label,
+    value: String(socialDraft.value || '').trim(),
+    customLabel: String(socialDraft.customLabel || '').trim(),
+  };
+
+  if (
+    socialEditorMode.value === 'edit' &&
+    editingSocialIndex.value !== null &&
+    state.socials[editingSocialIndex.value]
+  ) {
+    state.socials.splice(editingSocialIndex.value, 1, nextLink);
+  } else {
+    state.socials.push(nextLink);
+  }
+
+  closeSocialSlideover();
+}
+
+function requestRemoveLink(index: number) {
+  pendingDeleteSocialIndex.value = index;
+  isDeleteSocialConfirmOpen.value = true;
+}
+
+function closeDeleteSocialConfirm() {
+  pendingDeleteSocialIndex.value = null;
+  isDeleteSocialConfirmOpen.value = false;
+}
+
+function confirmRemoveLink() {
+  if (pendingDeleteSocialIndex.value === null) return;
+  state.socials.splice(pendingDeleteSocialIndex.value, 1);
+  closeDeleteSocialConfirm();
+}
 
 watch(
   () => state.type,
@@ -185,6 +318,37 @@ watch(
 watch(receiptFile, (file) => {
   if (receiptPreviewUrl.value) URL.revokeObjectURL(receiptPreviewUrl.value);
   receiptPreviewUrl.value = file ? URL.createObjectURL(file) : null;
+});
+
+watch(
+  () => socialDraft.label,
+  (label) => {
+    if (label !== 'Custom') {
+      socialDraft.customLabel = '';
+    }
+  }
+);
+
+watch(socialsListEl, (el) => {
+  if (!el) return;
+  useSortable(socialsListEl, socialsSortable, {
+    animation: 200,
+    handle: '.drag-handle',
+    draggable: '.sortable-link-row',
+    ghostClass: 'sortable-ghost',
+    chosenClass: 'sortable-chosen',
+    dragClass: 'sortable-drag',
+    fallbackOnBody: true,
+    swapThreshold: 0.65,
+    invertSwap: true,
+  });
+});
+
+watch(isSocialSlideoverOpen, (open) => {
+  if (!open) {
+    editingSocialIndex.value = null;
+    resetSocialDraft();
+  }
 });
 
 const { mutate: insertCardRequest, isPending: isLoading } = useMutation({
@@ -457,7 +621,7 @@ function onFormError(event: FormErrorEvent) {
     <UFormField
       label="What would you like to create?"
       name="type"
-      class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+      class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
     >
       <URadioGroup
         v-model="state.type"
@@ -480,7 +644,7 @@ function onFormError(event: FormErrorEvent) {
       v-if="state.type === 'existing_design'"
       label="Choose one of the design"
       name="sourceCardId"
-      class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+      class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
     >
       <URadioGroup
         v-model="state.sourceCardId"
@@ -525,7 +689,7 @@ function onFormError(event: FormErrorEvent) {
       <UFormField
         label="Full Name"
         name="name"
-        class="w-full [&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
       >
         <UInput
           v-model="state.name"
@@ -540,7 +704,7 @@ function onFormError(event: FormErrorEvent) {
       <UFormField
         label="Professional Title / Role"
         name="position"
-        class="w-full [&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
       >
         <UInput
           v-model="state.position"
@@ -555,7 +719,7 @@ function onFormError(event: FormErrorEvent) {
       <UFormField
         label="Company / Brand Name"
         name="company"
-        class="w-full [&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
       >
         <UInput
           v-model="state.company"
@@ -570,7 +734,7 @@ function onFormError(event: FormErrorEvent) {
       <UFormField
         label="Phone Number"
         name="phone"
-        class="w-full [&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
       >
         <UInput
           v-model="state.phone"
@@ -585,7 +749,7 @@ function onFormError(event: FormErrorEvent) {
       <UFormField
         label="Email Address"
         name="email"
-        class="w-full [&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
       >
         <UInput
           v-model="state.email"
@@ -600,7 +764,7 @@ function onFormError(event: FormErrorEvent) {
       <UFormField
         label="Personal Website / Portfolio"
         name="website"
-        class="w-full [&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
       >
         <UInput
           v-model="state.website"
@@ -619,122 +783,110 @@ function onFormError(event: FormErrorEvent) {
           Social / Professional Links
         </h3>
         <UButton
+          type="button"
           icon="i-lucide-plus"
           size="sm"
           variant="soft"
           label="Add Link"
           class="rounded-full bg-[#232323] text-white hover:bg-[#2a2a2a]"
-          @click="addLink"
+          @click="openCreateLinkSlideover"
         />
       </div>
 
-      <div
-        v-for="(link, index) in state.socials"
-        :key="index"
-        class="flex gap-3 overflow-x-scroll hide-scrollbar"
-      >
-        <UFormField class="w-32 shrink-0" :name="`socials.${index}.label`">
-          <USelectMenu
-            v-model="link.label"
-            :items="linkTypeItems"
-            :search-input="false"
-            class="w-full"
-            :ui="{
-              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white',
-            }"
-          />
-        </UFormField>
-        <UFormField
-          v-if="link.label === 'Custom'"
-          class="w-32 shrink-0"
-          :name="`socials.${index}.customLabel`"
+      <div ref="socialsListEl" class="relative flex flex-col gap-3">
+        <div
+          v-for="(link, index) in state.socials"
+          :key="`${index}-${link.label}-${link.value}`"
+          class="sortable-link-row relative flex items-center gap-3 rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-3"
         >
-          <UInput
-            v-model="link.customLabel"
-            placeholder="Custom Label"
-            class="w-full"
-            :ui="{
-              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
-            }"
-          />
-        </UFormField>
-        <UFormField
-          class="flex-1 min-w-52 shrink-0"
-          :name="`socials.${index}.value`"
-        >
-          <UInput
-            v-model="link.value"
-            placeholder="www.example.com"
-            class="w-full"
-            :ui="{
-              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
-            }"
-          />
-        </UFormField>
-        <UButton
-          size="xl"
-          icon="i-lucide-x"
-          variant="ghost"
-          @click="removeLink(index)"
-          class="max-h-11.75"
-        />
+          <button
+            type="button"
+            class="drag-handle inline-flex h-10 w-9 cursor-grab items-center justify-center rounded-[4px] text-[#8b8b8b] hover:bg-[#171717] active:cursor-grabbing"
+            aria-label="Drag to reorder link"
+          >
+            <UIcon name="i-lucide-grip-vertical" class="size-5" />
+          </button>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-medium text-white">
+              {{ resolveSocialLabel(link) || 'Untitled Link' }}
+            </p>
+            <p class="mt-1 truncate text-sm text-[#8b8b8b]">
+              {{ link.value || 'No URL added yet' }}
+            </p>
+          </div>
+          <div class="flex items-center gap-1">
+            <UButton
+              type="button"
+              size="sm"
+              icon="i-lucide-pen-square"
+              color="neutral"
+              variant="ghost"
+              class="text-[#8b8b8b] hover:bg-[#171717] hover:text-white"
+              @click="openEditLinkSlideover(index)"
+            />
+            <UButton
+              type="button"
+              size="sm"
+              icon="i-lucide-trash-2"
+              color="error"
+              variant="ghost"
+              class="text-[#8b8b8b] hover:bg-[#171717]"
+              @click="requestRemoveLink(index)"
+            />
+          </div>
+        </div>
       </div>
     </div>
 
     <div v-if="showPricingSummary">
-      <div
-        class="bg-black px-4 py-1 text-white sm:px-5"
-        role="region"
-        aria-label="Pricing breakdown"
-      >
-        <div
-          class="flex items-start justify-between gap-4 border-b border-[#2a2a2a] py-3 text-sm leading-snug"
-        >
-          <span class="text-white">Duration</span>
-          <span class="shrink-0 text-right text-white tabular-nums">
-            {{
-              state.type === 'new_design'
-                ? billingDurationLabel(premiumPlanMeta?.billingCycle)
-                : billingDurationLabel(derivedPlan?.billingCycle)
-            }}
-          </span>
-        </div>
-        <div
-          class="flex items-start justify-between gap-4 py-3 text-sm leading-snug"
-          :class="
-            state.type === 'new_design' ? 'border-b border-[#2a2a2a]' : ''
-          "
-        >
-          <span class="text-white">Hosting Fee</span>
-          <span class="shrink-0 text-right text-white tabular-nums">
-            <template v-if="state.type === 'new_design'">
-              Free of charge
-            </template>
-            <template v-else-if="derivedPlan">
+      <div role="region" aria-label="Pricing breakdown">
+        <div class="rounded-[4px] border-b border-[#2a2a2a] px-4 py-3">
+          <div class="flex items-center justify-between text-sm text-white">
+            <span>Duration</span>
+            <span class="font-bold">
               {{
-                formatMinorAmount(derivedPlan.priceMinor, derivedPlan.currency)
+                state.type === 'new_design'
+                  ? billingDurationLabel(premiumPlanMeta?.billingCycle)
+                  : billingDurationLabel(derivedPlan?.billingCycle)
               }}
-            </template>
-            <template v-else>—</template>
-          </span>
+            </span>
+          </div>
+        </div>
+        <div class="rounded-[4px] px-4 py-0">
+          <div
+            class="flex items-center justify-between py-3 text-sm text-white"
+          >
+            <span>Hosting Fee</span>
+            <span class="font-bold">
+              {{
+                state.type === 'new_design'
+                  ? 'Free of charge'
+                  : requestQrAmountLabel
+              }}
+            </span>
+          </div>
         </div>
         <div
           v-if="state.type === 'new_design'"
-          class="flex items-start justify-between gap-4 py-3 text-sm leading-snug"
+          class="rounded-[4px] px-4 py-0 -mt-2 sm:mt-0"
         >
-          <span class="text-white">Custom Design Fee</span>
-          <span class="shrink-0 text-right text-white tabular-nums">
-            <template v-if="cardPaymentPricing">
-              {{
-                cardPaymentPricing.customDesignFeeMinor === 0
-                  ? 'Free of charge'
-                  : formatMinorAmount(
-                      cardPaymentPricing.customDesignFeeMinor,
-                      cardPaymentPricing.currency
-                    )
-              }}
-            </template>
-          </span>
+          <div
+            class="flex items-center justify-between py-3 text-sm text-white"
+          >
+            <span>Custom Design Fee</span>
+            <span class="font-bold">
+              <template v-if="cardPaymentPricing">
+                {{
+                  cardPaymentPricing.customDesignFeeMinor === 0
+                    ? 'Free of charge'
+                    : formatMinorAmount(
+                        cardPaymentPricing.customDesignFeeMinor,
+                        cardPaymentPricing.currency
+                      )
+                }}
+              </template>
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -766,7 +918,7 @@ function onFormError(event: FormErrorEvent) {
       <UFormField
         label="Upload Payment Receipt"
         name="receiptFile"
-        class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
       >
         <UFileUpload
           v-model="receiptFile"
@@ -795,4 +947,134 @@ function onFormError(event: FormErrorEvent) {
       />
     </div>
   </UForm>
+
+  <USlideover
+    v-model:open="isSocialSlideoverOpen"
+    side="right"
+    inset
+    :title="socialEditorMode === 'create' ? 'ADD LINK' : 'EDIT LINK'"
+    :ui="{
+      header: 'border-b-2 border-[#232323] px-6 py-6',
+      title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+      content: 'bg-[#171717]',
+    }"
+  >
+    <template #body>
+      <div class="space-y-6">
+        <UFormField
+          label="Link Type"
+          name="socialDraft.label"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        >
+          <USelectMenu
+            v-model="socialDraft.label"
+            :items="linkTypeItems"
+            :search-input="false"
+            class="w-full"
+            placeholder="Select Link Type"
+            :ui="{
+              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white',
+            }"
+          />
+        </UFormField>
+
+        <UFormField
+          v-if="socialDraft.label === 'Custom'"
+          label="Custom Label"
+          name="socialDraft.customLabel"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        >
+          <UInput
+            v-model="socialDraft.customLabel"
+            placeholder="Custom Label"
+            class="w-full"
+            :ui="{
+              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            }"
+          />
+        </UFormField>
+
+        <UFormField
+          label="Link"
+          name="socialDraft.value"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        >
+          <UInput
+            v-model="socialDraft.value"
+            placeholder="www.example.com"
+            class="w-full"
+            :ui="{
+              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            }"
+          />
+        </UFormField>
+
+        <div class="flex justify-end gap-3 pt-2">
+          <UButton
+            type="button"
+            label="Cancel"
+            color="neutral"
+            variant="ghost"
+            class="h-10 rounded-full px-5 font-semibold text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+            @click="closeSocialSlideover"
+          />
+          <UButton
+            type="button"
+            :label="socialEditorMode === 'create' ? 'Add Link' : 'Save Link'"
+            icon="i-lucide-check"
+            class="h-10 rounded-full bg-[#232323] px-5 font-semibold text-white hover:bg-[#2a2a2a]"
+            @click="saveSocialDraft"
+          />
+        </div>
+      </div>
+    </template>
+  </USlideover>
+
+  <UModal
+    v-model:open="isDeleteSocialConfirmOpen"
+    title="Delete Link?"
+    :ui="{
+      content: 'bg-[#171717] max-w-md',
+      title: 'text-white',
+      body: 'pt-4',
+      footer: 'justify-end gap-2',
+    }"
+  >
+    <template #body>
+      <p class="text-sm leading-relaxed text-[#bcbcbc]">
+        This action cannot be undone. The selected social link will be removed.
+      </p>
+    </template>
+    <template #footer>
+      <UButton
+        type="button"
+        size="xl"
+        label="Cancel"
+        color="neutral"
+        variant="ghost"
+        @click="closeDeleteSocialConfirm"
+      />
+      <UButton
+        type="button"
+        size="xl"
+        label="Delete"
+        color="error"
+        @click="confirmRemoveLink"
+      />
+    </template>
+  </UModal>
 </template>
+
+<style scoped>
+:deep(.sortable-ghost) {
+  opacity: 0.35;
+}
+
+:deep(.sortable-chosen) {
+  background: transparent;
+}
+
+:deep(.sortable-drag) {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+}
+</style>
