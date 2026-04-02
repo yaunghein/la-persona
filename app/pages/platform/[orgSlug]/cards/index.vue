@@ -138,24 +138,39 @@ function getCardBadgeColor(card: CardDTO) {
 function hasSplinePreview(card: CardDTO) {
   return Boolean(card.splineUrl?.trim());
 }
+
+const isSmUp = useMediaQuery('(min-width: 640px)');
+const cardFooterActionSize = computed(() => (isSmUp.value ? 'md' : 'sm'));
 </script>
 
 <template>
-  <div
-    class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-  >
-    <div class="flex items-center gap-2">
-      <h1 class="text-2xl font-medium uppercase tracking-widest leading-tight">
-        Your Cards
-      </h1>
+  <div class="space-y-6 pb-20 sm:pb-0">
+    <div
+      class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <div class="flex items-center justify-between gap-2">
+        <h1
+          class="text-2xl font-medium uppercase tracking-widest leading-tight"
+        >
+          Your Cards
+        </h1>
+        <UButton
+          size="lg"
+          icon="material-symbols:info-outline"
+          color="neutral"
+          variant="ghost"
+          class="flex items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323] cursor-pointer"
+          aria-label="Open cards information"
+          @click="isInfoOpen = true"
+        />
+      </div>
+
       <UButton
-        size="xl"
-        icon="material-symbols:info-outline"
+        label="Request New Card"
+        leading-icon="i-lucide-plus"
         color="neutral"
-        variant="ghost"
-        class="size-6 flex items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323] cursor-pointer"
-        aria-label="Open cards information"
-        @click="isInfoOpen = true"
+        class="fixed z-20 bottom-5 left-1/2 -translate-x-1/2 sm:static sm:translate-x-0 h-10 cursor-pointer flex items-center justify-center rounded-full border-2 border-[#232323] bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
+        @click="isSlideoverOpen = true"
       />
     </div>
 
@@ -170,12 +185,6 @@ function hasSplinePreview(card: CardDTO) {
         body: 'px-6',
       }"
     >
-      <UButton
-        label="Request New Card"
-        class="w-full sm:w-auto rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90 cursor-pointer"
-        icon="i-lucide-plus"
-        size="xl"
-      />
       <template #body>
         <FormRequestCard
           @close="isSlideoverOpen = false"
@@ -183,200 +192,182 @@ function hasSplinePreview(card: CardDTO) {
         />
       </template>
     </USlideover>
-  </div>
 
-  <UModal
-    v-model:open="isInfoOpen"
-    :close="false"
-    :ui="{
-      content:
-        'max-w-[480px] rounded-[8px] border border-[#232323] bg-[#171717]',
-      body: 'p-0',
-    }"
-  >
-    <template #content>
-      <div class="overflow-hidden rounded-[8px] bg-[#171717]">
-        <div
-          class="flex items-center justify-between border-b-2 border-[#232323] px-6 pb-[26px] pt-6"
-        >
-          <h2 class="text-sm font-medium uppercase tracking-widest text-white">
-            What is cards?
-          </h2>
-          <UButton
-            size="xl"
-            icon="i-lucide-x"
-            color="neutral"
-            variant="ghost"
-            class="size-6 flex items-center justify-center rounded-full p-0 text-white hover:bg-[#232323]"
-            aria-label="Close info"
-            @click="isInfoOpen = false"
-          />
-        </div>
-        <div class="p-6">
-          <div class="space-y-8">
-            <div class="space-y-4">
-              <h3
-                class="text-[20px] font-medium leading-[27px] uppercase tracking-widest text-white"
-              >
-                Your cards, all in one place
-              </h3>
-              <p class="text-sm leading-[21px] text-[#8b8b8b]">
-                Manage your card library and subscription actions quickly.
-              </p>
-            </div>
+    <UModal
+      v-model:open="isInfoOpen"
+      title="What is cards?"
+      :ui="{
+        content:
+          'sm:max-w-[480px] rounded-lg border border-[#232323] bg-[#171717]',
+        title: 'text-sm font-medium uppercase tracking-widest text-white',
+        body: 'px-5 py-4 sm:px-6 sm:py-5',
+      }"
+    >
+      <template #body>
+        <div class="space-y-5 sm:space-y-6">
+          <div class="space-y-2">
+            <h3
+              class="text-lg font-medium leading-tight tracking-widest uppercase text-white sm:text-xl"
+            >
+              Your cards, all in one place
+            </h3>
+            <p class="text-sm leading-relaxed text-[#8b8b8b]">
+              Manage your card library and subscription actions quickly.
+            </p>
+          </div>
 
-            <div class="space-y-0">
-              <div
-                v-for="(item, index) in infoItems"
-                :key="item.title"
-                class="px-4 py-3"
-                :class="
-                  index < infoItems.length - 1
-                    ? 'border-b border-[#2a2a2a]'
-                    : ''
-                "
-              >
-                <div class="flex items-start gap-2">
-                  <UIcon :name="item.icon" class="mt-0.5 size-5 text-white" />
-                  <div>
-                    <p class="text-[14px] text-white">{{ item.title }}</p>
-                    <p class="mt-2 text-[14px] text-[#8b8b8b]">
-                      {{ item.description }}
-                    </p>
-                  </div>
+          <div class="space-y-0">
+            <div
+              v-for="(item, index) in infoItems"
+              :key="item.title"
+              class="py-3 sm:py-3.5"
+              :class="
+                index < infoItems.length - 1 ? 'border-b border-[#2a2a2a]' : ''
+              "
+            >
+              <div class="flex items-start gap-3">
+                <UIcon
+                  :name="item.icon"
+                  class="mt-0.5 size-[18px] shrink-0 text-white sm:size-5"
+                />
+                <div class="min-w-0">
+                  <p class="text-sm font-medium text-white">{{ item.title }}</p>
+                  <p class="mt-1.5 text-sm leading-relaxed text-[#8b8b8b]">
+                    {{ item.description }}
+                  </p>
                 </div>
               </div>
             </div>
+          </div>
 
-            <div class="flex justify-end">
-              <UButton
-                size="xl"
-                label="Understood"
-                color="neutral"
-                class="rounded-full bg-white px-6 text-dark hover:bg-white/90"
-                @click="isInfoOpen = false"
-              />
-            </div>
+          <div class="flex justify-end">
+            <UButton
+              size="md"
+              label="Understood"
+              color="neutral"
+              class="h-10 justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+              @click="isInfoOpen = false"
+            />
           </div>
         </div>
-      </div>
-    </template>
-  </UModal>
+      </template>
+    </UModal>
 
-  <div
-    v-if="cards"
-    class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 sm:gap-6"
-  >
-    <UCard
-      v-for="card in cards"
-      :key="card.id"
-      variant="outline"
-      class="bg-white/2"
-      :ui="{ body: 'p-5 sm:p-8 lg:p-10' }"
+    <div
+      v-if="cards"
+      class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 sm:gap-6"
     >
-      <div class="aspect-5/3 relative">
-        <img
-          v-if="card.cardBackUrl"
-          :src="getS3Url(card.cardBackUrl)"
-          :alt="`${card.firstName} ${card.lastName || ''} card back`"
-          class="h-full w-full object-cover rounded-md"
-        />
-        <div
-          v-else
-          class="h-full w-full rounded-md bg-[#1f1f1f] border border-[#2a2a2a] flex items-center justify-center"
-        >
-          <UIcon
-            name="i-material-symbols:cards-star-outline-rounded"
-            class="size-8 text-[#8b8b8b]"
+      <UCard
+        v-for="card in cards"
+        :key="card.id"
+        variant="outline"
+        class="bg-white/2"
+        :ui="{ body: 'p-8 lg:p-10' }"
+      >
+        <div class="aspect-5/3 relative">
+          <img
+            v-if="card.cardBackUrl"
+            :src="getS3Url(card.cardBackUrl)"
+            :alt="`${card.firstName} ${card.lastName || ''} card back`"
+            class="h-full w-full object-cover rounded-md"
           />
-        </div>
-        <UBadge
-          class="absolute right-3 top-3 sm:-top-7.5 sm:-right-7.5 uppercase font-semibold"
-          :class="{
-            'cursor-pointer bg-amber-500/20 text-amber-300':
-              card.subscription?.status === 'pending_approval',
-            'bg-[#232323] text-white':
-              card.subscription?.status !== 'pending_approval',
-          }"
-          :color="getCardBadgeColor(card)"
-          size="sm"
-          @click="
-            card.subscription?.status === 'pending_approval' &&
-            openPendingInfo(`${card.firstName} ${card.lastName || ''}`.trim())
-          "
-        >
-          {{ getCardBadgeLabel(card) }}
-        </UBadge>
-      </div>
-
-      <template #footer>
-        <div>
-          <div>{{ card.firstName }} {{ card.lastName }}</div>
-        </div>
-        <div class="mt-4 flex items-center justify-start gap-2">
-          <UButton
-            v-if="hasSplinePreview(card)"
-            icon="i-lucide-scan-eye"
-            color="primary"
-            size="md"
-            class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
-            target="_blank"
-            :href="`/yaunghein/${card.slug}`"
-          />
-          <UPopover
+          <div
             v-else
-            :ui="{
-              content:
-                'max-w-[240px] rounded-md border border-[#2a2a2a] bg-[#171717] p-3 text-sm text-white leading-relaxed',
-            }"
+            class="h-full w-full rounded-md bg-[#1f1f1f] border border-[#2a2a2a] flex items-center justify-center"
           >
+            <UIcon
+              name="i-material-symbols:cards-star-outline-rounded"
+              class="size-8 text-[#8b8b8b]"
+            />
+          </div>
+          <UBadge
+            class="absolute -right-6.5 -top-6.5 sm:-top-7.5 sm:-right-7.5 uppercase font-semibold"
+            :class="{
+              'cursor-pointer bg-amber-500/20 text-amber-300':
+                card.subscription?.status === 'pending_approval',
+              'bg-[#232323] text-white':
+                card.subscription?.status !== 'pending_approval',
+            }"
+            :color="getCardBadgeColor(card)"
+            size="sm"
+            @click="
+              card.subscription?.status === 'pending_approval' &&
+              openPendingInfo(`${card.firstName} ${card.lastName || ''}`.trim())
+            "
+          >
+            {{ getCardBadgeLabel(card) }}
+          </UBadge>
+        </div>
+
+        <template #footer>
+          <div>
+            <div>{{ card.firstName }} {{ card.lastName }}</div>
+          </div>
+          <div class="mt-4 flex items-center justify-start gap-2">
             <UButton
+              v-if="hasSplinePreview(card)"
               icon="i-lucide-scan-eye"
               color="primary"
-              size="md"
+              :size="cardFooterActionSize"
               class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
+              target="_blank"
+              :href="`/yaunghein/${card.slug}`"
             />
+            <UPopover
+              v-else
+              :ui="{
+                content:
+                  'max-w-[240px] rounded-md border border-[#2a2a2a] bg-[#171717] p-3 text-sm text-white leading-relaxed',
+              }"
+            >
+              <UButton
+                icon="i-lucide-scan-eye"
+                color="primary"
+                :size="cardFooterActionSize"
+                class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
+              />
 
-            <template #content>3D card is still cooking.</template>
-          </UPopover>
-          <UButton
-            icon="i-lucide-square-pen"
-            color="primary"
-            size="md"
-            class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
-            :href="`/platform/${route.params.orgSlug}/cards/${card.slug}`"
-          />
-          <UButton
-            icon="i-lucide-trash"
-            color="primary"
-            size="md"
-            class="bg-white/5 text-red-500 hover:bg-white/15 ml-auto active:hover:bg-white/20"
-            @click="openDeleteConfirm(card)"
+              <template #content>3D card is still cooking.</template>
+            </UPopover>
+            <UButton
+              icon="i-lucide-square-pen"
+              color="primary"
+              :size="cardFooterActionSize"
+              class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
+              :href="`/platform/${route.params.orgSlug}/cards/${card.slug}`"
+            />
+            <UButton
+              icon="i-lucide-trash"
+              color="primary"
+              :size="cardFooterActionSize"
+              class="bg-white/5 text-red-500 hover:bg-white/15 ml-auto active:hover:bg-white/20"
+              @click="openDeleteConfirm(card)"
+            />
+          </div>
+        </template>
+      </UCard>
+    </div>
+
+    <UContainer v-else class="h-[calc(100vh-10rem)] min-h-96">
+      <div class="flex flex-col items-center justify-center text-center h-full">
+        <div
+          class="bg-[#232323] w-11 aspect-square flex items-center justify-center rounded-sm"
+        >
+          <UIcon
+            name="i-material-symbols:cards-stack-outline-sharp"
+            class="w-5 h-5"
           />
         </div>
-      </template>
-    </UCard>
-  </div>
-
-  <UContainer v-else class="h-[calc(100vh-10rem)] min-h-96">
-    <div class="flex flex-col items-center justify-center text-center h-full">
-      <div
-        class="bg-[#232323] w-11 aspect-square flex items-center justify-center rounded-sm"
-      >
-        <UIcon
-          name="i-material-symbols:cards-stack-outline-sharp"
-          class="w-5 h-5"
-        />
+        <h2 class="text-sm tracking-[1.4px] font-semibold uppercase mt-8 mb-4">
+          No cards in here yet
+        </h2>
+        <p class="text-muted max-w-sm text-sm leading-relaxed">
+          It looks like you don't have any card yet.<br />
+          Create one to get started.
+        </p>
       </div>
-      <h2 class="text-sm tracking-[1.4px] font-semibold uppercase mt-8 mb-4">
-        No cards in here yet
-      </h2>
-      <p class="text-muted max-w-sm text-sm leading-relaxed">
-        It looks like you don't have any card yet.<br />
-        Create one to get started.
-      </p>
-    </div>
-  </UContainer>
+    </UContainer>
+  </div>
 
   <PendingApprovalInfo
     v-model:open="isPendingInfoOpen"

@@ -24,15 +24,16 @@ const modalOpen = computed({
     v-model:open="modalOpen"
     title="Pending Approval"
     :ui="{
-      content: 'bg-[#171717] border border-[#2a2a2a]',
-      header: 'border-b border-[#2a2a2a]',
-      title: 'text-white',
+      content:
+        'sm:max-w-[480px] rounded-lg border border-[#232323] bg-[#171717]',
+      title: 'text-sm font-medium uppercase tracking-widest text-white',
+      body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"
   >
     <template #body>
-      <div class="space-y-4 text-sm text-[#bcbcbc] leading-relaxed">
+      <div class="space-y-4 text-sm leading-relaxed text-[#bcbcbc]">
         <p>
-          <span class="text-white font-medium">{{ cardName }}</span>
+          <span class="font-medium text-white">{{ cardName }}</span>
           is currently under payment verification.
         </p>
         <p>
@@ -46,6 +47,15 @@ const modalOpen = computed({
         <p class="text-[#8b8b8b]">
           Need help? Please contact support for verification updates.
         </p>
+      </div>
+      <div class="flex justify-end">
+        <UButton
+          size="md"
+          label="Got it"
+          color="neutral"
+          class="h-10 justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+          @click="modalOpen = false"
+        />
       </div>
     </template>
   </UModal>

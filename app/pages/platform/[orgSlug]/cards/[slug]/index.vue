@@ -487,11 +487,10 @@ const active = computed({
       This card does not exist or you do not have permission to access it.
     </p>
     <UButton
-      size="xl"
       label="Back to Cards"
       icon="i-lucide-arrow-left"
       color="neutral"
-      class="mt-2 rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+      class="mt-2 h-10 rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
       :to="`/platform/${orgSlug}/cards`"
     />
   </div>
@@ -502,7 +501,7 @@ const active = computed({
       class="mb-8 flex items-center justify-center bg-[#232323] px-8 py-2 -mx-6 -mt-4 sm:-mt-6"
     >
       <p
-        class="text-center text-sm font-medium uppercase tracking-widest text-white"
+        class="text-center text-xs sm:text-sm font-medium uppercase tracking-widest text-white"
       >
         <template v-if="isTrialEndingSoon">
           Your trial period is going to end in
@@ -546,9 +545,8 @@ const active = computed({
         <div class="flex flex-wrap items-center gap-y-2">
           <UButton
             icon="i-lucide-chevron-left"
-            size="xl"
             color="primary"
-            class="bg-transparent mr-2 text-white -mt-[0.15rem] hover:bg-white/10 active:hover:bg-white/20"
+            class="h-10 bg-transparent mr-2 text-white -mt-[0.15rem] hover:bg-white/10 active:hover:bg-white/20"
             :to="`/platform/${orgSlug}/cards`"
           />
           <h1
@@ -572,12 +570,11 @@ const active = computed({
       </div>
 
       <UButton
-        size="xl"
         v-if="showUpgradeButton"
         :label="upgradeButtonLabel"
         icon="i-lucide-chevrons-up"
         color="neutral"
-        class="fixed z-20 sm:static bottom-5 left-1/2 -translate-x-1/2 sm:translate-x-0 rounded-full bg-white px-4 font-medium text-dark hover:bg-white/90"
+        class="h-10 fixed z-20 sm:static bottom-5 left-1/2 -translate-x-1/2 sm:translate-x-0 rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
         @click="openUpgradeSlideover"
       />
     </div>
@@ -701,8 +698,7 @@ const active = computed({
               color="neutral"
               :loading="isSubmittingPayment"
               :disabled="!receiptFile"
-              size="xl"
-              class="rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90 disabled:opacity-60"
+              class="h-10 rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90 disabled:opacity-60"
               @click="submitPayment()"
             />
           </div>

@@ -62,6 +62,12 @@ const { data: plans } = await useFetch<
     isActive: boolean;
   }[]
 >('/api/subscriptions/plans');
+const { data: cardPaymentPricing } = await useFetch<{
+  currency: string;
+  standardPlanPriceMinor: number;
+  premiumPlanPriceMinor: number;
+  customDesignFeeMinor: number;
+}>('/api/subscriptions/pricing/card-payment');
 
 const typeItems = [
   {
@@ -97,12 +103,60 @@ const derivedPlanCode = computed(() =>
 const derivedPlan = computed(() =>
   (plans.value || []).find((plan) => plan.code === derivedPlanCode.value)
 );
+
+const premiumPlanMeta = computed(() =>
+  (plans.value || []).find((plan) => plan.code === 'premium')
+);
+
+const showPricingSummary = computed(() => {
+  if (state.type === 'new_design') return Boolean(cardPaymentPricing.value);
+  return Boolean(state.sourceCardId && derivedPlan.value);
+});
+
+/** Amount shown on KBZ Pay QR line (custom design only for new; plan price for existing). */
+const requestPaymentTotalMinor = computed(() => {
+  if (state.type === 'new_design' && cardPaymentPricing.value) {
+    return cardPaymentPricing.value.customDesignFeeMinor;
+  }
+  if (
+    state.type === 'existing_design' &&
+    state.sourceCardId &&
+    derivedPlan.value
+  ) {
+    return derivedPlan.value.priceMinor;
+  }
+  return 0;
+});
+
+const requestPaymentCurrency = computed(() => {
+  if (state.type === 'new_design' && cardPaymentPricing.value) {
+    return cardPaymentPricing.value.currency;
+  }
+  if (derivedPlan.value) return derivedPlan.value.currency;
+  return 'MMK';
+});
+
 const linkTypeItems = computed<string[][]>(() =>
   createLinkTypeItemsWithCustom(CARD_LINK_SELECT_ITEMS)
 );
 
-function formatCurrency(amountMinor: number, currency: string) {
-  return `${currency} ${amountMinor.toLocaleString()}`;
+function formatMinorAmount(amountMinor: number, currency: string) {
+  return `${amountMinor.toLocaleString()} ${currency}`;
+}
+
+const requestQrAmountLabel = computed(() => {
+  if (requestPaymentTotalMinor.value === 0) return 'Free of charge';
+  return formatMinorAmount(
+    requestPaymentTotalMinor.value,
+    requestPaymentCurrency.value
+  );
+});
+
+function billingDurationLabel(cycle?: string | null) {
+  const c = (cycle || 'yearly').toLowerCase();
+  if (c === 'yearly') return '1 Year';
+  if (c === 'monthly') return '1 Month';
+  return cycle ? cycle.replace(/_/g, ' ') : '1 Year';
 }
 
 function getS3Url(path?: string | null) {
@@ -390,7 +444,7 @@ function onFormError(event: FormErrorEvent) {
     @error="onFormError"
     class="space-y-8 pb-6"
   >
-    <div class="space-y-4">
+    <!-- <div class="space-y-4">
       <h1 class="text-[20px] font-medium uppercase tracking-widest text-white">
         NEW CARD REQUEST FORM
       </h1>
@@ -398,7 +452,7 @@ function onFormError(event: FormErrorEvent) {
         Whether you're creating a new identity or reusing an existing design,
         we'll take care of the rest.
       </p>
-    </div>
+    </div> -->
 
     <UFormField
       label="What would you like to create?"
@@ -462,25 +516,6 @@ function onFormError(event: FormErrorEvent) {
         </template>
       </URadioGroup>
     </UFormField>
-
-    <div
-      v-if="state.type === 'existing_design' && state.sourceCardId"
-      class="rounded-[6px] border border-[#2a2a2a] bg-[#1f1f1f] p-4 space-y-2"
-    >
-      <div class="text-xs uppercase tracking-wide text-[#8b8b8b]">
-        Calculated Subscription
-      </div>
-      <div class="text-sm text-white font-medium">
-        {{ derivedPlan?.name || derivedPlanCode || 'Unknown Plan' }}
-      </div>
-      <div class="text-sm text-[#8b8b8b]">
-        {{
-          derivedPlan
-            ? `${formatCurrency(derivedPlan.priceMinor, derivedPlan.currency)} / ${derivedPlan.billingCycle}`
-            : 'Price unavailable'
-        }}
-      </div>
-    </div>
 
     <p class="text-sm leading-[21px] text-white">
       Please provide the details you'd like to appear on this card.
@@ -585,7 +620,7 @@ function onFormError(event: FormErrorEvent) {
         </h3>
         <UButton
           icon="i-lucide-plus"
-          size="xl"
+          size="sm"
           variant="soft"
           label="Add Link"
           class="rounded-full bg-[#232323] text-white hover:bg-[#2a2a2a]"
@@ -646,35 +681,117 @@ function onFormError(event: FormErrorEvent) {
       </div>
     </div>
 
-    <UFormField
-      label="Upload Payment Receipt"
-      name="receiptFile"
-      class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
-    >
-      <UFileUpload
-        v-model="receiptFile"
-        accept="image/*"
-        icon="i-lucide-upload"
-        label="Drop your receipt here"
-        description="PNG, JPG or WebP"
-        class="w-full min-h-42"
-        :ui="{
-          root: '[&_img]:object-contain',
-          base: 'rounded-[4px] border-[#2a2a2a] bg-[#232323]',
-          label: 'text-sm text-white',
-          description: 'text-xs text-[#8b8b8b]',
-        }"
-      />
-    </UFormField>
+    <div v-if="showPricingSummary">
+      <div
+        class="bg-black px-4 py-1 text-white sm:px-5"
+        role="region"
+        aria-label="Pricing breakdown"
+      >
+        <div
+          class="flex items-start justify-between gap-4 border-b border-[#2a2a2a] py-3 text-sm leading-snug"
+        >
+          <span class="text-white">Duration</span>
+          <span class="shrink-0 text-right text-white tabular-nums">
+            {{
+              state.type === 'new_design'
+                ? billingDurationLabel(premiumPlanMeta?.billingCycle)
+                : billingDurationLabel(derivedPlan?.billingCycle)
+            }}
+          </span>
+        </div>
+        <div
+          class="flex items-start justify-between gap-4 py-3 text-sm leading-snug"
+          :class="
+            state.type === 'new_design' ? 'border-b border-[#2a2a2a]' : ''
+          "
+        >
+          <span class="text-white">Hosting Fee</span>
+          <span class="shrink-0 text-right text-white tabular-nums">
+            <template v-if="state.type === 'new_design'">
+              Free of charge
+            </template>
+            <template v-else-if="derivedPlan">
+              {{
+                formatMinorAmount(derivedPlan.priceMinor, derivedPlan.currency)
+              }}
+            </template>
+            <template v-else>—</template>
+          </span>
+        </div>
+        <div
+          v-if="state.type === 'new_design'"
+          class="flex items-start justify-between gap-4 py-3 text-sm leading-snug"
+        >
+          <span class="text-white">Custom Design Fee</span>
+          <span class="shrink-0 text-right text-white tabular-nums">
+            <template v-if="cardPaymentPricing">
+              {{
+                cardPaymentPricing.customDesignFeeMinor === 0
+                  ? 'Free of charge'
+                  : formatMinorAmount(
+                      cardPaymentPricing.customDesignFeeMinor,
+                      cardPaymentPricing.currency
+                    )
+              }}
+            </template>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showPricingSummary" class="space-y-8">
+      <p class="text-sm leading-[21px] text-white">
+        Please scan the QR code below to complete your payment.
+      </p>
+
+      <div class="space-y-3">
+        <p class="text-sm font-medium text-white">KBZ Pay QR Code</p>
+        <div
+          class="rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4 text-center"
+        >
+          <p class="text-sm text-white/50">Scan to Pay</p>
+          <div class="mx-auto my-3 size-40 overflow-hidden bg-[#d9d9d9]">
+            <img
+              src="/images/kpay.jpg"
+              alt="KBZ Pay QR Code"
+              class="h-full w-full object-contain"
+            />
+          </div>
+          <p class="text-sm font-bold text-white">
+            {{ requestQrAmountLabel }}
+          </p>
+        </div>
+      </div>
+
+      <UFormField
+        label="Upload Payment Receipt"
+        name="receiptFile"
+        class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+      >
+        <UFileUpload
+          v-model="receiptFile"
+          accept="image/*"
+          icon="i-lucide-upload"
+          label="Drop your receipt here"
+          description="PNG, JPG or WebP"
+          class="w-full min-h-42"
+          :ui="{
+            root: '[&_img]:object-contain',
+            base: 'rounded-[4px] border-[#2a2a2a] bg-[#232323]',
+            label: 'text-sm text-white',
+            description: 'text-xs text-[#8b8b8b]',
+          }"
+        />
+      </UFormField>
+    </div>
 
     <div class="flex items-center justify-end pt-2">
       <UButton
-        size="xl"
         type="submit"
         label="Send Request"
         :loading="isLoading"
         icon="i-material-symbols:keyboard-double-arrow-right"
-        class="rounded-full bg-white px-6 text-dark hover:bg-white/90"
+        class="h-10 rounded-full bg-white px-5 text-dark hover:bg-white/90"
       />
     </div>
   </UForm>

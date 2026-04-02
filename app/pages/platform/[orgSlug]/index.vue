@@ -268,24 +268,26 @@ const chartOptions = {
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="space-y-4 pb-17 sm:pb-0">
     <div
       class="flex flex-col sm:flex-row gap-3 sm:gap-0 items-center justify-between"
     >
-      <h1
-        class="flex items-center gap-3 text-3xl leading-[1.1] font-medium uppercase tracking-widest"
-      >
-        {{ analyticsHeading }}
+      <div class="flex items-center gap-2">
+        <h1
+          class="text-2xl font-medium leading-tight tracking-widest uppercase"
+        >
+          {{ analyticsHeading }}
+        </h1>
         <UButton
-          size="xl"
+          size="lg"
           icon="material-symbols:info-outline"
           color="neutral"
           variant="ghost"
-          class="size-6 flex items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323] cursor-pointer"
+          class="flex items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323] cursor-pointer"
           aria-label="Open analytics information"
           @click="isInfoOpen = true"
         />
-      </h1>
+      </div>
 
       <USelectMenu
         v-if="isOwner"
@@ -293,9 +295,9 @@ const chartOptions = {
         value-key="id"
         :items="ownerCardItems"
         :search-input="false"
-        class="w-full sm:w-48"
+        class="w-auto min-w-48 sm:w-48 fixed z-20 bottom-5 left-1/2 -translate-x-1/2 sm:translate-x-0 sm:static"
         :ui="{
-          base: 'h-[49px] rounded-[8px] border-none bg-[#171717] px-4 text-white',
+          base: 'h-10 rounded-lg border-none bg-[#171717] px-4 text-white',
           content: 'bg-[#171717] border border-[#2a2a2a]',
           item: 'text-white data-[highlighted]:bg-[#232323]',
           value: 'text-white',
@@ -303,71 +305,71 @@ const chartOptions = {
       />
     </div>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-      <div class="rounded-[8px] bg-[#171717] px-6 pt-6 pb-7">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
         <div
-          class="mb-4 grid size-11 place-items-center rounded-[4px] bg-[#232323]"
+          class="mb-4 grid size-8 sm:size-11 place-items-center rounded-[4px] bg-[#232323]"
         >
           <UIcon name="i-lucide-eye" class="size-5 text-white/70" />
         </div>
         <p
-          class="text-xs font-medium uppercase tracking-[1.2px] text-[#8b8b8b]"
+          class="text-xs font-medium uppercase tracking-[1.2px] text-[#8b8b8b] whitespace-nowrap -mt-1 mb-4"
         >
           Total Views
         </p>
-        <p class="mt-1 text-3xl font-bold leading-[1.1] text-white">
+        <p class="mt-1 text-3xl font-bold leading-[1.1] -mb-1 text-white">
           {{ totalViews }}
         </p>
       </div>
-      <div class="rounded-[8px] bg-[#171717] px-6 pt-6 pb-7">
+      <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
         <div
-          class="mb-4 grid size-11 place-items-center rounded-[4px] bg-[#232323]"
+          class="mb-4 grid size-8 sm:size-11 place-items-center rounded-[4px] bg-[#232323]"
         >
           <UIcon name="i-lucide-download" class="size-5 text-white/70" />
         </div>
         <p
-          class="text-xs font-medium uppercase tracking-[1.2px] text-[#8b8b8b]"
+          class="text-xs font-medium uppercase tracking-[1.2px] text-[#8b8b8b] whitespace-nowrap -mt-1 mb-4"
         >
           Card Saves (CTR)
         </p>
-        <p class="mt-1 text-3xl font-bold leading-[1.1] text-white">
+        <p class="mt-1 text-3xl font-bold leading-[1.1] -mb-1 text-white">
           {{ cardSaves }}
         </p>
       </div>
-      <div class="rounded-[8px] bg-[#171717] px-6 pt-6 pb-7">
+      <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
         <div
-          class="mb-4 grid size-11 place-items-center rounded-[4px] bg-[#232323]"
+          class="mb-4 grid size-8 sm:size-11 place-items-center rounded-[4px] bg-[#232323]"
         >
           <UIcon name="i-lucide-percent" class="size-5 text-white/70" />
         </div>
         <p
-          class="text-xs font-medium uppercase tracking-[1.2px] text-[#8b8b8b]"
+          class="text-xs font-medium uppercase tracking-[1.2px] text-[#8b8b8b] whitespace-nowrap -mt-1 mb-4"
         >
           Conversion Rate
         </p>
-        <p class="mt-1 text-3xl font-bold leading-[1.1] text-white">
+        <p class="mt-1 text-3xl font-bold leading-[1.1] -mb-1 text-white">
           {{ conversionRate }}%
         </p>
       </div>
-      <div class="rounded-[8px] bg-[#171717] px-6 pt-6 pb-7">
+      <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
         <div
-          class="mb-4 grid size-11 place-items-center rounded-[4px] bg-[#232323]"
+          class="mb-4 grid size-8 sm:size-11 place-items-center rounded-[4px] bg-[#232323]"
         >
           <UIcon name="i-lucide-share-2" class="size-5 text-white/70" />
         </div>
         <p
-          class="text-xs font-medium uppercase tracking-[1.2px] text-[#8b8b8b]"
+          class="text-xs font-medium uppercase tracking-[1.2px] text-[#8b8b8b] whitespace-nowrap -mt-1 mb-4"
         >
           Social Clicks
         </p>
-        <p class="mt-1 text-3xl font-bold leading-[1.1] text-white">
+        <p class="mt-1 text-3xl font-bold leading-[1.1] -mb-1 text-white">
           {{ socialTotal }}
         </p>
       </div>
     </div>
 
-    <div class="rounded-[8px] bg-[#171717] p-6">
-      <h2 class="text-3xl leading-[1.1] font-medium uppercase tracking-[2px]">
+    <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
+      <h2 class="text-2xl font-medium leading-tight tracking-widest uppercase">
         Views Over Time
       </h2>
       <p class="mt-1 text-sm text-[#8b8b8b]">
@@ -379,8 +381,10 @@ const chartOptions = {
     </div>
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <div class="rounded-[8px] bg-[#171717] p-6">
-        <h3 class="text-3xl leading-[1.1] font-medium uppercase tracking-[2px]">
+      <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
+        <h3
+          class="text-2xl font-medium leading-tight tracking-widest uppercase"
+        >
           Social Media Click-Throughs
         </h3>
         <p class="mt-1 text-sm text-[#8b8b8b]">
@@ -417,8 +421,10 @@ const chartOptions = {
         </div>
       </div>
 
-      <div class="rounded-[8px] bg-[#171717] p-6">
-        <h3 class="text-3xl leading-[1.1] font-medium uppercase tracking-[2px]">
+      <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
+        <h3
+          class="text-2xl font-medium leading-tight tracking-widest uppercase"
+        >
           Portfolio & Link Clicks
         </h3>
         <p class="mt-1 text-sm text-[#8b8b8b]">
@@ -448,8 +454,10 @@ const chartOptions = {
     </div>
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <div class="rounded-[8px] bg-[#171717] p-6">
-        <h3 class="text-3xl leading-[1.1] font-medium uppercase tracking-[2px]">
+      <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
+        <h3
+          class="text-2xl font-medium leading-tight tracking-widest uppercase"
+        >
           Card Save Actions
         </h3>
         <p class="mt-1 text-sm text-[#8b8b8b]">
@@ -498,7 +506,7 @@ const chartOptions = {
 
       <div
         v-if="hasDonutData"
-        class="flex items-center justify-center rounded-[8px] bg-[#171717] p-6"
+        class="flex items-center justify-center rounded-lg bg-[#171717] p-4 sm:p-6"
       >
         <AnalyticsDonutChart :data="[exchangeCount, vcfCount]" />
       </div>
@@ -507,77 +515,59 @@ const chartOptions = {
 
   <UModal
     v-model:open="isInfoOpen"
-    :close="false"
+    title="What is analytics?"
     :ui="{
       content:
-        'max-w-[480px] rounded-[8px] border border-[#232323] bg-[#171717]',
-      body: 'p-0',
+        'sm:max-w-[480px] rounded-lg border border-[#232323] bg-[#171717]',
+      title: 'text-sm font-medium uppercase tracking-widest text-white',
+      body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"
   >
-    <template #content>
-      <div class="overflow-hidden rounded-[8px] bg-[#171717]">
-        <div
-          class="flex items-center justify-between border-b-2 border-[#232323] px-6 pb-[26px] pt-6"
-        >
-          <h2 class="text-sm font-medium uppercase tracking-widest text-white">
-            What is analytics?
-          </h2>
-          <UButton
-            size="xl"
-            icon="i-lucide-x"
-            color="neutral"
-            variant="ghost"
-            class="size-6 flex items-center justify-center rounded-full p-0 text-white hover:bg-[#232323]"
-            aria-label="Close info"
-            @click="isInfoOpen = false"
-          />
+    <template #body>
+      <div class="space-y-5 sm:space-y-6">
+        <div class="space-y-2">
+          <h3
+            class="text-lg font-medium leading-tight tracking-widest uppercase text-white sm:text-xl"
+          >
+            Understand your card performance
+          </h3>
+          <p class="text-sm leading-relaxed text-[#8b8b8b]">
+            Use these insights to learn what drives engagement.
+          </p>
         </div>
-        <div class="p-6">
-          <div class="space-y-8">
-            <div class="space-y-4">
-              <h3
-                class="text-[20px] font-medium leading-[27px] uppercase tracking-widest text-white"
-              >
-                Understand your card performance
-              </h3>
-              <p class="text-sm leading-[21px] text-[#8b8b8b]">
-                Use these insights to learn what drives engagement.
-              </p>
-            </div>
 
-            <div class="space-y-0">
-              <div
-                v-for="(item, index) in infoItems"
-                :key="item.title"
-                class="px-4 py-3"
-                :class="
-                  index < infoItems.length - 1
-                    ? 'border-b border-[#2a2a2a]'
-                    : ''
-                "
-              >
-                <div class="flex items-start gap-2">
-                  <UIcon :name="item.icon" class="mt-0.5 size-5 text-white" />
-                  <div>
-                    <p class="text-[14px] text-white">{{ item.title }}</p>
-                    <p class="mt-2 text-[14px] text-[#8b8b8b]">
-                      {{ item.description }}
-                    </p>
-                  </div>
-                </div>
+        <div class="space-y-0">
+          <div
+            v-for="(item, index) in infoItems"
+            :key="item.title"
+            class="py-3 sm:py-3.5"
+            :class="
+              index < infoItems.length - 1 ? 'border-b border-[#2a2a2a]' : ''
+            "
+          >
+            <div class="flex items-start gap-3">
+              <UIcon
+                :name="item.icon"
+                class="mt-0.5 size-[18px] shrink-0 text-white sm:size-5"
+              />
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-white">{{ item.title }}</p>
+                <p class="mt-1.5 text-sm leading-relaxed text-[#8b8b8b]">
+                  {{ item.description }}
+                </p>
               </div>
             </div>
-
-            <div class="flex justify-end">
-              <UButton
-                size="xl"
-                label="Understood"
-                color="neutral"
-                class="rounded-full bg-white px-6 text-dark hover:bg-white/90"
-                @click="isInfoOpen = false"
-              />
-            </div>
           </div>
+        </div>
+
+        <div class="flex justify-end">
+          <UButton
+            size="md"
+            label="Understood"
+            color="neutral"
+            class="h-10 justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+            @click="isInfoOpen = false"
+          />
         </div>
       </div>
     </template>

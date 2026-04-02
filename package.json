@@ -48,6 +48,7 @@
   },
   "devDependencies": {
     "@iconify-json/lucide": "^1.2.82",
+    "@iconify-json/simple-icons": "^1.2.76",
     "@types/pg": "^8.16.0",
     "drizzle-kit": "^0.31.8",
     "prettier": "^3.7.4",

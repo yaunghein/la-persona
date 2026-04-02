@@ -793,18 +793,24 @@ const visibleColumns = computed(() =>
           :key="contact.id"
           :ui="{
             root: 'rounded-[8px] bg-[#171717] border border-transparent',
-            body: 'p-4',
-            footer: 'border-t border-[#232323] p-4',
+            body: 'p-5 sm:p-4',
+            footer: 'border-t border-[#232323] p-5 sm:p-4',
           }"
         >
-          <div class="space-y-1">
-            <p class="text-[20px] font-medium leading-[20px] text-white">
+          <div class="space-y-2">
+            <p
+              class="text-xl font-medium leading-none text-white sm:text-[20px]"
+            >
               {{ contact.name }}
             </p>
-            <p class="text-sm text-muted">{{ contact.role }}</p>
+            <p class="text-md leading-none text-muted sm:text-sm">
+              {{ contact.role }}
+            </p>
           </div>
 
-          <div class="mt-10 space-y-2 text-sm text-muted">
+          <div
+            class="mt-12 space-y-4 text-md leading-none text-muted sm:mt-10 sm:space-y-2 sm:text-sm"
+          >
             <p>{{ contact.phone }}</p>
             <p>{{ contact.email }}</p>
             <p>{{ contact.company }}</p>
@@ -816,18 +822,17 @@ const visibleColumns = computed(() =>
               :class="isOwner ? 'justify-between' : 'justify-end'"
             >
               <div v-if="isOwner">
-                <p class="text-xs text-muted">Origin</p>
+                <p class="text-[14px] text-muted sm:text-xs">Origin</p>
                 <UButton
                   size="xl"
                   v-if="contact.originTo"
                   :to="contact.originTo"
                   color="neutral"
                   variant="link"
-                  class="mt-1 h-auto p-0 text-sm text-white underline underline-offset-2"
+                  class="mt-2 h-auto p-0 text-md leading-none text-white underline-offset-2 sm:mt-1 sm:text-sm"
                 >
                   {{ contact.origin }}
                 </UButton>
-                <p v-else class="text-sm text-white">{{ contact.origin }}</p>
               </div>
 
               <UDropdownMenu :items="getActionItems(contact)">
@@ -870,78 +875,59 @@ const visibleColumns = computed(() =>
 
   <UModal
     v-model:open="isInfoOpen"
-    :close="false"
+    title="What is cards?"
     :ui="{
       content:
-        'max-w-[480px] rounded-[8px] border border-[#232323] bg-[#171717]',
-      body: 'p-0',
+        'sm:max-w-[480px] rounded-lg border border-[#232323] bg-[#171717]',
+      title: 'text-sm font-medium uppercase tracking-widest text-white',
+      body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"
   >
-    <template #content>
-      <div class="overflow-hidden rounded-[8px] bg-[#171717]">
-        <div
-          class="flex items-center justify-between border-b-2 border-[#232323] px-6 pb-[26px] pt-6"
-        >
-          <h2 class="text-sm font-medium uppercase tracking-widest text-white">
-            What is cards?
-          </h2>
-          <UButton
-            size="xl"
-            icon="i-lucide-x"
-            color="neutral"
-            variant="ghost"
-            class="size-6 flex items-center justify-center rounded-full p-0 text-white hover:bg-[#232323]"
-            aria-label="Close info"
-            @click="isInfoOpen = false"
-          />
+    <template #body>
+      <div class="space-y-5 sm:space-y-6">
+        <div class="space-y-2">
+          <h3
+            class="text-lg font-medium leading-tight tracking-widest uppercase text-white sm:text-xl"
+          >
+            Your cards, all in one place
+          </h3>
+          <p class="text-sm leading-relaxed text-[#8b8b8b]">
+            Manage every version of your presence.
+          </p>
         </div>
 
-        <div class="p-6">
-          <div class="space-y-8">
-            <div class="space-y-4">
-              <h3
-                class="text-[20px] font-medium leading-[27px] uppercase tracking-widest text-white"
-              >
-                Your cards, all in one place
-              </h3>
-              <p class="text-sm leading-[21px] text-muted">
-                Manage every version of your presence.
-              </p>
-            </div>
-
-            <div class="space-y-0">
-              <div
-                v-for="(item, index) in infoItems"
-                :key="item.title"
-                class="px-4 py-3"
-                :class="
-                  index < infoItems.length - 1
-                    ? 'border-b border-[#2a2a2a]'
-                    : ''
-                "
-              >
-                <div class="flex items-start gap-2">
-                  <UIcon :name="item.icon" class="mt-0.5 size-5 text-white" />
-                  <div>
-                    <p class="text-[14px] text-white">{{ item.title }}</p>
-                    <p class="mt-2 text-[14px] text-muted">
-                      {{ item.description }}
-                    </p>
-                  </div>
-                </div>
+        <div class="space-y-0">
+          <div
+            v-for="(item, index) in infoItems"
+            :key="item.title"
+            class="py-3 sm:py-3.5"
+            :class="
+              index < infoItems.length - 1 ? 'border-b border-[#2a2a2a]' : ''
+            "
+          >
+            <div class="flex items-start gap-3">
+              <UIcon
+                :name="item.icon"
+                class="mt-0.5 size-[18px] shrink-0 text-white sm:size-5"
+              />
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-white">{{ item.title }}</p>
+                <p class="mt-1.5 text-sm leading-relaxed text-[#8b8b8b]">
+                  {{ item.description }}
+                </p>
               </div>
             </div>
-
-            <div class="flex justify-end">
-              <UButton
-                size="xl"
-                label="Understood"
-                color="neutral"
-                class="rounded-full bg-white px-6 text-dark hover:bg-white/90"
-                @click="isInfoOpen = false"
-              />
-            </div>
           </div>
+        </div>
+
+        <div class="flex justify-end">
+          <UButton
+            size="md"
+            label="Understood"
+            color="neutral"
+            class="h-10 justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+            @click="isInfoOpen = false"
+          />
         </div>
       </div>
     </template>

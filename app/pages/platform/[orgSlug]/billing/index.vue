@@ -169,6 +169,10 @@ const setViewMode = (mode: 'list' | 'grid') => {
   page.value = 1;
 };
 
+const toggleViewMode = () => {
+  setViewMode(viewMode.value === 'list' ? 'grid' : 'list');
+};
+
 const onDownload = () => {
   toast.add({
     title: 'Download is coming soon',
@@ -247,27 +251,27 @@ function getStatusLabel(status: string) {
 <template>
   <div class="flex min-h-[calc(100dvh-7rem)] flex-col gap-8">
     <div
-      class="flex flex-col gap-3 pb-5 sm:flex-row sm:items-center sm:justify-between"
+      class="relative flex flex-col gap-3 pb-5 sm:flex-row sm:items-center sm:justify-between sm:pr-0"
     >
       <h1 class="text-2xl font-medium leading-tight tracking-widest uppercase">
         Billing & Subscription
       </h1>
 
-      <div class="flex items-center gap-2">
-        <!-- <UButton size="xl"
-          icon="i-lucide-refresh-cw"
-          color="neutral"
-          variant="ghost"
-          class="h-8 w-10 flex items-center justify-center cursor-pointer rounded-md border-2 border-[#232323] bg-[#171717] p-0 text-white hover:bg-[#232323]"
-          :loading="pending"
-          @click="refresh()"
-        /> -->
+      <UButton
+        icon="material-symbols:list-alt-outline-sharp"
+        color="neutral"
+        variant="ghost"
+        class="fixed top-3.75 right-4 z-20 flex items-center justify-center sm:hidden cursor-pointer text-muted"
+        :aria-label="viewMode === 'list' ? 'Switch to grid view' : 'Switch to list view'"
+        @click="toggleViewMode"
+      />
 
+      <div class="hidden items-center gap-2 sm:flex">
         <UFieldGroup>
           <UButton
             size="xl"
             icon="i-lucide-table-2"
-            class="cursor-pointer size-8 rounded-l-md border-2 border-[#232323] p-0 flex items-center justify-center hover:bg-[#232323]"
+            class="cursor-pointer size-9 rounded-l-md border-2 border-[#232323] p-0 flex items-center justify-center hover:bg-[#232323]"
             aria-label="List view"
             :variant="viewMode === 'list' ? 'solid' : 'ghost'"
             :class="
@@ -278,7 +282,7 @@ function getStatusLabel(status: string) {
           <UButton
             size="xl"
             icon="i-lucide-layout-grid"
-            class="cursor-pointer size-8 rounded-r-md border-2 border-[#232323] p-0 flex items-center justify-center hover:bg-[#232323]"
+            class="cursor-pointer size-9 rounded-r-md border-2 border-[#232323] p-0 flex items-center justify-center hover:bg-[#232323]"
             aria-label="Grid view"
             :variant="viewMode === 'grid' ? 'solid' : 'ghost'"
             :class="

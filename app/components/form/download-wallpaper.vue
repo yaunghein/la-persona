@@ -678,58 +678,48 @@ async function downloadQr() {
 
   <UModal
     v-model:open="isWallpaperPreviewModalOpen"
-    :close="false"
+    title="Wallpaper Preview"
     :ui="{
       content:
-        'max-w-[560px] rounded-[8px] border border-[#232323] bg-[#171717] max-h-[90vh]',
-      body: 'p-0',
+        'sm:max-w-[560px] rounded-lg border border-[#232323] bg-[#171717] max-h-[90vh]',
+      title: 'text-sm font-medium uppercase tracking-widest text-white',
+      body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"
   >
-    <template #content>
-      <div
-        class="flex max-h-[90vh] flex-col overflow-hidden rounded-[8px] bg-[#171717]"
-      >
-        <div
-          class="flex items-center justify-between border-b border-[#232323] p-4"
-        >
-          <h3 class="text-sm font-medium uppercase tracking-widest text-white">
-            Wallpaper Preview
-          </h3>
-          <UButton
-            size="xl"
-            icon="i-lucide-x"
-            color="neutral"
-            variant="ghost"
-            class="size-7 flex justify-center items-center cursor-pointer rounded-full p-0 text-white hover:bg-[#232323]"
-            aria-label="Close preview"
-            @click="isWallpaperPreviewModalOpen = false"
-          />
-        </div>
-        <div class="flex-1 overflow-y-auto p-6">
-          <div class="mx-auto w-full max-w-[320px]">
+    <template #body>
+      <div class="max-h-[62vh] overflow-y-auto sm:max-h-[65vh]">
+        <div class="mx-auto w-full max-w-[320px]">
+          <div
+            class="w-full overflow-hidden rounded-lg"
+            :style="previewWallpaperFrameStyle"
+          >
+            <img
+              v-if="wallpaperPreviewDataUrl"
+              :src="wallpaperPreviewDataUrl"
+              alt="Large wallpaper preview"
+              class="h-full w-full object-cover"
+            />
             <div
-              class="w-full overflow-hidden rounded-[8px]"
-              :style="previewWallpaperFrameStyle"
+              v-else
+              class="flex h-full min-h-[280px] w-full items-center justify-center bg-[#1c1c1c] text-sm text-white/50 sm:min-h-[400px]"
             >
-              <img
-                v-if="wallpaperPreviewDataUrl"
-                :src="wallpaperPreviewDataUrl"
-                alt="Large wallpaper preview"
-                class="h-full w-full object-cover"
-              />
-              <div
-                v-else
-                class="flex h-full min-h-[520px] w-full items-center justify-center bg-[#1c1c1c] text-sm text-white/50"
-              >
-                {{
-                  isRenderingWallpaperPreview
-                    ? 'Preparing preview...'
-                    : 'No wallpaper'
-                }}
-              </div>
+              {{
+                isRenderingWallpaperPreview
+                  ? 'Preparing preview...'
+                  : 'No wallpaper'
+              }}
             </div>
           </div>
         </div>
+      </div>
+      <div class="mt-5 flex justify-center border-t border-[#2a2a2a] pt-5">
+        <UButton
+          size="md"
+          label="Close"
+          color="neutral"
+          class="h-10 min-w-44 justify-center rounded-full bg-white px-8 font-medium text-dark hover:bg-white/90"
+          @click="isWallpaperPreviewModalOpen = false"
+        />
       </div>
     </template>
   </UModal>
