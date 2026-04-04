@@ -79,3 +79,8 @@ export const approveSubscriptionPaymentBodySchema = z.object({
   note: z.string().trim().optional(),
   status: textStatus(['approved']).optional(),
 });
+
+export const rejectSubscriptionPaymentBodySchema = z.object({
+  note: z.string().trim().optional(),
+  reason: z.string().trim().max(4000).optional(),
+});

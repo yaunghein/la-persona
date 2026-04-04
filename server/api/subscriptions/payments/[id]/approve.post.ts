@@ -4,10 +4,12 @@ import {
   cardSubscription,
   subscriptionPayment,
   subscriptionPaymentItem,
+  user,
 } from '~~/server/db/schema';
 import { assertOrganizationOwner } from '~~/server/services/subscription';
 import { approveSubscriptionPaymentBodySchema } from '~~/shared/types/subscription';
 import { requireAdminSession } from '~~/server/utils/admin-permissions';
+import { notifySubscriptionPaymentApprovedEmail } from '~~/server/utils/subscription-email-notifications';
 
 export default defineEventHandler(async (event) => {
   const session = await requireAdminSession(event);
@@ -124,6 +126,21 @@ export default defineEventHandler(async (event) => {
       updatedCardsCount: items.length,
     };
   });
+
+  const [payer] = await db
+    .select({ email: user.email, name: user.name })
+    .from(user)
+    .where(eq(user.id, payload.payment.paidByUserId))
+    .limit(1);
+
+  const payerEmail = payer?.email?.trim() || '';
+  if (payerEmail) {
+    void notifySubscriptionPaymentApprovedEmail({
+      payerEmail,
+      payerName: payer?.name?.trim() || payerEmail,
+      bodyText: `Your subscription payment has been approved (reference: ${payload.payment.id}). Your updated subscription term is now active in the platform.\n\nThank you for choosing LA PERSONA.`,
+    }).catch((err) => console.error('[approve-payment] user email', err));
+  }
 
   return payload;
 });

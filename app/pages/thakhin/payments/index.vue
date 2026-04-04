@@ -109,10 +109,6 @@ watch([filteredRows, maxPage], () => {
   }
 });
 
-function typeLabel(type: CardRequestRow['type']) {
-  return type === 'existing_design' ? 'Existing Design' : 'New Design';
-}
-
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
 }
@@ -149,10 +145,33 @@ async function approvePayment(row: PaymentRow) {
   }
 }
 
-function cannotApproveLinkedRequest() {
+async function rejectPayment(row: PaymentRow) {
+  try {
+    await $fetch(`/api/subscriptions/payments/${row.id}/reject`, {
+      method: 'POST',
+      body: {},
+    });
+    await refresh();
+    toast.add({
+      title: 'Payment rejected',
+      description: `${row.id} was marked rejected.`,
+      color: 'success',
+    });
+  } catch (error: any) {
+    toast.add({
+      title: 'Reject failed',
+      description:
+        error?.data?.statusMessage || error?.message || 'Please try again.',
+      color: 'error',
+    });
+  }
+}
+
+function cannotActOnLinkedPayment() {
   toast.add({
-    title: 'Approve from Requests',
-    description: 'This payment is linked to a card request approval flow.',
+    title: 'Linked to a card request',
+    description:
+      'This payment is tied to a design request. Approve or reject it from the Requests flow.',
     color: 'warning',
   });
 }
@@ -178,8 +197,15 @@ function getActionItems(row: PaymentRow): DropdownMenuItem[][] {
         disabled: Boolean(row.linkedRequestId),
         onSelect: () =>
           row.linkedRequestId
-            ? cannotApproveLinkedRequest()
+            ? cannotActOnLinkedPayment()
             : approvePayment(row),
+      },
+      {
+        label: 'Reject',
+        icon: 'i-lucide-x',
+        disabled: Boolean(row.linkedRequestId),
+        onSelect: () =>
+          row.linkedRequestId ? cannotActOnLinkedPayment() : rejectPayment(row),
       },
     ],
   ];

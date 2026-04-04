@@ -15,6 +15,7 @@ import {
   requireOrganizationSession,
 } from '~~/server/utils/organization-permissions';
 import { env } from '~~/server/utils/env';
+import { notifySubscriptionSubmissionEmails } from '~~/server/utils/subscription-email-notifications';
 
 function addYears(base: Date, years: number) {
   const result = new Date(base);
@@ -355,6 +356,39 @@ export default defineEventHandler(async (event) => {
       requestId: createdRequestId,
     };
   });
+
+  const submissionTitle = body.data.createPremiumRequest
+    ? 'premium upgrade payment'
+    : 'subscription renewal payment';
+
+  const userBodyText = body.data.createPremiumRequest
+    ? 'Thank you for submitting your Premium upgrade payment and receipt. We have received it and will review it shortly.'
+    : 'Thank you for submitting your subscription renewal payment and receipt. We have received it and will review it shortly.';
+
+  const planSummaries = body.data.items.map((item) => {
+    const c = cardById.get(item.cardId);
+    const label = c ? `${c.firstName} ${c.lastName || ''}`.trim() : item.cardId;
+    return `Card: ${label} — plan: ${item.planCode}`;
+  });
+
+  const teamLines = [
+    `Payment ID: ${result.payment.id}`,
+    `Organization ID: ${organizationId}`,
+    ...planSummaries,
+    ...(result.requestId ? [`Card request ID: ${result.requestId}`] : []),
+    body.data.note ? `Note: ${body.data.note}` : '',
+  ].filter(Boolean) as string[];
+
+  const payerEmail = session.user.email?.trim() || '';
+  if (payerEmail) {
+    void notifySubscriptionSubmissionEmails({
+      payerEmail,
+      payerName: session.user.name?.trim() || payerEmail,
+      submissionTitle,
+      userBodyText: `${userBodyText}\n\nReference: ${result.payment.id}`,
+      teamDetailLines: teamLines,
+    }).catch((err) => console.error('[subscription-payment] notify emails', err));
+  }
 
   return result;
 });

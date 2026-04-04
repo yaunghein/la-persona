@@ -25,8 +25,22 @@ const EnvSchema = z.object({
   CUSTOM_DESIGN_FEE: z.coerce.number().int().min(0),
   /** Unclaimed Thakhin-created cards live here until an onboarding invite assigns a real org. */
   PLACEHOLDER_ORGANIZATION_ID: z.string().min(1),
+  /**
+   * Comma-separated emails for internal subscription/payment alerts (e.g. receipts submitted).
+   * Example: ADMIN_EMAILS="a@x.com,b@y.com"
+   */
+  ADMIN_EMAILS: z.string().optional(),
 });
 
 export type EnvSchema = z.infer<typeof EnvSchema>;
 
 export const env = EnvSchema.parse(process.env);
+
+export function getAdminNotificationEmails(): string[] {
+  const raw = env.ADMIN_EMAILS?.trim();
+  if (!raw) return [];
+  return raw
+    .split(',')
+    .map((e) => e.trim())
+    .filter(Boolean);
+}

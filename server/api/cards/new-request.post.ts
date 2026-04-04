@@ -12,8 +12,47 @@ import { and, eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { splitName } from '~~/server/services/card';
 import { derivePlanCodeFromSource } from '~~/shared/utils/subscription';
+import { notifySubscriptionSubmissionEmails } from '~~/server/utils/subscription-email-notifications';
+import { env } from '~~/server/utils/env';
 
 const NEW_DESIGN_PLAN_CODE = 'premium';
+
+function fireCardRequestSubmittedEmails(
+  session: { user: { email?: string | null; name?: string | null } },
+  payload: {
+    request: { id: string };
+    paymentId: string;
+    planCode: string;
+    createdCardId: string;
+  },
+  kind: 'new_design' | 'existing_design'
+) {
+  const email = session.user.email?.trim();
+  if (!email) return;
+
+  const submissionTitle =
+    kind === 'new_design'
+      ? 'New Card Design Request'
+      : 'Existing Design Premium Request';
+  const userBodyText =
+    kind === 'new_design'
+      ? 'Thank you for submitting your new card design request and payment receipt. We have received everything and will review it shortly.'
+      : 'Thank you for submitting your existing-design premium request and payment receipt. We have received everything and will review it shortly.';
+
+  const thakhinRequestsUrl = new URL('/thakhin/requests', env.BASE_URL).href;
+
+  void notifySubscriptionSubmissionEmails({
+    payerEmail: email,
+    payerName: session.user.name?.trim() || email,
+    submissionTitle,
+    userBodyText: `${userBodyText}\n\nRequest ID: ${payload.request.id}\nPayment ID: ${payload.paymentId}`,
+    teamDetailLines: [
+      `Request type: ${kind === 'new_design' ? 'New card design' : 'Existing design → premium'}`,
+      `Plan: ${payload.planCode}`,
+    ],
+    teamRequestsDashboardUrl: thakhinRequestsUrl,
+  }).catch((err) => console.error('[new-request] notify emails', err));
+}
 
 function addYears(base: Date, years: number) {
   const result = new Date(base);
@@ -35,7 +74,6 @@ export default defineEventHandler(async (event) => {
     event,
     cardRequestInsertSchema.safeParse
   );
-  console.log(JSON.stringify(body, null, 2));
 
   if (!body.success) {
     throw createError({
@@ -181,6 +219,7 @@ export default defineEventHandler(async (event) => {
         };
       });
 
+      fireCardRequestSubmittedEmails(session, payload, 'new_design');
       return payload;
     }
 
@@ -343,6 +382,7 @@ export default defineEventHandler(async (event) => {
       };
     });
 
+    fireCardRequestSubmittedEmails(session, payload, 'existing_design');
     return payload;
   } catch (e) {
     console.error(e);
