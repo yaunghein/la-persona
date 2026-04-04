@@ -548,7 +548,7 @@ const active = computed({
           <UButton
             icon="i-lucide-chevron-left"
             color="primary"
-            class="h-10 bg-transparent mr-1 sm:mr-2 text-white sm:-mt-[0.15rem] hover:bg-white/10 active:hover:bg-white/20"
+            class="h-10 bg-transparent mr-1 sm:mr-2 text-white sm:-mt-[0rem] hover:bg-white/10 active:hover:bg-white/20"
             :to="`/platform/${orgSlug}/cards`"
           />
           <h1
@@ -615,14 +615,14 @@ const active = computed({
       <template #body>
         <div class="space-y-8">
           <div class="space-y-4">
-            <h3
+            <!-- <h3
               class="text-[20px] font-medium uppercase tracking-[2px] text-white"
             >
               {{ paymentTitle }}
             </h3>
             <p class="text-sm leading-[21px] text-[#8b8b8b]">
               {{ paymentDescription }}
-            </p>
+            </p> -->
 
             <div class="rounded-[4px] border-b border-[#2a2a2a] px-4 py-3">
               <div class="flex items-center justify-between text-sm text-white">
@@ -644,7 +644,8 @@ const active = computed({
 
           <div class="space-y-8">
             <p class="text-sm leading-[21px] text-white">
-              Please scan the QR code below to complete your payment.
+              Please scan the QR code below to complete your payment. Make sure
+              that account name is Yan Aung Hein.
             </p>
 
             <div class="space-y-3">

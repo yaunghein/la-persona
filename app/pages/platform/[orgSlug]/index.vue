@@ -330,7 +330,7 @@ const chartOptions = {
         <p
           class="text-xs font-medium uppercase tracking-[1.2px] text-[#8b8b8b] whitespace-nowrap -mt-1 mb-4"
         >
-          Card Saves (CTR)
+          Exchange or Save
         </p>
         <p class="mt-1 text-3xl font-bold leading-[1.1] -mb-1 text-white">
           {{ cardSaves }}

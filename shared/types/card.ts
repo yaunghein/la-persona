@@ -18,6 +18,8 @@ export type CardDTO = Omit<SelectCard, 'createdAt' | 'updatedAt'> & {
     status: string;
     planCode: string | null;
     isTrial: boolean;
+    /** Present on public card payload; reflects trial end vs raw `status`. */
+    effectiveStatus?: string;
   } | null;
 };
 

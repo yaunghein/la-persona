@@ -663,7 +663,7 @@ function onFormError(event: FormErrorEvent) {
       >
         <template #description="{ item }">
           <div class="mt-2 space-y-2">
-            <p class="text-sm text-[#8b8b8b]">Use this card back design</p>
+            <!-- <p class="text-sm text-[#8b8b8b]">Use this card back design</p> -->
             <img
               v-if="item.cardBackUrl"
               :src="getS3Url(item.cardBackUrl)"
@@ -893,7 +893,8 @@ function onFormError(event: FormErrorEvent) {
 
     <div v-if="showPricingSummary" class="space-y-8">
       <p class="text-sm leading-[21px] text-white">
-        Please scan the QR code below to complete your payment.
+        Please scan the QR code below to complete your payment. Make sure that
+        account name is Yan Aung Hein.
       </p>
 
       <div class="space-y-3">

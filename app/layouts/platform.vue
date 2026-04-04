@@ -33,14 +33,14 @@ const links = [
         open.value = false;
       },
     },
-    {
-      label: 'Billing',
-      icon: 'uil:bill',
-      to: `/platform/${route.params.orgSlug}/billing`,
-      onSelect: () => {
-        open.value = false;
-      },
-    },
+    // {
+    //   label: 'Billing',
+    //   icon: 'uil:bill',
+    //   to: `/platform/${route.params.orgSlug}/billing`,
+    //   onSelect: () => {
+    //     open.value = false;
+    //   },
+    // },
     {
       label: 'Teams (Coming Soon)',
       icon: 'i-ri:team-line',

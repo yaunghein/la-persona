@@ -113,6 +113,50 @@ const previewWallpaperFrameStyle = computed(() => ({
 
 const QR_SIZE_RATIO = 0.3;
 const QR_PADDING_RATIO = 0.05;
+const QR_IMAGE_CORNER_RADIUS_PX = 16;
+
+/** Fills the frame, draws the QR, and strokes the border — all with the same corner radius (bg was square before). */
+function fillStrokeAndDrawQrInRoundedFrame(
+  context: CanvasRenderingContext2D,
+  styledQr: HTMLCanvasElement,
+  qrFrameX: number,
+  qrFrameY: number,
+  qrFrameSize: number,
+  qrX: number,
+  qrY: number,
+  qrSize: number,
+  fillCss: string,
+  borderWidth: number,
+  strokeCss: string
+) {
+  const r = Math.min(QR_IMAGE_CORNER_RADIUS_PX, qrFrameSize / 2);
+
+  context.fillStyle = fillCss;
+  context.beginPath();
+  context.roundRect(qrFrameX, qrFrameY, qrFrameSize, qrFrameSize, r);
+  context.fill();
+
+  context.save();
+  context.beginPath();
+  context.roundRect(qrFrameX, qrFrameY, qrFrameSize, qrFrameSize, r);
+  context.clip();
+  context.drawImage(styledQr, qrX, qrY, qrSize, qrSize);
+  context.restore();
+
+  const half = borderWidth / 2;
+  const sx = qrFrameX + half;
+  const sy = qrFrameY + half;
+  const sw = qrFrameSize - borderWidth;
+  const sh = qrFrameSize - borderWidth;
+  const strokeR = Math.min(Math.max(0, r - half), sw / 2, sh / 2);
+
+  context.imageSmoothingEnabled = true;
+  context.strokeStyle = strokeCss;
+  context.lineWidth = borderWidth;
+  context.beginPath();
+  context.roundRect(sx, sy, sw, sh, strokeR);
+  context.stroke();
+}
 
 function triggerDownloadFromBlob(blob: Blob, fileName: string) {
   const blobUrl = URL.createObjectURL(blob);
@@ -302,17 +346,18 @@ async function renderWallpaperCanvas() {
   const qrY = (height - qrSize) / 2;
   const borderWidth = Math.max(2, Math.round(qrFrameSize * 0.015));
 
-  context.fillStyle = hexToRgba(qrLayerBgColor.value, qrLayerBgOpacity.value);
-  context.fillRect(qrFrameX, qrFrameY, qrFrameSize, qrFrameSize);
-  context.drawImage(styledQr, qrX, qrY, qrSize, qrSize);
-  context.imageSmoothingEnabled = true;
-  context.strokeStyle = hexToRgba(qrColor.value, qrBorderOpacity.value);
-  context.lineWidth = borderWidth;
-  context.strokeRect(
-    qrFrameX + borderWidth / 2,
-    qrFrameY + borderWidth / 2,
-    qrFrameSize - borderWidth,
-    qrFrameSize - borderWidth
+  fillStrokeAndDrawQrInRoundedFrame(
+    context,
+    styledQr,
+    qrFrameX,
+    qrFrameY,
+    qrFrameSize,
+    qrX,
+    qrY,
+    qrSize,
+    hexToRgba(qrLayerBgColor.value, qrLayerBgOpacity.value),
+    borderWidth,
+    hexToRgba(qrColor.value, qrBorderOpacity.value)
   );
 
   return canvas;
@@ -338,17 +383,18 @@ async function renderQrOnlyCanvas() {
   const context = canvas.getContext('2d');
   if (!context) throw new Error('QR canvas context unavailable');
 
-  context.fillStyle = hexToRgba(qrLayerBgColor.value, qrLayerBgOpacity.value);
-  context.fillRect(qrFrameX, qrFrameY, qrFrameSize, qrFrameSize);
-  context.drawImage(styledQr, qrX, qrY, qrSize, qrSize);
-  context.imageSmoothingEnabled = true;
-  context.strokeStyle = hexToRgba(qrColor.value, qrBorderOpacity.value);
-  context.lineWidth = borderWidth;
-  context.strokeRect(
-    qrFrameX + borderWidth / 2,
-    qrFrameY + borderWidth / 2,
-    qrFrameSize - borderWidth,
-    qrFrameSize - borderWidth
+  fillStrokeAndDrawQrInRoundedFrame(
+    context,
+    styledQr,
+    qrFrameX,
+    qrFrameY,
+    qrFrameSize,
+    qrX,
+    qrY,
+    qrSize,
+    hexToRgba(qrLayerBgColor.value, qrLayerBgOpacity.value),
+    borderWidth,
+    hexToRgba(qrColor.value, qrBorderOpacity.value)
   );
 
   return canvas;
@@ -648,13 +694,13 @@ async function downloadQr() {
           >
             <p class="text-sm text-white/50">Preview</p>
             <div
-              class="flex h-40 w-40 items-center justify-center rounded-[4px] bg-[#1c1c1c] p-1"
+              class="flex h-40 w-40 items-center justify-center rounded-[8px] bg-[#1c1c1c] p-1"
             >
               <img
                 v-if="qrOnlyPreviewDataUrl"
                 :src="qrOnlyPreviewDataUrl"
                 alt="QR preview"
-                class="h-full w-full rounded-[2px] object-contain"
+                class="h-full w-full rounded-[8px] object-contain"
               />
               <div
                 v-else
@@ -693,8 +739,10 @@ async function downloadQr() {
     }"
   >
     <template #body>
-      <div class="max-h-[62vh] overflow-y-auto sm:max-h-[65vh]">
-        <div class="mx-auto w-full max-w-[320px]">
+      <div
+        class="max-h-[62vh] overflow-y-auto overflow-hidden rounded-lg hide-scrollbar sm:max-h-[75vh]"
+      >
+        <div class="mx-auto w-full overflow-hidden rounded-lg">
           <div
             class="w-full overflow-hidden rounded-lg"
             :style="previewWallpaperFrameStyle"
@@ -703,7 +751,7 @@ async function downloadQr() {
               v-if="wallpaperPreviewDataUrl"
               :src="wallpaperPreviewDataUrl"
               alt="Large wallpaper preview"
-              class="h-full w-full object-cover"
+              class="h-full w-full object-contain"
             />
             <div
               v-else
@@ -718,7 +766,7 @@ async function downloadQr() {
           </div>
         </div>
       </div>
-      <div class="mt-5 flex justify-center border-t border-[#2a2a2a] pt-5">
+      <!-- <div class="mt-5 flex justify-center border-t border-[#2a2a2a] pt-5">
         <UButton
           size="md"
           label="Close"
@@ -726,7 +774,7 @@ async function downloadQr() {
           class="h-10 min-w-44 justify-center rounded-full bg-white px-8 font-medium text-dark hover:bg-white/90"
           @click="isWallpaperPreviewModalOpen = false"
         />
-      </div>
+      </div> -->
     </template>
   </UModal>
 </template>

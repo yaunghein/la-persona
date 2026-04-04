@@ -4,10 +4,33 @@ import { Application } from '@splinetool/runtime';
 import type { ConcreteComponent } from 'vue';
 import { SOCIAL_MEDIA_LINK_LABELS } from '~~/shared/constants/card-link-options';
 
+function websiteLabelForSpline(website: string | null | undefined): string {
+  if (!website?.trim()) return '';
+  const raw = website.trim();
+  try {
+    const url = new URL(raw.includes('://') ? raw : `https://${raw}`);
+    const host = url.hostname.toUpperCase();
+    const path =
+      url.pathname && url.pathname !== '/'
+        ? url.pathname.replace(/\/$/, '').toUpperCase()
+        : '';
+    return path ? `${host}${path}` : host;
+  } catch {
+    return raw
+      .replace(/^https?:\/\//i, '')
+      .replace(/\/$/, '')
+      .toUpperCase();
+  }
+}
+
 const { trackEvent } = useAnalytics();
 
 const { slug } = useRoute().params;
-const { data: card } = await useFetch<SelectCard>(`/api/public/cards/${slug}`);
+const { data: card } = await useFetch<CardDTO>(`/api/public/cards/${slug}`);
+
+const isCardInFreeTrial = computed(
+  () => card.value?.subscription?.effectiveStatus === 'trial'
+);
 useSeoMeta({ ...getSeoTitle(`${card.value?.firstName}`) });
 
 onMounted(async () => {
@@ -26,9 +49,17 @@ onMounted(async () => {
   const spline = new Application(canvas);
   spline.load(card.value?.splineUrl + `?v=${new Date().getTime()}`).then(() => {
     if (!card.value) return;
+    const fullname = [card.value.firstName, card.value.lastName]
+      .filter(Boolean)
+      .join(' ')
+      .trim()
+      .toUpperCase();
     spline.setVariables({
-      firstName: card.value.firstName,
-      lastName: card.value.lastName || '',
+      name: fullname,
+      position: card.value.position?.toUpperCase() || '',
+      phone: card.value.phone || '',
+      email: card.value.email?.toUpperCase() || '',
+      website: websiteLabelForSpline(card.value.website),
     });
   });
 });
@@ -60,19 +91,19 @@ const onSubmit = async (e: SubmitEvent) => {
   // console.log({ data });
 
   try {
-    await $fetch('/api/email/send', {
-      method: 'POST',
-      body: {
-        name: data.name,
-        to: [data.ownerEmail],
-        subject: `New Contact Exchange from ${(data.name as string).split(' ')[0]} 👋`,
-        template: 'ContactExchange',
-        email: data.email,
-        phone: data.phone,
-        company: data.company,
-        position: data.position,
-      },
-    });
+    // await $fetch('/api/email/send', {
+    //   method: 'POST',
+    //   body: {
+    //     name: data.name,
+    //     to: [data.ownerEmail],
+    //     subject: `New Contact Exchange from ${(data.name as string).split(' ')[0]} 👋`,
+    //     template: 'ContactExchange',
+    //     email: data.email,
+    //     phone: data.phone,
+    //     company: data.company,
+    //     position: data.position,
+    //   },
+    // });
 
     await $fetch('/api/contact-exchange', {
       method: 'POST',
@@ -283,7 +314,7 @@ async function onSaveContact() {
       organizationId: card.value.organizationId,
       userId: card.value.userId,
       type: 'save_action',
-      metadata: { action: 'contact_save' },
+      metadata: { action: 'vcf_download' },
     });
   } catch {
     toast.add({
@@ -480,8 +511,12 @@ async function onSaveContact() {
             @click="closeForm"
             class="text-xs font-bold leading-none tracking-[0.1rem] underline underline-offset-4"
           >
-            Exit
+            Cancel
           </button>
+
+          <div v-if="isCardInFreeTrial" class="mt-2 w-full">
+            <PoweredByLaPersona />
+          </div>
         </div>
       </div>
     </div>
@@ -574,6 +609,19 @@ async function onSaveContact() {
               </div>
             </a> -->
           </template>
+        </div>
+        <div
+          v-if="isCardInFreeTrial"
+          class="mt-8 px-5 transition duration-750"
+          :class="{
+            'opacity-100': isMenuOpen,
+            'opacity-0': !isMenuOpen,
+          }"
+          :style="{
+            transitionDelay: `${((card?.socials?.length ?? 0) + 1) * 100}ms`,
+          }"
+        >
+          <PoweredByLaPersona />
         </div>
       </div>
     </div>

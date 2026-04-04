@@ -1,4 +1,5 @@
 import { and, eq, desc } from 'drizzle-orm';
+import { getEffectiveSubscriptionStatus } from '~~/server/services/subscription';
 import { db } from '../../db';
 import { card, cardSubscription } from '../schema';
 
@@ -78,6 +79,8 @@ export const findCardsBySlug = async (slug: string) => {
       subscriptionStatus: cardSubscription.status,
       subscriptionPlanCode: cardSubscription.planCode,
       subscriptionIsTrial: cardSubscription.isTrial,
+      subscriptionTrialEndAt: cardSubscription.trialEndAt,
+      subscriptionCurrentPeriodEndAt: cardSubscription.currentPeriodEndAt,
     })
     .from(card)
     .leftJoin(cardSubscription, eq(cardSubscription.cardId, card.id))
@@ -94,6 +97,11 @@ export const findCardsBySlug = async (slug: string) => {
           status: row.subscriptionStatus,
           planCode: row.subscriptionPlanCode,
           isTrial: row.subscriptionIsTrial ?? false,
+          effectiveStatus: getEffectiveSubscriptionStatus(
+            row.subscriptionStatus,
+            row.subscriptionTrialEndAt,
+            row.subscriptionCurrentPeriodEndAt
+          ),
         }
       : null,
   };
