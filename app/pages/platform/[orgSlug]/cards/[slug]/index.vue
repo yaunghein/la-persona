@@ -548,7 +548,7 @@ const active = computed({
           <UButton
             icon="i-lucide-chevron-left"
             color="primary"
-            class="h-10 bg-transparent mr-1 sm:mr-2 text-white sm:-mt-[0rem] hover:bg-white/10 active:hover:bg-white/20"
+            class="h-10 bg-transparent mr-1 sm:mr-2 text-white hover:bg-white/10 active:hover:bg-white/20"
             :to="`/platform/${orgSlug}/cards`"
           />
           <h1

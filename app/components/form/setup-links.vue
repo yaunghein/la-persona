@@ -506,12 +506,14 @@ watch(isSocialSlideoverOpen, (open) => {
         type="button"
         label="Cancel"
         variant="ghost"
+        class="rounded-full px-5"
         @click="closeDeleteSocialConfirm"
       />
       <UButton
         type="button"
         label="Delete"
         color="error"
+        class="rounded-full px-6 font-medium"
         @click="confirmRemoveLink"
       />
     </template>

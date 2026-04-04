@@ -8,9 +8,12 @@ import {
   subscriptionPaymentItem,
   subscriptionPlan,
 } from '~~/server/db/schema';
-import { assertOrganizationOwner } from '~~/server/services/subscription';
 import { createSubscriptionPaymentBodySchema } from '~~/shared/types/subscription';
-import { requireAdminSession } from '~~/server/utils/admin-permissions';
+import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+import {
+  hasOrganizationPermission,
+  requireOrganizationSession,
+} from '~~/server/utils/organization-permissions';
 import { env } from '~~/server/utils/env';
 
 function addYears(base: Date, years: number) {
@@ -20,12 +23,8 @@ function addYears(base: Date, years: number) {
 }
 
 export default defineEventHandler(async (event) => {
-  const session = await requireAdminSession(event);
-  const organizationId = session.session.activeOrganizationId ?? null;
-  if (!organizationId) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
-  }
-  await assertOrganizationOwner(session.user.id, organizationId);
+  const session = await requireOrganizationSession(event);
+  const organizationId = session.session.activeOrganizationId;
 
   const body = await readValidatedBody(
     event,
@@ -42,7 +41,7 @@ export default defineEventHandler(async (event) => {
 
   const cardIds = body.data.items.map((item) => item.cardId);
   const cardsInOrg = await db
-    .select({ id: card.id })
+    .select({ id: card.id, userId: card.userId })
     .from(card)
     .where(and(eq(card.organizationId, organizationId), inArray(card.id, cardIds)));
 
@@ -54,6 +53,21 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Some cards are not in your organization.',
       data: { missingCardIds },
     });
+  }
+
+  const canPayForAnyCardInOrg = await hasOrganizationPermission(
+    event,
+    ORGANIZATION_PERMISSIONS.CARD_READ_ALL
+  );
+  for (const row of cardsInOrg) {
+    const isCardHolder = row.userId === session.user.id;
+    if (!isCardHolder && !canPayForAnyCardInOrg) {
+      throw createError({
+        statusCode: 403,
+        statusMessage:
+          'You can only submit payment for cards assigned to your account.',
+      });
+    }
   }
 
   const planCodes = [...new Set(body.data.items.map((item) => item.planCode))];

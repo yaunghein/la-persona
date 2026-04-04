@@ -140,7 +140,8 @@ function hasSplinePreview(card: CardDTO) {
 }
 
 const isSmUp = useMediaQuery('(min-width: 640px)');
-const cardFooterActionSize = computed(() => (isSmUp.value ? 'md' : 'sm'));
+const cardFooterActionSize = 'sm';
+// const cardFooterActionSize = computed(() => (isSmUp.value ? 'sm' : 'sm'));
 </script>
 
 <template>
@@ -404,6 +405,7 @@ const cardFooterActionSize = computed(() => (isSmUp.value ? 'md' : 'sm'));
         label="Cancel"
         color="neutral"
         variant="ghost"
+        class="rounded-full px-5"
         :disabled="isDeleting"
         @click="closeDeleteConfirm"
       />
@@ -411,6 +413,7 @@ const cardFooterActionSize = computed(() => (isSmUp.value ? 'md' : 'sm'));
         size="xl"
         label="Delete"
         color="error"
+        class="rounded-full px-6 font-medium"
         :loading="isDeleting"
         @click="onConfirmDelete"
       />

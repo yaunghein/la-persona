@@ -960,6 +960,7 @@ const visibleColumns = computed(() =>
         label="Cancel"
         color="neutral"
         variant="ghost"
+        class="rounded-full px-5"
         :disabled="isDeletingContact"
         @click="closeDeleteConfirm"
       />
@@ -967,6 +968,7 @@ const visibleColumns = computed(() =>
         size="xl"
         label="Delete"
         color="error"
+        class="rounded-full px-6 font-medium"
         :loading="isDeletingContact"
         @click="onConfirmDelete"
       />

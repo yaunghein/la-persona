@@ -1053,6 +1053,7 @@ function onFormError(event: FormErrorEvent) {
         label="Cancel"
         color="neutral"
         variant="ghost"
+        class="rounded-full px-5"
         @click="closeDeleteSocialConfirm"
       />
       <UButton
@@ -1060,6 +1061,7 @@ function onFormError(event: FormErrorEvent) {
         size="xl"
         label="Delete"
         color="error"
+        class="rounded-full px-6 font-medium"
         @click="confirmRemoveLink"
       />
     </template>

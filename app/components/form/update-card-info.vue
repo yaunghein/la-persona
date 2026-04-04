@@ -980,6 +980,7 @@ onBeforeUnmount(() => {
         label="Cancel"
         color="neutral"
         variant="ghost"
+        class="rounded-full px-5"
         @click="closeDeleteSocialConfirm"
       />
       <UButton
@@ -987,6 +988,7 @@ onBeforeUnmount(() => {
         size="xl"
         label="Delete"
         color="error"
+        class="rounded-full px-6 font-medium"
         @click="confirmRemoveLink"
       />
     </template>
