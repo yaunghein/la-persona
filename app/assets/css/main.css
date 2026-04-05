@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
+@import 'swiper/css/bundle';
 
 html {
   scroll-behavior: smooth;
@@ -9,6 +10,8 @@ html {
   --font-sans: 'Red Hat Display', sans-serif;
 
   --color-dark: #121212;
+  /* La Persona landing accent (Figma: #c8a97e) */
+  --color-gold: #c8a97e;
 }
 
 :root {
