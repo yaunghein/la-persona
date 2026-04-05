@@ -42,7 +42,6 @@ async function onAccept() {
 
   isAccepting.value = true;
   try {
-    const orgSlug = invitation.value?.organizationSlug;
     await $fetch(`/api/onboarding-invitation/${invitationId.value}/accept`, {
       method: 'POST',
     });
@@ -53,11 +52,14 @@ async function onAccept() {
       description: 'Your workspace is now ready.',
       color: 'success',
     });
-    const cardsPath =
-      orgSlug && orgSlug.length > 0
-        ? `${ROUTES.PLATFORM.ROOT}/${orgSlug}/cards`
-        : ROUTES.PLATFORM.ROOT;
-    await navigateTo(cardsPath);
+    // Direct-to-cards after invite is disabled for now — use /platform so the
+    // hub sends new users through setup like other signups.
+    // const cardsPath =
+    //   orgSlug && orgSlug.length > 0
+    //     ? `${ROUTES.PLATFORM.ROOT}/${orgSlug}/cards`
+    //     : ROUTES.PLATFORM.ROOT;
+    // await navigateTo(cardsPath);
+    await navigateTo(ROUTES.PLATFORM.ROOT);
   } catch (acceptError: any) {
     toast.add({
       title: 'Accept failed',

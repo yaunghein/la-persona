@@ -3,22 +3,21 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '~~/server/db';
 import { card, organization } from '~~/server/db/schema';
+import { slugify } from '~~/shared/utils/slugify';
 import { ensureCardTrialSubscription } from '~~/server/services/subscription';
 import { requireAdminSession } from '~~/server/utils/admin-permissions';
 import { env } from '~~/server/utils/env';
-
-const optionalUrl = z
-  .union([z.string().url(), z.literal('')])
-  .optional()
-  .nullable()
-  .transform((v) => (v === '' || v === undefined ? null : v));
+import {
+  optionalHttpUrl,
+  optionalS3ObjectKey,
+} from '~~/server/utils/zod-admin-card';
 
 const adminCreateCardSchema = z.object({
   /** Omit to use `PLACEHOLDER_ORGANIZATION_ID` (Thakhin “create card” flow). */
   organizationId: z.string().min(1).optional(),
-  firstName: z.string().trim().min(1),
+  firstName: z.string().trim().optional().nullable(),
   lastName: z.string().trim().optional().nullable(),
-  position: z.string().trim().min(1),
+  position: z.string().trim().optional().nullable(),
   company: z.string().trim().optional().nullable(),
   phone: z.string().trim().optional().nullable(),
   email: z
@@ -27,10 +26,10 @@ const adminCreateCardSchema = z.object({
     .nullable()
     .transform((v) => (v === '' || v === undefined ? null : v)),
   website: z.string().trim().optional().nullable(),
-  splineUrl: optionalUrl,
-  avatarUrl: optionalUrl,
-  wallpaperUrl: optionalUrl,
-  cardBackUrl: optionalUrl,
+  splineUrl: optionalHttpUrl,
+  avatarUrl: optionalHttpUrl,
+  wallpaperUrl: optionalS3ObjectKey('Wallpaper'),
+  cardBackUrl: optionalS3ObjectKey('Card back'),
 });
 
 export default defineEventHandler(async (event) => {
@@ -62,26 +61,28 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  const firstName = result.data.firstName?.trim() || 'Card';
   const lastName = result.data.lastName?.trim() || null;
-  const baseSlug = slugify(result.data.firstName);
+  const position = result.data.position?.trim() || 'Professional';
+  const baseSlug = slugify(firstName) || 'card';
   const slug = `${baseSlug}-${nanoid(8)}`;
 
   try {
     const [newCard] = await db
       .insert(card)
       .values({
-        firstName: result.data.firstName,
+        firstName,
         lastName,
         slug,
-        position: result.data.position,
+        position,
         company: result.data.company || null,
         phone: result.data.phone || null,
         email: result.data.email,
         website: result.data.website || null,
-        splineUrl: result.data.splineUrl,
-        avatarUrl: result.data.avatarUrl,
-        wallpaperUrl: result.data.wallpaperUrl,
-        cardBackUrl: result.data.cardBackUrl,
+        splineUrl: result.data.splineUrl ?? null,
+        avatarUrl: result.data.avatarUrl ?? null,
+        wallpaperUrl: result.data.wallpaperUrl ?? null,
+        cardBackUrl: result.data.cardBackUrl ?? null,
         organizationId,
         userId: null,
       })

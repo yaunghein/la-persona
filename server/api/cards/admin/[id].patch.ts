@@ -3,18 +3,22 @@ import { z } from 'zod';
 import { db } from '~~/server/db';
 import { card, organization } from '~~/server/db/schema';
 import { requireAdminSession } from '~~/server/utils/admin-permissions';
-
-const optionalUrl = z
-  .union([z.string().url(), z.literal('')])
-  .optional()
-  .nullable()
-  .transform((v) => (v === '' || v === undefined ? null : v));
+import {
+  optionalHttpUrl,
+  optionalS3ObjectKey,
+} from '~~/server/utils/zod-admin-card';
 
 const adminUpdateCardSchema = z.object({
   organizationId: z.string().min(1).optional(),
-  firstName: z.string().trim().min(1).optional(),
+  firstName: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().trim().min(1).optional()
+  ),
   lastName: z.string().trim().optional().nullable(),
-  position: z.string().trim().min(1).optional(),
+  position: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().trim().min(1).optional()
+  ),
   company: z.string().trim().optional().nullable(),
   phone: z.string().trim().optional().nullable(),
   email: z
@@ -23,10 +27,10 @@ const adminUpdateCardSchema = z.object({
     .nullable()
     .transform((v) => (v === '' || v === undefined ? null : v)),
   website: z.string().trim().optional().nullable(),
-  splineUrl: optionalUrl,
-  avatarUrl: optionalUrl,
-  wallpaperUrl: optionalUrl,
-  cardBackUrl: optionalUrl,
+  splineUrl: optionalHttpUrl,
+  avatarUrl: optionalHttpUrl,
+  wallpaperUrl: optionalS3ObjectKey('Wallpaper'),
+  cardBackUrl: optionalS3ObjectKey('Card back'),
 });
 
 export default defineEventHandler(async (event) => {

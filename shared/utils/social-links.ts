@@ -14,10 +14,7 @@ export type SocialSubmitLink = {
 };
 
 export function createLinkTypeItemsWithCustom(items: string[][]): string[][] {
-  return [
-    [...(items[0] || [])],
-    [...(items[1] || []), CUSTOM_SOCIAL_LABEL],
-  ];
+  return [[...(items[0] || [])], [...(items[1] || []), CUSTOM_SOCIAL_LABEL]];
 }
 
 export function normalizeSocialLinksForForm(

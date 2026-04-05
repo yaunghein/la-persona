@@ -4,6 +4,7 @@ definePageMeta({
 });
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
+import { getThakhinCardPlanAssetDefaults } from '~~/shared/constants/thakhin-card-plan-assets';
 
 type CardRow = {
   id: string;
@@ -54,6 +55,14 @@ const form = reactive({
   cardBackUrl: '',
 });
 
+function applyPlanAssetPrefills(planCode: string) {
+  const d = getThakhinCardPlanAssetDefaults(planCode);
+  if (!d) return;
+  form.splineUrl = d.splineUrl;
+  form.wallpaperUrl = d.wallpaperS3Key;
+  form.cardBackUrl = d.cardBackS3Key;
+}
+
 function resetForm() {
   form.organizationId = '';
   form.firstName = '';
@@ -84,9 +93,58 @@ function fillForm(row: CardRow) {
   form.cardBackUrl = row.cardBackUrl || '';
 }
 
+const {
+  data: cardsData,
+  pending,
+  refresh,
+} = await useFetch<CardRow[]>('/api/cards/admin');
+const { data: orgOptions } = await useFetch<OrgOption[]>(
+  '/api/cards/admin/options'
+);
+const { data: onboardingOptions } = await useFetch<{
+  plans: { code: string; name: string }[];
+}>('/api/onboarding-invitation/options');
+
+const rows = computed(() => cardsData.value || []);
+const orgSelectItems = computed(() =>
+  (orgOptions.value || []).map((o) => ({ label: o.name, value: o.id }))
+);
+const planSelectItems = computed(() =>
+  (onboardingOptions.value?.plans ?? []).map((p) => ({
+    label: p.name,
+    value: p.code,
+  }))
+);
+
+/** Subscription plan for create flow — prefills Spline + S3 keys (placeholders). */
+const createPlanCode = ref('standard');
+
+watch(
+  planSelectItems,
+  (items) => {
+    const first = items[0];
+    if (!first) return;
+    if (!items.some((i) => i.value === createPlanCode.value)) {
+      createPlanCode.value = first.value;
+    }
+  },
+  { immediate: true }
+);
+
+watch(createPlanCode, (code) => {
+  if (editingId.value || !isFormOpen.value) return;
+  applyPlanAssetPrefills(code);
+});
+
 function openCreate() {
   editingId.value = null;
   resetForm();
+  const items = planSelectItems.value;
+  const firstPlan = items[0];
+  if (firstPlan && !items.some((i) => i.value === createPlanCode.value)) {
+    createPlanCode.value = firstPlan.value;
+  }
+  applyPlanAssetPrefills(createPlanCode.value);
   isFormOpen.value = true;
 }
 
@@ -105,20 +163,6 @@ function closeDelete() {
   isDeleteOpen.value = false;
   cardToDelete.value = null;
 }
-
-const {
-  data: cardsData,
-  pending,
-  refresh,
-} = await useFetch<CardRow[]>('/api/cards/admin');
-const { data: orgOptions } = await useFetch<OrgOption[]>(
-  '/api/cards/admin/options'
-);
-
-const rows = computed(() => cardsData.value || []);
-const orgSelectItems = computed(() =>
-  (orgOptions.value || []).map((o) => ({ label: o.name, value: o.id }))
-);
 
 const page = ref(1);
 const itemsPerPage = 10;
@@ -146,14 +190,6 @@ const slideTitle = computed(() =>
 );
 
 async function onSubmitForm() {
-  if (!form.firstName.trim() || !form.position.trim()) {
-    toast.add({
-      title: 'Missing fields',
-      description: 'First name and position are required.',
-      color: 'warning',
-    });
-    return;
-  }
   isSaving.value = true;
   try {
     const body: Record<string, unknown> = {
@@ -406,10 +442,25 @@ const selectUi = {
               />
             </UFormField>
 
-            <UFormField label="First name" required :class="formFieldClass">
+            <UFormField
+              v-if="!editingId && planSelectItems.length"
+              label="Plan (prefill assets)"
+              :class="formFieldClass"
+            >
+              <USelect
+                v-model="createPlanCode"
+                :items="planSelectItems"
+                placeholder="Select plan"
+                size="xl"
+                class="w-full"
+                :ui="selectUi"
+              />
+            </UFormField>
+
+            <UFormField label="First name" :class="formFieldClass">
               <UInput
                 v-model="form.firstName"
-                placeholder="First name"
+                placeholder="Optional — defaults to “Card” if empty"
                 class="w-full"
                 size="xl"
                 :ui="inputUi"
@@ -424,14 +475,10 @@ const selectUi = {
                 :ui="inputUi"
               />
             </UFormField>
-            <UFormField
-              label="Position / role"
-              required
-              :class="formFieldClass"
-            >
+            <UFormField label="Position / role" :class="formFieldClass">
               <UInput
                 v-model="form.position"
-                placeholder="e.g. Designer"
+                placeholder="Optional — defaults to “Professional” if empty"
                 class="w-full"
                 size="xl"
                 :ui="inputUi"
@@ -474,10 +521,10 @@ const selectUi = {
                 :ui="inputUi"
               />
             </UFormField>
-            <UFormField label="Spline URL" :class="formFieldClass">
+            <UFormField label="Spline scene URL" :class="formFieldClass">
               <UInput
                 v-model="form.splineUrl"
-                placeholder="https://..."
+                placeholder="https://prod.spline.design/…/scene.splinecode"
                 class="w-full"
                 size="xl"
                 :ui="inputUi"
@@ -486,25 +533,25 @@ const selectUi = {
             <UFormField label="Avatar URL" :class="formFieldClass">
               <UInput
                 v-model="form.avatarUrl"
-                placeholder="https://..."
+                placeholder="https://… (optional)"
                 class="w-full"
                 size="xl"
                 :ui="inputUi"
               />
             </UFormField>
-            <UFormField label="Wallpaper URL" :class="formFieldClass">
+            <UFormField label="Wallpaper (S3 key)" :class="formFieldClass">
               <UInput
                 v-model="form.wallpaperUrl"
-                placeholder="https://..."
+                placeholder="path/in/bucket.webp — not a full URL"
                 class="w-full"
                 size="xl"
                 :ui="inputUi"
               />
             </UFormField>
-            <UFormField label="Card back URL" :class="formFieldClass">
+            <UFormField label="Card back (S3 key)" :class="formFieldClass">
               <UInput
                 v-model="form.cardBackUrl"
-                placeholder="https://..."
+                placeholder="path/in/bucket.webp — not a full URL"
                 class="w-full"
                 size="xl"
                 :ui="inputUi"
