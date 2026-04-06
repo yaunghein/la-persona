@@ -602,7 +602,7 @@ const premiumPlanFeatures = [
           <SwiperSlide
             v-for="(card, i) in bespokeSwiperSlides"
             :key="`${card.name}-${i}`"
-            class="w-[min(85vw,35.75rem)]! sm:w-[35.75rem]!"
+            class="w-[min(85vw,35.75rem)]! sm:w-143!"
           >
             <article class="select-none">
               <div

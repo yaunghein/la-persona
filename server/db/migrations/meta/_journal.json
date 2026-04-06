@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1773173297073,
-      "tag": "0000_workable_sunset_bain",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1773312799404,
-      "tag": "0001_stormy_moonstone",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1773745462950,
-      "tag": "0002_tearful_misty_knight",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1774549062370,
-      "tag": "0003_watery_princess_powerful",
+      "when": 1775498817907,
+      "tag": "0000_supreme_johnny_blaze",
       "breakpoints": true
     }
   ]
