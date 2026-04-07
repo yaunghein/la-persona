@@ -30,14 +30,15 @@ function fireCardRequestSubmittedEmails(
   const email = session.user.email?.trim();
   if (!email) return;
 
+  const planLabel = payload.planCode.charAt(0).toUpperCase() + payload.planCode.slice(1);
   const submissionTitle =
     kind === 'new_design'
       ? 'New Card Design Request'
-      : 'Existing Design Premium Request';
+      : `Existing Design ${planLabel} Request`;
   const userBodyText =
     kind === 'new_design'
       ? 'Thank you for submitting your new card design request and payment receipt. We have received everything and will review it shortly.'
-      : 'Thank you for submitting your existing-design premium request and payment receipt. We have received everything and will review it shortly.';
+      : `Thank you for submitting your existing-design ${payload.planCode} request and payment receipt. We have received everything and will review it shortly.`;
 
   const thakhinRequestsUrl = new URL('/thakhin/requests', env.BASE_URL).href;
 
@@ -47,7 +48,7 @@ function fireCardRequestSubmittedEmails(
     submissionTitle,
     userBodyText: `${userBodyText}\n\nRequest ID: ${payload.request.id}\nPayment ID: ${payload.paymentId}`,
     teamDetailLines: [
-      `Request type: ${kind === 'new_design' ? 'New card design' : 'Existing design → premium'}`,
+      `Request type: ${kind === 'new_design' ? 'New card design' : `Existing design → ${payload.planCode}`}`,
       `Plan: ${payload.planCode}`,
     ],
     teamRequestsDashboardUrl: thakhinRequestsUrl,
