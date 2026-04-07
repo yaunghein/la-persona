@@ -91,25 +91,27 @@ const ownerSearchQuery = ref('');
 
 const infoItems = [
   {
-    icon: 'i-lucide-eye',
-    title: 'View Your Cards',
-    description: 'See all your cards in one place.',
-  },
-  {
-    icon: 'i-lucide-chevrons-up',
-    title: 'Update Your Cards',
-    description: 'Change contact details.',
-  },
-  {
-    icon: 'i-lucide-plus',
-    title: 'Create a New Card',
+    icon: 'i-lucide-users',
+    title: 'Track Every Connection',
     description:
-      'Request a new card with a fresh design or a different purpose.',
+      'See everyone who exchanged details with your persona cards in one organized list.',
   },
   {
-    icon: 'i-lucide-share-2',
-    title: 'Share Instantly',
-    description: 'Access your card link or QR code whenever you need it.',
+    icon: 'i-lucide-user-plus',
+    title: 'Add Contacts Manually',
+    description:
+      'Create a contact anytime, even when the exchange happened outside your persona card flow.',
+  },
+  {
+    icon: 'i-lucide-download',
+    title: 'Export for Follow-ups',
+    description:
+      'Download your current contacts view as CSV for outreach, reports, or team sharing.',
+  },
+  {
+    icon: 'i-lucide-save',
+    title: 'Save Contact',
+    description: 'Save any contact to your phone.',
   },
 ];
 const {
@@ -719,8 +721,9 @@ const visibleColumns = computed(() =>
       <h2 class="text-base font-medium uppercase tracking-widest text-white">
         No contacts yet
       </h2>
-      <p class="max-w-[20rem] text-center text-sm text-muted">
-        Once people exchange contacts with your card, they will appear here.
+      <p class="max-w-[18rem] text-center text-sm text-muted">
+        Once people exchange contacts with your persona card, they will appear
+        here.
       </p>
       <UButton
         label="Create New Contact"
@@ -875,7 +878,7 @@ const visibleColumns = computed(() =>
 
   <UModal
     v-model:open="isInfoOpen"
-    title="What is cards?"
+    title="What is Contacts?"
     :ui="{
       content:
         'sm:max-w-[480px] rounded-lg border border-[#232323] bg-[#171717]',
@@ -889,10 +892,10 @@ const visibleColumns = computed(() =>
           <h3
             class="text-lg font-medium leading-tight tracking-widest uppercase text-white sm:text-xl"
           >
-            Your cards, all in one place
+            Your network, all in one place
           </h3>
           <p class="text-sm leading-relaxed text-[#8b8b8b]">
-            Manage every version of your presence.
+            Capture, review, and act on every contact.
           </p>
         </div>
 

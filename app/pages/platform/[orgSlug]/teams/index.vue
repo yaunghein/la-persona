@@ -11,21 +11,22 @@ const teaserItems = [
       'Add teammates and keep everyone connected to the same organization workspace.',
   },
   {
-    icon: 'i-lucide-shield-check',
-    title: 'Assign Roles',
+    icon: 'i-lucide-bar-chart-3',
+    title: 'Manage Teammates',
     description:
-      'Set owner and member permissions so sensitive actions stay protected.',
+      'Owners can view teammate analytics, manage teammate info, and oversee team activity in one place.',
   },
   {
-    icon: 'i-lucide-folder-sync',
-    title: 'Shared Access',
+    icon: 'i-lucide-credit-card',
+    title: 'Pay for Teammates',
     description:
-      'Manage cards, contacts, and billing together without switching accounts.',
+      'Handle teammate billing from one workspace so payments stay simple and organized.',
   },
   {
-    icon: 'i-lucide-bell-ring',
-    title: 'Activity Visibility',
-    description: 'Track key workspace updates as your organization grows.',
+    icon: 'i-lucide-contact-round',
+    title: 'Teammate Contact Exchanges',
+    description:
+      'See contact exchanges made by teammates to track follow-ups and team impact.',
   },
 ];
 
@@ -70,8 +71,8 @@ const onContactClick = () => {
               Collaborate across your organization
             </h3>
             <p class="text-sm leading-[21px] text-muted">
-              Teams will help you manage members, permissions, and shared
-              workflows in one place.
+              Teams will help owners manage teammates, billing, and contact
+              exchange visibility in one place.
             </p>
           </div>
 

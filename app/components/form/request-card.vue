@@ -90,12 +90,13 @@ const typeItems = [
   {
     value: 'new_design',
     label: 'New Design',
-    description: 'A fresh, bespoke design crafted for this card.',
+    description: 'A custom-crafted design created specifically for this card.',
   },
   {
     value: 'existing_design',
-    label: 'Use Existing Design',
-    description: 'Same design as a previous card, with different information.',
+    label: 'Existing Design',
+    description:
+      'Use the same design as an existing card with different contact information.',
   },
 ];
 
@@ -642,7 +643,7 @@ function onFormError(event: FormErrorEvent) {
 
     <UFormField
       v-if="state.type === 'existing_design'"
-      label="Choose one of the design"
+      label="Choose one of the designs"
       name="sourceCardId"
       class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
     >
@@ -668,7 +669,7 @@ function onFormError(event: FormErrorEvent) {
               v-if="item.cardBackUrl"
               :src="getS3Url(item.cardBackUrl)"
               :alt="`${item.firstName} card back`"
-              class="w-56 aspect-[1/0.57] rounded bg-[#1f1f1f]"
+              class="w-full aspect-[1/0.57] rounded bg-[#1f1f1f]"
             />
             <div
               v-else
@@ -842,7 +843,7 @@ function onFormError(event: FormErrorEvent) {
       <div role="region" aria-label="Pricing breakdown">
         <div class="rounded-[4px] border-b border-[#2a2a2a] px-4 py-3">
           <div class="flex items-center justify-between text-sm text-white">
-            <span>Duration</span>
+            <span>Membership Period</span>
             <span class="font-bold">
               {{
                 state.type === 'new_design'
@@ -852,7 +853,7 @@ function onFormError(event: FormErrorEvent) {
             </span>
           </div>
         </div>
-        <div class="rounded-[4px] px-4 py-0">
+        <div class="rounded-[4px] px-4 py-0 border-b border-[#2a2a2a]">
           <div
             class="flex items-center justify-between py-3 text-sm text-white"
           >
@@ -871,7 +872,7 @@ function onFormError(event: FormErrorEvent) {
           class="rounded-[4px] px-4 py-0 -mt-2 sm:mt-0"
         >
           <div
-            class="flex items-center justify-between py-3 text-sm text-white"
+            class="flex items-center justify-between py-4 text-sm text-white"
           >
             <span>Custom Design Fee</span>
             <span class="font-bold">
@@ -892,9 +893,9 @@ function onFormError(event: FormErrorEvent) {
     </div>
 
     <div v-if="showPricingSummary" class="space-y-8">
-      <p class="text-sm leading-[21px] text-white">
+      <p class="text-sm leading-[21px] text-muted">
         Please scan the QR code below to complete your payment. Make sure that
-        account name is Yan Aung Hein.
+        account name is <span class="font-bold text-white">Yan Aung Hein</span>.
       </p>
 
       <div class="space-y-3">
@@ -937,6 +938,8 @@ function onFormError(event: FormErrorEvent) {
         />
       </UFormField>
     </div>
+
+    <NeedHelp />
 
     <div class="flex items-center justify-end pt-2">
       <UButton

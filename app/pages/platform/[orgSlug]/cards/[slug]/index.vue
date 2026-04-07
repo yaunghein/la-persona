@@ -498,7 +498,7 @@ const active = computed({
   <template v-else>
     <div
       v-if="showEndingBanner"
-      class="mb-8 flex items-center justify-center bg-[#232323] px-8 py-2 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6"
+      class="flex items-center justify-center bg-[#232323] px-8 py-2 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6"
     >
       <p
         class="text-center text-xs sm:text-sm font-medium uppercase tracking-widest text-white"
@@ -539,7 +539,7 @@ const active = computed({
     </div>
 
     <div
-      class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between -mt-4 sm:mt-0"
+      class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:mt-0"
     >
       <div>
         <div
@@ -565,9 +565,8 @@ const active = computed({
             {{ cardBadgeLabel }}
           </UBadge>
         </div>
-        <p class="mt-2 text-sm leading-[20px] text-muted ml-0 sm:ml-10">
-          Manage your 3D card information, contact information, QR, and
-          wallpapers.
+        <p class="text-sm leading-[20px] text-muted ml-0 sm:ml-10">
+          Manage your contact information, QR, and wallpaper.
         </p>
       </div>
 
@@ -614,7 +613,7 @@ const active = computed({
     >
       <template #body>
         <div class="space-y-8">
-          <div class="space-y-4">
+          <div class="space-y-0">
             <!-- <h3
               class="text-[20px] font-medium uppercase tracking-[2px] text-white"
             >
@@ -626,14 +625,14 @@ const active = computed({
 
             <div class="rounded-[4px] border-b border-[#2a2a2a] px-4 py-3">
               <div class="flex items-center justify-between text-sm text-white">
-                <span>Duration</span>
+                <span>Membership Period</span>
                 <span class="font-bold">1 Year</span>
               </div>
             </div>
             <div
               v-for="row in paymentFeeRows"
               :key="row.label"
-              class="rounded-[4px] px-4 py-0"
+              class="rounded-[4px] px-4 py-3 border-b last:border-b-0 border-[#2a2a2a]"
             >
               <div class="flex items-center justify-between text-sm text-white">
                 <span>{{ row.label }}</span>
@@ -643,9 +642,10 @@ const active = computed({
           </div>
 
           <div class="space-y-8">
-            <p class="text-sm leading-[21px] text-white">
+            <p class="text-sm leading-[21px] text-muted">
               Please scan the QR code below to complete your payment. Make sure
-              that account name is Yan Aung Hein.
+              that account name is
+              <span class="font-bold text-white">Yan Aung Hein</span>.
             </p>
 
             <div class="space-y-3">
@@ -686,13 +686,9 @@ const active = computed({
                 }"
               />
             </div>
-
-            <p class="text-sm leading-[21px] text-white">
-              Once submitted, our team will review your request and reach out
-              within 24 hours to confirm the request and schedule the next
-              steps.
-            </p>
           </div>
+
+          <NeedHelp />
 
           <div class="flex justify-end">
             <UButton

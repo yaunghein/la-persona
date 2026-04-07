@@ -16,10 +16,8 @@ import {
   resolveSocialLinksForSubmission,
   type SocialFormLink,
 } from '~~/shared/utils/social-links';
-import { slugify } from '~~/shared/utils/slugify';
 
 const route = useRoute();
-const router = useRouter();
 const queryClient = useQueryClient();
 const slug = computed(() => String(route.params.slug || ''));
 const runtimeConfig = useRuntimeConfig();
@@ -40,7 +38,6 @@ const { data: card, isLoading } = useQuery<SelectCard>({
 
 const state = reactive({
   id: '',
-  slug: '',
   firstName: '',
   lastName: '',
   position: '',
@@ -75,19 +72,8 @@ const updateCardFormSchema = cardUpdateSchema.omit({ socials: true });
 const linkTypeItems = computed<string[][]>(() =>
   createLinkTypeItemsWithCustom(CARD_LINK_SELECT_ITEMS)
 );
-const previewCardSlug = computed(() => state.slug || slug.value);
-const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-
-function normalizeSlugInput(value: string | null | undefined) {
-  return slugify(String(value || '').replace(/_/g, '-'));
-}
-
-function normalizeSlugField() {
-  state.slug = normalizeSlugInput(state.slug);
-}
 
 const FIELD_LABELS: Record<string, string> = {
-  slug: 'Card URL slug',
   firstName: 'First name',
   lastName: 'Last name',
   position: 'Professional title / role',
@@ -166,7 +152,6 @@ watch(
   (val) => {
     if (!val) return;
     state.id = val.id ?? '';
-    state.slug = val.slug ?? '';
     state.firstName = val.firstName ?? '';
     state.lastName = val.lastName ?? '';
     state.position = val.position ?? '';
@@ -253,13 +238,11 @@ const { mutate: updateCard, isPending: isSaving } = useMutation({
     const normalizedSocials = normalizeLinkValuesWithHttps(
       resolveSocialLinksForSubmission(state.socials)
     );
-    const normalizedSlug = normalizeSlugInput(formData.slug);
 
     return await $fetch('/api/cards', {
       method: 'PATCH',
       body: {
         ...formData,
-        slug: normalizedSlug,
         website: normalizeUrlWithHttps(formData.website),
         avatarUrl: finalAvatarUrl,
         id: card.value?.id,
@@ -278,14 +261,7 @@ const { mutate: updateCard, isPending: isSaving } = useMutation({
       return;
     }
 
-    state.slug = updatedCard.slug ?? state.slug;
     await queryClient.invalidateQueries({ queryKey: ['cards'] });
-
-    if (updatedCard.slug && updatedCard.slug !== slug.value) {
-      await router.replace(
-        `/platform/${route.params.orgSlug}/cards/${updatedCard.slug}`
-      );
-    }
 
     toast.add({
       title: 'Success',
@@ -308,21 +284,6 @@ function onSubmit(event: FormSubmitEvent<UpdateCard>) {
 
 function validate(formData: Partial<UpdateCard>): FormError[] {
   const errors: FormError[] = [];
-  const slugValue = String(formData.slug || '').trim();
-  const normalizedSlug = normalizeSlugInput(slugValue);
-
-  if (!normalizedSlug) {
-    errors.push({
-      name: 'slug',
-      message: 'Please enter a card URL slug.',
-    });
-  } else if (!SLUG_PATTERN.test(normalizedSlug)) {
-    errors.push({
-      name: 'slug',
-      message:
-        'Use lowercase letters, numbers, and hyphens only, like john-smith.',
-    });
-  }
 
   const missingIndexes = getCustomSocialLabelMissingIndexes(state.socials);
   missingIndexes.forEach((index) => {
@@ -659,15 +620,15 @@ onBeforeUnmount(() => {
       @error="onFormError"
       class="space-y-8"
     >
-      <div class="space-y-4">
+      <div class="space-y-2">
         <h2
           class="text-md sm:text-xl font-medium uppercase tracking-widest text-white"
         >
           Contact Information
         </h2>
         <p class="max-w-160 text-sm leading-[21px] text-[#8b8b8b]">
-          This information will be visible on your public profile page and
-          exchange contact feature. Please share only what you are comfortable.
+          This information will be visible on your persona card and exchange
+          contact profile. Please share only what you are comfortable.
         </p>
       </div>
 
@@ -713,7 +674,9 @@ onBeforeUnmount(() => {
               Ready to upload
             </span> -->
           </div>
-          <p class="text-xs text-[#8b8b8b]">JPG, PNG or WebP. Max 800KB.</p>
+          <p class="text-xs text-[#8b8b8b]">
+            JPG, PNG or WebP. Prefer under 800KB.
+          </p>
         </div>
       </div>
 
@@ -743,25 +706,6 @@ onBeforeUnmount(() => {
               base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
             }"
           />
-        </UFormField>
-        <UFormField
-          label="URL Slug"
-          name="slug"
-          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
-        >
-          <UInput
-            v-model="state.slug"
-            placeholder="john-smith"
-            autocomplete="off"
-            class="w-full"
-            :ui="{
-              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
-            }"
-            @blur="normalizeSlugField"
-          />
-          <p class="mt-2 text-xs text-[#8b8b8b]">
-            Your public link will be `/c/{{ previewCardSlug || 'your-slug' }}`.
-          </p>
         </UFormField>
         <UFormField
           label="Professional Title / Role"

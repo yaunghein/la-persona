@@ -82,7 +82,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       >
         <UInput
           v-model="state.firstName"
-          placeholder="Kyaw"
+          placeholder="John"
           class="w-full"
           :ui="{
             base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
@@ -97,7 +97,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       >
         <UInput
           v-model="state.lastName"
-          placeholder="Gyi"
+          placeholder="Doe"
           class="w-full"
           :ui="{
             base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',

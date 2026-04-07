@@ -60,7 +60,7 @@ const infoItems = [
     icon: 'i-lucide-scan-eye',
     title: 'Preview & Edit',
     description:
-      'Open each card to preview, update information, and manage subscriptions.',
+      'Open each card to preview, update information, and download wallpapers.',
   },
 ];
 
@@ -230,7 +230,7 @@ const cardFooterActionSize = 'sm';
               <div class="flex items-start gap-3">
                 <UIcon
                   :name="item.icon"
-                  class="mt-0.5 size-[18px] shrink-0 text-white sm:size-5"
+                  class="shrink-0 mt-0.5 size-[18px] text-white sm:size-5"
                 />
                 <div class="min-w-0">
                   <p class="text-sm font-medium text-white">{{ item.title }}</p>
@@ -263,8 +263,11 @@ const cardFooterActionSize = 'sm';
         v-for="card in cards"
         :key="card.id"
         variant="outline"
-        class="bg-white/2"
-        :ui="{ body: 'p-8 lg:p-10' }"
+        class="bg-[#232323]"
+        :ui="{
+          body: 'p-8 lg:p-10',
+          footer: 'bg-[#171717]',
+        }"
       >
         <div class="aspect-5/3 relative">
           <img

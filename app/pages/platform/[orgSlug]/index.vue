@@ -274,7 +274,7 @@ const chartOptions = {
     >
       <div class="flex items-center gap-2">
         <h1
-          class="text-2xl font-medium leading-tight tracking-widest uppercase"
+          class="text-xl sm:text-2xl font-medium leading-tight tracking-widest uppercase"
         >
           {{ analyticsHeading }}
         </h1>
@@ -369,7 +369,9 @@ const chartOptions = {
     </div>
 
     <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
-      <h2 class="text-2xl font-medium leading-tight tracking-widest uppercase">
+      <h2
+        class="text-xl sm:text-2xl font-medium leading-tight tracking-widest uppercase"
+      >
         Views Over Time
       </h2>
       <p class="mt-1 text-sm text-[#8b8b8b]">
@@ -383,7 +385,7 @@ const chartOptions = {
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
       <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
         <h3
-          class="text-2xl font-medium leading-tight tracking-widest uppercase"
+          class="text-xl sm:text-2xl font-medium leading-tight tracking-widest uppercase"
         >
           Social Media Click-Throughs
         </h3>
@@ -423,7 +425,7 @@ const chartOptions = {
 
       <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
         <h3
-          class="text-2xl font-medium leading-tight tracking-widest uppercase"
+          class="text-xl sm:text-2xl font-medium leading-tight tracking-widest uppercase"
         >
           Portfolio & Link Clicks
         </h3>
@@ -456,7 +458,7 @@ const chartOptions = {
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
       <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
         <h3
-          class="text-2xl font-medium leading-tight tracking-widest uppercase"
+          class="text-xl sm:text-2xl font-medium leading-tight tracking-widest uppercase"
         >
           Card Save Actions
         </h3>
@@ -476,9 +478,11 @@ const chartOptions = {
                   class="size-4 text-white/75"
                 />
               </div>
-              <div>
+              <div class="max-w-48">
                 <p class="text-sm">Exchange Contacts</p>
-                <p class="text-xs text-[#8b8b8b]">Direct exchange action</p>
+                <p class="text-xs text-[#8b8b8b]">
+                  {{ exchangeCount }} people have connected with you.
+                </p>
               </div>
             </div>
             <span class="text-3xl leading-[1.1] font-bold">{{
@@ -494,9 +498,11 @@ const chartOptions = {
               >
                 <UIcon name="i-lucide-download" class="size-4 text-white/75" />
               </div>
-              <div>
+              <div class="max-w-48">
                 <p class="text-sm">Add to Contacts</p>
-                <p class="text-xs text-[#8b8b8b]">Direct add action</p>
+                <p class="text-xs text-[#8b8b8b]">
+                  {{ vcfCount }} people have saved your contact to their phones.
+                </p>
               </div>
             </div>
             <span class="text-3xl leading-[1.1] font-bold">{{ vcfCount }}</span>
