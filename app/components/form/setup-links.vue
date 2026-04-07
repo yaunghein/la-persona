@@ -12,7 +12,9 @@ import {
   normalizeSocialLinksForForm,
   resolveSocialLinksForSubmission,
   type SocialFormLink,
+  type SocialSubmitLink,
 } from '~~/shared/utils/social-links';
+import { useUrlNormalization } from '~~/app/composables/url-normalization';
 
 const emit = defineEmits<{
   back: [];
@@ -75,7 +77,7 @@ const { mutate: submitRequest, isPending: isSubmitting } = useMutation({
   mutationFn: async (formData: typeof state) => {
     const socials = normalizeLinkValuesWithHttps(
       resolveSocialLinksForSubmission(state.socials)
-    ).filter((item) => item.label || item.value);
+    ).filter((item: SocialSubmitLink) => item.label || item.value);
 
     return await $fetch(`/api/cards`, {
       method: 'PATCH',

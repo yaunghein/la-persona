@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const route = useRoute();
-const step = ref<'contact' | 'link' | 'welcome'>('contact');
+const step = ref<'contact' | 'link'>('contact');
 
 function goToDashboard() {
   navigateTo(`/platform/${route.params.orgSlug}/cards`);
@@ -8,7 +8,7 @@ function goToDashboard() {
 </script>
 
 <template>
-  <section v-if="step !== 'welcome'">
+  <section>
     <div class="mt-9 mx-auto aspect-[1/0.11] w-36 sm:w-44">
       <IconLogo />
     </div>
@@ -66,10 +66,8 @@ function goToDashboard() {
       <FormSetupLinks
         v-if="step === 'link'"
         @back="step = 'contact'"
-        @completed="step = 'welcome'"
+        @completed="goToDashboard"
       />
     </div>
   </section>
-
-  <FormSetupWelcome v-else @enter="goToDashboard" />
 </template>
