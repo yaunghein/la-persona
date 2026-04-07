@@ -475,12 +475,43 @@ function confirmRemoveLink() {
   closeDeleteSocialConfirm();
 }
 
+function websiteLabelForSpline(website: string | null | undefined): string {
+  if (!website?.trim()) return '';
+  const raw = website.trim();
+  try {
+    const url = new URL(raw.includes('://') ? raw : `https://${raw}`);
+    const host = url.hostname.toUpperCase();
+    const path =
+      url.pathname && url.pathname !== '/'
+        ? url.pathname.replace(/\/$/, '').toUpperCase()
+        : '';
+    return path ? `${host}${path}` : host;
+  } catch {
+    return raw
+      .replace(/^https?:\/\//i, '')
+      .replace(/\/$/, '')
+      .toUpperCase();
+  }
+}
+
 function updatePreviewSplineVariables() {
   if (!previewSpline.value) return;
 
+  const firstName = state.firstName || card.value?.firstName || '';
+  const lastName = state.lastName || card.value?.lastName || '';
+  const fullname = [firstName, lastName]
+    .filter(Boolean)
+    .join(' ')
+    .trim()
+    .toUpperCase();
+
   previewSpline.value.setVariables({
-    firstName: state.firstName || card.value?.firstName || '',
-    lastName: state.lastName || card.value?.lastName || '',
+    name: fullname,
+    position:
+      (state.position || card.value?.position || '').toUpperCase() || '',
+    phone: state.phone || card.value?.phone || '',
+    email: (state.email || card.value?.email || '').toUpperCase() || '',
+    website: websiteLabelForSpline(state.website || card.value?.website),
   });
 }
 
@@ -576,9 +607,19 @@ watch(isPreviewModalOpen, async (open) => {
   disposePreviewSpline();
 });
 
-watch([() => state.firstName, () => state.lastName], () => {
-  updatePreviewSplineVariables();
-});
+watch(
+  [
+    () => state.firstName,
+    () => state.lastName,
+    () => state.position,
+    () => state.phone,
+    () => state.email,
+    () => state.website,
+  ],
+  () => {
+    updatePreviewSplineVariables();
+  }
+);
 
 watch(
   () => card.value?.splineUrl,
