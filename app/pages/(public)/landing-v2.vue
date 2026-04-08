@@ -2,8 +2,7 @@
 import Lenis from 'lenis';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Autoplay, FreeMode } from 'swiper/modules';
-import { Swiper, SwiperSlide } from 'swiper/vue';
+import { Application } from '@splinetool/runtime';
 
 useSeoMeta({
   title: 'Meet the right people — LA PERSONA',
@@ -249,33 +248,110 @@ const changeFeatures = [
     label: 'Instant Exchange',
     description:
       "Instantly exchange contact details through your persona card—so there's no friction, no manual saving, and no lost information after you meet someone.",
+    video: '/videos/instant-exchange-demo.mp4',
+    duration: 25000,
   },
   {
     id: 'dynamic',
     label: 'Dynamic Updates',
     description:
-      'Refresh your story, links, and focus areas anytime—so every new introduction reflects who you are right now, not last season.',
+      'Update your persona anytime, so your information is always current without reprinting cards, and you’ll never worry about running out when it matters most.',
+    video: '/videos/dynamic-update-demo.mp4',
+    duration: 24000,
   },
   {
     id: 'engagement',
     label: 'Engagement Insights',
     description:
-      'See how people engage with your persona so you can follow up with context and keep the right conversations moving.',
+      'See how many people viewed and engaged with your persona card, giving you a clear signal of interest, so you can follow up with intention instead of guessing.',
+    video: '/videos/insights-demo.mp4',
+    duration: 8000,
   },
   {
     id: 'contacts',
     label: 'Contact List',
     description:
-      'Keep the people you meet organized in one place—names, context, and next steps without digging through screenshots or paper cards.',
+      'Every person you connect with is automatically saved, so you can easily revisit, manage, and follow up without losing track of important contacts.',
+    video: '/videos/contacts-demo.mp4',
+    duration: 19000,
   },
 ] as const;
-
 const activeFeatureIndex = ref(0);
 const activeFeature = computed(() => changeFeatures[activeFeatureIndex.value]!);
+const featureProgress = ref(0);
+let featureTimerId: ReturnType<typeof setInterval> | null = null;
+let featureProgressRafId = 0;
+let featureTickStart = 0;
 
-const selectFeature = (index: number) => {
+function startFeatureTimer() {
+  stopFeatureTimer();
+  const ms = changeFeatures[activeFeatureIndex.value]!.duration;
+  featureTickStart = performance.now();
+  featureProgress.value = 0;
+
+  featureProgressRafId = requestAnimationFrame(function tick(now) {
+    const elapsed = now - featureTickStart;
+    featureProgress.value = Math.min(1, elapsed / ms);
+    if (elapsed < ms) {
+      featureProgressRafId = requestAnimationFrame(tick);
+    }
+  });
+
+  featureTimerId = setTimeout(() => {
+    activeFeatureIndex.value =
+      (activeFeatureIndex.value + 1) % changeFeatures.length;
+    startFeatureTimer();
+  }, ms);
+}
+
+function stopFeatureTimer() {
+  if (featureTimerId) {
+    clearTimeout(featureTimerId);
+    featureTimerId = null;
+  }
+  cancelAnimationFrame(featureProgressRafId);
+  featureProgressRafId = 0;
+}
+
+const featureVideosEl = ref<HTMLElement | null>(null);
+
+function syncFeatureVideos(activeIndex: number) {
+  if (!featureVideosEl.value) return;
+  const videos = featureVideosEl.value.querySelectorAll('video');
+  videos.forEach((video, i) => {
+    if (i === activeIndex) {
+      video.currentTime = 0;
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  });
+}
+
+function selectFeature(index: number) {
   activeFeatureIndex.value = index;
-};
+  syncFeatureVideos(index);
+  startFeatureTimer();
+}
+
+watch(activeFeatureIndex, (index) => {
+  syncFeatureVideos(index);
+});
+
+onMounted(async () => {
+  await nextTick();
+  syncFeatureVideos(0);
+  startFeatureTimer();
+
+  if (bespokeCanvasEl.value) {
+    const spline = new Application(bespokeCanvasEl.value);
+    spline.load(BESPOKE_SPLINE_URL);
+  }
+});
+
+onUnmounted(() => {
+  stopFeatureTimer();
+});
 
 const whyItems = [
   {
@@ -292,46 +368,21 @@ const whyItems = [
   },
 ] as const;
 
-const bespokeCards = [
-  {
-    name: 'Min Htet Dipar',
-    role: 'Creative Director @ The Sand Studio',
-  },
-  {
-    name: 'Matt Nay',
-    role: 'F&B Visual Content Creator',
-  },
-  {
-    name: 'Banyar Kyaw Kyaw',
-    role: 'IT Support Specialist',
-  },
-] as const;
-
-/** Repeated for smoother Swiper `loop` + `slidesPerView: 'auto'`. */
-const bespokeSwiperSlides = [...bespokeCards, ...bespokeCards, ...bespokeCards];
-
-const bespokeSwiperModules = [FreeMode, Autoplay];
-
-const bespokeSwiperAutoplay = computed(() =>
-  prefersReducedMotion.value
-    ? false
-    : {
-        delay: 1,
-        disableOnInteraction: false,
-        pauseOnMouseEnter: true,
-      }
-);
+const BESPOKE_SPLINE_URL =
+  'https://prod.spline.design/PUnUYVF6idyub0GP/scene.splinecode';
+const bespokeCanvasEl = ref<HTMLCanvasElement | null>(null);
 
 const freePlanFeatures = [
-  'Smart profile creation',
-  'Basic discovery',
-  'Share via link',
+  'Create and share your persona card with our professionally designed template',
+  'Instant contact exchange',
+  'Access your contact list',
+  'See engagement insights (total view, card saves, social clicks, etc)',
 ] as const;
 
 const premiumPlanFeatures = [
-  'Custom persona card design',
-  'Analytics dashboard',
-  'Dedicated support',
+  'Everything in Standard',
+  'Fully custom-designed persona card',
+  'Priority support and updates',
 ] as const;
 </script>
 
@@ -504,14 +555,14 @@ const premiumPlanFeatures = [
       <div
         class="mx-auto flex max-w-360 flex-col items-center gap-12 sm:gap-18"
       >
-        <div class="flex flex-col gap-6 text-center sm:gap-8">
+        <div class="flex flex-col gap-2 text-center sm:gap-8">
           <h2
-            class="text-xl font-light uppercase leading-normal tracking-[0.2rem] sm:text-[2rem] sm:tracking-[0.2rem]"
+            class="text-xl max-w-68 sm:max-w-none font-light uppercase leading-normal tracking-[0.2rem] sm:text-[2rem] sm:tracking-[0.2rem]"
           >
             What Changes With La Persona
           </h2>
           <p
-            class="text-xs max-w-110 mx-auto font-light leading-normal tracking-[0.035rem] text-white/50 sm:text-sm sm:tracking-[0.056rem]"
+            class="text-xs max-w-68 sm:max-w-110 mx-auto font-light leading-normal tracking-[0.035rem] text-white/50 sm:text-sm sm:tracking-[0.056rem]"
           >
             With La Persona, your professional life starts to shift in small but
             powerful—ways:
@@ -519,20 +570,34 @@ const premiumPlanFeatures = [
         </div>
 
         <div class="relative w-41.5 shrink-0 sm:w-61">
-          <img
-            src="/images/landing-v2/phone-mockup.png"
-            alt=""
-            class="h-auto w-full object-contain"
-            width="437"
-            height="884"
-          />
+          <div class="relative">
+            <div
+              ref="featureVideosEl"
+              class="absolute inset-[2.3%_5.4%_2.3%_5.4%] z-0 overflow-hidden rounded-[11%/5.5%]"
+            >
+              <video
+                v-for="(f, i) in changeFeatures"
+                :key="f.id"
+                :src="f.video"
+                muted
+                playsinline
+                class="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
+                :class="activeFeatureIndex === i ? 'opacity-100' : 'opacity-0'"
+              />
+            </div>
+            <img
+              src="/images/landing-v2/iphone-frame.webp"
+              alt=""
+              class="relative z-10 h-auto w-full"
+            />
+          </div>
         </div>
 
         <div
           class="flex w-full max-w-114 flex-col items-center gap-10 sm:max-w-none sm:gap-13"
         >
           <div
-            class="flex flex-wrap items-start justify-center gap-x-8 gap-y-4 sm:gap-x-13"
+            class="grid grid-cols-1 gap-x-8 gap-y-4 sm:flex sm:flex-wrap sm:items-start sm:justify-center sm:gap-x-13"
             role="tablist"
             aria-label="Feature highlights"
           >
@@ -542,7 +607,7 @@ const premiumPlanFeatures = [
               type="button"
               role="tab"
               :aria-selected="activeFeatureIndex === i"
-              class="flex flex-col items-center gap-4 border-none bg-transparent p-0 text-center text-xs font-light uppercase tracking-[0.175rem] sm:text-sm sm:tracking-[0.175rem]"
+              class="flex flex-col items-center gap-2 border-none bg-transparent p-0 text-center text-xs font-light uppercase tracking-[0.175rem] sm:text-sm sm:tracking-[0.175rem]"
               :class="
                 activeFeatureIndex === i
                   ? 'text-white'
@@ -552,8 +617,13 @@ const premiumPlanFeatures = [
             >
               {{ f.label }}
               <span
-                class="block h-px w-full max-w-24 origin-center scale-x-0 bg-white/30 sm:max-w-none"
-                :class="{ 'scale-x-full!': activeFeatureIndex === i }"
+                class="block h-px w-full origin-left bg-white"
+                :style="{
+                  transform:
+                    activeFeatureIndex === i
+                      ? `scaleX(${featureProgress})`
+                      : 'scaleX(0)',
+                }"
               />
             </button>
           </div>
@@ -568,54 +638,56 @@ const premiumPlanFeatures = [
 
     <!-- Why La Persona -->
     <section class="px-4 py-14 sm:py-24">
-      <h2
-        class="mx-auto mb-12 text-center text-xl font-light uppercase leading-normal tracking-[0.2rem] sm:mb-18 sm:max-w-none sm:text-[2rem] sm:tracking-[0.15rem]"
-      >
-        Why choose La Persona
-      </h2>
       <div
-        class="mx-auto flex max-w-305.5 flex-col items-stretch sm:flex-row sm:items-center sm:justify-center"
+        class="mx-auto flex max-w-305 flex-col items-center gap-12 sm:gap-18"
       >
-        <template v-for="(item, i) in whyItems" :key="item.title">
-          <div
-            v-if="i > 0"
-            class="hidden h-70 w-px shrink-0 bg-white/10 sm:block"
-            aria-hidden="true"
-          />
-          <div
-            class="border-t border-white/10 px-6 py-12 sm:w-[20rem] sm:border-none sm:px-8 sm:py-0"
-          >
-            <div class="flex flex-col gap-6 sm:gap-8">
+        <h2
+          class="text-center text-xl font-light uppercase leading-normal tracking-[0.15rem] sm:text-[2rem] sm:tracking-[0.15rem]"
+        >
+          Why choose La Persona
+        </h2>
+        <div
+          class="flex w-full flex-col items-stretch sm:flex-row sm:items-center"
+        >
+          <template v-for="(item, i) in whyItems" :key="item.title">
+            <div
+              class="hidden w-px shrink-0 self-stretch bg-white/10 sm:block"
+              aria-hidden="true"
+            />
+            <div
+              class="flex flex-1 flex-col gap-6 px-4 py-10 sm:gap-8 sm:border-none sm:px-13 sm:py-16"
+              :class="i > 0 ? 'border-t border-white/10' : ''"
+            >
               <h3
                 class="text-base font-light uppercase leading-normal tracking-[0.125rem] sm:text-xl sm:tracking-[0.125rem]"
               >
                 {{ item.title }}
               </h3>
               <p
-                class="max-w-[20rem] text-xs font-light leading-normal tracking-[0.0875rem] text-white/40 sm:text-sm"
+                class="max-w-80 text-xs font-light leading-normal tracking-[0.0875rem] text-white/40 sm:text-sm sm:tracking-[0.0875rem]"
               >
                 {{ item.body }}
               </p>
             </div>
-          </div>
-        </template>
+          </template>
+        </div>
       </div>
     </section>
 
-    <!-- Bespoke cards: full-bleed Swiper — free mode + autoplay (swiper/vue) -->
+    <!-- Bespoke cards: full-page Spline scene -->
     <section id="bespoke-cards" class="py-14 sm:py-24">
       <div
-        class="mx-auto flex max-w-305.5 flex-col items-center gap-12 px-4 sm:gap-18"
+        class="mx-auto flex max-w-305.5 flex-col items-center gap-12 px-4 sm:gap-18 relative z-10"
       >
         <div class="flex flex-col items-center gap-8 text-center sm:gap-13">
-          <div class="flex flex-col gap-6 sm:gap-8">
+          <div class="flex flex-col gap-2 sm:gap-8">
             <h2
               class="text-xl font-light uppercase leading-normal tracking-[0.2rem] sm:text-[2rem] sm:tracking-[0.2rem]"
             >
               Bespoke Persona Cards
             </h2>
             <p
-              class="mx-auto max-w-105 text-xs font-light leading-normal tracking-[0.035rem] text-white/50 sm:text-sm sm:tracking-[0.056rem]"
+              class="max-w-76 sm:max-w-105 mx-auto text-xs font-light leading-normal tracking-[0.035rem] text-white/50 sm:text-sm sm:tracking-[0.056rem]"
             >
               Explore how professionals present themselves through
               custom-designed cards. Each one crafted to reflect their own
@@ -626,70 +698,32 @@ const premiumPlanFeatures = [
             to="/#commission-us"
             class="inline-flex h-12 items-center justify-center rounded-full border border-white/10 px-10 text-xs font-light uppercase tracking-[0.1rem] hover:bg-white hover:text-dark sm:h-[2.94rem] sm:text-sm sm:tracking-[0.0875rem]"
           >
-            Commission us
+            Talk to Us
           </NuxtLink>
         </div>
       </div>
 
       <div
-        class="landing-v2-bespoke-swiper relative w-screen max-w-none overflow-hidden mt-20"
+        class="relative w-screen max-w-none overflow-hidden aspect-square sm:aspect-[1/0.58] sm:max-h-dvh -mt-20 sm:-mt-48 -mb-20 sm:-mb-56"
         style="margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw)"
-        data-slider="bespoke-persona-cards"
       >
-        <Swiper
-          :modules="bespokeSwiperModules"
-          slides-per-view="auto"
-          :space-between="24"
-          :loop="true"
-          :loop-additional-slides="2"
-          :free-mode="{
-            enabled: true,
-            minimumVelocity: 0.02,
-          }"
-          :autoplay="bespokeSwiperAutoplay"
-          :speed="12000"
-          class="overflow-visible! px-4 sm:px-6"
-        >
-          <SwiperSlide
-            v-for="(card, i) in bespokeSwiperSlides"
-            :key="`${card.name}-${i}`"
-            class="w-[min(85vw,35.75rem)]! sm:w-143!"
-          >
-            <article class="select-none">
-              <div
-                class="mb-6 aspect-[1/0.58] w-full rounded-xl border-2 border-white/10 bg-white/5 sm:mb-8"
-              />
-              <div class="flex flex-col gap-4">
-                <h3
-                  class="text-xs font-light uppercase tracking-[0.175rem] sm:text-sm sm:tracking-[0.175rem]"
-                >
-                  {{ card.name }}
-                </h3>
-                <p
-                  class="max-w-[20rem] text-xs font-light leading-normal tracking-[0.0875rem] text-white/40 sm:text-sm"
-                >
-                  {{ card.role }}
-                </p>
-              </div>
-            </article>
-          </SwiperSlide>
-        </Swiper>
+        <canvas ref="bespokeCanvasEl" class="absolute inset-0 h-full w-full" />
       </div>
     </section>
 
     <!-- Pricing -->
-    <section class="px-4 py-14 sm:py-24">
+    <section class="px-4 py-14 sm:py-24 relative z-10">
       <div
-        class="mx-auto flex max-w-204 flex-col items-center gap-12 sm:gap-18"
+        class="mx-auto flex max-w-196 flex-col items-center gap-12 sm:gap-18"
       >
         <h2
-          class="max-w-133 text-center text-xl font-light uppercase leading-normal tracking-[0.15rem] sm:text-[2rem] sm:leading-snug sm:tracking-[0.15rem]"
+          class="max-w-133 text-center text-xl font-light uppercase leading-snug tracking-[0.15rem] sm:text-[2rem] sm:tracking-[0.15rem]"
         >
           Start free. Upgrade when you're ready.
         </h2>
-        <div class="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-6">
+        <div class="grid w-full grid-cols-1 gap-6 sm:grid-cols-2">
           <div
-            class="flex flex-col gap-8 rounded-xl border border-white/10 bg-dark p-8 sm:p-10 sm:pb-11"
+            class="flex flex-col gap-4 rounded-xl border border-white/10 bg-dark p-8 sm:p-10"
           >
             <div class="flex flex-col gap-2">
               <p
@@ -706,58 +740,54 @@ const premiumPlanFeatures = [
             >
               Explore the platform and start connecting.
             </p>
-            <ul class="flex flex-col gap-3">
-              <li
-                v-for="feat in freePlanFeatures"
-                :key="feat"
-                class="flex items-center gap-3 text-xs font-light tracking-[0.0225rem] text-white/50"
-              >
-                <span class="size-1 shrink-0 rounded-full bg-gold" />
+            <ul
+              class="list-disc space-y-1 pl-5 text-[0.8125rem] font-light leading-snug tracking-[0.024rem] text-white/40"
+            >
+              <li v-for="feat in freePlanFeatures" :key="feat">
                 {{ feat }}
               </li>
             </ul>
             <NuxtLink
               to="/sign-in"
-              class="mt-auto inline-flex h-12 w-fit items-center justify-center rounded-full border border-white/10 px-8 text-xs font-light uppercase tracking-[0.1rem] hover:bg-white hover:text-dark sm:h-[2.94rem] sm:text-sm sm:tracking-[0.0875rem]"
+              class="mt-5 inline-flex h-10 sm:h-12 w-fit items-center justify-center rounded-full border border-white/10 px-8 text-xs font-light uppercase tracking-[0.1rem] hover:bg-white hover:text-dark sm:text-sm sm:tracking-[0.0875rem]"
             >
               Try Free
             </NuxtLink>
           </div>
 
           <div
-            class="relative flex items-start flex-col gap-8 overflow-hidden rounded-xl border border-gold bg-dark p-8 sm:p-10 sm:pb-11"
+            class="flex flex-col justify-between gap-4 rounded-xl border border-gold bg-dark p-8 sm:p-10"
           >
-            <div class="flex flex-col gap-2">
+            <div class="flex flex-col gap-4">
+              <div class="flex flex-col gap-2">
+                <p
+                  class="text-[0.6875rem] font-light uppercase tracking-[0.06875rem] text-gold"
+                >
+                  Premium
+                </p>
+                <p class="text-sm font-medium uppercase tracking-[0.07rem]">
+                  Bespoke Persona Card
+                </p>
+              </div>
               <p
-                class="text-[0.6875rem] font-light uppercase tracking-[0.06875rem] text-gold"
+                class="text-[0.8125rem] font-light leading-snug tracking-[0.024rem] text-white/40"
               >
-                Premium
+                Elevate your presence with a custom-designed persona card.
               </p>
-              <p class="text-sm font-medium uppercase tracking-[0.07rem]">
-                Bespoke Persona Card
-              </p>
+              <ul
+                class="list-disc space-y-1 pl-5 text-[0.8125rem] font-light leading-snug tracking-[0.024rem] text-white/40"
+              >
+                <li v-for="feat in premiumPlanFeatures" :key="feat">
+                  {{ feat }}
+                </li>
+              </ul>
             </div>
-            <p
-              class="max-w-71.5 text-[0.8125rem] font-light leading-snug tracking-[0.024rem] text-white/40"
-            >
-              Elevate your presence with a custom-designed persona card.
-            </p>
-            <ul class="flex flex-col gap-3">
-              <li
-                v-for="feat in premiumPlanFeatures"
-                :key="feat"
-                class="flex items-center gap-3 text-xs font-light tracking-[0.0225rem] text-white/50"
-              >
-                <span class="size-1 shrink-0 rounded-full bg-gold" />
-                {{ feat }}
-              </li>
-            </ul>
             <UButton
               to="/#commission-us"
               size="xl"
-              class="mt-auto h-12 justify-center rounded-full bg-white px-8 text-xs font-light uppercase tracking-[0.1rem] text-neutral-950 sm:h-11 sm:text-sm sm:tracking-[0.0875rem]"
+              class="h-10 sm:h-12 w-fit justify-center rounded-full bg-white px-8 text-xs font-light uppercase tracking-[0.1rem] text-neutral-950 sm:text-sm sm:tracking-[0.0875rem]"
             >
-              Get Started
+              Talk to Us
             </UButton>
           </div>
         </div>
@@ -765,12 +795,12 @@ const premiumPlanFeatures = [
     </section>
 
     <!-- Final CTA -->
-    <section id="landing-v2-final-cta" class="px-4 py-14 sm:px-58.5 sm:py-24">
+    <section id="landing-v2-final-cta" class="px-4 py-20 sm:px-58.5 sm:py-33">
       <div
         class="mx-auto flex max-w-127.5 flex-col items-center gap-10 sm:gap-13"
       >
         <p
-          class="text-center text-xl font-light uppercase leading-normal tracking-[0.15rem] sm:text-[2rem] sm:leading-snug sm:tracking-[0.15rem]"
+          class="max-w-80 text-center text-xl font-light uppercase leading-snug tracking-[0.15rem] sm:max-w-127.5 sm:text-[2rem] sm:tracking-[0.15rem]"
         >
           Every meaningful connection starts with a great introduction.
         </p>
@@ -789,7 +819,7 @@ const premiumPlanFeatures = [
     <!-- Floating CTA -->
     <div
       ref="floatingCtaEl"
-      class="fixed bottom-5 sm:bottom-8 left-1/2 z-50 -translate-x-1/2 invisible"
+      class="fixed bottom-5 left-1/2 z-50 -translate-x-1/2 invisible"
     >
       <UButton
         to="/sign-in"
@@ -800,12 +830,14 @@ const premiumPlanFeatures = [
       </UButton>
     </div>
   </main>
-  <footer class="border-t border-white/10 px-4 py-10 sm:px-12 sm:pt-12">
+  <footer
+    class="border-t border-white/10 px-4 pt-5 sm:pt-12 pb-5 sm:pb-10 sm:px-12"
+  >
     <div
-      class="mx-auto flex max-w-360 flex-col gap-6 sm:flex-row sm:items-center sm:justify-between"
+      class="mx-auto flex max-w-360 flex-col gap-6 sm:flex-row items-center sm:justify-between"
     >
       <nav
-        class="flex flex-wrap items-center gap-6 text-[0.75rem] font-light uppercase tracking-[0.075rem] text-white/40"
+        class="flex flex-wrap items-center gap-6 text-xs font-light uppercase tracking-[0.075rem] text-white/40"
         aria-label="Footer"
       >
         <a href="#" class="hover:text-white">Contact</a>
