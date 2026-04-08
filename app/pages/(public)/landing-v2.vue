@@ -65,6 +65,7 @@ const storyScrollMinVh = computed(() => Math.max(360, storyLines.length * 150));
 
 /** Set on client; when true we skip Lenis + scrub triggers (static layout). */
 const prefersReducedMotion = ref(false);
+const floatingCtaEl = ref<HTMLElement | null>(null);
 
 const STORY_WORD_TRAVEL_PX = 28;
 /** Within each beat’s scroll segment [0–1]: word stagger-in, full-line hold, stagger-out. */
@@ -194,6 +195,40 @@ onMounted(async () => {
     })
   );
 
+  if (floatingCtaEl.value) {
+    gsap.set(floatingCtaEl.value, { autoAlpha: 0, y: 16 });
+
+    const showCta = () =>
+      gsap.to(floatingCtaEl.value, {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.3,
+        ease: 'power2.out',
+      });
+    const hideCta = () =>
+      gsap.to(floatingCtaEl.value, {
+        autoAlpha: 0,
+        y: 16,
+        duration: 0.2,
+        ease: 'power2.in',
+      });
+
+    landingV2ScrollTriggers.push(
+      ScrollTrigger.create({
+        trigger: '#landing-v2-hero',
+        start: 'bottom center',
+        onEnter: showCta,
+        onLeaveBack: hideCta,
+      }),
+      ScrollTrigger.create({
+        trigger: '#landing-v2-final-cta',
+        start: 'top bottom+=700',
+        onEnter: hideCta,
+        onLeaveBack: showCta,
+      })
+    );
+  }
+
   ScrollTrigger.refresh();
   applyLandingV2StoryWords(storyScrollTrigger.progress);
 });
@@ -302,7 +337,7 @@ const premiumPlanFeatures = [
 
 <template>
   <header
-    class="z-30 flex h-30 justify-center items-center border-b border-white/10 bg-dark px-4 sm:px-18"
+    class="z-30 flex h-15 sm:h-30 justify-center items-center border-b border-white/10 bg-dark px-4 sm:px-18"
   >
     <NuxtLink
       to="/"
@@ -317,17 +352,20 @@ const premiumPlanFeatures = [
 
     <!-- Hero -->
     <section
-      class="flex flex-col items-center justify-center px-4 py-14 text-center sm:py-60"
+      id="landing-v2-hero"
+      class="flex flex-col items-center justify-center text-center"
     >
-      <div class="flex max-w-211.5 flex-col items-center gap-8 sm:gap-13">
-        <div class="flex flex-col gap-6 sm:gap-8">
+      <div
+        class="flex max-w-211.5 flex-col items-center gap-8 sm:gap-13 py-18 sm:py-24"
+      >
+        <div class="flex flex-col gap-4 sm:gap-8">
           <h1
             class="mx-auto max-w-[20rem] text-xl font-light uppercase leading-[1.1] tracking-[0.2rem] sm:max-w-none sm:text-[3.5rem] sm:leading-[1.1] sm:tracking-[0.35rem]"
           >
             Meet the right people. At the right time.
           </h1>
           <p
-            class="mx-auto max-w-150 text-xs font-light leading-normal tracking-[0.035rem] text-white/50 sm:text-base sm:tracking-[0.056rem]"
+            class="mx-auto max-w-80 sm:max-w-140 text-xs font-light leading-normal tracking-[0.04rem] text-white/50 sm:text-base"
           >
             La Persona transforms how professionals introduce themselves,
             connect, and unlock opportunities—starting from a single
@@ -335,12 +373,12 @@ const premiumPlanFeatures = [
           </p>
         </div>
         <div
-          class="flex w-full max-w-[23.33rem] flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center sm:gap-4"
+          class="flex sm:w-full max-w-[23.33rem] flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center sm:gap-4"
         >
           <UButton
             to="/sign-in"
             size="xl"
-            class="h-12 justify-center rounded-full bg-white px-10 text-xs font-light uppercase tracking-[0.1rem] text-neutral-950 sm:h-[2.94rem] sm:text-sm sm:tracking-[0.0875rem]"
+            class="h-10 sm:h-12 justify-center rounded-full bg-white px-10 text-xs font-light uppercase tracking-[0.1rem] text-neutral-950 sm:text-sm sm:tracking-[0.0875rem]"
           >
             Try free
           </UButton>
@@ -348,11 +386,24 @@ const premiumPlanFeatures = [
             to="/landing-v2#what-changes"
             variant="outline"
             size="xl"
-            class="h-12 justify-center px-6 rounded-full border-white/10 bg-transparent text-xs font-light uppercase tracking-[0.1rem] text-white sm:h-[2.94rem] sm:text-sm sm:tracking-[0.0875rem]"
+            class="h-10 sm:h-12 justify-center px-6 rounded-full border-white/10 bg-transparent text-xs font-light uppercase tracking-[0.1rem] text-white sm:text-sm sm:tracking-[0.0875rem]"
           >
             See How It Works
           </UButton>
         </div>
+      </div>
+
+      <div class="w-full max-w-7xl">
+        <img
+          src="/images/landing-v2/hero-visual-mobile.webp"
+          alt="La Persona platform preview"
+          class="block h-auto w-full sm:hidden -mt-8"
+        />
+        <img
+          src="/images/landing-v2/hero-visual-desktop.webp"
+          alt="La Persona platform preview"
+          class="hidden h-auto w-full sm:block px-4 sm:pl-10"
+        />
       </div>
     </section>
 
@@ -442,7 +493,7 @@ const premiumPlanFeatures = [
           />
           <div
             id="landing-v2-reveal-mask"
-            class="relative box-border h-full w-full border-solid border-[3.5rem] border-dark sm:border-[7.5rem]"
+            class="relative box-border h-full w-full border-solid border-[5.5rem] border-dark sm:border-[12rem]"
           ></div>
         </div>
       </div>
@@ -714,7 +765,7 @@ const premiumPlanFeatures = [
     </section>
 
     <!-- Final CTA -->
-    <section class="px-4 py-14 sm:px-58.5 sm:py-24">
+    <section id="landing-v2-final-cta" class="px-4 py-14 sm:px-58.5 sm:py-24">
       <div
         class="mx-auto flex max-w-127.5 flex-col items-center gap-10 sm:gap-13"
       >
@@ -734,6 +785,20 @@ const premiumPlanFeatures = [
     </section>
 
     <!-- Footer -->
+
+    <!-- Floating CTA -->
+    <div
+      ref="floatingCtaEl"
+      class="fixed bottom-5 sm:bottom-8 left-1/2 z-50 -translate-x-1/2 invisible"
+    >
+      <UButton
+        to="/sign-in"
+        size="xl"
+        class="h-10 sm:h-12 rounded-full bg-white px-10 text-xs font-light uppercase tracking-[0.1rem] text-neutral-950 shadow-lg sm:text-sm sm:tracking-[0.0875rem]"
+      >
+        Try Free
+      </UButton>
+    </div>
   </main>
   <footer class="border-t border-white/10 px-4 py-10 sm:px-12 sm:pt-12">
     <div
