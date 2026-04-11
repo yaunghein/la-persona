@@ -26,12 +26,14 @@ export default defineNuxtConfig({
           "'unsafe-eval'", // <-- REQUIRED for Spline runtime (WebGL/Shaders)
           'https://fonts.gstatic.com',
           'https://prod.spline.design',
+          'https://www.googletagmanager.com',
         ],
         'connect-src': [
           "'self'",
           'https://prod.spline.design',
           'https://fonts.gstatic.com',
           'https://prod.spline.design',
+          'https://www.googletagmanager.com',
         ],
       },
     },
