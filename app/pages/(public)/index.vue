@@ -276,7 +276,7 @@ const changeFeatures = [
     label: 'Instant Exchange',
     description:
       "Instantly exchange contact details through your persona card—so there's no friction, no manual saving, and no lost information after you meet someone.",
-    video: '/videos/instant-exchange-demo.mp4',
+    video: '/videos/instant-exchange-demo.webm',
     duration: 25000,
   },
   {
@@ -284,7 +284,7 @@ const changeFeatures = [
     label: 'Dynamic Updates',
     description:
       'Update your persona anytime, so your information is always current without reprinting cards, and you’ll never worry about running out when it matters most.',
-    video: '/videos/dynamic-update-demo.mp4',
+    video: '/videos/dynamic-update-demo.webm',
     duration: 24000,
   },
   {
@@ -292,7 +292,7 @@ const changeFeatures = [
     label: 'Engagement Insights',
     description:
       'See how many people viewed and engaged with your persona card, giving you a clear signal of interest, so you can follow up with intention instead of guessing.',
-    video: '/videos/insights-demo.mp4',
+    video: '/videos/insights-demo.webm',
     duration: 8000,
   },
   {
@@ -300,7 +300,7 @@ const changeFeatures = [
     label: 'Contact List',
     description:
       'Every person you connect with is automatically saved, so you can easily revisit, manage, and follow up without losing track of important contacts.',
-    video: '/videos/contacts-demo.mp4',
+    video: '/videos/contacts-demo.webm',
     duration: 19000,
   },
 ] as const;
