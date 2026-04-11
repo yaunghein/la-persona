@@ -370,11 +370,10 @@ watch(activeFeatureIndex, (index) => {
     const container = featureTablistEl.value;
     if (!container) return;
     const btn = container.children[index] as HTMLElement | undefined;
-    btn?.scrollIntoView({
-      inline: 'center',
-      block: 'nearest',
-      behavior: 'smooth',
-    });
+    if (!btn) return;
+    const scrollLeft =
+      btn.offsetLeft - container.clientWidth / 2 + btn.offsetWidth / 2;
+    container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
   });
 });
 
