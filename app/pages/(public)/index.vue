@@ -528,7 +528,7 @@ const premiumPlanFeatures = [
             Try free
           </UButton>
           <UButton
-            to="/landing-v2#features"
+            to="/#features"
             variant="outline"
             size="xl"
             class="h-10 sm:h-12 justify-center px-6 rounded-full border-white/10 bg-transparent text-xs font-light uppercase tracking-[0.1rem] text-white sm:text-sm sm:tracking-[0.0875rem]"
