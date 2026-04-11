@@ -29,9 +29,9 @@ const storyLines = [
   },
   {
     key: 'share',
-    text: 'You share your persona instantly.',
+    text: 'You share your persona card instantly.',
     gold: false,
-    maxWidth: 'min(100%, 28rem)',
+    maxWidth: 'min(100%, 30rem)',
   },
   {
     key: 'understand',
@@ -228,6 +228,34 @@ onMounted(async () => {
     );
   }
 
+  landingV2ScrollTriggers.push(
+    ScrollTrigger.create({
+      trigger: 'header',
+      start: 'top top',
+      end: 'bottom top',
+      onEnter: () => (isHeaderVisible.value = true),
+      onLeave: () => (isHeaderVisible.value = false),
+      onEnterBack: () => (isHeaderVisible.value = true),
+    })
+  );
+
+  const v2SectionIds = Object.values(V2_SECTIONS);
+  v2SectionIds.forEach((id, index) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    landingV2ScrollTriggers.push(
+      ScrollTrigger.create({
+        trigger: el,
+        start: 'top 50%',
+        end: 'bottom 50%',
+        onEnter: () => (currentSection.value = id),
+        onLeave: () => (currentSection.value = null),
+        onEnterBack: () => (currentSection.value = id),
+        onLeaveBack: () => index === 0 && (currentSection.value = null),
+      })
+    );
+  });
+
   ScrollTrigger.refresh();
   applyLandingV2StoryWords(storyScrollTrigger.progress);
 });
@@ -372,6 +400,28 @@ const BESPOKE_SPLINE_URL =
   'https://prod.spline.design/PUnUYVF6idyub0GP/scene.splinecode';
 const bespokeCanvasEl = ref<HTMLCanvasElement | null>(null);
 
+const V2_SECTIONS = {
+  FEATURES: 'features',
+  WHY_LA_PERSONA: 'why-la-persona',
+  BESPOKE_CARDS: 'bespoke-cards',
+  PRICING: 'pricing',
+} as const;
+type V2Section = (typeof V2_SECTIONS)[keyof typeof V2_SECTIONS] | null;
+
+const V2_NAV_LINKS = [
+  { label: 'Features', id: V2_SECTIONS.FEATURES },
+  { label: 'Why La Persona', id: V2_SECTIONS.WHY_LA_PERSONA },
+  { label: 'Bespoke Cards', id: V2_SECTIONS.BESPOKE_CARDS },
+  { label: 'Pricing', id: V2_SECTIONS.PRICING },
+] as const;
+
+const isHeaderVisible = ref(true);
+const currentSection = ref<V2Section>(null);
+
+function goToV2Section(item: (typeof V2_NAV_LINKS)[number]) {
+  document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' });
+}
+
 const freePlanFeatures = [
   'Create and share your persona card with our professionally designed template',
   'Instant contact exchange',
@@ -398,6 +448,39 @@ const premiumPlanFeatures = [
       <IconLogo class="aspect-[1/0.09] w-full" />
     </NuxtLink>
   </header>
+
+  <nav
+    class="sticky top-0 z-30 hidden items-center justify-between bg-dark px-4 sm:flex sm:px-18"
+  >
+    <button
+      v-for="item in V2_NAV_LINKS"
+      :key="item.id"
+      @click="goToV2Section(item)"
+      class="cursor-pointer relative py-6 text-sm font-light uppercase leading-[1.1] tracking-[0.28rem] transition-colors duration-300"
+      :class="
+        currentSection === item.id
+          ? 'text-white'
+          : 'text-white/40 hover:text-white/70'
+      "
+    >
+      {{ item.label }}
+      <div
+        class="absolute inset-0 top-auto h-px w-full bg-white transition-all duration-1000"
+        :class="{
+          'scale-x-100': currentSection === item.id,
+          'scale-x-0': currentSection !== item.id,
+        }"
+      ></div>
+    </button>
+    <div
+      class="absolute inset-0 top-auto h-px w-full bg-white/10 transition-all duration-1000"
+      :class="{
+        'scale-x-100': !isHeaderVisible,
+        'scale-x-0': isHeaderVisible,
+      }"
+    ></div>
+  </nav>
+
   <main class="min-h-screen bg-dark text-white">
     <!-- Header: centered logo (Figma); Sign in aligned for product continuity -->
 
@@ -434,7 +517,7 @@ const premiumPlanFeatures = [
             Try free
           </UButton>
           <UButton
-            to="/landing-v2#what-changes"
+            to="/landing-v2#features"
             variant="outline"
             size="xl"
             class="h-10 sm:h-12 justify-center px-6 rounded-full border-white/10 bg-transparent text-xs font-light uppercase tracking-[0.1rem] text-white sm:text-sm sm:tracking-[0.0875rem]"
@@ -534,7 +617,9 @@ const premiumPlanFeatures = [
     </section>
     <section v-else aria-label="Product visual" class="w-full">
       <div id="landing-v2-feature-reveal" class="relative h-[200dvh] w-full">
-        <div class="sticky top-0 z-0 w-full h-dvh">
+        <div
+          class="sticky top-0 sm:top-16 z-0 w-full h-dvh sm:h-[calc(100dvh-4rem)]"
+        >
           <img
             src="/images/landing-v2/feature-visual.png"
             alt=""
@@ -551,7 +636,7 @@ const premiumPlanFeatures = [
     </section>
 
     <!-- What changes: tabs + phone + copy -->
-    <section id="what-changes" class="scroll-mt-24 px-4 py-14 sm:py-24">
+    <section id="features" class="scroll-mt-16 px-4 py-14 sm:py-24">
       <div
         class="mx-auto flex max-w-360 flex-col items-center gap-12 sm:gap-18"
       >
@@ -637,7 +722,7 @@ const premiumPlanFeatures = [
     </section>
 
     <!-- Why La Persona -->
-    <section class="px-4 py-14 sm:py-24">
+    <section id="why-la-persona" class="px-4 py-14 sm:py-24">
       <div
         class="mx-auto flex max-w-305 flex-col items-center gap-12 sm:gap-18"
       >
@@ -712,7 +797,7 @@ const premiumPlanFeatures = [
     </section>
 
     <!-- Pricing -->
-    <section class="px-4 py-14 sm:py-24 relative z-10">
+    <section id="pricing" class="px-4 py-14 sm:py-24 relative z-10">
       <div
         class="mx-auto flex max-w-196 flex-col items-center gap-12 sm:gap-18"
       >
