@@ -2,7 +2,40 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  modules: ['@nuxt/ui', 'nuxt-email-renderer', '@vueuse/nuxt', 'nuxt-gtag'],
+  modules: [
+    '@nuxt/ui',
+    'nuxt-email-renderer',
+    '@vueuse/nuxt',
+    'nuxt-gtag',
+    'nuxt-security',
+  ],
+  security: {
+    headers: {
+      contentSecurityPolicy: {
+        'img-src': [
+          "'self'",
+          'data:',
+          'blob:',
+          'https://*.googleusercontent.com',
+          'https://la-persona-staging.s3.ap-southeast-2.amazonaws.com',
+          'https://la-persona-prod.s3.ap-southeast-2.amazonaws.com',
+        ],
+        'script-src': [
+          "'self'",
+          "'unsafe-inline'", // Needed for Nuxt hydration
+          "'unsafe-eval'", // <-- REQUIRED for Spline runtime (WebGL/Shaders)
+          'https://fonts.gstatic.com',
+          'https://prod.spline.design',
+        ],
+        'connect-src': [
+          "'self'",
+          'https://prod.spline.design',
+          'https://fonts.gstatic.com',
+          'https://prod.spline.design',
+        ],
+      },
+    },
+  },
   css: ['~/assets/css/main.css'],
   colorMode: {
     preference: 'dark',

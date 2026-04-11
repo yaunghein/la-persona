@@ -304,6 +304,7 @@ const changeFeatures = [
     duration: 19000,
   },
 ] as const;
+const FEATURE_FADE_MS = 1200;
 const activeFeatureIndex = ref(0);
 const activeFeature = computed(() => changeFeatures[activeFeatureIndex.value]!);
 const featureProgress = ref(0);
@@ -342,6 +343,7 @@ function stopFeatureTimer() {
 }
 
 const featureVideosEl = ref<HTMLElement | null>(null);
+const featureTablistEl = ref<HTMLElement | null>(null);
 
 function syncFeatureVideos(activeIndex: number) {
   if (!featureVideosEl.value) return;
@@ -364,6 +366,16 @@ function selectFeature(index: number) {
 
 watch(activeFeatureIndex, (index) => {
   syncFeatureVideos(index);
+  nextTick(() => {
+    const container = featureTablistEl.value;
+    if (!container) return;
+    const btn = container.children[index] as HTMLElement | undefined;
+    btn?.scrollIntoView({
+      inline: 'center',
+      block: 'nearest',
+      behavior: 'smooth',
+    });
+  });
 });
 
 onMounted(async () => {
@@ -636,7 +648,7 @@ const premiumPlanFeatures = [
     </section>
 
     <!-- What changes: tabs + phone + copy -->
-    <section id="features" class="scroll-mt-16 px-4 py-14 sm:py-24">
+    <section id="features" class="scroll-mt-16 py-14 sm:py-24">
       <div
         class="mx-auto flex max-w-360 flex-col items-center gap-12 sm:gap-18"
       >
@@ -666,8 +678,9 @@ const premiumPlanFeatures = [
                 :src="f.video"
                 muted
                 playsinline
-                class="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
+                class="absolute inset-0 h-full w-full object-cover transition-opacity"
                 :class="activeFeatureIndex === i ? 'opacity-100' : 'opacity-0'"
+                :style="{ transitionDuration: `${FEATURE_FADE_MS}ms` }"
               />
             </div>
             <img
@@ -679,10 +692,11 @@ const premiumPlanFeatures = [
         </div>
 
         <div
-          class="flex w-full max-w-114 flex-col items-center gap-10 sm:max-w-none sm:gap-13"
+          class="flex w-full flex-col items-center gap-10 sm:max-w-none sm:gap-13 overflow-hidden"
         >
           <div
-            class="grid grid-cols-1 gap-x-8 gap-y-4 sm:flex sm:flex-wrap sm:items-start sm:justify-center sm:gap-x-13"
+            ref="featureTablistEl"
+            class="flex items-start justify-start sm:justify-center gap-x-13 w-full overflow-x-auto hide-scrollbar px-4"
             role="tablist"
             aria-label="Feature highlights"
           >
@@ -692,7 +706,7 @@ const premiumPlanFeatures = [
               type="button"
               role="tab"
               :aria-selected="activeFeatureIndex === i"
-              class="flex flex-col items-center gap-2 border-none bg-transparent p-0 text-center text-xs font-light uppercase tracking-[0.175rem] sm:text-sm sm:tracking-[0.175rem]"
+              class="shrink-0 flex flex-col items-center gap-2 border-none bg-transparent p-0 text-center text-xs font-light uppercase tracking-[0.175rem] sm:text-sm sm:tracking-[0.175rem]"
               :class="
                 activeFeatureIndex === i
                   ? 'text-white'
@@ -712,11 +726,20 @@ const premiumPlanFeatures = [
               />
             </button>
           </div>
-          <p
-            class="max-w-105 text-center text-xs font-light leading-normal tracking-[0.035rem] text-white/50 sm:text-sm sm:tracking-[0.056rem]"
-          >
-            {{ activeFeature.description }}
-          </p>
+          <div class="relative sm:max-w-105 max-w-80">
+            <p
+              v-for="(f, i) in changeFeatures"
+              :key="f.id"
+              class="text-center text-xs font-light leading-normal tracking-[0.035rem] text-white/50 sm:text-sm sm:tracking-[0.056rem] transition-opacity"
+              :class="[
+                activeFeatureIndex === i ? 'opacity-100' : 'opacity-0',
+                i === 0 ? 'relative' : 'absolute inset-0',
+              ]"
+              :style="{ transitionDuration: `${FEATURE_FADE_MS}ms` }"
+            >
+              {{ f.description }}
+            </p>
+          </div>
         </div>
       </div>
     </section>
@@ -781,7 +804,7 @@ const premiumPlanFeatures = [
           </div>
           <NuxtLink
             to="/#commission-us"
-            class="inline-flex h-12 items-center justify-center rounded-full border border-white/10 px-10 text-xs font-light uppercase tracking-[0.1rem] hover:bg-white hover:text-dark sm:h-[2.94rem] sm:text-sm sm:tracking-[0.0875rem]"
+            class="inline-flex h-10 sm:h-12 items-center justify-center rounded-full border border-white/10 px-10 text-xs font-light uppercase tracking-[0.1rem] hover:bg-white hover:text-dark sm:text-sm sm:tracking-[0.0875rem]"
           >
             Talk to Us
           </NuxtLink>
@@ -792,7 +815,10 @@ const premiumPlanFeatures = [
         class="relative w-screen max-w-none overflow-hidden aspect-square sm:aspect-[1/0.58] sm:max-h-dvh -mt-20 sm:-mt-48 -mb-20 sm:-mb-56"
         style="margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw)"
       >
-        <canvas ref="bespokeCanvasEl" class="absolute inset-0 h-full w-full" />
+        <canvas
+          ref="bespokeCanvasEl"
+          class="absolute inset-0 h-full w-full pointer-events-none sm:pointer-events-auto"
+        />
       </div>
     </section>
 
@@ -904,7 +930,7 @@ const premiumPlanFeatures = [
     <!-- Floating CTA -->
     <div
       ref="floatingCtaEl"
-      class="fixed bottom-5 left-1/2 z-50 -translate-x-1/2 invisible"
+      class="fixed bottom-[5vh] left-1/2 z-50 -translate-x-1/2 invisible"
     >
       <UButton
         to="/sign-in"
