@@ -803,7 +803,8 @@ const premiumPlanFeatures = [
             </p>
           </div>
           <NuxtLink
-            to="/#commission-us"
+            to="https://m.me/61571393589144?text=Hello%20I%20want%20to%20know%20more"
+            target="_blank"
             class="inline-flex h-10 sm:h-12 items-center justify-center rounded-full border border-white/10 px-10 text-xs font-light uppercase tracking-[0.1rem] hover:bg-white hover:text-dark sm:text-sm sm:tracking-[0.0875rem]"
           >
             Talk to Us
@@ -894,7 +895,8 @@ const premiumPlanFeatures = [
               </ul>
             </div>
             <UButton
-              to="/#commission-us"
+              to="https://m.me/61571393589144?text=Hello%20I%20want%20to%20know%20more"
+              target="_blank"
               size="xl"
               class="h-10 sm:h-12 w-fit justify-center rounded-full bg-white px-8 text-xs font-light uppercase tracking-[0.1rem] text-neutral-950 sm:text-sm sm:tracking-[0.0875rem]"
             >
