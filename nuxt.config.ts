@@ -27,6 +27,8 @@ export default defineNuxtConfig({
           'https://fonts.gstatic.com',
           'https://prod.spline.design',
           'https://www.googletagmanager.com',
+          'https://la-persona-staging.s3.ap-southeast-2.amazonaws.com',
+          'https://la-persona-prod.s3.ap-southeast-2.amazonaws.com',
         ],
         'connect-src': [
           "'self'",
@@ -34,6 +36,8 @@ export default defineNuxtConfig({
           'https://fonts.gstatic.com',
           'https://prod.spline.design',
           'https://www.googletagmanager.com',
+          'https://la-persona-staging.s3.ap-southeast-2.amazonaws.com',
+          'https://la-persona-prod.s3.ap-southeast-2.amazonaws.com',
         ],
       },
     },
