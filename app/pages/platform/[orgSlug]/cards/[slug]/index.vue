@@ -119,7 +119,7 @@ const showUpgradeButton = computed(() => {
   const isTrial = card.value?.subscription?.isTrial;
   const status = card.value?.subscription?.status;
 
-  if (planCode === 'premium' || planCode === 'founder_club') return false;
+  if (planCode === 'premium' || planCode === 'founder-club') return false;
   if (isTrial || status === 'trial') return true;
   return planCode === 'standard';
 });
@@ -143,7 +143,7 @@ function getCardBadgeLabel(cardData?: CardDTO | null) {
     return 'Standard (Trial)';
   }
 
-  if (planCode === 'founder_club') {
+  if (planCode === 'founder-club') {
     return "Founders' Club";
   }
 
@@ -322,7 +322,7 @@ function openRenewSlideover() {
     paymentScenario.value = 'trial_to_standard_renewal';
   } else if (
     card.value.subscription?.planCode === 'premium' ||
-    card.value.subscription?.planCode === 'founder_club'
+    card.value.subscription?.planCode === 'founder-club'
   ) {
     paymentScenario.value = 'premium_renewal';
   } else {

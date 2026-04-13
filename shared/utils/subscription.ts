@@ -9,7 +9,7 @@ export function derivePlanCodeFromSource(
 ) {
   const sourcePlanCode = sourceSubscription?.planCode ?? null;
 
-  if (sourcePlanCode === 'founder_club') return 'premium';
+  if (sourcePlanCode === 'founder-club') return 'premium';
 
   if (
     !sourcePlanCode ||

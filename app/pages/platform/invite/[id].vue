@@ -21,7 +21,7 @@ onMounted(async () => {
     // if (response?.success) {
     //   setTimeout(() => {
     //     navigateTo(
-    //       response.card?.subscription?.planCode === 'founder_club'
+    //       response.card?.subscription?.planCode === 'founder-club'
     //         ? '/platform/cards'
     //         : '/platform'
     //     );

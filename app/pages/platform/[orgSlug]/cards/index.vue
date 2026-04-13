@@ -123,7 +123,7 @@ function getCardBadgeLabel(card: CardDTO) {
     return 'Standard (Trial)';
 
   const planCode = card.subscription?.planCode;
-  if (planCode === 'founder_club') return "Founders' Club";
+  if (planCode === 'founder-club') return "Founders' Club";
   if (planCode === 'premium') return 'Premium';
   if (planCode === 'standard') return 'Standard';
   return 'No Plan';

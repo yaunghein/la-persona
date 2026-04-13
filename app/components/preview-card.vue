@@ -18,7 +18,7 @@ const planBadge = computed(() => {
     return { label: 'Trial', color: 'neutral' as const };
   }
 
-  if (planCode === 'founder_club') {
+  if (planCode === 'founder-club') {
     return { label: "Founders' Club", color: 'primary' as const };
   }
 

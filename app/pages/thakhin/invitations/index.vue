@@ -38,9 +38,9 @@ const createState = reactive({
   organizationName: '',
   cardId: '',
   subscriptionPlanCode: '',
-  freeMonths: 3,
+  freeMonths: 6,
   expirationMinutes: 60,
-  sendNow: true,
+  sendNow: false,
 });
 
 const {
@@ -103,9 +103,9 @@ async function onCreateInvitation() {
     createState.organizationName = '';
     createState.cardId = '';
     createState.subscriptionPlanCode = '';
-    createState.freeMonths = 3;
+    createState.freeMonths = 6;
     createState.expirationMinutes = 60;
-    createState.sendNow = true;
+    createState.sendNow = false;
     toast.add({
       title: 'Invitation created',
       description: 'A new onboarding invitation has been created.',
@@ -306,7 +306,7 @@ const selectUi = {
       <template #body>
         <div class="py-2">
           <div class="flex flex-col gap-4">
-            <UFormField label="Invitee Email" required :class="formFieldClass">
+            <UFormField label="Invitee Email" :class="formFieldClass">
               <UInput
                 v-model="createState.email"
                 type="email"
