@@ -24,6 +24,7 @@ function websiteLabelForSpline(website: string | null | undefined): string {
 }
 
 const { trackEvent } = useAnalytics();
+const runtimeConfig = useRuntimeConfig();
 
 const { slug } = useRoute().params;
 const { data: card } = await useFetch<CardDTO>(`/api/public/cards/${slug}`);
@@ -211,10 +212,34 @@ function toBase64(buffer: ArrayBuffer) {
   return btoa(binary);
 }
 
+function resolveCardAvatarUrl(avatarUrl: string | null | undefined) {
+  const raw = String(avatarUrl || '').trim();
+  if (!raw) return null;
+  if (
+    raw.startsWith('http://') ||
+    raw.startsWith('https://') ||
+    raw.startsWith('/') ||
+    raw.startsWith('data:')
+  ) {
+    return raw;
+  }
+
+  const bucket = runtimeConfig.public.awsBucketName;
+  const region = runtimeConfig.public.awsRegion;
+  if (!bucket || !region) return raw;
+
+  return `https://${bucket}.s3.${region}.amazonaws.com/${raw}`;
+}
+
 async function getPhotoForVcf() {
-  const candidateUrls = [card.value?.avatarUrl, '/images/favicon.png'].filter(
-    Boolean
-  ) as string[];
+  const avatarUrl = resolveCardAvatarUrl(card.value?.avatarUrl);
+  const candidateUrls = [
+    avatarUrl
+      ? `/api/s3/image-proxy?url=${encodeURIComponent(avatarUrl)}`
+      : null,
+    avatarUrl,
+    '/images/favicon.png',
+  ].filter(Boolean) as string[];
 
   for (const rawUrl of candidateUrls) {
     try {
