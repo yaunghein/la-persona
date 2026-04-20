@@ -17,6 +17,7 @@ export type CardDTO = Omit<SelectCard, 'createdAt' | 'updatedAt'> & {
   subscription?: {
     status: string;
     planCode: string | null;
+    planName?: string | null;
     isTrial: boolean;
     /** Present on public card payload; reflects trial end vs raw `status`. */
     effectiveStatus?: string;

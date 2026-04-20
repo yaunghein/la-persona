@@ -33,6 +33,7 @@ const session = await authClient.useSession(useFetch);
 
 const user = ref({
   name: session.data.value?.user.name,
+  email: session.data.value?.user.email,
   avatar: {
     src: session.data.value?.user.image as string,
     alt: session.data.value?.user.name as string,
@@ -43,7 +44,8 @@ const items = computed<DropdownMenuItem[][]>(() => [
   [
     {
       type: 'label',
-      label: user.value.name,
+      label: user.value.name || '',
+      // description: user.value.email || '',
       avatar: user.value.avatar,
     },
   ],
@@ -221,11 +223,6 @@ const items = computed<DropdownMenuItem[][]>(() => [
   >
     <UButton
       size="xl"
-      v-bind="{
-        ...user,
-        label: collapsed ? undefined : user?.name,
-        trailingIcon: collapsed ? undefined : 'i-lucide-chevrons-up-down',
-      }"
       color="neutral"
       variant="ghost"
       block
@@ -234,7 +231,40 @@ const items = computed<DropdownMenuItem[][]>(() => [
       :ui="{
         trailingIcon: 'text-dimmed',
       }"
-    />
+    >
+      <template v-if="collapsed">
+        <UAvatar
+          :src="user.avatar.src"
+          :alt="user.avatar.alt"
+          size="md"
+          class="mx-auto"
+        />
+      </template>
+      <template v-else>
+        <div class="flex w-full items-center justify-between gap-3">
+          <div class="flex min-w-0 items-center gap-3">
+            <UAvatar
+              :src="user.avatar.src"
+              :alt="user.avatar.alt"
+              size="md"
+              class="shrink-0"
+            />
+            <div class="min-w-0 text-left">
+              <p class="truncate text-sm font-medium text-white">
+                {{ user.name }}
+              </p>
+              <p class="truncate text-xs text-muted">
+                {{ user.email }}
+              </p>
+            </div>
+          </div>
+          <UIcon
+            name="i-lucide-chevrons-up-down"
+            class="shrink-0 text-dimmed size-4"
+          />
+        </div>
+      </template>
+    </UButton>
 
     <template #chip-leading="{ item }">
       <div class="inline-flex items-center justify-center shrink-0 size-5">

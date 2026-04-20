@@ -10,6 +10,7 @@ import {
 import {
   setupDefaultOrganization,
   getPersonalOrganizationByUserId,
+  getAnyOrganizationByUserId,
 } from '~~/server/services/auth';
 import { sendEmail } from '~~/server/utils/email';
 
@@ -124,9 +125,9 @@ export const auth = betterAuth({
     session: {
       create: {
         before: async (session) => {
-          const organization = await getPersonalOrganizationByUserId(
-            session.userId
-          );
+          const organization =
+            (await getPersonalOrganizationByUserId(session.userId)) ||
+            (await getAnyOrganizationByUserId(session.userId));
           return {
             data: {
               ...session,

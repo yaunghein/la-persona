@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/vue-query';
 useSeoMeta({ ...getSeoTitle('Cards - LA PERSONA') });
 
 const route = useRoute();
+const orgSlug = computed(() => String(route.params.orgSlug || ''));
 const runtimeConfig = useRuntimeConfig();
 const toast = useToast();
 const isInfoOpen = ref(false);
@@ -29,8 +30,11 @@ const {
   error,
   refetch: refresh,
 } = useQuery<CardDTO[]>({
-  queryKey: ['cards'],
-  queryFn: async () => $fetch('/api/cards'),
+  queryKey: ['cards', orgSlug],
+  queryFn: async () =>
+    $fetch('/api/cards', {
+      query: { organizationSlug: orgSlug.value },
+    }),
 });
 
 const isSlideoverOpen = ref(false);
@@ -122,10 +126,15 @@ function getCardBadgeLabel(card: CardDTO) {
   if (card.subscription?.status === 'trial' || card.subscription?.isTrial)
     return 'Standard (Trial)';
 
+  if (card.subscription?.planName?.trim()) {
+    return card.subscription.planName.trim();
+  }
+
   const planCode = card.subscription?.planCode;
   if (planCode === 'founder-club') return "Founders' Club";
   if (planCode === 'premium') return 'Premium';
   if (planCode === 'standard') return 'Standard';
+  if (planCode === 'friend-family') return 'Friends & Family';
   return 'No Plan';
 }
 
@@ -290,7 +299,7 @@ const cardFooterActionSize = 'sm';
             :class="{
               'cursor-pointer bg-amber-500/20 text-amber-300':
                 card.subscription?.status === 'pending_approval',
-              'bg-[#232323] text-white':
+              'bg-[#171717] text-white':
                 card.subscription?.status !== 'pending_approval',
             }"
             :color="getCardBadgeColor(card)"

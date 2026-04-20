@@ -1,7 +1,7 @@
 import { and, eq, desc } from 'drizzle-orm';
 import { getEffectiveSubscriptionStatus } from '~~/server/services/subscription';
 import { db } from '../../db';
-import { card, cardSubscription } from '../schema';
+import { card, cardSubscription, subscriptionPlan } from '../schema';
 
 export const findFreeCardByUserId = (userId: string) => {
   return db
@@ -25,10 +25,12 @@ export const findCardsByUserId = async (userId: string) => {
       card,
       subscriptionStatus: cardSubscription.status,
       subscriptionPlanCode: cardSubscription.planCode,
+      subscriptionPlanName: subscriptionPlan.name,
       subscriptionIsTrial: cardSubscription.isTrial,
     })
     .from(card)
     .leftJoin(cardSubscription, eq(cardSubscription.cardId, card.id))
+    .leftJoin(subscriptionPlan, eq(subscriptionPlan.code, cardSubscription.planCode))
     .where(eq(card.userId, userId))
     .orderBy(desc(card.createdAt));
 
@@ -38,6 +40,7 @@ export const findCardsByUserId = async (userId: string) => {
       ? {
           status: row.subscriptionStatus,
           planCode: row.subscriptionPlanCode,
+          planName: row.subscriptionPlanName,
           isTrial: row.subscriptionIsTrial ?? false,
         }
       : null,
@@ -53,10 +56,12 @@ export const findCardsByUserIdAndOrganization = async (
       card,
       subscriptionStatus: cardSubscription.status,
       subscriptionPlanCode: cardSubscription.planCode,
+      subscriptionPlanName: subscriptionPlan.name,
       subscriptionIsTrial: cardSubscription.isTrial,
     })
     .from(card)
     .leftJoin(cardSubscription, eq(cardSubscription.cardId, card.id))
+    .leftJoin(subscriptionPlan, eq(subscriptionPlan.code, cardSubscription.planCode))
     .where(and(eq(card.userId, userId), eq(card.organizationId, organizationId)))
     .orderBy(desc(card.createdAt));
 
@@ -66,6 +71,7 @@ export const findCardsByUserIdAndOrganization = async (
       ? {
           status: row.subscriptionStatus,
           planCode: row.subscriptionPlanCode,
+          planName: row.subscriptionPlanName,
           isTrial: row.subscriptionIsTrial ?? false,
         }
       : null,
@@ -78,12 +84,14 @@ export const findCardsBySlug = async (slug: string) => {
       card,
       subscriptionStatus: cardSubscription.status,
       subscriptionPlanCode: cardSubscription.planCode,
+      subscriptionPlanName: subscriptionPlan.name,
       subscriptionIsTrial: cardSubscription.isTrial,
       subscriptionTrialEndAt: cardSubscription.trialEndAt,
       subscriptionCurrentPeriodEndAt: cardSubscription.currentPeriodEndAt,
     })
     .from(card)
     .leftJoin(cardSubscription, eq(cardSubscription.cardId, card.id))
+    .leftJoin(subscriptionPlan, eq(subscriptionPlan.code, cardSubscription.planCode))
     .where(eq(card.slug, slug))
     .limit(1);
 
@@ -96,6 +104,7 @@ export const findCardsBySlug = async (slug: string) => {
       ? {
           status: row.subscriptionStatus,
           planCode: row.subscriptionPlanCode,
+          planName: row.subscriptionPlanName,
           isTrial: row.subscriptionIsTrial ?? false,
           effectiveStatus: getEffectiveSubscriptionStatus(
             row.subscriptionStatus,
@@ -117,10 +126,12 @@ export const findCardBySlugForUserAndOrganization = async (
       card,
       subscriptionStatus: cardSubscription.status,
       subscriptionPlanCode: cardSubscription.planCode,
+      subscriptionPlanName: subscriptionPlan.name,
       subscriptionIsTrial: cardSubscription.isTrial,
     })
     .from(card)
     .leftJoin(cardSubscription, eq(cardSubscription.cardId, card.id))
+    .leftJoin(subscriptionPlan, eq(subscriptionPlan.code, cardSubscription.planCode))
     .where(
       and(
         eq(card.slug, slug),
@@ -139,6 +150,7 @@ export const findCardBySlugForUserAndOrganization = async (
       ? {
           status: row.subscriptionStatus,
           planCode: row.subscriptionPlanCode,
+          planName: row.subscriptionPlanName,
           isTrial: row.subscriptionIsTrial ?? false,
         }
       : null,

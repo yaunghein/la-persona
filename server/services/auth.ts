@@ -50,6 +50,11 @@ export async function insertMember(
 }
 
 export async function setupDefaultOrganization(user: User) {
+  const existingPersonalOrganization = await getPersonalOrganizationByUserId(user.id);
+  if (existingPersonalOrganization) {
+    return;
+  }
+
   // TODO: probabily need to revisit later, because if we just early return here, then what
   const pendingInvitation = await getPendingOnboardingInvitationByEmail(
     user.email
@@ -91,6 +96,17 @@ export async function getPersonalOrganizationByUserId(userId: string) {
     .from(organization)
     .innerJoin(member, eq(member.organizationId, organization.id))
     .where(and(eq(member.userId, userId), eq(organization.isPersonal, true)))
+    .limit(1);
+  const first = result[0];
+  return first ? first.organization : null;
+}
+
+export async function getAnyOrganizationByUserId(userId: string) {
+  const result = await db
+    .select({ organization: organization })
+    .from(organization)
+    .innerJoin(member, eq(member.organizationId, organization.id))
+    .where(eq(member.userId, userId))
     .limit(1);
   const first = result[0];
   return first ? first.organization : null;
