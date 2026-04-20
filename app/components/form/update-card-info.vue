@@ -20,6 +20,7 @@ import {
 const route = useRoute();
 const queryClient = useQueryClient();
 const slug = computed(() => String(route.params.slug || ''));
+const orgSlug = computed(() => String(route.params.orgSlug || ''));
 const runtimeConfig = useRuntimeConfig();
 const toast = useToast();
 const {
@@ -268,6 +269,10 @@ const { mutate: updateCard, isPending: isSaving } = useMutation({
       description: 'Your card details were updated successfully.',
       color: 'success',
     });
+
+    if (orgSlug.value) {
+      await navigateTo(`/platform/${orgSlug.value}/cards`);
+    }
   },
   onError: (err: any) => {
     toast.add({
