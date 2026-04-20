@@ -1,17 +1,11 @@
-import { auth } from '~~/server/auth';
 import { db } from '~~/server/db';
 import { feedbackSubmission } from '~~/server/db/schema';
 import { handleApiError } from '~~/server/utils/errors';
+import { requireOrganizationSession } from '~~/server/utils/organization-permissions';
 import { feedbackSubmissionInsertSchema } from '~~/shared/types/feedback';
 
 export default defineEventHandler(async (event) => {
-  const session = await auth.api.getSession({ headers: event.headers });
-  if (!session) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Unauthorized',
-    });
-  }
+  const session = await requireOrganizationSession(event);
 
   const body = await readValidatedBody(
     event,
@@ -26,12 +20,6 @@ export default defineEventHandler(async (event) => {
   }
 
   const organizationId = session.session.activeOrganizationId;
-  if (!organizationId) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'No active organization selected.',
-    });
-  }
 
   try {
     const [inserted] = await db

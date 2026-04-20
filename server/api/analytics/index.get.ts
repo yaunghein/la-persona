@@ -1,7 +1,7 @@
 import { and, eq, sql, gte } from 'drizzle-orm';
 import { db } from '~~/server/db';
-import { auth } from '~~/server/auth';
 import { analytics, card, member } from '~~/server/db/schema';
+import { requireOrganizationSession } from '~~/server/utils/organization-permissions';
 import {
   OTHER_LINK_LABELS,
   SOCIAL_MEDIA_LINK_LABELS,
@@ -17,10 +17,7 @@ const knownLabelByLower = new Map(
 );
 
 export default defineEventHandler(async (event) => {
-  const session = await auth.api.getSession({ headers: event.headers });
-  if (!session || !session.session.activeOrganizationId) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
-  }
+  const session = await requireOrganizationSession(event);
 
   const { cardId } = getQuery(event);
   const selectedCardId = typeof cardId === 'string' ? cardId : 'all';

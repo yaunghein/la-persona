@@ -1,11 +1,11 @@
 import { and, eq } from 'drizzle-orm';
-import { auth } from '~~/server/auth';
 import { db } from '~~/server/db';
 import {
   findCardByIdAndOrganization,
   findCardSubscriptionByCardId,
 } from '~~/server/db/queries/subscription';
 import { member } from '~~/server/db/schema';
+import { requireOrganizationSession } from '~~/server/utils/organization-permissions';
 import {
   ensureCardTrialSubscription,
   getDaysLeft,
@@ -13,10 +13,7 @@ import {
 } from '~~/server/services/subscription';
 
 export default defineEventHandler(async (event) => {
-  const session = await auth.api.getSession({ headers: event.headers });
-  if (!session || !session.session.activeOrganizationId) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
-  }
+  const session = await requireOrganizationSession(event);
 
   const organizationId = session.session.activeOrganizationId;
   const userId = session.user.id;

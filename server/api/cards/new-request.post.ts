@@ -1,4 +1,3 @@
-import { auth } from '~~/server/auth';
 import { db } from '~~/server/db';
 import {
   card,
@@ -14,6 +13,7 @@ import { splitName } from '~~/server/services/card';
 import { derivePlanCodeFromSource } from '~~/shared/utils/subscription';
 import { notifySubscriptionSubmissionEmails } from '~~/server/utils/subscription-email-notifications';
 import { env } from '~~/server/utils/env';
+import { requireOrganizationSession } from '~~/server/utils/organization-permissions';
 
 const NEW_DESIGN_PLAN_CODE = 'premium';
 
@@ -62,14 +62,7 @@ function addYears(base: Date, years: number) {
 }
 
 export default defineEventHandler(async (event) => {
-  const session = await auth.api.getSession({ headers: event.headers });
-
-  if (!session) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Unauthorized',
-    });
-  }
+  const session = await requireOrganizationSession(event);
 
   const body = await readValidatedBody(
     event,
@@ -93,12 +86,6 @@ export default defineEventHandler(async (event) => {
     }
 
     const activeOrgId = session.session.activeOrganizationId;
-    if (!activeOrgId) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'No active organization selected.',
-      });
-    }
 
     if (body.data.type !== 'existing_design') {
       const planRows = await db
