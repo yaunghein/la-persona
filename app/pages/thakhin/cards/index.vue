@@ -111,14 +111,16 @@ const orgSelectItems = computed(() =>
   (orgOptions.value || []).map((o) => ({ label: o.name, value: o.id }))
 );
 const planSelectItems = computed(() =>
-  (onboardingOptions.value?.plans ?? []).map((p) => ({
+  (onboardingOptions.value?.plans ?? [])
+    .filter((p) => p.code === 'friend-family')
+    .map((p) => ({
     label: p.name,
     value: p.code,
-  }))
+    }))
 );
 
 /** Subscription plan for create flow — prefills Spline + S3 keys (placeholders). */
-const createPlanCode = ref('standard');
+const createPlanCode = ref('friend-family');
 
 watch(
   planSelectItems,
