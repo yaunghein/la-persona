@@ -12,7 +12,10 @@ import { normalizeEmail } from '~~/server/services/onboarding-invitation';
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id');
   if (!id) {
-    throw createError({ statusCode: 400, statusMessage: 'Invitation id is required' });
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Invitation id is required',
+    });
   }
 
   const invitation = await db
@@ -30,7 +33,10 @@ export default defineEventHandler(async (event) => {
       planName: subscriptionPlan.name,
     })
     .from(onboardingInvitation)
-    .innerJoin(organization, eq(organization.id, onboardingInvitation.organizationId))
+    .innerJoin(
+      organization,
+      eq(organization.id, onboardingInvitation.organizationId)
+    )
     .innerJoin(card, eq(card.id, onboardingInvitation.cardId))
     .innerJoin(
       subscriptionPlan,
@@ -40,7 +46,10 @@ export default defineEventHandler(async (event) => {
     .then((rows) => rows[0]);
 
   if (!invitation) {
-    throw createError({ statusCode: 404, statusMessage: 'Invitation not found' });
+    throw createError({
+      statusCode: 404,
+      statusMessage: 'Invitation not found',
+    });
   }
 
   const now = new Date();

@@ -52,14 +52,11 @@ async function onAccept() {
       description: 'Your workspace is now ready.',
       color: 'success',
     });
-    // Direct-to-cards after invite is disabled for now — use /platform so the
-    // hub sends new users through setup like other signups.
-    // const cardsPath =
-    //   orgSlug && orgSlug.length > 0
-    //     ? `${ROUTES.PLATFORM.ROOT}/${orgSlug}/cards`
-    //     : ROUTES.PLATFORM.ROOT;
-    // await navigateTo(cardsPath);
-    await navigateTo(ROUTES.PLATFORM.ROOT);
+    const orgSlug = invitation.value?.organizationSlug;
+    const cardsPath = orgSlug
+      ? `${ROUTES.PLATFORM.ROOT}/${orgSlug}/cards`
+      : ROUTES.PLATFORM.ROOT;
+    await navigateTo(cardsPath);
   } catch (acceptError: any) {
     toast.add({
       title: 'Accept failed',
