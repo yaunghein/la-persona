@@ -28,6 +28,7 @@ export default defineEventHandler(async (event) => {
       acceptedAt: onboardingInvitation.acceptedAt,
       organizationName: organization.name,
       organizationSlug: organization.slug,
+      cardSlug: card.slug,
       cardFirstName: card.firstName,
       cardLastName: card.lastName,
       planName: subscriptionPlan.name,

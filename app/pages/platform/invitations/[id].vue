@@ -12,6 +12,7 @@ type InvitationDetails = {
   acceptedAt: string | null;
   organizationName: string;
   organizationSlug: string;
+  cardSlug: string;
   cardFirstName: string;
   cardLastName: string | null;
   planName: string;
@@ -53,7 +54,10 @@ async function onAccept() {
       color: 'success',
     });
     const orgSlug = invitation.value?.organizationSlug;
-    const cardsPath = orgSlug
+    const cardSlug = invitation.value?.cardSlug;
+    const cardsPath = orgSlug && cardSlug
+      ? `${ROUTES.PLATFORM.ROOT}/${orgSlug}/cards/${cardSlug}/setup`
+      : orgSlug
       ? `${ROUTES.PLATFORM.ROOT}/${orgSlug}/cards`
       : ROUTES.PLATFORM.ROOT;
     await navigateTo(cardsPath);
