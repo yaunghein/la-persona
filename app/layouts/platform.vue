@@ -5,110 +5,117 @@ const route = useRoute();
 const toast = useToast();
 
 const open = ref(false);
+const orgSlug = computed(() => String(route.params.orgSlug || ''));
+const platformBasePath = computed(() =>
+  orgSlug.value ? `${ROUTES.PLATFORM.ROOT}/${orgSlug.value}` : ROUTES.PLATFORM.ROOT
+);
 
-const links = [
-  [
-    {
-      label: 'Insights',
-      icon: 'i-gg:insights',
-      to: `/platform/${route.params.orgSlug}`,
-      onSelect: () => {
-        open.value = false;
-      },
-    },
-    {
-      label: 'Cards',
-      icon: 'i-material-symbols:cards-stack-outline-sharp',
-      to: `/platform/${route.params.orgSlug}/cards`,
-      // badge: '4',
-      onSelect: () => {
-        open.value = false;
-      },
-    },
-    {
-      label: 'Contacts',
-      icon: 'i-material-symbols:perm-contact-calendar-sharp',
-      to: `/platform/${route.params.orgSlug}/contacts`,
-      onSelect: () => {
-        open.value = false;
-      },
-    },
-    // {
-    //   label: 'Billing',
-    //   icon: 'uil:bill',
-    //   to: `/platform/${route.params.orgSlug}/billing`,
-    //   onSelect: () => {
-    //     open.value = false;
-    //   },
-    // },
-    {
-      label: 'Teams (Coming Soon)',
-      icon: 'i-ri:team-line',
-      to: `/platform/${route.params.orgSlug}/teams`,
-      onSelect: () => {
-        open.value = false;
-      },
-    },
-    // {
-    //   label: 'Settings',
-    //   to: '',
-    //   icon: 'i-lucide-settings',
-    //   defaultOpen: true,
-    //   type: 'trigger',
-    //   children: [
-    //     {
-    //       label: 'General',
-    //       to: '',
-    //       exact: true,
-    //       onSelect: () => {
-    //         open.value = false;
-    //       },
-    //     },
-    //     {
-    //       label: 'Members',
-    //       to: '',
-    //       onSelect: () => {
-    //         open.value = false;
-    //       },
-    //     },
-    //     {
-    //       label: 'Notifications',
-    //       to: '',
-    //       onSelect: () => {
-    //         open.value = false;
-    //       },
-    //     },
-    //     {
-    //       label: 'Security',
-    //       to: '',
-    //       onSelect: () => {
-    //         open.value = false;
-    //       },
-    //     },
-    //   ],
-    // },
-  ],
-  // [
-  //   {
-  //     label: 'Feedback',
-  //     icon: 'i-lucide-message-circle',
-  //     to: 'https://github.com/nuxt-ui-templates/dashboard',
-  //     target: '_blank',
-  //   },
-  //   {
-  //     label: 'Help & Support',
-  //     icon: 'i-lucide-info',
-  //     to: 'https://github.com/nuxt-ui-templates/dashboard',
-  //     target: '_blank',
-  //   },
-  // ],
-] satisfies NavigationMenuItem[][];
+const links = computed(
+  () =>
+    [
+      [
+        {
+          label: 'Insights',
+          icon: 'i-gg:insights',
+          to: platformBasePath.value,
+          onSelect: () => {
+            open.value = false;
+          },
+        },
+        {
+          label: 'Cards',
+          icon: 'i-material-symbols:cards-stack-outline-sharp',
+          to: `${platformBasePath.value}/cards`,
+          // badge: '4',
+          onSelect: () => {
+            open.value = false;
+          },
+        },
+        {
+          label: 'Contacts',
+          icon: 'i-material-symbols:perm-contact-calendar-sharp',
+          to: `${platformBasePath.value}/contacts`,
+          onSelect: () => {
+            open.value = false;
+          },
+        },
+        // {
+        //   label: 'Billing',
+        //   icon: 'uil:bill',
+        //   to: `${platformBasePath.value}/billing`,
+        //   onSelect: () => {
+        //     open.value = false;
+        //   },
+        // },
+        {
+          label: 'Teams (Coming Soon)',
+          icon: 'i-ri:team-line',
+          to: `${platformBasePath.value}/teams`,
+          onSelect: () => {
+            open.value = false;
+          },
+        },
+        // {
+        //   label: 'Settings',
+        //   to: '',
+        //   icon: 'i-lucide-settings',
+        //   defaultOpen: true,
+        //   type: 'trigger',
+        //   children: [
+        //     {
+        //       label: 'General',
+        //       to: '',
+        //       exact: true,
+        //       onSelect: () => {
+        //         open.value = false;
+        //       },
+        //     },
+        //     {
+        //       label: 'Members',
+        //       to: '',
+        //       onSelect: () => {
+        //         open.value = false;
+        //       },
+        //     },
+        //     {
+        //       label: 'Notifications',
+        //       to: '',
+        //       onSelect: () => {
+        //         open.value = false;
+        //       },
+        //     },
+        //     {
+        //       label: 'Security',
+        //       to: '',
+        //       onSelect: () => {
+        //         open.value = false;
+        //       },
+        //     },
+        //   ],
+        // },
+      ],
+      // [
+      //   {
+      //     label: 'Feedback',
+      //     icon: 'i-lucide-message-circle',
+      //     to: 'https://github.com/nuxt-ui-templates/dashboard',
+      //     target: '_blank',
+      //   },
+      //   {
+      //     label: 'Help & Support',
+      //     icon: 'i-lucide-info',
+      //     to: 'https://github.com/nuxt-ui-templates/dashboard',
+      //     target: '_blank',
+      //   },
+      // ],
+    ] satisfies NavigationMenuItem[][]
+);
 
 const groups = computed(() => [
   {
     id: 'links',
     label: 'Go to',
-    items: links.flat(),
+    items: links.value.flat(),
   },
   {
     id: 'code',
