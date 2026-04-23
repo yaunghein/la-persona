@@ -29,9 +29,17 @@ const runtimeConfig = useRuntimeConfig();
 const { slug } = useRoute().params;
 const { data: card } = await useFetch<CardDTO>(`/api/public/cards/${slug}`);
 
-const isCardInFreeTrial = computed(
-  () => card.value?.subscription?.effectiveStatus === 'trial'
-);
+const shouldShowPoweredByLaPersona = computed(() => {
+  const subscription = card.value?.subscription;
+  const planCode = subscription?.planCode;
+  const status = subscription?.effectiveStatus ?? subscription?.status;
+  const isTrial = subscription?.isTrial || status === 'trial';
+
+  const isPremiumPlan = planCode === 'premium' || planCode === 'founder-club';
+  const isPaidStandardPlan = planCode === 'standard' && !isTrial;
+
+  return !isPremiumPlan && !isPaidStandardPlan;
+});
 useSeoMeta({ ...getSeoTitle(`${card.value?.firstName}`) });
 
 onMounted(async () => {
@@ -548,7 +556,7 @@ async function onSaveContact() {
             Cancel
           </button>
 
-          <div v-if="isCardInFreeTrial" class="mt-2 w-full">
+          <div v-if="shouldShowPoweredByLaPersona" class="mt-2 w-full">
             <PoweredByLaPersona />
           </div>
         </div>
@@ -645,7 +653,7 @@ async function onSaveContact() {
           </template>
         </div>
         <div
-          v-if="isCardInFreeTrial"
+          v-if="shouldShowPoweredByLaPersona"
           class="mt-8 px-5 transition duration-750"
           :class="{
             'opacity-100': isMenuOpen,
