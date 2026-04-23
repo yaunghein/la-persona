@@ -533,6 +533,15 @@ async function onSaveContact() {
           </div>
 
           <button
+            v-if="!isSuccess"
+            @click="isSuccess = true"
+            class="text-xs font-bold leading-none tracking-[0.1rem] underline underline-offset-4"
+          >
+            Skip for now
+          </button>
+
+          <button
+            v-if="isSuccess"
             @click="closeForm"
             class="text-xs font-bold leading-none tracking-[0.1rem] underline underline-offset-4"
           >
