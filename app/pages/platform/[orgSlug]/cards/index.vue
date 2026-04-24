@@ -123,18 +123,22 @@ async function onConfirmDelete() {
 
 function getCardBadgeLabel(card: CardDTO) {
   if (card.subscription?.status === 'pending_approval') return 'Pending';
-  if (card.subscription?.status === 'trial' || card.subscription?.isTrial)
-    return 'Standard (Trial)';
+
+  const planCode = card.subscription?.planCode;
+  const isTrial =
+    card.subscription?.status === 'trial' || card.subscription?.isTrial;
+
+  // Keep explicit/special plan names visible even during trial periods.
+  if (planCode === 'friend-family') return 'Friends & Family';
+  if (planCode === 'founder-club') return "Founders' Club";
+  if (planCode === 'premium') return 'Premium';
+  if (isTrial) return 'Standard (Trial)';
 
   if (card.subscription?.planName?.trim()) {
     return card.subscription.planName.trim();
   }
 
-  const planCode = card.subscription?.planCode;
-  if (planCode === 'founder-club') return "Founders' Club";
-  if (planCode === 'premium') return 'Premium';
   if (planCode === 'standard') return 'Standard';
-  if (planCode === 'friend-family') return 'Friends & Family';
   return 'No Plan';
 }
 
