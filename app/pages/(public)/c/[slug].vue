@@ -54,15 +54,34 @@ onMounted(async () => {
     metadata: { path: useRoute().path },
   });
 
+  loading.value = true;
+
   const canvas = document.querySelector('#card') as HTMLCanvasElement;
   const spline = new Application(canvas);
   spline.load(card.value?.splineUrl + `?v=${new Date().getTime()}`).then(() => {
+    loading.value = false;
     if (!card.value) return;
     const fullname = [card.value.firstName, card.value.lastName]
       .filter(Boolean)
       .join(' ')
       .trim()
       .toUpperCase();
+    const planCode = card.value.subscription?.planCode;
+    const isFounderSubscription =
+      planCode === 'founder' || planCode === 'founder-club';
+
+    if (isFounderSubscription) {
+      spline.setVariables({
+        firstname: card.value.firstName?.toUpperCase() || '',
+        lastname: card.value.lastName?.toUpperCase() || '',
+        position: card.value.position?.toUpperCase() || '',
+        phone: card.value.phone || '',
+        email: card.value.email?.toUpperCase() || '',
+        website: websiteLabelForSpline(card.value.website),
+      });
+      return;
+    }
+
     spline.setVariables({
       name: fullname,
       position: card.value.position?.toUpperCase() || '',
@@ -79,6 +98,7 @@ const isSuccess = ref(false);
 const isValid = ref(true);
 const isSubmitting = ref(false);
 const isSavingContact = ref(false);
+const loading = ref(false);
 const error = ref('');
 const toast = useToast();
 
@@ -365,6 +385,14 @@ async function onSaveContact() {
 <template>
   <div v-if="card" class="relative z-10 h-dvh w-screen overflow-hidden">
     <div class="absolute inset-0 w-full h-full">
+      <div
+        v-if="loading"
+        class="inline-block size-12 animate-spin rounded-full border border-current border-t-transparent text-white/20 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+        role="status"
+        aria-label="loading"
+      >
+        <span class="sr-only">Loading...</span>
+      </div>
       <canvas id="card" class="h-full w-full"></canvas>
     </div>
 
