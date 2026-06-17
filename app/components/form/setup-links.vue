@@ -24,7 +24,7 @@ const emit = defineEmits<{
 const route = useRoute();
 const toast = useToast();
 const slug = computed(() => route.params.slug as string);
-const { normalizeLinkValuesWithHttps, isValidPublicWebUrl } =
+const { normalizeLinkValuesWithHttps, isValidCardLinkValue } =
   useUrlNormalization();
 const linkTypeItems = computed<string[][]>(() =>
   createLinkTypeItemsWithCustom(CARD_LINK_SELECT_ITEMS)
@@ -135,10 +135,10 @@ function validate(formData: typeof state): FormError[] {
     const value = String(social.value || '').trim();
     if (!value) return;
 
-    if (!isValidPublicWebUrl(value)) {
+    if (!isValidCardLinkValue(value, social.label)) {
       errors.push({
         name: `socials.${index}.value`,
-        message: 'Please enter a valid URL.',
+        message: 'Please enter a valid link.',
       });
     }
   });
@@ -193,9 +193,6 @@ function resolveSocialLabel(link: SocialFormLink) {
 
 function validateSocialDraft(): FormError[] {
   const errors: FormError[] = [];
-  const normalizedValue = normalizeLinkValuesWithHttps([
-    { label: socialDraft.label, value: socialDraft.value },
-  ])[0]?.value;
 
   if (!String(socialDraft.label || '').trim()) {
     errors.push({
@@ -219,10 +216,10 @@ function validateSocialDraft(): FormError[] {
       name: 'socialDraft.value',
       message: 'Please enter a link.',
     });
-  } else if (!isValidPublicWebUrl(normalizedValue || '')) {
+  } else if (!isValidCardLinkValue(socialDraft.value, socialDraft.label)) {
     errors.push({
       name: 'socialDraft.value',
-      message: 'Please enter a valid URL.',
+      message: 'Please enter a valid link.',
     });
   }
 

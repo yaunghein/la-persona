@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useQuery } from '@tanstack/vue-query';
 import { Application } from '@splinetool/runtime';
 import type { ConcreteComponent } from 'vue';
 import { SOCIAL_MEDIA_LINK_LABELS } from '~~/shared/constants/card-link-options';
@@ -25,6 +24,7 @@ function websiteLabelForSpline(website: string | null | undefined): string {
 
 const { trackEvent } = useAnalytics();
 const runtimeConfig = useRuntimeConfig();
+const { normalizeCardLinkValue } = useUrlNormalization();
 
 const { slug } = useRoute().params;
 const { data: card } = await useFetch<CardDTO>(`/api/public/cards/${slug}`);
@@ -629,7 +629,7 @@ async function onSaveContact() {
             :key="index"
           >
             <a
-              :href="link.value"
+              :href="normalizeCardLinkValue(link.value, link.label)"
               target="_blank"
               class="flex shrink-0 flex-col items-center gap-4 transition duration-750"
               :class="isMenuOpen ? 'opacity-100' : 'opacity-0'"

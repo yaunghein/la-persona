@@ -1,5 +1,21 @@
 const SCHEME_REGEX = /^[a-z][a-z\d+.-]*:/i;
 const IPV4_REGEX = /^(?:\d{1,3}\.){3}\d{1,3}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function isGmailLinkLabel(label?: string | null) {
+  return String(label || '').trim().toLowerCase() === 'gmail';
+}
+
+function normalizeMailto(rawValue?: string | null): string {
+  const value = String(rawValue || '').trim();
+  if (!value) return '';
+
+  if (value.toLowerCase().startsWith('mailto:')) {
+    return value;
+  }
+
+  return `mailto:${value.replace(/^https?:\/\//i, '')}`;
+}
 
 export function useUrlNormalization() {
   const normalizeUrlWithHttps = (rawValue?: string | null): string => {
@@ -17,14 +33,27 @@ export function useUrlNormalization() {
     return `https://${value}`;
   };
 
-  const normalizeLinkValuesWithHttps = <T extends { value?: string | null }>(
+  const normalizeCardLinkValue = (
+    rawValue?: string | null,
+    label?: string | null
+  ): string => {
+    if (isGmailLinkLabel(label)) {
+      return normalizeMailto(rawValue);
+    }
+
+    return normalizeUrlWithHttps(rawValue);
+  };
+
+  const normalizeLinkValuesWithHttps = <
+    T extends { label?: string | null; value?: string | null },
+  >(
     links: T[] | undefined | null
   ): T[] => {
     if (!links?.length) return [];
 
     return links.map((link) => ({
       ...link,
-      value: normalizeUrlWithHttps(link.value),
+      value: normalizeCardLinkValue(link.value, link.label),
     }));
   };
 
@@ -52,9 +81,26 @@ export function useUrlNormalization() {
     }
   };
 
+  const isValidCardLinkValue = (
+    rawValue?: string | null,
+    label?: string | null
+  ): boolean => {
+    const normalized = normalizeCardLinkValue(rawValue, label);
+    if (!normalized) return false;
+
+    if (!isGmailLinkLabel(label)) {
+      return isValidPublicWebUrl(normalized);
+    }
+
+    const email = normalized.replace(/^mailto:/i, '');
+    return EMAIL_REGEX.test(email);
+  };
+
   return {
     normalizeUrlWithHttps,
+    normalizeCardLinkValue,
     normalizeLinkValuesWithHttps,
     isValidPublicWebUrl,
+    isValidCardLinkValue,
   };
 }

@@ -27,6 +27,7 @@ const {
   normalizeUrlWithHttps,
   normalizeLinkValuesWithHttps,
   isValidPublicWebUrl,
+  isValidCardLinkValue,
 } = useUrlNormalization();
 
 const selectedFile = ref<File | null>(null);
@@ -355,12 +356,6 @@ function resolveSocialLabel(link: SocialFormLink) {
 
 function validateSocialDraft(): FormError[] {
   const errors: FormError[] = [];
-  const normalizedValue = normalizeLinkValuesWithHttps([
-    {
-      label: socialDraft.label,
-      value: socialDraft.value,
-    },
-  ])[0]?.value;
 
   if (!String(socialDraft.label || '').trim()) {
     errors.push({
@@ -384,10 +379,10 @@ function validateSocialDraft(): FormError[] {
       name: 'socialDraft.value',
       message: 'Please enter a link.',
     });
-  } else if (!isValidPublicWebUrl(normalizedValue || '')) {
+  } else if (!isValidCardLinkValue(socialDraft.value, socialDraft.label)) {
     errors.push({
       name: 'socialDraft.value',
-      message: 'Please enter a valid URL.',
+      message: 'Please enter a valid link.',
     });
   }
 

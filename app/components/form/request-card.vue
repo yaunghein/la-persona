@@ -35,6 +35,7 @@ const {
   normalizeUrlWithHttps,
   normalizeLinkValuesWithHttps,
   isValidPublicWebUrl,
+  isValidCardLinkValue,
 } = useUrlNormalization();
 
 const state = reactive<RequestCardFormState>({
@@ -223,12 +224,6 @@ function resolveSocialLabel(link: SocialFormLink) {
 
 function validateSocialDraft(): FormError[] {
   const errors: FormError[] = [];
-  const normalizedValue = normalizeLinkValuesWithHttps([
-    {
-      label: socialDraft.label,
-      value: socialDraft.value,
-    },
-  ])[0]?.value;
 
   if (!String(socialDraft.label || '').trim()) {
     errors.push({
@@ -252,10 +247,10 @@ function validateSocialDraft(): FormError[] {
       name: 'socialDraft.value',
       message: 'Please enter a link.',
     });
-  } else if (!isValidPublicWebUrl(normalizedValue || '')) {
+  } else if (!isValidCardLinkValue(socialDraft.value, socialDraft.label)) {
     errors.push({
       name: 'socialDraft.value',
-      message: 'Please enter a valid URL.',
+      message: 'Please enter a valid link.',
     });
   }
 
@@ -543,12 +538,12 @@ function validate(formData: Partial<RequestCardFormState>): FormError[] {
   );
   normalizedSocials.forEach((social, index) => {
     if (!String(social.value || '').trim()) return;
-    if (isValidPublicWebUrl(social.value)) return;
+    if (isValidCardLinkValue(social.value, social.label)) return;
     if (errors.some((error) => error.name === `socials.${index}.value`)) return;
 
     errors.push({
       name: `socials.${index}.value`,
-      message: 'Please enter a valid URL.',
+      message: 'Please enter a valid link.',
     });
   });
 
