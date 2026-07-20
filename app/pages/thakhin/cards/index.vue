@@ -114,8 +114,8 @@ const planSelectItems = computed(() =>
   (onboardingOptions.value?.plans ?? [])
     .filter((p) => p.code === 'friend-family')
     .map((p) => ({
-    label: p.name,
-    value: p.code,
+      label: p.name,
+      value: p.code,
     }))
 );
 
@@ -360,7 +360,7 @@ const selectUi = {
           tr: 'bg-transparent',
           empty: 'py-16 text-center text-sm text-muted',
         }"
-        class="w-full min-w-[1100px]"
+        class="w-full min-w-275"
       >
         <template #displayName-cell="{ row }">
           <span class="font-medium text-white">
@@ -577,7 +577,12 @@ const selectUi = {
               color="neutral"
               variant="ghost"
               class="rounded-full px-5 text-white hover:bg-[#232323]"
-              @click="isFormOpen = false"
+              @click="
+                () => {
+                  isFormOpen = false;
+                  // resetForm();
+                }
+              "
             />
             <UButton
               size="xl"

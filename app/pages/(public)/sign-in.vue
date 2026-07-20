@@ -111,14 +111,14 @@ const onMagicLink = async () => {
       <div
         class="relative w-full sm:w-1/2 flex items-center justify-center bg-[#171717] px-6 py-10 sm:py-16 min-h-[58dvh] sm:min-h-full rounded-lg sm:rounded-none"
       >
-        <div class="w-full max-w-[485px] space-y-8 mb-12">
-          <div class="mx-auto max-w-[254px] space-y-6 text-center">
+        <div class="w-full max-w-121.25 space-y-8 mb-12">
+          <div class="mx-auto max-w-63.5 space-y-6 text-center">
             <h1
               class="text-[1.75rem] font-medium leading-none tracking-widest text-white uppercase"
             >
               Sign In
             </h1>
-            <p class="text-sm leading-[21px] text-muted">
+            <p class="text-sm leading-5.25 text-muted">
               Access your cards, manage your contacts, and update your presence.
             </p>
           </div>
@@ -155,7 +155,7 @@ const onMagicLink = async () => {
 
           <div class="flex items-center gap-2">
             <div class="h-px flex-1 bg-[#2a2a2a]" />
-            <span class="px-2 text-sm leading-[21px] text-[#8b8b8b]">or</span>
+            <span class="px-2 text-sm leading-5.25 text-[#8b8b8b]">or</span>
             <div class="h-px flex-1 bg-[#2a2a2a]" />
           </div>
 
@@ -194,7 +194,7 @@ const onMagicLink = async () => {
         </div>
 
         <p
-          class="absolute bottom-6 left-1/2 w-full text-xs max-w-[485px] -translate-x-1/2 px-6 text-center sm:text-sm leading-[21px] text-[#8b8b8b]"
+          class="absolute bottom-6 left-1/2 w-full text-xs max-w-121.25 -translate-x-1/2 px-6 text-center sm:text-sm leading-5.25 text-[#8b8b8b]"
         >
           By continuing, you agree to La Persona's
           <NuxtLink href="/privacy-policy" class="underline underline-offset-2">

@@ -10,6 +10,14 @@ useSeoMeta({
     'La Persona transforms how professionals introduce themselves, connect, and unlock opportunities—starting from a single interaction.',
 });
 
+const { data: session } = await authClient.useSession(useFetch);
+const heroCtaTo = computed(() =>
+  session.value ? ROUTES.PLATFORM.ROOT : ROUTES.SIGN_IN
+);
+const heroCtaLabel = computed(() =>
+  session.value ? 'Go to platform' : 'Try free'
+);
+
 /**
  * Story — scrollytelling: tall track + sticky stage; ScrollTrigger scrub drives word motion
  * (same pattern as index.vue: Lenis + GSAP + ScrollTrigger).
@@ -521,17 +529,17 @@ const premiumPlanFeatures = [
           class="flex sm:w-full max-w-[23.33rem] flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center sm:gap-4"
         >
           <UButton
-            to="/sign-in"
+            :to="heroCtaTo"
             size="xl"
-            class="h-10 sm:h-12 justify-center rounded-full bg-white px-10 text-xs font-light uppercase tracking-[0.1rem] text-neutral-950 sm:text-sm sm:tracking-[0.0875rem]"
+            class="whitespace-nowrap h-10 sm:h-12 justify-center rounded-full bg-white px-10 text-xs font-light uppercase tracking-[0.1rem] text-neutral-950 sm:text-sm sm:tracking-[0.0875rem]"
           >
-            Try free
+            {{ heroCtaLabel }}
           </UButton>
           <UButton
             to="/#features"
             variant="outline"
             size="xl"
-            class="h-10 sm:h-12 justify-center px-6 rounded-full border-white/10 bg-transparent text-xs font-light uppercase tracking-[0.1rem] text-white sm:text-sm sm:tracking-[0.0875rem]"
+            class="whitespace-nowrap h-10 sm:h-12 justify-center px-6 rounded-full border-white/10 bg-transparent text-xs font-light uppercase tracking-[0.1rem] text-white sm:text-sm sm:tracking-[0.0875rem]"
           >
             See How It Works
           </UButton>
