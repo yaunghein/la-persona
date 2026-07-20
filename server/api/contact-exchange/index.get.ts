@@ -1,4 +1,5 @@
 import { and, desc, eq, ilike, or } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import { db } from '~~/server/db';
 import { card, contactExchange } from '~~/server/db/schema';
 import {
@@ -6,6 +7,8 @@ import {
   requireOrganizationPermission,
 } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+
+const laPersonaCard = alias(card, 'la_persona_card');
 
 export default defineEventHandler(async (event) => {
   const session = await requireOrganizationPermission(
@@ -74,12 +77,18 @@ export default defineEventHandler(async (event) => {
         company: contactExchange.company,
         position: contactExchange.position,
         cardId: contactExchange.cardId,
+        source: contactExchange.source,
+        laPersonaUserId: contactExchange.laPersonaUserId,
+        laPersonaCardId: contactExchange.laPersonaCardId,
+        laPersonaCardSlug: laPersonaCard.slug,
+        reciprocalExchangeId: contactExchange.reciprocalExchangeId,
         cardSlug: card.slug,
         cardFirstName: card.firstName,
         cardLastName: card.lastName,
       })
       .from(contactExchange)
       .leftJoin(card, eq(contactExchange.cardId, card.id))
+      .leftJoin(laPersonaCard, eq(contactExchange.laPersonaCardId, laPersonaCard.id))
       .where(and(...conditions))
       .orderBy(desc(contactExchange.createdAt)),
     canReadAllContacts

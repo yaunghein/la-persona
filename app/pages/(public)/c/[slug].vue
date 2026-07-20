@@ -28,6 +28,7 @@ const { normalizeCardLinkValue } = useUrlNormalization();
 
 const { slug } = useRoute().params;
 const { data: card } = await useFetch<CardDTO>(`/api/public/cards/${slug}`);
+const { data: session } = await authClient.useSession(useFetch);
 
 const shouldShowPoweredByLaPersona = computed(() => {
   const subscription = card.value?.subscription;
@@ -98,16 +99,85 @@ const isSuccess = ref(false);
 const isValid = ref(true);
 const isSubmitting = ref(false);
 const isSavingContact = ref(false);
+const isSeamlessExchanging = ref(false);
+const successMode = ref<'visitor' | 'seamless' | null>(null);
 const loading = ref(false);
 const error = ref('');
 const toast = useToast();
+
+const cardDisplayName = computed(() =>
+  [card.value?.firstName, card.value?.lastName].filter(Boolean).join(' ').trim()
+);
+const exchangeButtonLabel = computed(() =>
+  isSeamlessExchanging.value ? 'Connecting...' : 'Exchange Contact'
+);
+const successTitle = computed(() =>
+  successMode.value === 'seamless'
+    ? 'Successfully Connected'
+    : "You're all set!"
+);
+const successDescription = computed(() =>
+  successMode.value === 'seamless'
+    ? `${cardDisplayName.value || 'This contact'} has been added to your Contacts.`
+    : `Tap below to save ${card.value?.firstName || 'this person'}'s contact directly to your phone.`
+);
+const isSeamlessSuccess = ref(true);
+// const isSeamlessSuccess = computed(
+//   () => isSuccess.value && successMode.value === 'seamless'
+// );
 
 const closeForm = () => {
   isFormOpen.value = false;
   setTimeout(() => {
     isSuccess.value = false;
+    successMode.value = null;
     error.value = '';
   }, 750);
+};
+
+const onExchangeContactClick = async () => {
+  if (!session.value) {
+    isFormOpen.value = !isFormOpen.value;
+    return;
+  }
+  if (!card.value || isSeamlessExchanging.value) return;
+
+  isMenuOpen.value = false;
+  isSeamlessExchanging.value = true;
+  try {
+    await $fetch('/api/contact-exchange/seamless', {
+      method: 'POST',
+      body: {
+        ownerCardId: card.value.id,
+      },
+    });
+
+    trackEvent({
+      cardId: card.value.id,
+      organizationId: card.value.organizationId,
+      userId: card.value.userId,
+      type: 'save_action',
+      metadata: { action: 'seamless_exchange' },
+    });
+
+    successMode.value = 'seamless';
+    isSuccess.value = true;
+    isFormOpen.value = true;
+  } catch (error: any) {
+    toast.add({
+      title: 'Unable to connect',
+      description:
+        error?.data?.statusMessage ||
+        error?.statusMessage ||
+        'Please try again.',
+      color: 'error',
+      icon: 'i-heroicons-x-circle',
+      progress: false,
+      duration: 10000,
+    });
+  } finally {
+    isSeamlessExchanging.value = false;
+  }
 };
 
 const onSubmit = async (e: SubmitEvent) => {
@@ -154,6 +224,7 @@ const onSubmit = async (e: SubmitEvent) => {
       metadata: { action: 'contact_exchange' },
     });
 
+    successMode.value = 'visitor';
     isSuccess.value = true;
   } catch (error: any) {
     toast.add({
@@ -404,10 +475,11 @@ async function onSaveContact() {
       }"
     >
       <button
-        @click="isFormOpen = !isFormOpen"
-        class="grid flex-1 place-items-center rounded-full border border-white/10 bg-white/10 text-sm font-bold"
+        :disabled="isSeamlessExchanging"
+        @click="onExchangeContactClick"
+        class="grid flex-1 place-items-center rounded-full border border-white/10 bg-white/10 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
       >
-        Exchange Contact
+        {{ exchangeButtonLabel }}
       </button>
       <button
         @click="isMenuOpen = !isMenuOpen"
@@ -420,14 +492,33 @@ async function onSaveContact() {
     </div>
 
     <div
-      class="fixed inset-0 top-auto -mb-px h-[calc(100dvh-3.5rem)] w-full scale-[1.005] rounded-t-xl border border-white/10 bg-dark transition duration-750 sm:mx-auto sm:max-w-104"
-      :class="{
-        'translate-y-0': isFormOpen,
-        'translate-y-[101%]': !isFormOpen,
-      }"
+      class="fixed inset-x-0 bottom-0 -mb-px w-full scale-[1.005] rounded-t-xl border border-white/10 bg-dark transition duration-750 sm:mx-auto sm:max-w-104"
+      :class="[
+        isSeamlessSuccess ? 'min-h-80.5 pb-13' : 'h-[calc(100dvh-3.5rem)]',
+        isFormOpen ? 'translate-y-0' : 'translate-y-[101%]',
+      ]"
     >
       <div class="flex h-full flex-col">
         <div
+          v-if="isSeamlessSuccess"
+          class="flex items-center justify-end p-4 transition duration-750"
+          :class="{
+            'opacity-100': isFormOpen,
+            'opacity-0': !isFormOpen,
+          }"
+        >
+          <button
+            @click="closeForm"
+            class="grid size-8 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/15"
+            aria-label="Close"
+          >
+            <div class="size-[0.62rem]">
+              <IconClose />
+            </div>
+          </button>
+        </div>
+        <div
+          v-else
           class="flex items-center justify-center border-b border-white/10 py-6 text-center text-sm font-bold transition duration-750"
           :class="{
             'opacity-100': isFormOpen,
@@ -441,14 +532,30 @@ async function onSaveContact() {
           v-if="isSuccess"
           class="flex flex-1 flex-col items-center justify-center gap-6"
         >
-          <div class="text-sm font-bold leading-none tracking-[0.1rem]">
-            You're all set!
+          <Icon
+            v-if="isSeamlessSuccess"
+            name="i-material-symbols:verified"
+            class="size-13 text-[#8BF667]"
+          />
+          <div
+            class="text-center"
+            :class="
+              isSeamlessSuccess
+                ? 'w-35.5 text-base font-medium uppercase leading-6.75 tracking-[1.6px] text-[#8BF667]'
+                : 'text-sm font-bold leading-none tracking-[0.1rem]'
+            "
+          >
+            {{ successTitle }}
           </div>
           <p
-            class="mx-auto max-w-[16rem] text-center text-xs font-light leading-normal tracking-[0.1rem]"
+            class="mx-auto text-center"
+            :class="
+              isSeamlessSuccess
+                ? 'max-w-[16rem] text-sm font-normal leading-5.25 text-white'
+                : 'max-w-[16rem] text-xs font-light leading-normal tracking-[0.1rem]'
+            "
           >
-            Tap below to save {{ card.firstName }}'s contact directly to your
-            phone.
+            {{ successDescription }}
           </p>
         </div>
 
@@ -517,6 +624,7 @@ async function onSaveContact() {
           </form>
         </div>
         <div
+          v-if="!isSeamlessSuccess"
           class="flex flex-col items-center justify-center gap-6 border-t border-white/10 px-5 py-8"
         >
           <button
@@ -570,7 +678,10 @@ async function onSaveContact() {
 
           <button
             v-if="!isSuccess"
-            @click="isSuccess = true"
+            @click="
+              successMode = 'visitor';
+              isSuccess = true;
+            "
             class="text-xs font-bold leading-none tracking-[0.1rem] underline underline-offset-4"
           >
             Skip for now

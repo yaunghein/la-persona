@@ -15,6 +15,8 @@ type Contact = {
   email: string;
   origin: string;
   originTo?: string;
+  isLaPersonaContact: boolean;
+  personaCardTo?: string;
 };
 type ContactActionItem = {
   id: string;
@@ -23,6 +25,7 @@ type ContactActionItem = {
   company: string;
   phone: string;
   email: string;
+  personaCardTo?: string;
 };
 
 type ContactRow = {
@@ -35,6 +38,8 @@ type ContactRow = {
   email: string;
   origin: string;
   originTo?: string;
+  isLaPersonaContact: boolean;
+  personaCardTo?: string;
   actions: string;
 };
 type ContactExchangeDTO = {
@@ -45,6 +50,11 @@ type ContactExchangeDTO = {
   position: string | null;
   company: string | null;
   cardId: string | null;
+  source: string;
+  laPersonaUserId: string | null;
+  laPersonaCardId: string | null;
+  laPersonaCardSlug: string | null;
+  reciprocalExchangeId: string | null;
   cardSlug: string | null;
   cardFirstName: string | null;
   cardLastName: string | null;
@@ -121,7 +131,7 @@ const {
 } = useQuery<ContactsResponse>({
   queryKey: ['contact-exchange', () => selectedCardId.value],
   queryFn: async () =>
-    $fetch('/api/contact-exchange', {
+    $fetch<ContactsResponse>('/api/contact-exchange', {
       query: {
         cardId: selectedCardId.value,
       },
@@ -159,14 +169,20 @@ const contacts = computed<ContactRow[]>(() =>
       .filter(Boolean)
       .join(' ')
       .trim();
-    const originLabel =
-      item.cardId && sourceCardName
+    const isLaPersonaContact = item.source === 'seamless_exchange';
+    const personaCardTo =
+      isLaPersonaContact && item.laPersonaCardSlug
+        ? `/c/${item.laPersonaCardSlug}`
+        : undefined;
+    const originLabel = isLaPersonaContact
+      ? 'Seamless Exchange'
+      : item.cardId && sourceCardName
         ? `From ${sourceCardName}`
         : item.cardId
           ? 'From Card Exchange'
           : 'Added Manually';
     const originTo =
-      item.cardId && item.cardSlug
+      !isLaPersonaContact && item.cardId && item.cardSlug
         ? `/platform/${orgSlug.value}/cards/${item.cardSlug}`
         : undefined;
     return {
@@ -179,6 +195,8 @@ const contacts = computed<ContactRow[]>(() =>
       email: item.email || 'N/A',
       origin: originLabel,
       originTo,
+      isLaPersonaContact,
+      personaCardTo,
       actions: '⋮',
     };
   })
@@ -218,6 +236,8 @@ const gridContacts = computed<Contact[]>(() =>
     email: contact.email,
     origin: contact.origin,
     originTo: contact.originTo,
+    isLaPersonaContact: contact.isLaPersonaContact,
+    personaCardTo: contact.personaCardTo,
   }))
 );
 
@@ -411,6 +431,16 @@ async function onConfirmDelete() {
 }
 
 function getActionItems(contact: ContactActionItem): DropdownMenuItem[][] {
+  const personaCardActions: DropdownMenuItem[] = contact.personaCardTo
+    ? [
+        {
+          label: 'View PERSONA Card',
+          icon: 'i-lucide-external-link',
+          onSelect: () => navigateTo(contact.personaCardTo),
+        },
+      ]
+    : [];
+
   return [
     [
       {
@@ -418,6 +448,7 @@ function getActionItems(contact: ContactActionItem): DropdownMenuItem[][] {
         icon: 'i-lucide-download',
         onSelect: () => saveContactAsVcf(contact),
       },
+      ...personaCardActions,
     ],
     [
       {
@@ -571,7 +602,11 @@ const visibleColumns = computed(() =>
           variant="ghost"
           class="flex items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323] cursor-pointer"
           aria-label="Open contacts information"
-          @click="isInfoOpen = true"
+          @click="
+            () => {
+              isInfoOpen = true;
+            }
+          "
         />
       </div>
 
@@ -706,7 +741,11 @@ const visibleColumns = computed(() =>
         label="Clear Search"
         color="neutral"
         class="mt-2 rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
-        @click="ownerSearchQuery = ''"
+        @click="
+          () => {
+            ownerSearchQuery = '';
+          }
+        "
       />
     </div>
 
@@ -747,12 +786,22 @@ const visibleColumns = computed(() =>
           tr: 'bg-transparent',
           empty: 'py-16 text-center text-sm text-muted',
         }"
-        class="w-full min-w-[1000px]"
+        class="w-full min-w-250"
       >
         <template #nameRole-cell="{ row }">
           <div class="leading-[1.35]">
-            <p class="text-sm font-medium text-white">
+            <p class="flex items-center gap-1 text-sm font-medium text-white">
               {{ row.original.name }}
+              <NuxtLink
+                v-if="
+                  row.original.isLaPersonaContact && row.original.personaCardTo
+                "
+                :to="row.original.personaCardTo"
+                class="scale-90 inline-flex h-4 w-7 shrink-0 cursor-pointer transition hover:opacity-80"
+                aria-label="La Persona contact"
+              >
+                <IconLpBadge />
+              </NuxtLink>
             </p>
             <p class="text-sm font-medium text-muted">
               {{ row.original.role }}
@@ -802,9 +851,17 @@ const visibleColumns = computed(() =>
         >
           <div class="space-y-2">
             <p
-              class="text-xl font-medium leading-none text-white sm:text-[20px]"
+              class="flex items-center gap-1 text-xl font-medium leading-none text-white sm:text-[20px]"
             >
               {{ contact.name }}
+              <NuxtLink
+                v-if="contact.isLaPersonaContact && contact.personaCardTo"
+                :to="contact.personaCardTo"
+                class="inline-flex scale-90 h-4 w-7 shrink-0 cursor-pointer transition hover:opacity-80"
+                aria-label="La Persona contact"
+              >
+                <IconLpBadge />
+              </NuxtLink>
             </p>
             <p class="text-md leading-none text-muted sm:text-sm">
               {{ contact.role }}
@@ -911,7 +968,7 @@ const visibleColumns = computed(() =>
             <div class="flex items-start gap-3">
               <UIcon
                 :name="item.icon"
-                class="mt-0.5 size-[18px] shrink-0 text-white sm:size-5"
+                class="mt-0.5 size-4.5 shrink-0 text-white sm:size-5"
               />
               <div class="min-w-0">
                 <p class="text-sm font-medium text-white">{{ item.title }}</p>
@@ -929,7 +986,11 @@ const visibleColumns = computed(() =>
             label="Understood"
             color="neutral"
             class="h-10 justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
-            @click="isInfoOpen = false"
+            @click="
+              () => {
+                isInfoOpen = false;
+              }
+            "
           />
         </div>
       </div>

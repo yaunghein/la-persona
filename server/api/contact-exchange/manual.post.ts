@@ -73,6 +73,7 @@ export default defineEventHandler(async (event) => {
         position: body.data.position,
         company: body.data.company?.trim() || null,
         cardId: fallbackCardId,
+        source: 'manual',
       })
       .returning();
 
