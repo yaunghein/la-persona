@@ -12,6 +12,7 @@ const emit = defineEmits<{
   create: [];
   edit: [event: CommunityEvent];
   share: [event: CommunityEvent];
+  open: [event: CommunityEvent];
 }>();
 
 const searchQuery = ref('');
@@ -67,6 +68,10 @@ function onShare(event: CommunityEvent) {
 
 function onEdit(event: CommunityEvent) {
   emit('edit', event);
+}
+
+function onOpen(event: CommunityEvent) {
+  emit('open', event);
 }
 
 const filterSelectUi = {
@@ -143,7 +148,11 @@ const filterSelectUi = {
         :key="event.id"
         class="flex flex-col overflow-hidden rounded-lg"
       >
-        <div class="relative aspect-[1/0.75] w-full overflow-hidden rounded-t-lg">
+        <button
+          type="button"
+          class="relative aspect-[1/0.75] w-full cursor-pointer overflow-hidden rounded-t-lg text-left"
+          @click="onOpen(event)"
+        >
           <img
             :src="event.imageUrl"
             :alt="event.title"
@@ -157,12 +166,16 @@ const filterSelectUi = {
           >
             {{ event.status === 'upcoming' ? 'Upcoming' : 'Past' }}
           </span>
-        </div>
+        </button>
 
         <div
           class="flex flex-col gap-4 rounded-b-lg bg-[#171717] p-5"
         >
-          <div class="flex min-h-11 flex-col gap-1">
+          <button
+            type="button"
+            class="flex min-h-11 cursor-pointer flex-col gap-1 text-left"
+            @click="onOpen(event)"
+          >
             <h2 class="line-clamp-1 text-base leading-5 text-white">
               {{ event.title }}
             </h2>
@@ -176,7 +189,7 @@ const filterSelectUi = {
               />
               <span class="line-clamp-1">{{ event.location }}</span>
             </p>
-          </div>
+          </button>
 
           <div class="flex items-center justify-between">
             <UButton
@@ -184,7 +197,7 @@ const filterSelectUi = {
               color="neutral"
               class="size-7 cursor-pointer rounded-[4px] bg-[#232323] p-1 text-white hover:bg-[#2a2a2a]"
               aria-label="Edit event"
-              @click="onEdit(event)"
+              @click.stop="onEdit(event)"
             />
             <UButton
               icon="i-lucide-share-2"
@@ -192,7 +205,7 @@ const filterSelectUi = {
               variant="ghost"
               class="size-7 cursor-pointer rounded-[4px] p-1 text-white hover:bg-[#232323]"
               aria-label="Share event"
-              @click="onShare(event)"
+              @click.stop="onShare(event)"
             />
           </div>
         </div>
