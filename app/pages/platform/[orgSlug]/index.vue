@@ -61,7 +61,7 @@ onMounted(() => {
 const { data: stats } = useQuery<DashboardStats>({
   queryKey: ['analytics', selectedCardId],
   queryFn: async () =>
-    $fetch('/api/analytics', {
+    $fetch<DashboardStats>('/api/analytics', {
       query: { cardId: selectedCardId.value },
     }),
 });
@@ -285,7 +285,11 @@ const chartOptions = {
           variant="ghost"
           class="flex items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323] cursor-pointer"
           aria-label="Open analytics information"
-          @click="isInfoOpen = true"
+          @click="
+            () => {
+              isInfoOpen = true;
+            }
+          "
         />
       </div>
 
@@ -554,7 +558,7 @@ const chartOptions = {
             <div class="flex items-start gap-3">
               <UIcon
                 :name="item.icon"
-                class="mt-0.5 size-[18px] shrink-0 text-white sm:size-5"
+                class="mt-0.5 size-4.5 shrink-0 text-white sm:size-5"
               />
               <div class="min-w-0">
                 <p class="text-sm font-medium text-white">{{ item.title }}</p>
@@ -572,7 +576,11 @@ const chartOptions = {
             label="Understood"
             color="neutral"
             class="h-10 justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
-            @click="isInfoOpen = false"
+            @click="
+              () => {
+                isInfoOpen = false;
+              }
+            "
           />
         </div>
       </div>

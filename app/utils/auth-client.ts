@@ -3,6 +3,7 @@ import {
   magicLinkClient,
   adminClient,
   organizationClient,
+  inferOrgAdditionalFields,
 } from 'better-auth/client/plugins';
 import {
   organizationAccessControl,
@@ -16,6 +17,18 @@ export const authClient = createAuthClient({
     organizationClient({
       ac: organizationAccessControl,
       roles: organizationRoles,
+      schema: inferOrgAdditionalFields({
+        organization: {
+          additionalFields: {
+            type: {
+              type: 'string',
+            },
+            isPersonal: {
+              type: 'boolean',
+            },
+          },
+        },
+      }),
     }),
   ],
 });

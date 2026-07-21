@@ -9,15 +9,26 @@ import {
 import { getMembersByUserId } from '~~/server/db/queries/auth';
 import { insertDefaultCard } from '~~/server/services/card';
 import type { User } from 'better-auth';
+import {
+  ORGANIZATION_TYPES,
+  type OrganizationType,
+} from '~~/shared/utils/constants';
+import { slugify } from '~~/shared/utils/slugify';
 
-export async function insertOrganization(name: string, isPersonal = false) {
+export async function insertOrganization(
+  name: string,
+  type: OrganizationType = ORGANIZATION_TYPES.PERSONAL
+) {
+  const isPersonal = type === ORGANIZATION_TYPES.PERSONAL;
   const [inserted] = await db
     .insert(organization)
     .values({
       id: nanoid(),
       name: isPersonal ? `${name}'s Space` : name,
       slug: `${slugify(name)}-space-${nanoid()}`,
-      isPersonal: isPersonal,
+      type,
+      // Keep in sync while the column still exists.
+      isPersonal,
       createdAt: new Date(),
     })
     .returning();
@@ -50,7 +61,9 @@ export async function insertMember(
 }
 
 export async function setupDefaultOrganization(user: User) {
-  const existingPersonalOrganization = await getPersonalOrganizationByUserId(user.id);
+  const existingPersonalOrganization = await getPersonalOrganizationByUserId(
+    user.id
+  );
   if (existingPersonalOrganization) {
     return;
   }
@@ -70,7 +83,10 @@ export async function setupDefaultOrganization(user: User) {
     return;
   }
 
-  const newOrg = await insertOrganization(user.name, true);
+  const newOrg = await insertOrganization(
+    user.name,
+    ORGANIZATION_TYPES.PERSONAL
+  );
   await insertMember(user.id, newOrg.id, 'owner');
   await insertDefaultCard(user, newOrg.id);
 }
@@ -95,7 +111,12 @@ export async function getPersonalOrganizationByUserId(userId: string) {
     .select({ organization: organization })
     .from(organization)
     .innerJoin(member, eq(member.organizationId, organization.id))
-    .where(and(eq(member.userId, userId), eq(organization.isPersonal, true)))
+    .where(
+      and(
+        eq(member.userId, userId),
+        eq(organization.type, ORGANIZATION_TYPES.PERSONAL)
+      )
+    )
     .limit(1);
   const first = result[0];
   return first ? first.organization : null;

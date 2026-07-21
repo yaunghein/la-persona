@@ -15,6 +15,13 @@
       "when": 1784542211535,
       "tag": "0001_complex_whirlwind",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784639725392,
+      "tag": "0002_loose_iron_monger",
+      "breakpoints": true
     }
   ]
 }

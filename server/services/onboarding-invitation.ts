@@ -15,6 +15,7 @@ import {
 import { sendEmail } from '~~/server/utils/email';
 import { env } from '~~/server/utils/env';
 import { slugify } from '~~/shared/utils/slugify';
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
 export function addMonths(base: Date, months: number) {
   const result = new Date(base);
@@ -93,7 +94,8 @@ export async function createOnboardingInvitation(params: {
         id: nanoid(),
         name: params.organizationName,
         slug: `${slugify(params.organizationName)}-space-${nanoid()}`,
-        isPersonal: false,
+        type: ORGANIZATION_TYPES.PERSONAL,
+        isPersonal: true,
         createdAt: now,
       })
       .returning();

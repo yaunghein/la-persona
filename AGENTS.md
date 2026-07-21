@@ -25,6 +25,13 @@ Prefer project MCPs over guessing: **Nuxt**, **Nuxt UI**, **Figma**, **Tailwind*
 - Route groups already used: `(public)`, `platform`, `thakhin`. Match existing SSR rules in `nuxt.config.ts` (`/platform/**` and `/thakhin/**` are CSR).
 - Prefer `<script setup lang="ts">` and typed props/emits. Keep everything type-safe and DRY.
 
+## Data-driven UI
+
+- Build UI from **data objects + props**, not hardcoded copy scattered in templates.
+- **Page owns the data.** Define (or fetch) the shape at page level and pass it down into components. Components stay presentational / interactive — they should not invent their own source-of-truth content.
+- **Backend not ready yet?** Use a typed mock/fixture object on the page (same shape the API will later return). Swap the mock for `useQuery` / `$fetch` later without rewriting the component tree.
+- Do not hardcode lists, labels, stats, or section content inside child components “just for the demo” — put them in the page-level mock so wiring real data is a drop-in.
+
 ## Components
 
 - Organize under `app/components/` by domain (`landing/`, `form/`, `analytics/`, `icon/`, etc.).

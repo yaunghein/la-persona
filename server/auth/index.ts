@@ -100,6 +100,24 @@ export const auth = betterAuth({
     organization({
       ac: organizationAccessControl,
       roles: organizationRoles,
+      schema: {
+        organization: {
+          additionalFields: {
+            type: {
+              type: 'string',
+              required: true,
+              defaultValue: 'personal',
+              input: true,
+            },
+            isPersonal: {
+              type: 'boolean',
+              required: true,
+              defaultValue: false,
+              input: false,
+            },
+          },
+        },
+      },
     }),
   ],
   databaseHooks: {

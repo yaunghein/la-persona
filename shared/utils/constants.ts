@@ -21,3 +21,15 @@ export const CARD_TYPES = {
   STANDARD: 'standard',
 } as const;
 export type CardType = (typeof CARD_TYPES)[keyof typeof CARD_TYPES] | null;
+
+export const ORGANIZATION_TYPES = {
+  PERSONAL: 'personal',
+  EVENT_ORGANIZER: 'event_organizer',
+} as const;
+export type OrganizationType =
+  (typeof ORGANIZATION_TYPES)[keyof typeof ORGANIZATION_TYPES];
+
+export const ORGANIZATION_TYPE_LABELS: Record<OrganizationType, string> = {
+  [ORGANIZATION_TYPES.PERSONAL]: 'Personal',
+  [ORGANIZATION_TYPES.EVENT_ORGANIZER]: 'Event Organizer',
+};

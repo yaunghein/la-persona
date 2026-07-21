@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
     slug: org.slug,
     logo: org.logo,
     metadata: org.metadata,
-    isPersonal: org.isPersonal,
+    type: org.type,
     createdAt: org.createdAt,
     memberCount: memberByOrg.get(org.id) ?? 0,
     cardCount: cardByOrg.get(org.id) ?? 0,

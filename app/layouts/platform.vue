@@ -1,121 +1,184 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui';
+import {
+  ORGANIZATION_TYPES,
+  type OrganizationType,
+} from '~~/shared/utils/constants';
+
+type UserOrganization = {
+  id: string;
+  name: string;
+  slug: string;
+  logo: string | null;
+  type: OrganizationType;
+};
 
 const route = useRoute();
 const toast = useToast();
+const router = useRouter();
 
 const open = ref(false);
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
-const platformBasePath = computed(() =>
-  orgSlug.value ? `${ROUTES.PLATFORM.ROOT}/${orgSlug.value}` : ROUTES.PLATFORM.ROOT
+
+const { data: userOrgs } = await useFetch<UserOrganization[]>(
+  '/api/organizations',
+  { default: () => [] }
 );
 
-const links = computed(
+const personalOrg = computed(() =>
+  (userOrgs.value || []).find((org) => org.type === ORGANIZATION_TYPES.PERSONAL)
+);
+
+const organizationOrgs = computed(() =>
+  (userOrgs.value || []).filter(
+    (org) => org.type === ORGANIZATION_TYPES.EVENT_ORGANIZER
+  )
+);
+
+const selectedOrganizationSlug = useState<string | undefined>(
+  'platform-selected-organization-slug',
+  () => undefined
+);
+
+const routeOrg = computed(() =>
+  (userOrgs.value || []).find((org) => org.slug === orgSlug.value)
+);
+
+watch(
+  [organizationOrgs, routeOrg],
+  () => {
+    const routeOrganization =
+      routeOrg.value?.type === ORGANIZATION_TYPES.EVENT_ORGANIZER
+        ? routeOrg.value
+        : null;
+
+    if (routeOrganization) {
+      selectedOrganizationSlug.value = routeOrganization.slug;
+      return;
+    }
+
+    if (
+      selectedOrganizationSlug.value &&
+      organizationOrgs.value.some(
+        (org) => org.slug === selectedOrganizationSlug.value
+      )
+    ) {
+      return;
+    }
+
+    selectedOrganizationSlug.value =
+      organizationOrgs.value[0]?.slug ?? undefined;
+  },
+  { immediate: true }
+);
+
+const personalBasePath = computed(() =>
+  personalOrg.value
+    ? `${ROUTES.PLATFORM.ROOT}/${personalOrg.value.slug}`
+    : orgSlug.value
+      ? `${ROUTES.PLATFORM.ROOT}/${orgSlug.value}`
+      : ROUTES.PLATFORM.ROOT
+);
+
+const organizationsBasePath = computed(() =>
+  selectedOrganizationSlug.value
+    ? `${ROUTES.PLATFORM.ROOT}/${selectedOrganizationSlug.value}`
+    : null
+);
+
+const organizationItems = computed(() =>
+  organizationOrgs.value.map((org) => ({
+    label: org.name,
+    value: org.slug,
+  }))
+);
+
+async function onSelectOrganization(slug: unknown) {
+  if (typeof slug !== 'string' || !slug) return;
+  selectedOrganizationSlug.value = slug;
+  open.value = false;
+  await router.push(`${ROUTES.PLATFORM.ROOT}/${slug}`);
+}
+
+function closeSidebar() {
+  open.value = false;
+}
+
+const personalLinks = computed(
   () =>
     [
-      [
-        {
-          label: 'Insights',
-          icon: 'i-gg:insights',
-          to: platformBasePath.value,
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-        {
-          label: 'Cards',
-          icon: 'i-material-symbols:cards-stack-outline-sharp',
-          to: `${platformBasePath.value}/cards`,
-          // badge: '4',
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-        {
-          label: 'Contacts',
-          icon: 'i-material-symbols:perm-contact-calendar-sharp',
-          to: `${platformBasePath.value}/contacts`,
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-        // {
-        //   label: 'Billing',
-        //   icon: 'uil:bill',
-        //   to: `${platformBasePath.value}/billing`,
-        //   onSelect: () => {
-        //     open.value = false;
-        //   },
-        // },
-        {
-          label: 'Teams (Coming Soon)',
-          icon: 'i-ri:team-line',
-          to: `${platformBasePath.value}/teams`,
-          onSelect: () => {
-            open.value = false;
-          },
-        },
-        // {
-        //   label: 'Settings',
-        //   to: '',
-        //   icon: 'i-lucide-settings',
-        //   defaultOpen: true,
-        //   type: 'trigger',
-        //   children: [
-        //     {
-        //       label: 'General',
-        //       to: '',
-        //       exact: true,
-        //       onSelect: () => {
-        //         open.value = false;
-        //       },
-        //     },
-        //     {
-        //       label: 'Members',
-        //       to: '',
-        //       onSelect: () => {
-        //         open.value = false;
-        //       },
-        //     },
-        //     {
-        //       label: 'Notifications',
-        //       to: '',
-        //       onSelect: () => {
-        //         open.value = false;
-        //       },
-        //     },
-        //     {
-        //       label: 'Security',
-        //       to: '',
-        //       onSelect: () => {
-        //         open.value = false;
-        //       },
-        //     },
-        //   ],
-        // },
-      ],
-      // [
-      //   {
-      //     label: 'Feedback',
-      //     icon: 'i-lucide-message-circle',
-      //     to: 'https://github.com/nuxt-ui-templates/dashboard',
-      //     target: '_blank',
-      //   },
-      //   {
-      //     label: 'Help & Support',
-      //     icon: 'i-lucide-info',
-      //     to: 'https://github.com/nuxt-ui-templates/dashboard',
-      //     target: '_blank',
-      //   },
-      // ],
-    ] satisfies NavigationMenuItem[][]
+      {
+        label: 'Insights',
+        icon: 'i-gg:insights',
+        to: personalBasePath.value,
+        onSelect: closeSidebar,
+      },
+      {
+        label: 'Cards',
+        icon: 'i-material-symbols:cards-stack-outline-sharp',
+        to: `${personalBasePath.value}/cards`,
+        onSelect: closeSidebar,
+      },
+      {
+        label: 'Contacts',
+        icon: 'i-material-symbols:perm-contact-calendar-sharp',
+        to: `${personalBasePath.value}/contacts`,
+        onSelect: closeSidebar,
+      },
+      {
+        label: 'Teams (Coming Soon)',
+        icon: 'i-ri:team-line',
+        to: `${personalBasePath.value}/teams`,
+        onSelect: closeSidebar,
+      },
+    ] satisfies NavigationMenuItem[]
+);
+
+const organizationsLinks = computed(
+  () =>
+    [
+      {
+        label: 'Insights',
+        icon: 'i-gg:insights',
+        to: organizationsBasePath.value || undefined,
+        disabled: !organizationsBasePath.value,
+        onSelect: closeSidebar,
+      },
+      {
+        label: 'Members',
+        icon: 'i-ri:team-line',
+        to: organizationsBasePath.value
+          ? `${organizationsBasePath.value}/members`
+          : undefined,
+        disabled: !organizationsBasePath.value,
+        onSelect: closeSidebar,
+      },
+      {
+        label: 'Events',
+        icon: 'i-lucide-calendar',
+        to: organizationsBasePath.value
+          ? `${organizationsBasePath.value}/events`
+          : undefined,
+        disabled: !organizationsBasePath.value,
+        onSelect: closeSidebar,
+      },
+      {
+        label: 'Settings',
+        icon: 'i-lucide-settings',
+        to: organizationsBasePath.value
+          ? `${organizationsBasePath.value}/settings`
+          : undefined,
+        disabled: !organizationsBasePath.value,
+        onSelect: closeSidebar,
+      },
+    ] satisfies NavigationMenuItem[]
 );
 
 const groups = computed(() => [
   {
     id: 'links',
     label: 'Go to',
-    items: links.value.flat(),
+    items: [...personalLinks.value, ...organizationsLinks.value],
   },
   {
     id: 'code',
@@ -161,19 +224,9 @@ onMounted(async () => {
   });
 });
 
-import { sub } from 'date-fns';
-import type { DropdownMenuItem } from '@nuxt/ui';
-import type { Period, Range } from '~/types';
 import type { FeedbackKind } from '~~/shared/types/feedback';
 import { FEEDBACK_KIND_LABELS } from '~~/shared/types/feedback';
 
-// const { isNotificationsSlideoverOpen } = useDashboard()
-
-const range = shallowRef<Range>({
-  start: sub(new Date(), { days: 14 }),
-  end: new Date(),
-});
-const period = ref<Period>('daily');
 const isFeedbackSlideoverOpen = ref(false);
 const feedbackKind = ref<FeedbackKind>('feedback');
 
@@ -189,18 +242,32 @@ const feedbackHeaderLabel = computed(
 
 const currentPageLabel = computed(() => {
   const path = route.path;
-  const orgSlug = String(route.params.orgSlug || '');
-  if (!orgSlug) return path === ROUTES.PLATFORM.ROOT ? 'Insights' : '';
+  const slug = String(route.params.orgSlug || '');
+  if (!slug) return path === ROUTES.PLATFORM.ROOT ? 'Insights' : '';
 
-  const basePath = `${ROUTES.PLATFORM.ROOT}/${orgSlug}`;
+  const basePath = `${ROUTES.PLATFORM.ROOT}/${slug}`;
   if (path === basePath) return 'Insights';
   if (path.startsWith(`${basePath}/cards`)) return 'Cards';
   if (path.startsWith(`${basePath}/contacts`)) return 'Contacts';
   if (path.startsWith(`${basePath}/billing`)) return 'Billing';
   if (path.startsWith(`${basePath}/teams`)) return 'Teams';
+  if (path.startsWith(`${basePath}/members`)) return 'Members';
+  if (path.startsWith(`${basePath}/events`)) return 'Events';
+  if (path.startsWith(`${basePath}/settings`)) return 'Settings';
 
   return '';
 });
+
+const sectionHeadingClass =
+  'px-2 text-sm font-medium uppercase tracking-[1.4px] text-white';
+
+const sidebarSelectUi = {
+  base: 'h-9 w-full rounded-[4px] border-[#2a2a2a] bg-[#232323] px-3 text-sm text-white',
+  content: 'border border-[#2a2a2a] bg-[#232323]',
+  item: 'text-white data-[highlighted]:bg-[#2a2a2a]',
+  value: 'text-white',
+  placeholder: 'text-[#8b8b8b]',
+};
 </script>
 
 <template>
@@ -214,8 +281,6 @@ const currentPageLabel = computed(() => {
       :ui="{ footer: 'lg:border-t lg:border-default' }"
     >
       <template #header="{ collapsed }">
-        <!-- <TeamsMenu :collapsed="collapsed" /> -->
-
         <NuxtLink
           v-if="!collapsed"
           to="/platform"
@@ -229,31 +294,52 @@ const currentPageLabel = computed(() => {
       </template>
 
       <template #default="{ collapsed }">
-        <!-- <UDashboardSearchButton
-          :collapsed="collapsed"
-          class="bg-transparent ring-default"
-        /> -->
+        <div class="flex flex-col gap-10 py-4">
+          <div class="flex flex-col gap-4">
+            <p v-if="!collapsed" :class="sectionHeadingClass">Personal</p>
+            <UNavigationMenu
+              :collapsed="collapsed"
+              :items="personalLinks"
+              orientation="vertical"
+              tooltip
+              popover
+              class="[&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1 [&_a]:py-2 [&_a]:font-semibold"
+            />
+          </div>
 
-        <UNavigationMenu
-          :collapsed="collapsed"
-          :items="links[0]"
-          orientation="vertical"
-          tooltip
-          popover
-          class="[&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1 py-4 [&_a]:py-2 [&_a]:font-semibold"
-        />
+          <div class="flex flex-col gap-4">
+            <p v-if="!collapsed" :class="sectionHeadingClass">Organizations</p>
+            <USelect
+              v-if="!collapsed"
+              :model-value="selectedOrganizationSlug"
+              :items="organizationItems"
+              placeholder="Select organization"
+              color="neutral"
+              :disabled="organizationItems.length === 0"
+              :ui="sidebarSelectUi"
+              @update:model-value="onSelectOrganization"
+            />
+            <UNavigationMenu
+              v-if="organizationItems.length > 0"
+              :collapsed="collapsed"
+              :items="organizationsLinks"
+              orientation="vertical"
+              tooltip
+              popover
+              class="[&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1 [&_a]:py-2 [&_a]:font-semibold"
+            />
+            <p v-else-if="!collapsed" class="px-2 text-sm text-[#8b8b8b]">
+              No organizations yet
+            </p>
+          </div>
+        </div>
 
-        <UNavigationMenu
-          :collapsed="collapsed"
-          :items="links[1]"
-          orientation="vertical"
-          tooltip
-          class="mt-auto"
-        />
-        <HelpFeedbackMenu
-          :collapsed="collapsed"
-          @open-feedback="openFeedbackSlideover"
-        />
+        <div class="mt-auto">
+          <HelpFeedbackMenu
+            :collapsed="collapsed"
+            @open-feedback="openFeedbackSlideover"
+          />
+        </div>
       </template>
 
       <template #footer="{ collapsed }">
@@ -275,42 +361,10 @@ const currentPageLabel = computed(() => {
           <template #leading>
             <UDashboardSidebarCollapse />
           </template>
-
-          <template #right>
-            <!-- <UTooltip text="Notifications" :shortcuts="['N']">
-            <UButton size="xl"
-              color="neutral"
-              variant="ghost"
-              square
-              @click="isNotificationsSlideoverOpen = true"
-            >
-              <UChip color="error" inset>
-                <UIcon name="i-lucide-bell" class="size-5 shrink-0" />
-              </UChip>
-            </UButton>
-          </UTooltip> -->
-
-            <!-- <UDropdownMenu :items="items">
-              <UButton icon="i-lucide-plus" size="xl" class="rounded-full" />
-            </UDropdownMenu> -->
-          </template>
         </UDashboardNavbar>
-
-        <!-- <UDashboardToolbar>
-        <template #left>
-          NOTE: The `-ms-1` class is used to align with the `DashboardSidebarCollapse` button here.
-          <HomeDateRangePicker v-model="range" class="-ms-1" />
-
-          <HomePeriodSelect v-model="period" :range="range" />
-          left
-        </template>
-      </UDashboardToolbar> -->
       </template>
 
       <template #body>
-        <!-- <HomeStats :period="period" :range="range" />
-      <HomeChart :period="period" :range="range" />
-      <HomeSales :period="period" :range="range" /> -->
         <slot />
       </template>
     </UDashboardPanel>
@@ -332,7 +386,5 @@ const currentPageLabel = computed(() => {
         />
       </template>
     </USlideover>
-
-    <!-- <NotificationsSlideover /> -->
   </UDashboardGroup>
 </template>
