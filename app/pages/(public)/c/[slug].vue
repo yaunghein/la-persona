@@ -337,7 +337,7 @@ async function getPhotoForVcf() {
       ? `/api/s3/image-proxy?url=${encodeURIComponent(avatarUrl)}`
       : null,
     avatarUrl,
-    '/images/favicon.png',
+    '/images/reveal-image.webp',
   ].filter(Boolean) as string[];
 
   for (const rawUrl of candidateUrls) {
