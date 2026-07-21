@@ -2,37 +2,80 @@
 definePageMeta({
   layout: 'platform',
 });
+
+import type {
+  CommunityJoinPolicy,
+  CommunitySettingsFormValues,
+} from '~~/shared/types/community-settings';
+
+const toast = useToast();
+
+const PLACEHOLDER_IMAGE = '/images/favicon.png';
+
+const joinOptions: { label: string; value: CommunityJoinPolicy }[] = [
+  { label: 'Anyone', value: 'anyone' },
+  { label: 'Invite only', value: 'invite_only' },
+  { label: 'Approval required', value: 'approval_required' },
+];
+
+/** Mock until community settings API exists. */
+const initialForm = (): CommunitySettingsFormValues => ({
+  name: 'Tech Leaders Myanmar',
+  description:
+    'A community connecting founders, investors and professionals through curated networking events.',
+  coverImageUrl: '',
+  logoUrl: PLACEHOLDER_IMAGE,
+  whoCanJoin: 'anyone',
+  notifyNewMember: true,
+  notifyMembershipRequests: true,
+  notifyEventRegistrations: true,
+});
+
+const form = ref<CommunitySettingsFormValues>(initialForm());
+const snapshot = ref<CommunitySettingsFormValues>(initialForm());
+
+function onCancel() {
+  form.value = { ...snapshot.value };
+  toast.add({
+    title: 'Changes discarded',
+    description: 'Settings restored to the last saved mock state.',
+    color: 'neutral',
+  });
+}
+
+function onSubmit() {
+  if (!form.value.name.trim()) {
+    toast.add({
+      title: 'Name required',
+      description: 'Organization name cannot be empty.',
+      color: 'warning',
+    });
+    return;
+  }
+
+  snapshot.value = { ...form.value };
+  toast.add({
+    title: 'Settings updated',
+    description: 'Mock save — community settings API is not wired yet.',
+    color: 'success',
+  });
+}
+
+function onDelete() {
+  toast.add({
+    title: 'Delete community',
+    description: 'Mock action — deletion is not wired yet.',
+    color: 'warning',
+  });
+}
 </script>
 
 <template>
-  <div class="flex sm:min-h-[calc(100dvh-7rem)] items-center justify-center">
-    <div
-      class="w-full max-w-106 overflow-hidden rounded-[8px] border border-[#232323] bg-[#171717]"
-    >
-      <div
-        class="flex items-center justify-between border-b-2 border-[#232323] p-4 sm:p-6"
-      >
-        <h2 class="text-sm font-medium uppercase tracking-widest text-white">
-          Settings
-        </h2>
-        <UBadge
-          label="Coming Soon"
-          size="sm"
-          color="neutral"
-          variant="soft"
-          class="uppercase tracking-wide"
-        />
-      </div>
-      <div class="space-y-2 p-4 sm:p-6">
-        <h3
-          class="text-md sm:text-xl font-medium uppercase tracking-widest text-white"
-        >
-          Organization settings
-        </h3>
-        <p class="text-sm leading-5.25 text-muted">
-          Settings for community workspaces are coming soon.
-        </p>
-      </div>
-    </div>
-  </div>
+  <CommunitySettingsForm
+    v-model="form"
+    :join-options="joinOptions"
+    @submit="onSubmit"
+    @cancel="onCancel"
+    @delete="onDelete"
+  />
 </template>
