@@ -30,7 +30,7 @@ definePageMeta({
           Organization settings
         </h3>
         <p class="text-sm leading-5.25 text-muted">
-          Settings for event organizer workspaces are coming soon.
+          Settings for community workspaces are coming soon.
         </p>
       </div>
     </div>

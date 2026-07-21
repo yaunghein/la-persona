@@ -30,7 +30,7 @@ definePageMeta({
           Manage event members
         </h3>
         <p class="text-sm leading-5.25 text-muted">
-          Member management for event organizer workspaces is on the way.
+          Member management for community workspaces is on the way.
         </p>
       </div>
     </div>

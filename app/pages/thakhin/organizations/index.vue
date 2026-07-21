@@ -38,7 +38,7 @@ const editForm = reactive({
 const createForm = reactive({
   name: '',
   slug: '',
-  type: ORGANIZATION_TYPES.EVENT_ORGANIZER as OrganizationType,
+  type: ORGANIZATION_TYPES.COMMUNITY as OrganizationType,
   ownerUserId: undefined as string | undefined,
 });
 
@@ -48,8 +48,8 @@ const typeItems = [
     value: ORGANIZATION_TYPES.PERSONAL,
   },
   {
-    label: ORGANIZATION_TYPE_LABELS[ORGANIZATION_TYPES.EVENT_ORGANIZER],
-    value: ORGANIZATION_TYPES.EVENT_ORGANIZER,
+    label: ORGANIZATION_TYPE_LABELS[ORGANIZATION_TYPES.COMMUNITY],
+    value: ORGANIZATION_TYPES.COMMUNITY,
   },
 ];
 
@@ -108,7 +108,7 @@ function closeEdit() {
 function openCreate() {
   createForm.name = '';
   createForm.slug = '';
-  createForm.type = ORGANIZATION_TYPES.EVENT_ORGANIZER;
+  createForm.type = ORGANIZATION_TYPES.COMMUNITY;
   createForm.ownerUserId = undefined;
   isCreateOpen.value = true;
 }

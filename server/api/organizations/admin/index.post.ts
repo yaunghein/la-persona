@@ -14,7 +14,7 @@ const adminCreateOrganizationSchema = z.object({
   name: z.string().trim().min(1, 'Name is required'),
   type: z.enum([
     ORGANIZATION_TYPES.PERSONAL,
-    ORGANIZATION_TYPES.EVENT_ORGANIZER,
+    ORGANIZATION_TYPES.COMMUNITY,
   ]),
   slug: z.string().trim().max(200).optional(),
   ownerUserId: z.string().trim().min(1).optional(),

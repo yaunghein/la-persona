@@ -98,7 +98,7 @@ export const organization = pgTable(
     /** @deprecated Prefer `type`. Kept for migration compatibility. */
     isPersonal: boolean('is_personal').default(false).notNull(),
     type: text('type')
-      .$type<'personal' | 'event_organizer'>()
+      .$type<'personal' | 'community'>()
       .default('personal')
       .notNull(),
   },

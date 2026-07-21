@@ -29,14 +29,14 @@ const personalOrg = computed(() =>
   (userOrgs.value || []).find((org) => org.type === ORGANIZATION_TYPES.PERSONAL)
 );
 
-const organizationOrgs = computed(() =>
+const communityOrgs = computed(() =>
   (userOrgs.value || []).filter(
-    (org) => org.type === ORGANIZATION_TYPES.EVENT_ORGANIZER
+    (org) => org.type === ORGANIZATION_TYPES.COMMUNITY
   )
 );
 
-const selectedOrganizationSlug = useState<string | undefined>(
-  'platform-selected-organization-slug',
+const selectedCommunitySlug = useState<string | undefined>(
+  'platform-selected-community-slug',
   () => undefined
 );
 
@@ -45,29 +45,28 @@ const routeOrg = computed(() =>
 );
 
 watch(
-  [organizationOrgs, routeOrg],
+  [communityOrgs, routeOrg],
   () => {
-    const routeOrganization =
-      routeOrg.value?.type === ORGANIZATION_TYPES.EVENT_ORGANIZER
+    const routeCommunity =
+      routeOrg.value?.type === ORGANIZATION_TYPES.COMMUNITY
         ? routeOrg.value
         : null;
 
-    if (routeOrganization) {
-      selectedOrganizationSlug.value = routeOrganization.slug;
+    if (routeCommunity) {
+      selectedCommunitySlug.value = routeCommunity.slug;
       return;
     }
 
     if (
-      selectedOrganizationSlug.value &&
-      organizationOrgs.value.some(
-        (org) => org.slug === selectedOrganizationSlug.value
+      selectedCommunitySlug.value &&
+      communityOrgs.value.some(
+        (org) => org.slug === selectedCommunitySlug.value
       )
     ) {
       return;
     }
 
-    selectedOrganizationSlug.value =
-      organizationOrgs.value[0]?.slug ?? undefined;
+    selectedCommunitySlug.value = communityOrgs.value[0]?.slug ?? undefined;
   },
   { immediate: true }
 );
@@ -80,22 +79,22 @@ const personalBasePath = computed(() =>
       : ROUTES.PLATFORM.ROOT
 );
 
-const organizationsBasePath = computed(() =>
-  selectedOrganizationSlug.value
-    ? `${ROUTES.PLATFORM.ROOT}/${selectedOrganizationSlug.value}`
+const communitiesBasePath = computed(() =>
+  selectedCommunitySlug.value
+    ? `${ROUTES.PLATFORM.ROOT}/${selectedCommunitySlug.value}`
     : null
 );
 
-const organizationItems = computed(() =>
-  organizationOrgs.value.map((org) => ({
+const communityItems = computed(() =>
+  communityOrgs.value.map((org) => ({
     label: org.name,
     value: org.slug,
   }))
 );
 
-async function onSelectOrganization(slug: unknown) {
+async function onSelectCommunity(slug: unknown) {
   if (typeof slug !== 'string' || !slug) return;
-  selectedOrganizationSlug.value = slug;
+  selectedCommunitySlug.value = slug;
   open.value = false;
   await router.push(`${ROUTES.PLATFORM.ROOT}/${slug}`);
 }
@@ -134,41 +133,41 @@ const personalLinks = computed(
     ] satisfies NavigationMenuItem[]
 );
 
-const organizationsLinks = computed(
+const communitiesLinks = computed(
   () =>
     [
       {
         label: 'Insights',
         icon: 'i-gg:insights',
-        to: organizationsBasePath.value || undefined,
-        disabled: !organizationsBasePath.value,
+        to: communitiesBasePath.value || undefined,
+        disabled: !communitiesBasePath.value,
         onSelect: closeSidebar,
       },
       {
         label: 'Members',
         icon: 'i-ri:team-line',
-        to: organizationsBasePath.value
-          ? `${organizationsBasePath.value}/members`
+        to: communitiesBasePath.value
+          ? `${communitiesBasePath.value}/members`
           : undefined,
-        disabled: !organizationsBasePath.value,
+        disabled: !communitiesBasePath.value,
         onSelect: closeSidebar,
       },
       {
         label: 'Events',
         icon: 'i-lucide-calendar',
-        to: organizationsBasePath.value
-          ? `${organizationsBasePath.value}/events`
+        to: communitiesBasePath.value
+          ? `${communitiesBasePath.value}/events`
           : undefined,
-        disabled: !organizationsBasePath.value,
+        disabled: !communitiesBasePath.value,
         onSelect: closeSidebar,
       },
       {
         label: 'Settings',
         icon: 'i-lucide-settings',
-        to: organizationsBasePath.value
-          ? `${organizationsBasePath.value}/settings`
+        to: communitiesBasePath.value
+          ? `${communitiesBasePath.value}/settings`
           : undefined,
-        disabled: !organizationsBasePath.value,
+        disabled: !communitiesBasePath.value,
         onSelect: closeSidebar,
       },
     ] satisfies NavigationMenuItem[]
@@ -178,7 +177,7 @@ const groups = computed(() => [
   {
     id: 'links',
     label: 'Go to',
-    items: [...personalLinks.value, ...organizationsLinks.value],
+    items: [...personalLinks.value, ...communitiesLinks.value],
   },
   {
     id: 'code',
@@ -308,28 +307,28 @@ const sidebarSelectUi = {
           </div>
 
           <div class="flex flex-col gap-4">
-            <p v-if="!collapsed" :class="sectionHeadingClass">Organizations</p>
+            <p v-if="!collapsed" :class="sectionHeadingClass">Communities</p>
             <USelect
               v-if="!collapsed"
-              :model-value="selectedOrganizationSlug"
-              :items="organizationItems"
-              placeholder="Select organization"
+              :model-value="selectedCommunitySlug"
+              :items="communityItems"
+              placeholder="Select community"
               color="neutral"
-              :disabled="organizationItems.length === 0"
+              :disabled="communityItems.length === 0"
               :ui="sidebarSelectUi"
-              @update:model-value="onSelectOrganization"
+              @update:model-value="onSelectCommunity"
             />
             <UNavigationMenu
-              v-if="organizationItems.length > 0"
+              v-if="communityItems.length > 0"
               :collapsed="collapsed"
-              :items="organizationsLinks"
+              :items="communitiesLinks"
               orientation="vertical"
               tooltip
               popover
               class="[&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1 [&_a]:py-2 [&_a]:font-semibold"
             />
             <p v-else-if="!collapsed" class="px-2 text-sm text-[#8b8b8b]">
-              No organizations yet
+              No communities yet
             </p>
           </div>
         </div>
