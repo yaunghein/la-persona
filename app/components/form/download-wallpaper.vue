@@ -331,22 +331,6 @@ function fillStrokeAndDrawQrInRoundedFrame(
   context.stroke();
 }
 
-function triggerDownloadFromBlob(blob: Blob, fileName: string) {
-  const blobUrl = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = blobUrl;
-  link.download = fileName;
-  link.click();
-  URL.revokeObjectURL(blobUrl);
-}
-
-async function triggerDirectFileDownload(url: string, fileName: string) {
-  const response = await fetch(url, { mode: 'cors' });
-  if (!response.ok) throw new Error('Failed to download file');
-  const blob = await response.blob();
-  triggerDownloadFromBlob(blob, fileName);
-}
-
 function getSafeFileSegment(input?: string) {
   return (input || 'card').replace(/[^a-z0-9-_]+/gi, '-').toLowerCase();
 }
@@ -642,7 +626,10 @@ async function downloadWallpaper() {
 
     const cardSlug = getSafeFileSegment(card.value?.slug);
     const modelSlug = getSafeFileSegment(label);
-    triggerDownloadFromBlob(blob, `${cardSlug}-wallpaper-${modelSlug}.png`);
+    await shareOrDownloadFile({
+      blob,
+      fileName: `${cardSlug}-wallpaper-${modelSlug}.png`,
+    });
   } catch (error: any) {
     toast.add({
       title: 'Wallpaper download failed',
@@ -674,7 +661,10 @@ async function downloadQr() {
       }, 'image/png');
     });
     const cardSlug = getSafeFileSegment(card.value?.slug);
-    triggerDownloadFromBlob(blob, `${cardSlug}-qr.png`);
+    await shareOrDownloadFile({
+      blob,
+      fileName: `${cardSlug}-qr.png`,
+    });
   } catch (error: any) {
     toast.add({
       title: 'QR download failed',

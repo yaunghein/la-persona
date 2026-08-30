@@ -232,7 +232,7 @@ function escapeCsvCell(value: string) {
   return `"${safeValue.replace(/"/g, '""')}"`;
 }
 
-const onExport = () => {
+const onExport = async () => {
   if (!contacts.value.length) {
     toast.add({
       title: 'Nothing to export',
@@ -273,15 +273,7 @@ const onExport = () => {
     type: 'text/csv;charset=utf-8;',
   });
   const fileName = `contacts-${orgSlug.value || 'org'}-${new Date().toISOString().slice(0, 10)}.csv`;
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
+  await shareOrDownloadFile({ blob, fileName });
 
   // toast.add({
   //   title: 'Export complete',
@@ -349,20 +341,11 @@ function sanitizeVcfFilename(value: string) {
   );
 }
 
-function saveContactAsVcf(contact: ContactActionItem) {
+async function saveContactAsVcf(contact: ContactActionItem) {
   const content = createVcfContent(contact);
   const fileName = `${sanitizeVcfFilename(contact.name)}.vcf`;
   const blob = new Blob([content], { type: 'text/vcard;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-
-  anchor.href = url;
-  anchor.download = fileName;
-  anchor.style.display = 'none';
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
+  await shareOrDownloadFile({ blob, fileName });
 
   // toast.add({
   //   title: 'Contact saved',
@@ -747,7 +730,7 @@ const visibleColumns = computed(() =>
           tr: 'bg-transparent',
           empty: 'py-16 text-center text-sm text-muted',
         }"
-        class="w-full min-w-[1000px]"
+        class="w-full min-w-250"
       >
         <template #nameRole-cell="{ row }">
           <div class="leading-[1.35]">
@@ -911,7 +894,7 @@ const visibleColumns = computed(() =>
             <div class="flex items-start gap-3">
               <UIcon
                 :name="item.icon"
-                class="mt-0.5 size-[18px] shrink-0 text-white sm:size-5"
+                class="mt-0.5 size-4.5 shrink-0 text-white sm:size-5"
               />
               <div class="min-w-0">
                 <p class="text-sm font-medium text-white">{{ item.title }}</p>

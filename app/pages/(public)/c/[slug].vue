@@ -353,14 +353,7 @@ async function onSaveContact() {
       `${card.value.firstName} ${card.value.lastName || ''}`.trim()
     )}.vcf`;
     const blob = new Blob([vcf], { type: 'text/vcard;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+    await shareOrDownloadFile({ blob, fileName });
 
     trackEvent({
       cardId: card.value.id,
