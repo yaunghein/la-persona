@@ -17,6 +17,7 @@ export default defineNuxtConfig({
           'data:',
           'blob:',
           'https://*.googleusercontent.com',
+          'https://avatar.vercel.sh',
           'https://la-persona-staging.s3.ap-southeast-2.amazonaws.com',
           'https://la-persona-prod.s3.ap-southeast-2.amazonaws.com',
         ],

@@ -398,13 +398,13 @@ async function onSaveContact() {
     >
       <button
         @click="isFormOpen = !isFormOpen"
-        class="grid flex-1 place-items-center rounded-full border border-white/10 bg-white/10 text-sm font-bold"
+        class="grid flex-1 place-items-center rounded-full border border-[#494949] bg-[#353535] text-sm font-bold"
       >
         Exchange Contact
       </button>
       <button
         @click="isMenuOpen = !isMenuOpen"
-        class="grid aspect-square w-13 shrink-0 place-items-center rounded-full border border-white/10 bg-white/10"
+        class="grid aspect-square w-13 shrink-0 place-items-center rounded-full border border-[#494949] bg-[#353535]"
       >
         <div class="aspect-square w-6">
           <IconMenu />
@@ -413,7 +413,7 @@ async function onSaveContact() {
     </div>
 
     <div
-      class="fixed inset-0 top-auto -mb-px h-[calc(100dvh-3.5rem)] w-full scale-[1.005] rounded-t-xl border border-white/10 bg-dark transition duration-750 sm:mx-auto sm:max-w-104"
+      class="fixed inset-0 top-auto -mb-px h-[calc(100dvh-3.5rem)] w-full scale-[1.005] rounded-t-xl border border-[#494949] bg-dark transition duration-750 sm:mx-auto sm:max-w-104"
       :class="{
         'translate-y-0': isFormOpen,
         'translate-y-[101%]': !isFormOpen,
@@ -421,7 +421,7 @@ async function onSaveContact() {
     >
       <div class="flex h-full flex-col">
         <div
-          class="flex items-center justify-center border-b border-white/10 py-6 text-center text-sm font-bold transition duration-750"
+          class="flex items-center justify-center border-b border-[#494949] py-6 text-center text-sm font-bold transition duration-750"
           :class="{
             'opacity-100': isFormOpen,
             'opacity-0': !isFormOpen,
@@ -466,7 +466,7 @@ async function onSaveContact() {
                 type="text"
                 autocomplete="off"
                 required
-                class="h-[2.8rem] w-full appearance-none border border-white/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
+                class="h-[2.8rem] w-full appearance-none border border-[#494949] bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
             <PhoneInput />
@@ -479,7 +479,7 @@ async function onSaveContact() {
                 type="email"
                 autocomplete="off"
                 required
-                class="h-[2.8rem] w-full appearance-none border border-white/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
+                class="h-[2.8rem] w-full appearance-none border border-[#494949] bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
 
@@ -491,7 +491,7 @@ async function onSaveContact() {
                 name="company"
                 type="text"
                 autocomplete="off"
-                class="h-[2.8rem] w-full appearance-none border border-white/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
+                class="h-[2.8rem] w-full appearance-none border border-[#494949] bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
 
@@ -503,19 +503,19 @@ async function onSaveContact() {
                 name="position"
                 type="text"
                 autocomplete="off"
-                class="h-[2.8rem] w-full appearance-none border border-white/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
+                class="h-[2.8rem] w-full appearance-none border border-[#494949] bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
             <input type="hidden" name="ownerEmail" :value="card.email" />
           </form>
         </div>
         <div
-          class="flex flex-col items-center justify-center gap-6 border-t border-white/10 px-5 py-8"
+          class="flex flex-col items-center justify-center gap-6 border-t border-[#494949] px-5 py-8"
         >
           <button
             v-if="isSuccess"
             :disabled="isSavingContact"
-            class="cursor-pointer w-full rounded-full border border-white/10 bg-white py-4 text-center text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-white/10 disabled:text-white/20"
+            class="cursor-pointer w-full rounded-full border border-[#494949] bg-white py-4 text-center text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-[#353535] disabled:text-white/20"
             @click="onSaveContact"
           >
             {{ isSavingContact ? 'Preparing Contact...' : 'Save Contact' }}
@@ -524,7 +524,7 @@ async function onSaveContact() {
             v-if="isSuccess"
             :href="card.vcf"
             :download="`${card.id}.vcf`"
-            class="cursor-pointer w-full rounded-full border border-white/10 bg-white py-4 text-center text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-white/10 disabled:text-white/20"
+            class="cursor-pointer w-full rounded-full border border-[#494949] bg-white py-4 text-center text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-[#353535] disabled:text-white/20"
           >
             Save Contact
           </a> -->
@@ -533,7 +533,7 @@ async function onSaveContact() {
             type="submit"
             form="form"
             :disabled="!isValid || isSubmitting"
-            class="cursor-pointer relative w-full rounded-full border border-white/10 bg-white py-4 text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-white/10 disabled:text-white/20"
+            class="cursor-pointer relative w-full rounded-full border border-[#494949] bg-white py-4 text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-[#353535] disabled:text-white/20"
           >
             Continue
             <div
@@ -585,7 +585,7 @@ async function onSaveContact() {
     </div>
 
     <div
-      class="fixed inset-0 top-auto -mb-px w-full scale-[1.005] rounded-t-xl border border-white/10 bg-dark py-6 transition duration-750 sm:mx-auto sm:max-w-104"
+      class="fixed inset-0 top-auto -mb-px w-full scale-[1.005] rounded-t-xl border border-[#494949] bg-dark py-6 transition duration-750 sm:mx-auto sm:max-w-104"
       :class="{
         'translate-y-0': isMenuOpen,
         'translate-y-100': !isMenuOpen,
@@ -594,7 +594,7 @@ async function onSaveContact() {
       <div>
         <button
           @click="isMenuOpen = false"
-          class="absolute right-4 top-4 grid aspect-square w-8 place-items-center rounded-full border border-white/10 bg-white/10 transition duration-750"
+          class="absolute right-4 top-4 grid aspect-square w-8 place-items-center rounded-full border border-[#494949] bg-[#353535] transition duration-750"
           :class="{
             'opacity-100': isMenuOpen,
             'opacity-0': !isMenuOpen,
@@ -640,7 +640,7 @@ async function onSaveContact() {
                 />
                 <div
                   v-else
-                  class="grid aspect-square h-full w-full place-items-center rounded-full bg-white/10"
+                  class="grid aspect-square h-full w-full place-items-center rounded-full bg-[#353535]"
                 >
                   <div class="aspect-square w-8">
                     <component :is="iconMap[getLinkIcon(link.label)]" />
@@ -661,7 +661,7 @@ async function onSaveContact() {
               :style="{ transitionDelay: `${(index + 1) * 100}ms` }"
             >
               <div
-                class="grid aspect-square w-[4.56rem] place-items-center rounded-full bg-white/10"
+                class="grid aspect-square w-[4.56rem] place-items-center rounded-full bg-[#353535]"
               >
                 <div class="aspect-square w-8">
                   <component :is="iconMap[link.icon]" />
