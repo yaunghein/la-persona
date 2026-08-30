@@ -50,6 +50,15 @@ function getFallbackNameFromEmail(email: string) {
   return localPart || 'User';
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+}
+
 export const auth = betterAuth({
   baseURL: env.BASE_URL,
   database: drizzleAdapter(db, {
@@ -58,7 +67,9 @@ export const auth = betterAuth({
   socialProviders,
   plugins: [
     magicLink({
-      sendMagicLink: async ({ email, token, url }, _ctx) => {
+      expiresIn: 60 * 30,
+      sendMagicLink: async ({ email, url }, _ctx) => {
+        const safeUrl = escapeHtml(url);
         await sendEmail({
           to: [email],
           subject: 'Your LA PERSONA magic sign-in link',
@@ -69,7 +80,7 @@ export const auth = betterAuth({
                 Click the button below to continue. This link expires soon for your security.
               </p>
               <a
-                href="${url}"
+                href="${safeUrl}"
                 style="
                   display: inline-block;
                   padding: 10px 18px;
@@ -86,10 +97,7 @@ export const auth = betterAuth({
                 If the button does not work, paste this URL in your browser:
               </p>
               <p style="margin: 8px 0 0; font-size: 12px; word-break: break-all; color: #6b7280;">
-                ${url}
-              </p>
-              <p style="margin: 16px 0 0; font-size: 11px; color: #9ca3af;">
-                Token: ${token}
+                ${safeUrl}
               </p>
             </div>
           `,

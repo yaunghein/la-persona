@@ -8,6 +8,7 @@ import {
   organizationAccessControl,
   organizationRoles,
 } from '~~/shared/permissions/organization';
+import { getSafeInternalPath } from '~~/shared/utils/safe-redirect';
 
 export const authClient = createAuthClient({
   plugins: [
@@ -22,13 +23,24 @@ export const authClient = createAuthClient({
 
 type SocialProvider = 'google' | 'linkedin' | 'github';
 
+function getAuthRedirectTo() {
+  return (
+    getSafeInternalPath(useRoute().query.redirectTo, ROUTES.PLATFORM.ROOT) ||
+    ROUTES.PLATFORM.ROOT
+  );
+}
+
 function getAuthCallbackURL() {
-  const route = useRoute();
-  const redirectTo =
-    typeof route.query.redirectTo === 'string'
-      ? route.query.redirectTo
-      : ROUTES.PLATFORM.ROOT;
-  return `/platform?redirectTo=${redirectTo}`;
+  return getAuthRedirectTo();
+}
+
+function getAuthErrorCallbackURL() {
+  const redirectTo = getAuthRedirectTo();
+  if (redirectTo === ROUTES.PLATFORM.ROOT) {
+    return ROUTES.SIGN_IN;
+  }
+
+  return `${ROUTES.SIGN_IN}?redirectTo=${redirectTo}`;
 }
 
 export const signInWithSocial = async (provider: SocialProvider) => {
@@ -46,7 +58,8 @@ export const signInWithMagicLink = async (email: string, name?: string) => {
     email,
     name,
     callbackURL: getAuthCallbackURL(),
-    errorCallbackURL: ROUTES.SIGN_IN,
+    errorCallbackURL: getAuthErrorCallbackURL(),
+    newUserCallbackURL: getAuthCallbackURL(),
   });
 };
 
