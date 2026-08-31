@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Application } from '@splinetool/runtime';
 import type { ConcreteComponent } from 'vue';
+import { downloadUrl } from '~/utils/share-or-download';
 
 const { cardId } = useRoute().params;
 const card = cards.find((card) => card.id === cardId);
@@ -108,7 +109,7 @@ async function onActionClick(link: { action?: string; label: string }) {
           console.log('[card-action] missing vcf', link);
           return;
         }
-        await shareOrDownloadUrl({
+        await downloadUrl({
           url: card.vcf,
           fileName: `${card.id}.vcf`,
         });

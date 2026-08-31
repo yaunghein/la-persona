@@ -5,6 +5,7 @@ definePageMeta({
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import { useQuery } from '@tanstack/vue-query';
+import { downloadFile } from '~/utils/share-or-download';
 
 type Contact = {
   id: string;
@@ -273,7 +274,7 @@ const onExport = async () => {
     type: 'text/csv;charset=utf-8;',
   });
   const fileName = `contacts-${orgSlug.value || 'org'}-${new Date().toISOString().slice(0, 10)}.csv`;
-  await shareOrDownloadFile({ blob, fileName });
+  downloadFile({ blob, fileName });
 
   // toast.add({
   //   title: 'Export complete',
@@ -345,7 +346,7 @@ async function saveContactAsVcf(contact: ContactActionItem) {
   const content = createVcfContent(contact);
   const fileName = `${sanitizeVcfFilename(contact.name)}.vcf`;
   const blob = new Blob([content], { type: 'text/vcard;charset=utf-8' });
-  await shareOrDownloadFile({ blob, fileName });
+  downloadFile({ blob, fileName });
 
   // toast.add({
   //   title: 'Contact saved',

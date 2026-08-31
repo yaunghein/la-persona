@@ -2,6 +2,7 @@
 import { Application } from '@splinetool/runtime';
 import type { ConcreteComponent } from 'vue';
 import { SOCIAL_MEDIA_LINK_LABELS } from '~~/shared/constants/card-link-options';
+import { downloadFile } from '~/utils/share-or-download';
 
 function websiteLabelForSpline(website: string | null | undefined): string {
   if (!website?.trim()) return '';
@@ -353,7 +354,7 @@ async function onSaveContact() {
       `${card.value.firstName} ${card.value.lastName || ''}`.trim()
     )}.vcf`;
     const blob = new Blob([vcf], { type: 'text/vcard;charset=utf-8' });
-    await shareOrDownloadFile({ blob, fileName });
+    downloadFile({ blob, fileName });
 
     trackEvent({
       cardId: card.value.id,

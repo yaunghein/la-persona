@@ -37,6 +37,27 @@ function downloadBlob(blob: Blob, fileName: string) {
   URL.revokeObjectURL(objectUrl);
 }
 
+async function fetchTypedBlob(url: string, fileName: string) {
+  const response = await fetch(url, { mode: 'cors' });
+  if (!response.ok) {
+    throw new Error('Failed to download file');
+  }
+
+  const blob = await response.blob();
+  return blob.type && blob.type !== 'application/octet-stream'
+    ? blob
+    : new Blob([blob], { type: guessMimeType(fileName, blob.type) });
+}
+
+export function downloadFile(input: { blob: Blob; fileName: string }) {
+  downloadBlob(input.blob, input.fileName);
+}
+
+export async function downloadUrl(input: { url: string; fileName: string }) {
+  const blob = await fetchTypedBlob(input.url, input.fileName);
+  downloadFile({ blob, fileName: input.fileName });
+}
+
 export async function shareOrDownloadFile(input: {
   blob: Blob;
   fileName: string;
@@ -53,26 +74,16 @@ export async function shareOrDownloadFile(input: {
     }
   }
 
-  downloadBlob(input.blob, input.fileName);
+  downloadFile(input);
 }
 
 export async function shareOrDownloadUrl(input: {
   url: string;
   fileName: string;
 }) {
-  const response = await fetch(input.url, { mode: 'cors' });
-  if (!response.ok) {
-    throw new Error('Failed to download file');
-  }
-
-  const blob = await response.blob();
-  const typedBlob =
-    blob.type && blob.type !== 'application/octet-stream'
-      ? blob
-      : new Blob([blob], { type: guessMimeType(input.fileName, blob.type) });
-
+  const blob = await fetchTypedBlob(input.url, input.fileName);
   await shareOrDownloadFile({
-    blob: typedBlob,
+    blob,
     fileName: input.fileName,
   });
 }
