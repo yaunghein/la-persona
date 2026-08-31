@@ -25,10 +25,54 @@ function websiteLabelForSpline(website: string | null | undefined): string {
 
 const { trackEvent } = useAnalytics();
 const runtimeConfig = useRuntimeConfig();
+const route = useRoute();
 const { normalizeCardLinkValue } = useUrlNormalization();
 
-const { slug } = useRoute().params;
+const { slug } = route.params;
 const { data: card } = await useFetch<CardDTO>(`/api/public/cards/${slug}`);
+
+function getS3Url(path?: string | null) {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+
+  const bucket = runtimeConfig.public.awsBucketName;
+  const region = runtimeConfig.public.awsRegion;
+  if (!bucket || !region) return '';
+  return `https://${bucket}.s3.${region}.amazonaws.com/${path}`;
+}
+
+const cardFullName = computed(() =>
+  [card.value?.firstName, card.value?.lastName].filter(Boolean).join(' ').trim()
+);
+
+const seoTitle = computed(() => {
+  const name = cardFullName.value;
+  if (!name) return 'LA PERSONA';
+  const position = card.value?.position?.trim();
+  return position ? `${name} — ${position}` : name;
+});
+
+const seoDescription = computed(() => {
+  const name = cardFullName.value || '🤓';
+  const position = card.value?.position?.trim();
+  const company = card.value?.company?.trim();
+
+  if (position && company) {
+    return `${name} — ${position} at ${company}. Save contact and connect on LA PERSONA.`;
+  }
+  if (position) {
+    return `${name} — ${position}. Save contact and connect on LA PERSONA.`;
+  }
+  return `Connect with ${name} on LA PERSONA.`;
+});
+
+const seoImage = computed(() => {
+  const cardBackUrl = getS3Url(card.value?.cardBackUrl);
+  if (cardBackUrl) return cardBackUrl;
+
+  const base = String(runtimeConfig.public.baseUrl || '').replace(/\/$/, '');
+  return `${base}/og.png`;
+});
 
 const shouldShowPoweredByLaPersona = computed(() => {
   const subscription = card.value?.subscription;
@@ -41,7 +85,24 @@ const shouldShowPoweredByLaPersona = computed(() => {
 
   return !isPremiumPlan && !isPaidStandardPlan;
 });
-useSeoMeta({ ...getSeoTitle(`${card.value?.firstName}`) });
+
+useSeoMeta({
+  title: () => seoTitle.value,
+  ogTitle: () => seoTitle.value,
+  twitterTitle: () => seoTitle.value,
+  description: () => seoDescription.value,
+  ogDescription: () => seoDescription.value,
+  twitterDescription: () => seoDescription.value,
+  ogImage: () => seoImage.value,
+  twitterImage: () => seoImage.value,
+  ogImageAlt: () => cardFullName.value || 'LA PERSONA',
+  twitterCard: 'summary_large_image',
+  ogType: 'profile',
+  ogUrl: () => {
+    const base = String(runtimeConfig.public.baseUrl || '').replace(/\/$/, '');
+    return `${base}${route.path}`;
+  },
+});
 
 onMounted(async () => {
   if (!card || !card.value) return;
@@ -52,7 +113,7 @@ onMounted(async () => {
     organizationId: card.value.organizationId,
     userId: card.value.userId,
     type: 'view',
-    metadata: { path: useRoute().path },
+    metadata: { path: route.path },
   });
 
   loading.value = true;
