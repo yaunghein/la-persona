@@ -93,7 +93,7 @@ export async function createOnboardingInvitation(params: {
         id: nanoid(),
         name: params.organizationName,
         slug: `${slugify(params.organizationName)}-space-${nanoid()}`,
-        isPersonal: false,
+        isPersonal: true,
         createdAt: now,
       })
       .returning();
