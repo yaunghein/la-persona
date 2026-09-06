@@ -961,8 +961,8 @@ const premiumPlanFeatures = [
         aria-label="Footer"
       >
         <a href="#" class="hover:text-white">Contact</a>
-        <a href="#" class="hover:text-white">Terms</a>
-        <a href="#" class="hover:text-white">Privacy</a>
+        <a href="/privacy-policy" class="hover:text-white">Terms</a>
+        <a href="/privacy-policy" class="hover:text-white">Privacy</a>
       </nav>
       <p
         class="text-[0.6875rem] font-light uppercase tracking-[0.06875rem] text-white/30"
