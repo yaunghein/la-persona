@@ -2,7 +2,7 @@
 import { onClickOutside } from '@vueuse/core';
 import { countries } from 'country-codes-flags-phone-codes';
 
-const dialCode = ref(countries.find((c) => c.code === 'TH')?.dialCode);
+const dialCode = ref(countries.find((c) => c.code === 'MM')?.dialCode);
 const phone = ref('');
 const search = ref('');
 const searchFocus = ref(false);
