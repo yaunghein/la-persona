@@ -4,11 +4,35 @@ useSeoMeta({ ...getSeoTitle('Sign In - LA PERSONA') });
 import { Application } from '@splinetool/runtime';
 
 const toast = useToast();
+const route = useRoute();
 const loading = ref(false);
 const email = ref('');
 const isGoogleSigningIn = ref(false);
 const isLinkedInSigningIn = ref(false);
 const isMagicLinkSending = ref(false);
+
+watch(
+  () => route.query.error,
+  (authError) => {
+    if (authError === 'EXPIRED_TOKEN') {
+      toast.add({
+        title: 'Magic link expired',
+        description: 'Please request a new sign-in link to continue.',
+        color: 'warning',
+      });
+      return;
+    }
+
+    if (typeof authError === 'string' && authError) {
+      toast.add({
+        title: 'Sign-in failed',
+        description: 'Please try signing in again.',
+        color: 'error',
+      });
+    }
+  },
+  { immediate: true }
+);
 
 onMounted(async () => {
   loading.value = true;

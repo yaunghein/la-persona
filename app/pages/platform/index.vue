@@ -1,17 +1,13 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query';
+import { getSafeInternalPath } from '~~/shared/utils/safe-redirect';
 
 const router = useRouter();
 const route = useRoute();
 const session = await authClient.useSession(useFetch);
 const activeOrg = authClient.useActiveOrganization();
 
-const redirectTo = computed(() => {
-  const value = route.query.redirectTo;
-  if (typeof value !== 'string') return null;
-  if (!value.startsWith('/')) return null;
-  return value;
-});
+const redirectTo = computed(() => getSafeInternalPath(route.query.redirectTo));
 
 const orgSlug = computed(() => activeOrg.value?.data?.slug);
 
@@ -40,23 +36,19 @@ watch(
     const slug = activeOrg.value?.data?.slug;
     const target = redirectTo.value;
 
+    if (target) {
+      router.replace(target);
+      syncStuck.value = false;
+      return;
+    }
+
     if (!slug) {
-      if (target) {
-        router.replace(target);
-        syncStuck.value = false;
-      } else {
-        syncStuck.value = true;
-      }
+      syncStuck.value = true;
       return;
     }
 
     if (newCards == null) {
-      if (target) {
-        router.replace(target);
-        syncStuck.value = false;
-      } else {
-        syncStuck.value = true;
-      }
+      syncStuck.value = true;
       return;
     }
 
@@ -68,10 +60,10 @@ watch(
       if (card && card.socials && card.socials?.length === 0) {
         router.push(`/platform/${slug}/cards/${card.slug}/setup`);
       } else {
-        router.push(target || `/platform/${slug}`);
+        router.push(`/platform/${slug}`);
       }
     } else {
-      router.push(target || `/platform/${slug}`);
+      router.push(`/platform/${slug}`);
     }
   },
   { immediate: true }

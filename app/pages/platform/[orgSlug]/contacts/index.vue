@@ -5,6 +5,7 @@ definePageMeta({
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import { useQuery } from '@tanstack/vue-query';
+import { downloadFile } from '~/utils/share-or-download';
 
 type Contact = {
   id: string;
@@ -252,7 +253,7 @@ function escapeCsvCell(value: string) {
   return `"${safeValue.replace(/"/g, '""')}"`;
 }
 
-const onExport = () => {
+const onExport = async () => {
   if (!contacts.value.length) {
     toast.add({
       title: 'Nothing to export',
@@ -293,15 +294,7 @@ const onExport = () => {
     type: 'text/csv;charset=utf-8;',
   });
   const fileName = `contacts-${orgSlug.value || 'org'}-${new Date().toISOString().slice(0, 10)}.csv`;
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
+  downloadFile({ blob, fileName });
 
   // toast.add({
   //   title: 'Export complete',
@@ -369,20 +362,11 @@ function sanitizeVcfFilename(value: string) {
   );
 }
 
-function saveContactAsVcf(contact: ContactActionItem) {
+async function saveContactAsVcf(contact: ContactActionItem) {
   const content = createVcfContent(contact);
   const fileName = `${sanitizeVcfFilename(contact.name)}.vcf`;
   const blob = new Blob([content], { type: 'text/vcard;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-
-  anchor.href = url;
-  anchor.download = fileName;
-  anchor.style.display = 'none';
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
+  downloadFile({ blob, fileName });
 
   // toast.add({
   //   title: 'Contact saved',

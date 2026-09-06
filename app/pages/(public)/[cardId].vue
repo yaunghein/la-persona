@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Application } from '@splinetool/runtime';
 import type { ConcreteComponent } from 'vue';
+import { downloadUrl } from '~/utils/share-or-download';
 
 const { cardId } = useRoute().params;
 const card = cards.find((card) => card.id === cardId);
@@ -94,29 +95,30 @@ const iconMap: Record<string, string | ConcreteComponent> = {
   saveContact: resolveComponent('IconSaveContact'),
 };
 
-function triggerDownload(url: string, fileName: string) {
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = fileName;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-}
-
-function onActionClick(link: { action?: string; label: string }) {
-  switch (link.action) {
-    case 'buyMeCoffee':
-      triggerDownload('/images/mhm-laos-qr.jpg', 'mhm-laos-qr.jpg');
-      break;
-    case 'saveContact':
-      if (!card?.vcf) {
-        console.log('[card-action] missing vcf', link);
+async function onActionClick(link: { action?: string; label: string }) {
+  try {
+    switch (link.action) {
+      case 'buyMeCoffee':
+        await shareOrDownloadUrl({
+          url: '/images/mhm-laos-qr.jpg',
+          fileName: 'mhm-laos-qr.jpg',
+        });
         return;
-      }
-      triggerDownload(card.vcf, `${card.id}.vcf`);
-      break;
-    default:
-      console.log('[card-action]', link.action || link.label, link);
+      case 'saveContact':
+        if (!card?.vcf) {
+          console.log('[card-action] missing vcf', link);
+          return;
+        }
+        await downloadUrl({
+          url: card.vcf,
+          fileName: `${card.id}.vcf`,
+        });
+        return;
+      default:
+        console.log('[card-action]', link.action || link.label, link);
+    }
+  } catch (error) {
+    console.error('Failed to save file', error);
   }
 }
 </script>

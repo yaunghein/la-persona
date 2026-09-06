@@ -1,13 +1,16 @@
 import { nanoid } from 'nanoid';
-import { eq, and, gt } from 'drizzle-orm';
+import { eq, and, ne, inArray, sql } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import {
   organization,
   member,
   onboardingInvitation,
+  card,
 } from '~~/server/db/schema';
 import { getMembersByUserId } from '~~/server/db/queries/auth';
 import { insertDefaultCard } from '~~/server/services/card';
+import { normalizeEmail } from '~~/server/services/onboarding-invitation';
+import { env } from '~~/server/utils/env';
 import type { User } from 'better-auth';
 import {
   ORGANIZATION_TYPES,
@@ -68,18 +71,18 @@ export async function setupDefaultOrganization(user: User) {
     return;
   }
 
-  // TODO: probabily need to revisit later, because if we just early return here, then what
-  const pendingInvitation = await getPendingOnboardingInvitationByEmail(
-    user.email
-  );
-  if (pendingInvitation) {
+  const existingMemberships = await getMembersByUserId(user.id);
+  if (existingMemberships.length > 0) {
     return;
   }
 
-  const existingMemberships = await getMembersByUserId(user.id);
+  const existingInvitation = await getOnboardingInvitationByEmail(user.email);
+  if (existingInvitation) {
+    return;
+  }
 
-  if (existingMemberships.length > 0) {
-    // probably invited, maybe different logic or return to handle different flows
+  const existingInvitedCard = await getExistingInvitedCardByEmail(user.email);
+  if (existingInvitedCard) {
     return;
   }
 
@@ -91,19 +94,40 @@ export async function setupDefaultOrganization(user: User) {
   await insertDefaultCard(user, newOrg.id);
 }
 
-export async function getPendingOnboardingInvitationByEmail(email: string) {
-  const normalizedEmail = String(email || '')
-    .trim()
-    .toLowerCase();
-  if (!normalizedEmail) return null;
+export async function getOnboardingInvitationByEmail(email: string) {
+  const normalized = normalizeEmail(email);
+  if (!normalized) return null;
 
-  return await db.query.onboardingInvitation.findFirst({
-    where: and(
-      eq(onboardingInvitation.email, normalizedEmail),
-      eq(onboardingInvitation.status, 'pending'),
-      gt(onboardingInvitation.expiresAt, new Date())
-    ),
-  });
+  const [invite] = await db
+    .select()
+    .from(onboardingInvitation)
+    .where(
+      and(
+        sql`lower(${onboardingInvitation.email}) = ${normalized}`,
+        inArray(onboardingInvitation.status, ['pending', 'accepted'])
+      )
+    )
+    .limit(1);
+
+  return invite ?? null;
+}
+
+export async function getExistingInvitedCardByEmail(email: string) {
+  const normalized = normalizeEmail(email);
+  if (!normalized) return null;
+
+  const [existing] = await db
+    .select({ id: card.id })
+    .from(card)
+    .where(
+      and(
+        sql`lower(trim(coalesce(${card.email}, ''))) = ${normalized}`,
+        ne(card.organizationId, env.PLACEHOLDER_ORGANIZATION_ID)
+      )
+    )
+    .limit(1);
+
+  return existing ?? null;
 }
 
 export async function getPersonalOrganizationByUserId(userId: string) {

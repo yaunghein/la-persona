@@ -2,6 +2,7 @@
 import { Application } from '@splinetool/runtime';
 import type { ConcreteComponent } from 'vue';
 import { SOCIAL_MEDIA_LINK_LABELS } from '~~/shared/constants/card-link-options';
+import { downloadFile } from '~/utils/share-or-download';
 
 function websiteLabelForSpline(website: string | null | undefined): string {
   if (!website?.trim()) return '';
@@ -24,11 +25,55 @@ function websiteLabelForSpline(website: string | null | undefined): string {
 
 const { trackEvent } = useAnalytics();
 const runtimeConfig = useRuntimeConfig();
+const route = useRoute();
 const { normalizeCardLinkValue } = useUrlNormalization();
 
-const { slug } = useRoute().params;
+const { slug } = route.params;
 const { data: card } = await useFetch<CardDTO>(`/api/public/cards/${slug}`);
 const { data: session } = await authClient.useSession(useFetch);
+
+function getS3Url(path?: string | null) {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+
+  const bucket = runtimeConfig.public.awsBucketName;
+  const region = runtimeConfig.public.awsRegion;
+  if (!bucket || !region) return '';
+  return `https://${bucket}.s3.${region}.amazonaws.com/${path}`;
+}
+
+const cardFullName = computed(() =>
+  [card.value?.firstName, card.value?.lastName].filter(Boolean).join(' ').trim()
+);
+
+const seoTitle = computed(() => {
+  const name = cardFullName.value;
+  if (!name) return 'LA PERSONA';
+  const position = card.value?.position?.trim();
+  return position ? `${name} — ${position}` : name;
+});
+
+const seoDescription = computed(() => {
+  const name = cardFullName.value || '🤓';
+  const position = card.value?.position?.trim();
+  const company = card.value?.company?.trim();
+
+  if (position && company) {
+    return `${name} — ${position} at ${company}. Save contact and connect on LA PERSONA.`;
+  }
+  if (position) {
+    return `${name} — ${position}. Save contact and connect on LA PERSONA.`;
+  }
+  return `Connect with ${name} on LA PERSONA.`;
+});
+
+const seoImage = computed(() => {
+  const cardBackUrl = getS3Url(card.value?.cardBackUrl);
+  if (cardBackUrl) return cardBackUrl;
+
+  const base = String(runtimeConfig.public.baseUrl || '').replace(/\/$/, '');
+  return `${base}/og.png`;
+});
 
 const shouldShowPoweredByLaPersona = computed(() => {
   const subscription = card.value?.subscription;
@@ -41,7 +86,24 @@ const shouldShowPoweredByLaPersona = computed(() => {
 
   return !isPremiumPlan && !isPaidStandardPlan;
 });
-useSeoMeta({ ...getSeoTitle(`${card.value?.firstName}`) });
+
+useSeoMeta({
+  title: () => seoTitle.value,
+  ogTitle: () => seoTitle.value,
+  twitterTitle: () => seoTitle.value,
+  description: () => seoDescription.value,
+  ogDescription: () => seoDescription.value,
+  twitterDescription: () => seoDescription.value,
+  ogImage: () => seoImage.value,
+  twitterImage: () => seoImage.value,
+  ogImageAlt: () => cardFullName.value || 'LA PERSONA',
+  twitterCard: 'summary_large_image',
+  ogType: 'profile',
+  ogUrl: () => {
+    const base = String(runtimeConfig.public.baseUrl || '').replace(/\/$/, '');
+    return `${base}${route.path}`;
+  },
+});
 
 onMounted(async () => {
   if (!card || !card.value) return;
@@ -52,7 +114,7 @@ onMounted(async () => {
     organizationId: card.value.organizationId,
     userId: card.value.userId,
     type: 'view',
-    metadata: { path: useRoute().path },
+    metadata: { path: route.path },
   });
 
   loading.value = true;
@@ -121,10 +183,9 @@ const successDescription = computed(() =>
     ? `${cardDisplayName.value || 'This contact'} has been added to your Contacts.`
     : `Tap below to save ${card.value?.firstName || 'this person'}'s contact directly to your phone.`
 );
-const isSeamlessSuccess = ref(true);
-// const isSeamlessSuccess = computed(
-//   () => isSuccess.value && successMode.value === 'seamless'
-// );
+const isSeamlessSuccess = computed(
+  () => isSuccess.value && successMode.value === 'seamless'
+);
 
 const closeForm = () => {
   isFormOpen.value = false;
@@ -424,14 +485,7 @@ async function onSaveContact() {
       `${card.value.firstName} ${card.value.lastName || ''}`.trim()
     )}.vcf`;
     const blob = new Blob([vcf], { type: 'text/vcard;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+    downloadFile({ blob, fileName });
 
     trackEvent({
       cardId: card.value.id,
@@ -477,13 +531,13 @@ async function onSaveContact() {
       <button
         :disabled="isSeamlessExchanging"
         @click="onExchangeContactClick"
-        class="grid flex-1 place-items-center rounded-full border border-white/10 bg-white/10 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
+        class="grid flex-1 place-items-center rounded-full border border-[#494949] bg-[#353535] text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
       >
         {{ exchangeButtonLabel }}
       </button>
       <button
         @click="isMenuOpen = !isMenuOpen"
-        class="grid aspect-square w-13 shrink-0 place-items-center rounded-full border border-white/10 bg-white/10"
+        class="grid aspect-square w-13 shrink-0 place-items-center rounded-full border border-[#494949] bg-[#353535]"
       >
         <div class="aspect-square w-6">
           <IconMenu />
@@ -492,34 +546,15 @@ async function onSaveContact() {
     </div>
 
     <div
-      class="fixed inset-x-0 bottom-0 -mb-px w-full scale-[1.005] rounded-t-xl border border-white/10 bg-dark transition duration-750 sm:mx-auto sm:max-w-104"
-      :class="[
-        isSeamlessSuccess ? 'min-h-80.5 pb-13' : 'h-[calc(100dvh-3.5rem)]',
-        isFormOpen ? 'translate-y-0' : 'translate-y-[101%]',
-      ]"
+      class="fixed inset-0 top-auto -mb-px h-[calc(100dvh-3.5rem)] w-full scale-[1.005] rounded-t-xl border border-[#494949] bg-dark transition duration-750 sm:mx-auto sm:max-w-104"
+      :class="{
+        'translate-y-0': isFormOpen,
+        'translate-y-[101%]': !isFormOpen,
+      }"
     >
       <div class="flex h-full flex-col">
         <div
-          v-if="isSeamlessSuccess"
-          class="flex items-center justify-end p-4 transition duration-750"
-          :class="{
-            'opacity-100': isFormOpen,
-            'opacity-0': !isFormOpen,
-          }"
-        >
-          <button
-            @click="closeForm"
-            class="grid size-8 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/15"
-            aria-label="Close"
-          >
-            <div class="size-[0.62rem]">
-              <IconClose />
-            </div>
-          </button>
-        </div>
-        <div
-          v-else
-          class="flex items-center justify-center border-b border-white/10 py-6 text-center text-sm font-bold transition duration-750"
+          class="flex items-center justify-center border-b border-[#494949] py-6 text-center text-sm font-bold transition duration-750"
           :class="{
             'opacity-100': isFormOpen,
             'opacity-0': !isFormOpen,
@@ -580,7 +615,7 @@ async function onSaveContact() {
                 type="text"
                 autocomplete="off"
                 required
-                class="h-[2.8rem] w-full appearance-none border border-white/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
+                class="h-[2.8rem] w-full appearance-none border border-[#494949] bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
             <PhoneInput />
@@ -593,7 +628,7 @@ async function onSaveContact() {
                 type="email"
                 autocomplete="off"
                 required
-                class="h-[2.8rem] w-full appearance-none border border-white/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
+                class="h-[2.8rem] w-full appearance-none border border-[#494949] bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
 
@@ -605,7 +640,7 @@ async function onSaveContact() {
                 name="company"
                 type="text"
                 autocomplete="off"
-                class="h-[2.8rem] w-full appearance-none border border-white/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
+                class="h-[2.8rem] w-full appearance-none border border-[#494949] bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
 
@@ -617,20 +652,19 @@ async function onSaveContact() {
                 name="position"
                 type="text"
                 autocomplete="off"
-                class="h-[2.8rem] w-full appearance-none border border-white/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
+                class="h-[2.8rem] w-full appearance-none border border-[#494949] bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
             <input type="hidden" name="ownerEmail" :value="card.email" />
           </form>
         </div>
         <div
-          v-if="!isSeamlessSuccess"
-          class="flex flex-col items-center justify-center gap-6 border-t border-white/10 px-5 py-8"
+          class="flex flex-col items-center justify-center gap-6 border-t border-[#494949] px-5 py-8"
         >
           <button
             v-if="isSuccess"
             :disabled="isSavingContact"
-            class="cursor-pointer w-full rounded-full border border-white/10 bg-white py-4 text-center text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-white/10 disabled:text-white/20"
+            class="cursor-pointer w-full rounded-full border border-[#494949] bg-white py-4 text-center text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-[#353535] disabled:text-white/20"
             @click="onSaveContact"
           >
             {{ isSavingContact ? 'Preparing Contact...' : 'Save Contact' }}
@@ -639,7 +673,7 @@ async function onSaveContact() {
             v-if="isSuccess"
             :href="card.vcf"
             :download="`${card.id}.vcf`"
-            class="cursor-pointer w-full rounded-full border border-white/10 bg-white py-4 text-center text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-white/10 disabled:text-white/20"
+            class="cursor-pointer w-full rounded-full border border-[#494949] bg-white py-4 text-center text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-[#353535] disabled:text-white/20"
           >
             Save Contact
           </a> -->
@@ -648,7 +682,7 @@ async function onSaveContact() {
             type="submit"
             form="form"
             :disabled="!isValid || isSubmitting"
-            class="cursor-pointer relative w-full rounded-full border border-white/10 bg-white py-4 text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-white/10 disabled:text-white/20"
+            class="cursor-pointer relative w-full rounded-full border border-[#494949] bg-white py-4 text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-[#353535] disabled:text-white/20"
           >
             Continue
             <div
@@ -703,7 +737,7 @@ async function onSaveContact() {
     </div>
 
     <div
-      class="fixed inset-0 top-auto -mb-px w-full scale-[1.005] rounded-t-xl border border-white/10 bg-dark py-6 transition duration-750 sm:mx-auto sm:max-w-104"
+      class="fixed inset-0 top-auto -mb-px w-full scale-[1.005] rounded-t-xl border border-[#494949] bg-dark py-6 transition duration-750 sm:mx-auto sm:max-w-104"
       :class="{
         'translate-y-0': isMenuOpen,
         'translate-y-100': !isMenuOpen,
@@ -712,7 +746,7 @@ async function onSaveContact() {
       <div>
         <button
           @click="isMenuOpen = false"
-          class="absolute right-4 top-4 grid aspect-square w-8 place-items-center rounded-full border border-white/10 bg-white/10 transition duration-750"
+          class="absolute right-4 top-4 grid aspect-square w-8 place-items-center rounded-full border border-[#494949] bg-[#353535] transition duration-750"
           :class="{
             'opacity-100': isMenuOpen,
             'opacity-0': !isMenuOpen,
@@ -758,7 +792,7 @@ async function onSaveContact() {
                 />
                 <div
                   v-else
-                  class="grid aspect-square h-full w-full place-items-center rounded-full bg-white/10"
+                  class="grid aspect-square h-full w-full place-items-center rounded-full bg-[#353535]"
                 >
                   <div class="aspect-square w-8">
                     <component :is="iconMap[getLinkIcon(link.label)]" />
@@ -779,7 +813,7 @@ async function onSaveContact() {
               :style="{ transitionDelay: `${(index + 1) * 100}ms` }"
             >
               <div
-                class="grid aspect-square w-[4.56rem] place-items-center rounded-full bg-white/10"
+                class="grid aspect-square w-[4.56rem] place-items-center rounded-full bg-[#353535]"
               >
                 <div class="aspect-square w-8">
                   <component :is="iconMap[link.icon]" />
