@@ -3,7 +3,7 @@ import type { User, Session } from 'better-auth';
 import { and, eq } from 'drizzle-orm';
 import { auth } from '~~/server/auth';
 import { db } from '~~/server/db';
-import { member, organization, session as authSession } from '~~/server/db/schema';
+import { member, organization } from '~~/server/db/schema';
 import {
   type OrganizationPermission,
   organizationPermissionStatements,
@@ -41,7 +41,7 @@ function isAllowedPermissionResult(result: unknown) {
   return false;
 }
 
-function getOrganizationSlugFromRequest(event: H3Event) {
+export function getOrganizationSlugFromRequest(event: H3Event) {
   const query = getQuery(event);
   const querySlug =
     typeof query.organizationSlug === 'string' ? query.organizationSlug.trim() : '';
@@ -49,17 +49,6 @@ function getOrganizationSlugFromRequest(event: H3Event) {
 
   const routeSlug = String(getRouterParam(event, 'orgSlug') || '').trim();
   if (routeSlug) return routeSlug;
-
-  const referer = getHeader(event, 'referer');
-  if (referer) {
-    try {
-      const pathname = new URL(referer).pathname;
-      const match = pathname.match(/^\/platform\/([^/]+)/);
-      if (match?.[1]) return decodeURIComponent(match[1]).trim();
-    } catch {
-      // Ignore malformed referer values.
-    }
-  }
 
   return '';
 }
@@ -97,53 +86,42 @@ export async function requireOrganizationSession(event: H3Event) {
   }
 
   const requestedSlug = getOrganizationSlugFromRequest(event);
-  let resolvedOrganizationId = session.session.activeOrganizationId || null;
-
-  if (requestedSlug) {
-    const organizationId = await resolveOrganizationIdForUser({
-      userId: session.user.id,
-      organizationSlug: requestedSlug,
-    });
-    if (!organizationId) {
-      throw createError({
-        statusCode: 403,
-        statusMessage: 'Forbidden',
-      });
-    }
-
-    resolvedOrganizationId = organizationId;
-  }
-
-  if (!resolvedOrganizationId) {
+  if (!requestedSlug) {
     throw createError({
-      statusCode: 401,
-      statusMessage: 'Unauthorized',
+      statusCode: 400,
+      statusMessage: 'Organization slug is required.',
     });
   }
 
-  if (
-    session.session.id &&
-    session.session.activeOrganizationId !== resolvedOrganizationId
-  ) {
-    await db
-      .update(authSession)
-      .set({ activeOrganizationId: resolvedOrganizationId })
-      .where(eq(authSession.id, session.session.id));
-    session.session.activeOrganizationId = resolvedOrganizationId;
+  const organizationId = await resolveOrganizationIdForUser({
+    userId: session.user.id,
+    organizationSlug: requestedSlug,
+  });
+  if (!organizationId) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Forbidden',
+    });
   }
+
+  session.session.activeOrganizationId = organizationId;
 
   return session as SessionWithOrganization;
 }
 
 export async function hasOrganizationPermission(
   event: H3Event,
-  permissions: OrganizationPermission
+  permissions: OrganizationPermission,
+  organizationId?: string
 ) {
+  const resolvedOrganizationId =
+    organizationId || (await requireOrganizationSession(event)).session.activeOrganizationId;
   const mutablePermissions = toMutableOrganizationPermission(permissions);
   const result = await auth.api.hasPermission({
     headers: event.headers,
     body: {
       permissions: mutablePermissions,
+      organizationId: resolvedOrganizationId,
     },
   });
 
@@ -156,7 +134,11 @@ export async function requireOrganizationPermission(
   statusMessage = 'Forbidden'
 ) {
   const session = await requireOrganizationSession(event);
-  const hasPermission = await hasOrganizationPermission(event, permissions);
+  const hasPermission = await hasOrganizationPermission(
+    event,
+    permissions,
+    session.session.activeOrganizationId
+  );
 
   if (!hasPermission) {
     throw createError({

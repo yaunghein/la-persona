@@ -11,6 +11,8 @@ const emit = defineEmits<{
   nameChanged: [firstName: string, lastName: string];
 }>();
 
+const { withOrganizationQuery } = useOrganizationSlug();
+
 const schema = z.object({
   firstName: z.string().min(1, 'First Name is required'),
   lastName: z.string().min(1, 'Last Name is required'),
@@ -23,10 +25,8 @@ const state = reactive<Partial<Schema>>({
   lastName: '',
 });
 
-const firstName = computed(() => props.card.name.split(' ')[0] ?? '');
-const lastName = computed(
-  () => props.card.name.split(' ').slice(1).join(' ') ?? ''
-);
+const firstName = computed(() => props.card.firstName || '');
+const lastName = computed(() => props.card.lastName || '');
 
 watchEffect(() => {
   state.firstName = firstName.value;
@@ -49,9 +49,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
     await $fetch('/api/cards', {
       method: 'PATCH',
+      query: withOrganizationQuery(),
       body: {
         id: props.card.id,
-        name: `${event.data.firstName} ${event.data.lastName}`,
+        firstName: event.data.firstName,
+        lastName: event.data.lastName,
       },
     });
 

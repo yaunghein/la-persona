@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { auth } from '~~/server/auth';
 import { db } from '~~/server/db';
 import { card, contactExchange } from '~~/server/db/schema';
+import { getPersonalOrganizationByUserId } from '~~/server/services/auth';
 import { handleApiError } from '~~/server/utils/errors';
 
 const seamlessExchangeSchema = z
@@ -81,11 +82,13 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const activeOrganizationId = session.session.activeOrganizationId;
-    if (!activeOrganizationId) {
+    const personalOrganization = await getPersonalOrganizationByUserId(
+      session.user.id
+    );
+    if (!personalOrganization) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'No active organization selected.',
+        statusMessage: 'Create your La Persona card before using Seamless Exchange.',
       });
     }
 
@@ -95,7 +98,7 @@ export default defineEventHandler(async (event) => {
       .where(
         and(
           eq(card.userId, session.user.id),
-          eq(card.organizationId, activeOrganizationId)
+          eq(card.organizationId, personalOrganization.id)
         )
       )
       .orderBy(desc(card.createdAt))

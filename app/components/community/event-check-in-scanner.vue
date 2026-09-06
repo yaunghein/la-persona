@@ -98,7 +98,7 @@ function resetScanner() {
     v-model:open="open"
     :ui="{
       content:
-        'sm:max-w-md rounded-lg border border-[#232323] bg-[#171717]',
+        'sm:max-w-md rounded-lg bg-[#171717]',
       body: 'px-5 py-6 sm:px-6',
     }"
   >

@@ -1,19 +1,43 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query';
 import { getSafeInternalPath } from '~~/shared/utils/safe-redirect';
+import {
+  ORGANIZATION_TYPES,
+  type OrganizationType,
+} from '~~/shared/utils/constants';
+
+type UserOrganization = {
+  id: string;
+  name: string;
+  slug: string;
+  logo: string | null;
+  type: OrganizationType;
+};
 
 const router = useRouter();
 const route = useRoute();
 const session = await authClient.useSession(useFetch);
-const activeOrg = authClient.useActiveOrganization();
 
 const redirectTo = computed(() => getSafeInternalPath(route.query.redirectTo));
 
-const orgSlug = computed(() => activeOrg.value?.data?.slug);
+const { data: userOrgs, isError: isOrgsError } = await useFetch<
+  UserOrganization[]
+>('/api/organizations', { default: () => [] });
+
+const workspaceOrg = computed(() => {
+  const orgs = userOrgs.value || [];
+  return (
+    orgs.find((org) => org.type === ORGANIZATION_TYPES.PERSONAL) ||
+    orgs[0] ||
+    null
+  );
+});
+
+const orgSlug = computed(() => workspaceOrg.value?.slug || '');
 
 const {
   data: cards,
-  isError,
+  isError: isCardsError,
   isPending,
   isFetching,
 } = useQuery({
@@ -28,12 +52,13 @@ const {
 
 /** True when the watcher could not route yet and there is no redirect escape hatch. */
 const syncStuck = ref(false);
+const isError = computed(() => isOrgsError.value || isCardsError.value);
 
 watch(
-  [cards, activeOrg, redirectTo],
+  [cards, orgSlug, redirectTo],
   () => {
     const newCards = cards.value;
-    const slug = activeOrg.value?.data?.slug;
+    const slug = orgSlug.value;
     const target = redirectTo.value;
 
     if (target) {
@@ -124,9 +149,8 @@ const showSupportState = computed(() => {
             support.
           </template>
           <template v-else-if="!orgSlug">
-            No active organization is linked to your account yet. If you were
-            invited to join a workspace, try the invitation link again or
-            contact
+            No organization is linked to your account yet. If you were invited
+            to join a workspace, try the invitation link again or contact
             <span class="text-white">La Persona</span>
             for help.
           </template>
@@ -148,3 +172,4 @@ const showSupportState = computed(() => {
     </div>
   </div>
 </template>
+

@@ -543,7 +543,7 @@ function closeInfo() {
     title="What is analytics?"
     :ui="{
       content:
-        'sm:max-w-[480px] rounded-lg border border-[#232323] bg-[#171717]',
+        'sm:max-w-[480px] rounded-lg bg-[#171717]',
       title: 'text-sm font-medium uppercase tracking-widest text-white',
       body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"

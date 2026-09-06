@@ -14,6 +14,7 @@ const route = useRoute();
 const runtimeConfig = useRuntimeConfig();
 const toast = useToast();
 const slug = computed(() => route.params.slug as string);
+const orgSlug = computed(() => String(route.params.orgSlug || ''));
 
 const phoneModels: PhoneModel[] = [
   {
@@ -221,6 +222,10 @@ const isGeneratingWallpaper = ref(false);
 const isGeneratingQr = ref(false);
 const isRenderingWallpaperPreview = ref(false);
 const isWallpaperPreviewModalOpen = ref(false);
+
+function openWallpaperPreview() {
+  isWallpaperPreviewModalOpen.value = true;
+}
 const wallpaperPreviewDataUrl = ref('');
 const qrOnlyPreviewDataUrl = ref('');
 const qrColor = useStorage('wallpaper.qrColor', '#000000');
@@ -236,8 +241,11 @@ const debouncedQrLayerBgColor = refDebounced(qrLayerBgColor, 120);
 const debouncedQrLayerBgOpacity = refDebounced(qrLayerBgOpacity, 120);
 
 const { data: card, isLoading } = useQuery<SelectCard>({
-  queryKey: ['cards', slug],
-  queryFn: () => $fetch<SelectCard>(`/api/cards/${slug.value}` as string),
+  queryKey: ['cards', orgSlug, slug],
+  queryFn: () =>
+    $fetch<SelectCard>(`/api/cards/${slug.value}` as string, {
+      query: { organizationSlug: orgSlug.value },
+    }),
 });
 
 const selectedModelConfig = computed(
@@ -687,9 +695,9 @@ async function downloadQr() {
       <div
         class="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_auto_auto] lg:items-start"
       >
-        <USkeleton class="h-[80px] w-full" />
-        <USkeleton class="h-[264px] w-[240px]" />
-        <USkeleton class="h-[264px] w-[240px]" />
+        <USkeleton class="h-20 w-full" />
+        <USkeleton class="h-66 w-60" />
+        <USkeleton class="h-66 w-60" />
       </div>
     </div>
 
@@ -701,7 +709,7 @@ async function downloadQr() {
           >
             QR & Wallpaper
           </h2>
-          <p class="max-w-160 text-sm leading-[21px] text-[#8b8b8b]">
+          <p class="max-w-160 text-sm leading-5.25 text-[#8b8b8b]">
             Choose your phone model for a perfect-fit wallpaper, or download
             only the QR to share your persona card anywhere.
           </p>
@@ -729,7 +737,7 @@ async function downloadQr() {
         </UFormField>
 
         <div class="space-y-5">
-          <div class="w-full max-w-[760px] space-y-7">
+          <div class="w-full max-w-190 space-y-7">
             <div class="grid sm:grid-cols-2 gap-5">
               <div
                 class="space-y-3 flex sm:static flex-col items-center text-center sm:items-start"
@@ -800,7 +808,7 @@ async function downloadQr() {
       <div class="flex items-start justify-center flex-wrap gap-10">
         <div class="flex flex-col items-center gap-6">
           <div
-            class="relative flex sm:scale-100 h-[240px] w-[240px] flex-col items-center justify-center gap-[6px] overflow-hidden rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4"
+            class="relative flex h-60 w-60 flex-col items-center justify-center gap-1.5 overflow-hidden rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4 sm:scale-100"
           >
             <UButton
               size="xl"
@@ -809,7 +817,7 @@ async function downloadQr() {
               variant="ghost"
               class="absolute flex items-center justify-center right-2 top-2 z-10 cursor-pointer rounded-full bg-black/35 p-3 scale-[0.65] origin-top-right text-white hover:bg-black/50"
               aria-label="Expand wallpaper preview"
-              @click="isWallpaperPreviewModalOpen = true"
+              @click="openWallpaperPreview"
             />
             <p class="text-sm text-white/50">Preview</p>
             <div
@@ -852,7 +860,7 @@ async function downloadQr() {
 
         <div class="flex flex-col items-center gap-6">
           <div
-            class="flex sm:scale-100 h-[240px] w-[240px] flex-col items-center justify-center gap-[6px] overflow-hidden rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4 text-left"
+            class="flex h-60 w-60 flex-col items-center justify-center gap-1.5 overflow-hidden rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4 text-left sm:scale-100"
           >
             <p class="text-sm text-white/50">Preview</p>
             <div
@@ -895,7 +903,7 @@ async function downloadQr() {
     title="Wallpaper Preview"
     :ui="{
       content:
-        'sm:max-w-[560px] rounded-lg border border-[#232323] bg-[#171717] max-h-[90vh]',
+        'sm:max-w-[560px] rounded-lg bg-[#171717] max-h-[90vh]',
       title: 'text-sm font-medium uppercase tracking-widest text-white',
       body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"
@@ -917,7 +925,7 @@ async function downloadQr() {
             />
             <div
               v-else
-              class="flex h-full min-h-[280px] w-full items-center justify-center bg-[#1c1c1c] text-sm text-white/50 sm:min-h-[400px]"
+              class="flex h-full min-h-70 w-full items-center justify-center bg-[#1c1c1c] text-sm text-white/50 sm:min-h-100"
             >
               {{
                 isRenderingWallpaperPreview

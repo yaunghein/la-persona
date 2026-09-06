@@ -46,8 +46,12 @@ const viewMode = ref<'list' | 'grid'>(parseViewMode(route.query.view));
 const sortOrder = ref<'desc' | 'asc'>(parseSortOrder(route.query.sort));
 const page = ref(parsePage(route.query.page));
 
+const orgSlug = computed(() => String(route.params.orgSlug || ''));
 const { data, pending, refresh } = await useFetch<BillingRow[]>(
-  '/api/subscriptions/billing'
+  '/api/subscriptions/billing',
+  {
+    query: { organizationSlug: orgSlug },
+  }
 );
 
 const rows = computed(() => data.value || []);

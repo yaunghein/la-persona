@@ -34,8 +34,11 @@ const selectedFile = ref<File | null>(null);
 const localPreviewUrl = ref<string | null>(null);
 
 const { data: card, isLoading } = useQuery<SelectCard>({
-  queryKey: ['cards', slug],
-  queryFn: () => $fetch(`/api/cards/${slug.value}`),
+  queryKey: ['cards', orgSlug, slug],
+  queryFn: () =>
+    $fetch(`/api/cards/${slug.value}`, {
+      query: { organizationSlug: orgSlug.value },
+    }),
 });
 
 const state = reactive({
@@ -222,6 +225,7 @@ const { mutate: updateCard, isPending: isSaving } = useMutation({
 
       const { uploadUrl, fileKey } = await $fetch('/api/s3/presigned', {
         method: 'POST',
+        query: { organizationSlug: orgSlug.value },
         body: {
           fileType: compressed.type,
           fileName: selectedFile.value.name,
@@ -243,6 +247,7 @@ const { mutate: updateCard, isPending: isSaving } = useMutation({
 
     return await $fetch('/api/cards', {
       method: 'PATCH',
+      query: { organizationSlug: orgSlug.value },
       body: {
         ...formData,
         website: normalizeUrlWithHttps(formData.website),

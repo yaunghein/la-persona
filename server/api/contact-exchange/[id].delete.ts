@@ -26,7 +26,8 @@ export default defineEventHandler(async (event) => {
 
   const canReadAllContacts = await hasOrganizationPermission(
     event,
-    ORGANIZATION_PERMISSIONS.CONTACT_EXCHANGE_READ_ALL
+    ORGANIZATION_PERMISSIONS.CONTACT_EXCHANGE_READ_ALL,
+    orgId
   );
 
   const target = await db

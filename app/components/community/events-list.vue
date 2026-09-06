@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { TabsItem } from '@nuxt/ui';
 import type {
   CommunityEvent,
   CommunityEventsData,
@@ -12,20 +13,41 @@ const emit = defineEmits<{
   create: [];
   edit: [event: CommunityEvent];
   share: [event: CommunityEvent];
-  open: [event: CommunityEvent];
 }>();
 
+type EventsTab = 'upcoming' | 'past';
+
 const searchQuery = ref('');
-const statusFilter = ref('all');
+const activeTab = ref<EventsTab>('upcoming');
 const page = ref(1);
 const itemsPerPage = 6;
 const isInfoOpen = ref(false);
+
+const tabCounts = computed(() => {
+  const events = props.data.events;
+  return {
+    upcoming: events.filter((event) => event.status === 'upcoming').length,
+    past: events.filter((event) => event.status === 'past').length,
+  };
+});
+
+const tabItems = computed<TabsItem[]>(() => [
+  { label: `Upcoming Events (${tabCounts.value.upcoming})`, value: 'upcoming' },
+  { label: `Past Events (${tabCounts.value.past})`, value: 'past' },
+]);
+
+const selectedTab = computed({
+  get: () => activeTab.value,
+  set: (value: string | number) => {
+    activeTab.value = String(value) as EventsTab;
+  },
+});
 
 const filteredEvents = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
 
   return props.data.events.filter((event) => {
-    if (statusFilter.value !== 'all' && event.status !== statusFilter.value) {
+    if (event.status !== activeTab.value) {
       return false;
     }
 
@@ -45,7 +67,7 @@ const pagedEvents = computed(() => {
   return filteredEvents.value.slice(start, start + itemsPerPage);
 });
 
-watch([searchQuery, statusFilter], () => {
+watch([searchQuery, activeTab], () => {
   page.value = 1;
 });
 
@@ -69,25 +91,11 @@ function onShare(event: CommunityEvent) {
 function onEdit(event: CommunityEvent) {
   emit('edit', event);
 }
-
-function onOpen(event: CommunityEvent) {
-  emit('open', event);
-}
-
-const filterSelectUi = {
-  base: 'h-9 w-full rounded-full border border-[#232323] bg-transparent px-5 text-sm font-medium text-[#8b8b8b] ring-0 focus:ring-0',
-  content: 'border border-[#2a2a2a] bg-[#171717]',
-  item: 'text-white data-[highlighted]:bg-[#232323]',
-  value: 'text-[#8b8b8b]',
-  trailingIcon: 'text-[#8b8b8b]',
-};
 </script>
 
 <template>
   <div class="flex min-h-[calc(100dvh-11rem)] flex-col">
-    <div
-      class="flex flex-col gap-8 border-b border-[#232323] pb-6 pt-2 sm:pt-0"
-    >
+    <div class="flex flex-col gap-8 pt-2 sm:pt-0">
       <div
         class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
       >
@@ -116,7 +124,7 @@ const filterSelectUi = {
         />
       </div>
 
-      <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div class="flex flex-col gap-6">
         <UInput
           v-model="searchQuery"
           :placeholder="data.searchPlaceholder"
@@ -125,87 +133,89 @@ const filterSelectUi = {
           variant="soft"
           class="w-full flex-1"
           :ui="{
-            base: 'h-9 rounded-full border-0 bg-[#232323] px-5 text-sm font-medium text-white ring-0 placeholder:text-[#8b8b8b] focus-visible:ring-0',
-            trailing: 'pe-5',
-            trailingIcon: 'size-6 text-[#8b8b8b]',
+            base: 'h-10 rounded-full border-0 bg-[#232323] px-5 text-sm font-medium text-white ring-0 placeholder:text-[#8b8b8b] focus-visible:ring-0',
+            trailing: 'pe-4',
+            trailingIcon: 'size-4 text-[#8b8b8b]',
           }"
         />
-        <USelect
-          v-model="statusFilter"
-          :items="data.statusOptions"
+
+        <UTabs
+          v-model="selectedTab"
+          :items="tabItems"
+          :content="false"
           color="neutral"
-          class="w-full sm:w-37.75 sm:shrink-0"
-          :ui="filterSelectUi"
+          variant="pill"
+          :ui="{
+            root: 'w-fit',
+            list: 'bg-[#171717] w-fit rounded-lg p-1',
+            indicator: 'bg-[#232323]',
+            trigger:
+              'data-[state=active]:text-white data-[state=inactive]:text-[#8b8b8b] rounded-md px-4 py-2.5 grow-0',
+          }"
         />
       </div>
     </div>
 
     <div
-      class="grid flex-1 grid-cols-1 gap-6 py-8 sm:grid-cols-2 xl:grid-cols-3"
+      class="grid flex-1 grid-cols-1 items-start gap-6 py-8 pb-10 sm:grid-cols-2 xl:grid-cols-3"
     >
       <article
         v-for="event in pagedEvents"
         :key="event.id"
-        class="flex flex-col overflow-hidden rounded-lg"
+        class="flex flex-col rounded-lg"
       >
-        <button
-          type="button"
-          class="relative aspect-[1/0.75] w-full cursor-pointer overflow-hidden rounded-t-lg text-left"
-          @click="onOpen(event)"
-        >
+        <div class="relative aspect-[1/0.67] w-full overflow-hidden rounded-t-lg">
           <img
             :src="event.imageUrl"
             :alt="event.title"
             class="size-full object-cover"
           />
           <span
-            class="absolute top-1.5 right-1.5 rounded-[4px] bg-[#232323] px-2.5 py-2.5 text-[0.625rem] font-bold tracking-wide uppercase"
-            :class="
-              event.status === 'upcoming' ? 'text-white' : 'text-[#8b8b8b]'
-            "
+            class="absolute top-1.5 right-1.5 rounded-md bg-dark px-2.5 py-1.5 text-[0.625rem] font-medium tracking-wider text-white uppercase"
           >
             {{ event.status === 'upcoming' ? 'Upcoming' : 'Past' }}
           </span>
-        </button>
+        </div>
 
         <div
-          class="flex flex-col gap-4 rounded-b-lg bg-[#171717] p-5"
+          class="flex justify-between gap-2 rounded-b-lg bg-[#171717] px-5 pt-5 pb-6"
         >
-          <button
-            type="button"
-            class="flex min-h-11 cursor-pointer flex-col gap-1 text-left"
-            @click="onOpen(event)"
-          >
+          <div class="flex min-w-0 flex-col gap-1">
             <h2 class="line-clamp-1 text-base leading-5 text-white">
               {{ event.title }}
             </h2>
             <p
-              class="flex flex-wrap items-center gap-2 text-xs leading-5 text-[#8b8b8b]"
+              class="flex items-center gap-x-2 text-xs leading-5 text-[#8b8b8b]"
             >
               <span>{{ event.dateLabel }}</span>
-              <span
-                class="size-0.5 shrink-0 rounded-full bg-[#8b8b8b]"
-                aria-hidden="true"
-              />
+              <span>•</span>
               <span class="line-clamp-1">{{ event.location }}</span>
             </p>
-          </button>
+          </div>
 
-          <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3 justify-between">
             <UButton
               icon="i-lucide-pencil"
               color="neutral"
-              class="size-7 cursor-pointer rounded-[4px] bg-[#232323] p-1 text-white hover:bg-[#2a2a2a]"
+              class="group cursor-pointer rounded-[6px] bg-[#232323] text-white hover:bg-[#2a2a2a]"
               aria-label="Edit event"
-              @click.stop="onEdit(event)"
+              @click="onEdit(event)"
+              :ui="{
+                leadingIcon:
+                  'size-5 opacity-50 transition-opacity group-hover:opacity-100',
+              }"
             />
             <UButton
-              icon="i-lucide-share-2"
+              icon="material-symbols:ios-share-rounded"
               color="neutral"
               variant="ghost"
-              class="size-7 cursor-pointer rounded-[4px] p-1 text-white hover:bg-[#232323]"
+              class="group cursor-pointer rounded-[6px] bg-[#232323] text-white hover:bg-[#2a2a2a]"
               aria-label="Share event"
-              @click.stop="onShare(event)"
+              @click="onShare(event)"
+              :ui="{
+                leadingIcon:
+                  'size-5.5 opacity-50 transition-opacity group-hover:opacity-100',
+              }"
             />
           </div>
         </div>
@@ -219,7 +229,7 @@ const filterSelectUi = {
       </div>
     </div>
 
-    <div class="mt-auto flex items-center justify-end pt-2">
+    <div class="mt-auto flex items-center justify-end pt-0 pb-10">
       <UPagination
         v-model:page="page"
         :total="total"
@@ -236,8 +246,7 @@ const filterSelectUi = {
     v-model:open="isInfoOpen"
     title="What are events?"
     :ui="{
-      content:
-        'sm:max-w-[480px] rounded-lg border border-[#232323] bg-[#171717]',
+      content: 'sm:max-w-[480px] rounded-lg bg-[#171717]',
       title: 'text-sm font-medium uppercase tracking-widest text-white',
       body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"

@@ -130,11 +130,12 @@ const {
   isLoading: isContactsLoading,
   refetch: refetchContacts,
 } = useQuery<ContactsResponse>({
-  queryKey: ['contact-exchange', () => selectedCardId.value],
+  queryKey: ['contact-exchange', orgSlug, () => selectedCardId.value],
   queryFn: async () =>
     $fetch<ContactsResponse>('/api/contact-exchange', {
       query: {
         cardId: selectedCardId.value,
+        organizationSlug: orgSlug.value,
       },
     }),
 });
@@ -392,6 +393,7 @@ async function onConfirmDelete() {
   try {
     await $fetch(`/api/contact-exchange/${selectedContactToDelete.value.id}`, {
       method: 'DELETE',
+      query: { organizationSlug: orgSlug.value },
     });
     await refetchContacts();
     toast.add({
@@ -922,7 +924,7 @@ const visibleColumns = computed(() =>
     title="What is Contacts?"
     :ui="{
       content:
-        'sm:max-w-[480px] rounded-lg border border-[#232323] bg-[#171717]',
+        'sm:max-w-[480px] rounded-lg bg-[#171717]',
       title: 'text-sm font-medium uppercase tracking-widest text-white',
       body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"

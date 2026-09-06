@@ -12,16 +12,13 @@ const toast = useToast();
 const route = useRoute();
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
 
-const PLACEHOLDER_IMAGE = '/images/reveal-image.webp';
-
 /** Mock until community events API / schema exists. */
 const eventsMock = computed<CommunityEventsData>(() => ({
-  title: 'Events',
+  title: 'Events in Your Community',
   searchPlaceholder: 'Search Events',
   statusOptions: [
-    { label: 'All', value: 'all' },
-    { label: 'Upcoming', value: 'upcoming' },
-    { label: 'Past', value: 'past' },
+    { label: 'Upcoming Events', value: 'upcoming' },
+    { label: 'Past Events', value: 'past' },
   ],
   infoItems: [
     {
@@ -48,7 +45,7 @@ const eventsMock = computed<CommunityEventsData>(() => ({
       title: 'Tech Leaders Networking Night 2026',
       dateLabel: '15 May 2026',
       location: 'The Strand Ballroom, Yangon',
-      imageUrl: PLACEHOLDER_IMAGE,
+      imageUrl: '/images/event-placeholder-1.jpg',
       status: 'upcoming',
       category: 'networking',
       description:
@@ -64,7 +61,7 @@ const eventsMock = computed<CommunityEventsData>(() => ({
       title: 'Founders & Investors Dinner',
       dateLabel: '08 June 2026',
       location: 'Rosewood Yangon',
-      imageUrl: PLACEHOLDER_IMAGE,
+      imageUrl: '/images/event-placeholder-2.jpg',
       status: 'upcoming',
       category: 'networking',
       description: 'An intimate dinner for founders and investors.',
@@ -79,7 +76,7 @@ const eventsMock = computed<CommunityEventsData>(() => ({
       title: 'Startup Mixer Yangon #12',
       dateLabel: '02 April 2026',
       location: 'Impact Hub Yangon',
-      imageUrl: PLACEHOLDER_IMAGE,
+      imageUrl: '/images/event-placeholder-3.jpg',
       status: 'past',
       category: 'meetup',
       description: 'Monthly mixer for the Yangon startup community.',
@@ -94,7 +91,7 @@ const eventsMock = computed<CommunityEventsData>(() => ({
       title: 'Product Design Workshop',
       dateLabel: '22 July 2026',
       location: 'Junction City, Yangon',
-      imageUrl: PLACEHOLDER_IMAGE,
+      imageUrl: '/images/event-placeholder-1.jpg',
       status: 'upcoming',
       category: 'workshop',
       description: 'Hands-on workshop for product and design leads.',
@@ -109,7 +106,7 @@ const eventsMock = computed<CommunityEventsData>(() => ({
       title: 'Community AMA: Scaling Teams',
       dateLabel: '10 March 2026',
       location: 'Online',
-      imageUrl: PLACEHOLDER_IMAGE,
+      imageUrl: '/images/event-placeholder-2.jpg',
       status: 'past',
       category: 'meetup',
       description: 'Ask anything about hiring and scaling early teams.',
@@ -124,7 +121,7 @@ const eventsMock = computed<CommunityEventsData>(() => ({
       title: 'Yangon Tech Summit Preview',
       dateLabel: '30 August 2026',
       location: 'Sedona Hotel Yangon',
-      imageUrl: PLACEHOLDER_IMAGE,
+      imageUrl: '/images/event-placeholder-3.jpg',
       status: 'upcoming',
       category: 'conference',
       description: 'Preview night ahead of Yangon Tech Summit.',
@@ -143,10 +140,6 @@ function onCreate() {
 
 function onEdit(event: CommunityEvent) {
   navigateTo(`/platform/${orgSlug.value}/events/${event.id}/edit`);
-}
-
-function onOpen(event: CommunityEvent) {
-  navigateTo(`/platform/${orgSlug.value}/events/${event.id}`);
 }
 
 async function onShare(event: CommunityEvent) {
@@ -174,6 +167,5 @@ async function onShare(event: CommunityEvent) {
     @create="onCreate"
     @edit="onEdit"
     @share="onShare"
-    @open="onOpen"
   />
 </template>

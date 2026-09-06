@@ -26,8 +26,11 @@ const {
   isPending: isCardPending,
   error: cardError,
 } = useQuery<CardDTO>({
-  queryKey: ['cards', slug],
-  queryFn: () => $fetch<CardDTO>(`/api/cards/${slug.value}`),
+  queryKey: ['cards', orgSlug, slug],
+  queryFn: () =>
+    $fetch<CardDTO>(`/api/cards/${slug.value}`, {
+      query: { organizationSlug: orgSlug.value },
+    }),
   enabled: () => !!slug.value,
 });
 const showCardUnavailable = computed(
@@ -43,13 +46,14 @@ type CardSubscriptionSummary = {
 
 const cardId = computed(() => card.value?.id || '');
 const { data: cardSubscriptionSummary } = useQuery<CardSubscriptionSummary>({
-  queryKey: ['card-subscription', cardId],
+  queryKey: ['card-subscription', orgSlug, cardId],
   queryFn: async () => {
     if (!cardId.value) return null;
 
     try {
       return await $fetch<CardSubscriptionSummary>(
-        `/api/subscriptions/cards/${cardId.value}`
+        `/api/subscriptions/cards/${cardId.value}`,
+        { query: { organizationSlug: orgSlug.value } }
       );
     } catch {
       return null;
@@ -226,7 +230,10 @@ const receiptFile = ref<File | null>(null);
 const receiptPreviewUrl = ref<string | null>(null);
 const { data: paymentPricing } = useQuery<CardPaymentPricingConfig>({
   queryKey: ['subscription-card-payment-pricing'],
-  queryFn: () => $fetch('/api/subscriptions/pricing/card-payment'),
+  queryFn: () =>
+    $fetch('/api/subscriptions/pricing/card-payment', {
+      query: { organizationSlug: orgSlug.value },
+    }),
 });
 
 const isPremiumUpgradeScenario = computed(
@@ -383,6 +390,7 @@ const { mutate: submitPayment, isPending: isSubmittingPayment } = useMutation({
 
     const { uploadUrl, fileKey } = await $fetch('/api/s3/presigned', {
       method: 'POST',
+      query: { organizationSlug: orgSlug.value },
       body: {
         fileType: compressed.type,
         fileName: receiptFile.value.name,
@@ -418,6 +426,7 @@ const { mutate: submitPayment, isPending: isSubmittingPayment } = useMutation({
       '/api/subscriptions/payments',
       {
         method: 'POST',
+        query: { organizationSlug: orgSlug.value },
         body: payload,
       }
     );
@@ -432,7 +441,7 @@ const { mutate: submitPayment, isPending: isSubmittingPayment } = useMutation({
     isPaymentSlideoverOpen.value = false;
     await queryClient.invalidateQueries({ queryKey: ['cards', slug] });
     await queryClient.invalidateQueries({
-      queryKey: ['card-subscription', cardId],
+      queryKey: ['card-subscription', orgSlug, cardId],
     });
   },
   onError: (error: any) => {

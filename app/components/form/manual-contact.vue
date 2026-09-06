@@ -7,6 +7,7 @@ const emit = defineEmits<{
   submitted: [];
 }>();
 
+const { withOrganizationQuery } = useOrganizationSlug();
 const toast = useToast();
 
 const schema = z.object({
@@ -45,6 +46,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
     await $fetch('/api/contact-exchange/manual', {
       method: 'POST',
+      query: withOrganizationQuery(),
       body: event.data,
     });
 

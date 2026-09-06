@@ -9,10 +9,14 @@ const emit = defineEmits<{
 const route = useRoute();
 const toast = useToast();
 const slug = computed(() => route.params.slug as string);
+const orgSlug = computed(() => String(route.params.orgSlug || ''));
 
 const { data: card, isLoading } = useQuery<SelectCard>({
-  queryKey: ['cards', slug],
-  queryFn: () => $fetch(`/api/cards/${slug.value}`),
+  queryKey: ['cards', orgSlug, slug],
+  queryFn: () =>
+    $fetch(`/api/cards/${slug.value}`, {
+      query: { organizationSlug: orgSlug.value },
+    }),
 });
 
 const state = reactive<UpdateCardUpdateRequest>({
@@ -47,6 +51,7 @@ const { mutate: submitRequest, isPending: isSubmitting } = useMutation({
     // return true;
     return await $fetch(`/api/cards`, {
       method: 'PATCH',
+      query: { organizationSlug: orgSlug.value },
       body: {
         ...formData,
         id: formData.cardId,

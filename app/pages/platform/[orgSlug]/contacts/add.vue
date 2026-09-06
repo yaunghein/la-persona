@@ -52,6 +52,7 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
   try {
     await $fetch('/api/contact-exchange/manual', {
       method: 'POST',
+      query: { organizationSlug: orgSlug.value },
       body: event.data,
     });
 

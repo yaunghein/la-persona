@@ -48,8 +48,7 @@ const selectedTab = computed({
           {{ title }}
         </h1>
         <span
-          class="ml-3 rounded-[4px] bg-[#232323] px-2.5 py-2 text-[0.625rem] font-bold tracking-wide uppercase"
-          :class="status === 'upcoming' ? 'text-white' : 'text-[#8b8b8b]'"
+          class="ml-3 rounded-md bg-dark px-2.5 py-1.5 text-[0.625rem] font-medium text-white uppercase tracking-wider"
         >
           {{ status === 'upcoming' ? 'Upcoming' : 'Past' }}
         </span>

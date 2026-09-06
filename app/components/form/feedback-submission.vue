@@ -23,6 +23,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{ close: []; submitted: [] }>();
 
+const { withOrganizationQuery } = useOrganizationSlug();
 const toast = useToast();
 const success = ref(false);
 const serverErrorMessage = ref<string | null>(null);
@@ -61,6 +62,7 @@ const { mutate: submitFeedback, isPending: isSubmitting } = useMutation({
   mutationFn: async (payload: FeedbackSubmissionFormState) => {
     return await $fetch('/api/feedback', {
       method: 'POST',
+      query: withOrganizationQuery(),
       body: payload,
     });
   },

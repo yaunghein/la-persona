@@ -5,11 +5,15 @@ import type { FormSubmitEvent } from '#ui/types';
 const route = useRoute();
 const toast = useToast();
 const slug = computed(() => route.params.slug as string);
+const orgSlug = computed(() => String(route.params.orgSlug || ''));
 const previewUrl = computed(() => `/c/${slug.value}`);
 
 const { data: card, isLoading } = useQuery<SelectCard>({
-  queryKey: ['cards', slug],
-  queryFn: () => $fetch(`/api/cards/${slug.value}`),
+  queryKey: ['cards', orgSlug, slug],
+  queryFn: () =>
+    $fetch(`/api/cards/${slug.value}`, {
+      query: { organizationSlug: orgSlug.value },
+    }),
 });
 
 const state = reactive<Partial<UpdateCard>>({
@@ -41,6 +45,7 @@ const { mutate: submitRequest, isPending: isSubmitting } = useMutation({
   mutationFn: async (formData: Record<string, unknown>) => {
     return await $fetch(`/api/cards`, {
       method: 'PATCH',
+      query: { organizationSlug: orgSlug.value },
       body: formData,
     });
   },

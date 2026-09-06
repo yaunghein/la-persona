@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import type { DropdownMenuItem, TableColumn, TabsItem } from '@nuxt/ui';
 import type {
   CommunityMember,
   CommunityMembersData,
   CommunityMembersTab,
 } from '~~/shared/types/community-members';
-import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 
 const props = defineProps<{
   data: CommunityMembersData;
@@ -17,8 +17,6 @@ const emit = defineEmits<{
 
 const toast = useToast();
 const searchQuery = ref('');
-const statusFilter = ref('all');
-const participationFilter = ref('all');
 const activeTab = ref<CommunityMembersTab>('all');
 const page = ref(1);
 const itemsPerPage = 10;
@@ -35,35 +33,24 @@ const tabCounts = computed(() => {
   };
 });
 
-const tabs = computed(() => [
-  { label: `All Members (${tabCounts.value.all})`, value: 'all' as const },
-  {
-    label: `Active Members (${tabCounts.value.active})`,
-    value: 'active' as const,
-  },
-  {
-    label: `Pending Members (${tabCounts.value.pending})`,
-    value: 'pending' as const,
-  },
+const tabItems = computed<TabsItem[]>(() => [
+  { label: `All Members (${tabCounts.value.all})`, value: 'all' },
+  { label: `Active Members (${tabCounts.value.active})`, value: 'active' },
+  { label: `Pending Members (${tabCounts.value.pending})`, value: 'pending' },
 ]);
+
+const selectedTab = computed({
+  get: () => activeTab.value,
+  set: (value: string | number) => {
+    activeTab.value = String(value) as CommunityMembersTab;
+  },
+});
 
 const filteredMembers = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
 
   return props.data.members.filter((member) => {
-    if (activeTab.value === 'active' && member.status !== 'active')
-      return false;
-    if (activeTab.value === 'pending' && member.status !== 'pending')
-      return false;
-
-    if (statusFilter.value !== 'all' && member.status !== statusFilter.value) {
-      return false;
-    }
-
-    if (participationFilter.value === 'attended' && member.eventsAttended < 1) {
-      return false;
-    }
-    if (participationFilter.value === 'none' && member.eventsAttended > 0) {
+    if (activeTab.value !== 'all' && member.status !== activeTab.value) {
       return false;
     }
 
@@ -85,7 +72,7 @@ const pagedMembers = computed(() => {
   return filteredMembers.value.slice(start, start + itemsPerPage);
 });
 
-watch([searchQuery, statusFilter, participationFilter, activeTab], () => {
+watch([searchQuery, activeTab], () => {
   page.value = 1;
 });
 
@@ -139,21 +126,11 @@ function openInfo() {
 function closeInfo() {
   isInfoOpen.value = false;
 }
-
-const filterSelectUi = {
-  base: 'h-9 min-w-40 rounded-full border border-[#232323] bg-transparent px-5 text-sm font-medium text-[#8b8b8b] ring-0 focus:ring-0',
-  content: 'border border-[#2a2a2a] bg-[#171717]',
-  item: 'text-white data-[highlighted]:bg-[#232323]',
-  value: 'text-[#8b8b8b]',
-  trailingIcon: 'text-[#8b8b8b]',
-};
 </script>
 
 <template>
   <div class="flex min-h-[calc(100dvh-11rem)] flex-col">
-    <div
-      class="flex flex-col gap-8 border-b border-[#232323] pb-6 pt-2 sm:pt-0"
-    >
+    <div class="flex flex-col gap-8 pt-2 sm:pt-0">
       <div
         class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
       >
@@ -192,60 +169,38 @@ const filterSelectUi = {
       </div>
 
       <div class="flex flex-col gap-6">
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <UInput
-            v-model="searchQuery"
-            :placeholder="data.searchPlaceholder"
-            trailing-icon="i-lucide-search"
-            color="neutral"
-            variant="soft"
-            class="w-full flex-1"
-            :ui="{
-              base: 'h-9 rounded-full border-0 bg-[#232323] px-5 text-sm font-medium text-white ring-0 placeholder:text-[#8b8b8b] focus-visible:ring-0',
-              trailing: 'pe-4',
-              trailingIcon: 'size-4 text-[#8b8b8b]',
-            }"
-          />
-          <!-- <div
-            class="flex w-full flex-wrap items-center gap-2 sm:w-90.75 sm:flex-nowrap sm:shrink-0"
-          >
-            <USelect
-              v-model="statusFilter"
-              :items="data.statusOptions"
-              color="neutral"
-              class="min-w-0 flex-1"
-              :ui="filterSelectUi"
-            />
-            <USelect
-              v-model="participationFilter"
-              :items="data.participationOptions"
-              color="neutral"
-              class="min-w-0 flex-1"
-              :ui="filterSelectUi"
-            />
-          </div> -->
-        </div>
+        <UInput
+          v-model="searchQuery"
+          :placeholder="data.searchPlaceholder"
+          trailing-icon="i-lucide-search"
+          color="neutral"
+          variant="soft"
+          class="w-full flex-1"
+          :ui="{
+            base: 'h-10 rounded-full border-0 bg-[#232323] px-5 text-sm font-medium text-white ring-0 placeholder:text-[#8b8b8b] focus-visible:ring-0',
+            trailing: 'pe-4',
+            trailingIcon: 'size-4 text-[#8b8b8b]',
+          }"
+        />
 
-        <div class="flex gap-8 overflow-x-auto pl-5">
-          <button
-            v-for="tab in tabs"
-            :key="tab.value"
-            type="button"
-            class="shrink-0 cursor-pointer border-b pb-1 text-sm font-medium leading-5 whitespace-nowrap transition-colors"
-            :class="
-              activeTab === tab.value
-                ? 'border-white text-white'
-                : 'border-transparent text-[#8b8b8b] hover:text-white'
-            "
-            @click="activeTab = tab.value"
-          >
-            {{ tab.label }}
-          </button>
-        </div>
+        <UTabs
+          v-model="selectedTab"
+          :items="tabItems"
+          :content="false"
+          color="neutral"
+          variant="pill"
+          :ui="{
+            root: 'w-fit',
+            list: 'bg-[#171717] w-fit rounded-lg p-1',
+            indicator: 'bg-[#232323]',
+            trigger:
+              'data-[state=active]:text-white data-[state=inactive]:text-[#8b8b8b] rounded-md px-4 py-2.5 grow-0',
+          }"
+        />
       </div>
     </div>
 
-    <div class="hide-scrollbar flex-1 overflow-x-auto pt-2">
+    <div class="hide-scrollbar flex-1 overflow-x-auto pt-2 pb-6">
       <UTable
         :data="pagedMembers"
         :columns="columns"
@@ -314,8 +269,7 @@ const filterSelectUi = {
     v-model:open="isInfoOpen"
     title="What are members?"
     :ui="{
-      content:
-        'sm:max-w-[480px] rounded-lg border border-[#232323] bg-[#171717]',
+      content: 'sm:max-w-[480px] rounded-lg bg-[#171717]',
       title: 'text-sm font-medium uppercase tracking-widest text-white',
       body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"

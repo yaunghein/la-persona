@@ -29,6 +29,7 @@ type RequestCardFormState = {
 
 const emit = defineEmits<{ close: []; submitted: [] }>();
 
+const { organizationSlug, withOrganizationQuery } = useOrganizationSlug();
 const toast = useToast();
 const runtimeConfig = useRuntimeConfig();
 const {
@@ -69,7 +70,9 @@ const receiptFile = ref<File | null>(null);
 const receiptPreviewUrl = ref<string | null>(null);
 const success = ref(false);
 
-const { data: cards } = await useFetch<CardDTO[]>('/api/cards');
+const { data: cards } = await useFetch<CardDTO[]>('/api/cards', {
+  query: { organizationSlug },
+});
 const { data: plans } = await useFetch<
   {
     code: string;
@@ -79,13 +82,17 @@ const { data: plans } = await useFetch<
     billingCycle: string;
     isActive: boolean;
   }[]
->('/api/subscriptions/plans');
+>('/api/subscriptions/plans', {
+  query: { organizationSlug },
+});
 const { data: cardPaymentPricing } = await useFetch<{
   currency: string;
   standardPlanPriceMinor: number;
   premiumPlanPriceMinor: number;
   customDesignFeeMinor: number;
-}>('/api/subscriptions/pricing/card-payment');
+}>('/api/subscriptions/pricing/card-payment', {
+  query: { organizationSlug },
+});
 
 const typeItems = [
   {
@@ -364,6 +371,7 @@ const { mutate: insertCardRequest, isPending: isLoading } = useMutation({
 
     const { uploadUrl, fileKey } = await $fetch('/api/s3/presigned', {
       method: 'POST',
+      query: withOrganizationQuery(),
       body: {
         fileType: compressed.type,
         fileName: receiptFile.value.name,
@@ -382,6 +390,7 @@ const { mutate: insertCardRequest, isPending: isLoading } = useMutation({
     ).filter((social) => social.label || social.value);
     return await $fetch('/api/cards/new-request', {
       method: 'POST',
+      query: withOrganizationQuery(),
       body: {
         type,
         cardData: {

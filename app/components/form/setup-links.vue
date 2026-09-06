@@ -24,6 +24,7 @@ const emit = defineEmits<{
 const route = useRoute();
 const toast = useToast();
 const slug = computed(() => route.params.slug as string);
+const orgSlug = computed(() => String(route.params.orgSlug || ''));
 const { normalizeLinkValuesWithHttps, isValidCardLinkValue } =
   useUrlNormalization();
 const linkTypeItems = computed<string[][]>(() =>
@@ -31,8 +32,11 @@ const linkTypeItems = computed<string[][]>(() =>
 );
 
 const { data: card } = useQuery<SelectCard>({
-  queryKey: ['cards', slug],
-  queryFn: () => $fetch(`/api/cards/${slug.value}`),
+  queryKey: ['cards', orgSlug, slug],
+  queryFn: () =>
+    $fetch(`/api/cards/${slug.value}`, {
+      query: { organizationSlug: orgSlug.value },
+    }),
 });
 
 // 1. Initialize with one empty link placeholder
@@ -81,6 +85,7 @@ const { mutate: submitRequest, isPending: isSubmitting } = useMutation({
 
     return await $fetch(`/api/cards`, {
       method: 'PATCH',
+      query: { organizationSlug: orgSlug.value },
       body: {
         ...formData,
         socials,

@@ -40,9 +40,10 @@ export default defineEventHandler(async (event) => {
   try {
     const organizationId = session.session.activeOrganizationId;
     const userId = session.user.id;
-    const canReadAllCards = await hasOrganizationPermission(
+  const canReadAllCards = await hasOrganizationPermission(
       event,
-      ORGANIZATION_PERMISSIONS.CARD_READ_ALL
+      ORGANIZATION_PERMISSIONS.CARD_READ_ALL,
+      organizationId
     );
 
     const scopedCards = await db

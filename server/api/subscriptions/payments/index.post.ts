@@ -58,7 +58,8 @@ export default defineEventHandler(async (event) => {
 
   const canPayForAnyCardInOrg = await hasOrganizationPermission(
     event,
-    ORGANIZATION_PERMISSIONS.CARD_READ_ALL
+    ORGANIZATION_PERMISSIONS.CARD_READ_ALL,
+    organizationId
   );
   for (const row of cardsInOrg) {
     const isCardHolder = row.userId === session.user.id;

@@ -32,7 +32,8 @@ export default defineEventHandler(async (event) => {
     const userId = session.user.id;
     const canReadAllCards = await hasOrganizationPermission(
       event,
-      ORGANIZATION_PERMISSIONS.CARD_READ_ALL
+      ORGANIZATION_PERMISSIONS.CARD_READ_ALL,
+      organizationId
     );
 
     const targetCard = await db.query.card.findFirst({
