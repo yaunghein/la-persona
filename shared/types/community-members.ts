@@ -8,6 +8,14 @@ export type CommunityMember = {
   connections: number;
   eventsAttended: number;
   status: CommunityMemberStatus;
+  email?: string | null;
+  joinedAt: string;
+  avatarUrl?: string | null;
+  cardSlug?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  phone?: string | null;
+  linkedin?: string | null;
 };
 
 export type CommunityMembersTab = 'all' | 'active' | 'pending';

@@ -120,7 +120,7 @@ function downloadQr() {
             </p>
           </div>
           <div
-            class="flex h-[47px] items-center justify-between gap-3 rounded-[4px] border border-[#2a2a2a] bg-[#232323] px-4"
+            class="flex h-11.75 items-center justify-between gap-3 rounded-[4px] border border-[#2a2a2a] bg-[#232323] px-4"
           >
             <p class="truncate text-sm text-white">{{ inviteLink }}</p>
             <UButton
@@ -163,6 +163,7 @@ function downloadQr() {
               icon="i-lucide-send"
               color="neutral"
               :loading="isSending"
+              :ui="{ leadingIcon: 'size-5' }"
               class="rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
               @click="sendInvitations"
             />
@@ -183,7 +184,7 @@ function downloadQr() {
 
           <div class="flex flex-col items-center gap-6">
             <div
-              class="flex size-50 items-center justify-center rounded-xl border border-[#232323] bg-[#121212] p-2"
+              class="flex size-50 items-center justify-center rounded-xl border border-[#232323] bg-dark p-2"
             >
               <img
                 v-if="qrDataUrl"

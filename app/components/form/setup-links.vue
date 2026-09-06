@@ -413,7 +413,7 @@ watch(isSocialSlideoverOpen, (open) => {
       header: 'border-b border-white/10 px-6 py-6',
       title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
       body: 'px-6 py-6',
-      content: 'bg-[#171717] border border-[#2a2a2a]',
+      content: 'bg-[#171717]',
     }"
   >
     <template #body>

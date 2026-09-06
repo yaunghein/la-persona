@@ -12,6 +12,8 @@ html {
   --color-dark: #121212;
   /* La Persona landing accent (Figma: #c8a97e) */
   --color-gold: #c8a97e;
+  /* La Persona success / approve accent (Figma: #8bf667) */
+  --color-green: #8bf667;
 }
 
 :root {

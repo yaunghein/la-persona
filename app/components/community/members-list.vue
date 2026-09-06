@@ -23,6 +23,8 @@ const activeTab = ref<CommunityMembersTab>('all');
 const page = ref(1);
 const itemsPerPage = 10;
 const isInfoOpen = ref(false);
+const isProfileOpen = ref(false);
+const selectedMember = ref<CommunityMember | null>(null);
 
 const tabCounts = computed(() => {
   const members = props.data.members;
@@ -49,7 +51,8 @@ const filteredMembers = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
 
   return props.data.members.filter((member) => {
-    if (activeTab.value === 'active' && member.status !== 'active') return false;
+    if (activeTab.value === 'active' && member.status !== 'active')
+      return false;
     if (activeTab.value === 'pending' && member.status !== 'pending')
       return false;
 
@@ -60,10 +63,7 @@ const filteredMembers = computed(() => {
     if (participationFilter.value === 'attended' && member.eventsAttended < 1) {
       return false;
     }
-    if (
-      participationFilter.value === 'none' &&
-      member.eventsAttended > 0
-    ) {
+    if (participationFilter.value === 'none' && member.eventsAttended > 0) {
       return false;
     }
 
@@ -73,7 +73,8 @@ const filteredMembers = computed(() => {
       member.name.toLowerCase().includes(query) ||
       member.role.toLowerCase().includes(query) ||
       member.company.toLowerCase().includes(query) ||
-      member.status.toLowerCase().includes(query)
+      member.status.toLowerCase().includes(query) ||
+      (member.email || '').toLowerCase().includes(query)
     );
   });
 });
@@ -106,15 +107,9 @@ function getActionItems(member: CommunityMember): DropdownMenuItem[][] {
   return [
     [
       {
-        label: 'View profile',
+        label: 'View member',
         icon: 'i-lucide-user',
-        onSelect: () => {
-          toast.add({
-            title: member.name,
-            description: 'Member profile coming soon.',
-            color: 'neutral',
-          });
-        },
+        onSelect: () => openProfile(member),
       },
       {
         label: 'Remove',
@@ -130,6 +125,11 @@ function getActionItems(member: CommunityMember): DropdownMenuItem[][] {
       },
     ],
   ];
+}
+
+function openProfile(member: CommunityMember) {
+  selectedMember.value = member;
+  isProfileOpen.value = true;
 }
 
 function openInfo() {
@@ -202,11 +202,11 @@ const filterSelectUi = {
             class="w-full flex-1"
             :ui="{
               base: 'h-9 rounded-full border-0 bg-[#232323] px-5 text-sm font-medium text-white ring-0 placeholder:text-[#8b8b8b] focus-visible:ring-0',
-              trailing: 'pe-5',
-              trailingIcon: 'size-6 text-[#8b8b8b]',
+              trailing: 'pe-4',
+              trailingIcon: 'size-4 text-[#8b8b8b]',
             }"
           />
-          <div
+          <!-- <div
             class="flex w-full flex-wrap items-center gap-2 sm:w-90.75 sm:flex-nowrap sm:shrink-0"
           >
             <USelect
@@ -223,7 +223,7 @@ const filterSelectUi = {
               class="min-w-0 flex-1"
               :ui="filterSelectUi"
             />
-          </div>
+          </div> -->
         </div>
 
         <div class="flex gap-8 overflow-x-auto pl-5">
@@ -372,4 +372,9 @@ const filterSelectUi = {
       </div>
     </template>
   </UModal>
+
+  <CommunityMemberProfileSlideover
+    v-model:open="isProfileOpen"
+    :member="selectedMember"
+  />
 </template>
