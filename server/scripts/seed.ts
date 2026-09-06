@@ -37,6 +37,7 @@ async function main() {
     subscriptionPayment: _subscriptionPayment,
     subscriptionPaymentItem: _subscriptionPaymentItem,
     subscriptionPlan: _subscriptionPlan,
+    onboardingInvitation: _onboardingInvitation,
     ...seedableSchema
   } = schema;
 
