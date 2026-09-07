@@ -42,23 +42,23 @@ const mockAttendees: EventAttendee[] = [
     eventsAttended: 8,
     connectionsMade: 42,
     phone: '+95 9 123 456 789',
-    email: 'aye@waveventures.com',
+    email: 'thura@waveventures.co',
   },
   {
     id: 'a2',
     name: 'May Zin Oo',
     role: 'Strategy Consultant',
     company: 'Deloitte Myanmar',
-    status: 'registered',
-    statusLabel: 'Registered',
+    status: 'checked_in',
+    statusLabel: 'Checked-in at 6:42 PM',
     membershipStatus: 'Active',
     joinedAt: 'Feb 03, 2026',
     registeredAt: 'Apr 10, 2026',
-    checkedInAt: null,
+    checkedInAt: '6:42 PM',
     eventsAttended: 2,
     connectionsMade: 8,
     phone: '+95 9 234 567 890',
-    email: 'may@deloitte.com',
+    email: 'may@deloittemyanmar.com',
   },
   {
     id: 'a3',
@@ -74,7 +74,7 @@ const mockAttendees: EventAttendee[] = [
     eventsAttended: 6,
     connectionsMade: 24,
     phone: '+95 9 345 678 901',
-    email: 'ethan@nexuslabs.io',
+    email: 'ethan@nexuslab.com',
   },
   {
     id: 'a4',
@@ -90,39 +90,7 @@ const mockAttendees: EventAttendee[] = [
     eventsAttended: 3,
     connectionsMade: 11,
     phone: '+95 9 456 789 012',
-    email: 'susu@design.mm',
-  },
-  {
-    id: 'a5',
-    name: 'Aung Pyae Kyaw',
-    role: 'Designer',
-    company: 'LA PERSONA',
-    status: 'checked_in',
-    statusLabel: 'Checked-in at 6:42 PM',
-    membershipStatus: 'Active',
-    joinedAt: 'Nov 01, 2025',
-    registeredAt: 'Apr 15, 2026',
-    checkedInAt: '6:42 PM',
-    eventsAttended: 5,
-    connectionsMade: 18,
-    phone: '+66 1234 5678',
-    email: 'aung@la-persona.com',
-  },
-  {
-    id: 'a6',
-    name: 'Hnin Ei Phyu',
-    role: 'Investor',
-    company: 'Golden Bridge Capital',
-    status: 'registered',
-    statusLabel: 'Registered',
-    membershipStatus: 'Active',
-    joinedAt: 'Mar 12, 2026',
-    registeredAt: 'May 02, 2026',
-    checkedInAt: null,
-    eventsAttended: 1,
-    connectionsMade: 4,
-    phone: '+95 9 567 890 123',
-    email: 'hnin@goldenbridge.vc',
+    email: 'susuhlaing1999@gmail.com',
   },
 ];
 
@@ -267,6 +235,7 @@ async function onShare() {
   </CommunityEventDetailShell>
 
   <CommunityEventAttendeeProfileSlideover
+    :key="selectedAttendee?.id ?? 'attendee-profile'"
     v-model:open="isProfileOpen"
     :attendee="selectedAttendee"
   />

@@ -21,6 +21,8 @@ export type EventAttendee = {
   connectionsMade: number;
   phone?: string;
   email?: string;
+  avatarUrl?: string;
+  cardSlug?: string;
 };
 
 export type EventDetailOverview = {

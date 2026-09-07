@@ -10,42 +10,28 @@ const emit = defineEmits<{
   select: [attendee: EventAttendee];
 }>();
 
-type AttendeeTab = 'all' | 'registered' | 'check-in';
+type AttendeeTab = 'all' | 'registered' | 'checked_in';
 
 const searchQuery = ref('');
-const statusFilter = ref('all');
-const participationFilter = ref('all');
 const activeTab = ref<AttendeeTab>('all');
 const page = ref(1);
 const itemsPerPage = 10;
 
-const statusOptions = [
-  { label: 'All Status', value: 'all' },
-  { label: 'Registered', value: 'registered' },
-  { label: 'Checked In', value: 'checked_in' },
-];
-
-const participationOptions = [
-  { label: 'All Participation', value: 'all' },
-  { label: 'Attended Events', value: 'attended' },
-  { label: 'No Events', value: 'none' },
-];
-
 const tabCounts = computed(() => ({
   all: props.attendees.length,
   registered: props.attendees.filter((a) => a.status === 'registered').length,
-  checkIn: props.attendees.filter((a) => a.status === 'checked_in').length,
+  checkedIn: props.attendees.filter((a) => a.status === 'checked_in').length,
 }));
 
 const tabs = computed(() => [
-  { label: `All Members (${tabCounts.value.all})`, value: 'all' as const },
+  { label: `Total (${tabCounts.value.all})`, value: 'all' as const },
   {
     label: `Registered (${tabCounts.value.registered})`,
     value: 'registered' as const,
   },
   {
-    label: `Check-in (${tabCounts.value.checkIn})`,
-    value: 'check-in' as const,
+    label: `Checked-in (${tabCounts.value.checkedIn})`,
+    value: 'checked_in' as const,
   },
 ]);
 
@@ -53,21 +39,7 @@ const filteredAttendees = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
 
   return props.attendees.filter((attendee) => {
-    if (activeTab.value === 'registered' && attendee.status !== 'registered') {
-      return false;
-    }
-    if (activeTab.value === 'check-in' && attendee.status !== 'checked_in') {
-      return false;
-    }
-
-    if (statusFilter.value !== 'all' && attendee.status !== statusFilter.value) {
-      return false;
-    }
-
-    if (participationFilter.value === 'attended' && attendee.eventsAttended < 1) {
-      return false;
-    }
-    if (participationFilter.value === 'none' && attendee.eventsAttended > 0) {
+    if (activeTab.value !== 'all' && attendee.status !== activeTab.value) {
       return false;
     }
 
@@ -77,7 +49,8 @@ const filteredAttendees = computed(() => {
       attendee.name.toLowerCase().includes(query) ||
       attendee.role.toLowerCase().includes(query) ||
       attendee.company.toLowerCase().includes(query) ||
-      attendee.statusLabel.toLowerCase().includes(query)
+      attendee.statusLabel.toLowerCase().includes(query) ||
+      (attendee.email || '').toLowerCase().includes(query)
     );
   });
 });
@@ -88,7 +61,7 @@ const pagedAttendees = computed(() => {
   return filteredAttendees.value.slice(start, start + itemsPerPage);
 });
 
-watch([searchQuery, statusFilter, participationFilter, activeTab], () => {
+watch([searchQuery, activeTab], () => {
   page.value = 1;
 });
 
@@ -100,6 +73,7 @@ watch(filteredAttendees, () => {
 const columns: TableColumn<EventAttendee>[] = [
   { accessorKey: 'name', header: 'NAME' },
   { accessorKey: 'company', header: 'COMPANY' },
+  { accessorKey: 'email', header: 'EMAIL' },
   { accessorKey: 'status', header: 'STATUS' },
   { id: 'actions', header: '' },
 ];
@@ -115,58 +89,26 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
     ],
   ];
 }
-
-function onRowClick(attendee: EventAttendee) {
-  emit('select', attendee);
-}
-
-const filterSelectUi = {
-  base: 'h-9 min-w-40 rounded-full border border-[#232323] bg-transparent px-5 text-sm font-medium text-[#8b8b8b] ring-0 focus:ring-0',
-  content: 'border border-[#2a2a2a] bg-[#171717]',
-  item: 'text-white data-[highlighted]:bg-[#232323]',
-  value: 'text-[#8b8b8b]',
-  trailingIcon: 'text-[#8b8b8b]',
-};
 </script>
 
 <template>
   <div class="flex flex-col">
-    <div class="flex flex-col gap-6 border-b border-[#232323] pb-6">
-      <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <UInput
-          v-model="searchQuery"
-          placeholder="Search Attendees"
-          trailing-icon="i-lucide-search"
-          color="neutral"
-          variant="soft"
-          class="w-full flex-1"
-          :ui="{
-            base: 'h-9 rounded-full border-0 bg-[#232323] px-5 text-sm font-medium text-white ring-0 placeholder:text-[#8b8b8b] focus-visible:ring-0',
-            trailing: 'pe-5',
-            trailingIcon: 'size-6 text-[#8b8b8b]',
-          }"
-        />
-        <div
-          class="flex w-full flex-wrap items-center gap-2 sm:w-90.75 sm:flex-nowrap sm:shrink-0"
-        >
-          <USelect
-            v-model="statusFilter"
-            :items="statusOptions"
-            color="neutral"
-            class="min-w-0 flex-1"
-            :ui="filterSelectUi"
-          />
-          <USelect
-            v-model="participationFilter"
-            :items="participationOptions"
-            color="neutral"
-            class="min-w-0 flex-1"
-            :ui="filterSelectUi"
-          />
-        </div>
-      </div>
+    <div class="flex flex-col gap-6">
+      <UInput
+        v-model="searchQuery"
+        placeholder="Search members by name, keywords, or role"
+        trailing-icon="i-lucide-search"
+        color="neutral"
+        variant="soft"
+        class="w-full"
+        :ui="{
+          base: 'h-10 rounded-full border-0 bg-[#232323] px-5 text-sm font-medium text-white ring-0 placeholder:text-[#8b8b8b] focus-visible:ring-0',
+          trailing: 'pe-4',
+          trailingIcon: 'size-4 text-[#8b8b8b]',
+        }"
+      />
 
-      <div class="flex gap-8 overflow-x-auto pl-1">
+      <div class="flex gap-8 overflow-x-auto px-5">
         <button
           v-for="tab in tabs"
           :key="tab.value"
@@ -184,60 +126,50 @@ const filterSelectUi = {
       </div>
     </div>
 
-    <div class="hide-scrollbar flex-1 overflow-x-auto pt-2">
+    <div
+      class="hide-scrollbar shrink-0 overflow-x-auto overflow-y-hidden pt-2 pb-6"
+    >
       <UTable
         :data="pagedAttendees"
         :columns="columns"
         :ui="{
           th: 'px-4 py-4 border-b border-[#232323] text-xs font-medium tracking-wide uppercase text-white',
-          td: 'px-4 py-4 border-b border-[#232323] text-sm cursor-pointer',
-          tr: 'bg-transparent hover:bg-[#171717]/50',
+          td: 'px-4 py-4 border-b border-[#232323] text-sm',
+          tr: 'bg-transparent',
           empty: 'py-16 text-center text-sm text-muted',
         }"
-        class="w-full min-w-150"
+        class="w-full min-w-200"
       >
         <template #name-cell="{ row }">
-          <div
-            class="flex cursor-pointer flex-col gap-0.5"
-            @click="onRowClick(row.original)"
-          >
+          <div class="flex flex-col gap-0.5">
             <span class="font-medium text-white">{{ row.original.name }}</span>
-            <span class="text-sm text-[#8b8b8b]">{{ row.original.role }}</span>
+            <span class="text-xs text-[#8b8b8b]">{{ row.original.role }}</span>
           </div>
         </template>
         <template #company-cell="{ row }">
           <span class="text-[#8b8b8b]">{{ row.original.company }}</span>
         </template>
+        <template #email-cell="{ row }">
+          <span class="text-[#8b8b8b]">{{ row.original.email || '—' }}</span>
+        </template>
         <template #status-cell="{ row }">
-          <span
-            :class="
-              row.original.status === 'checked_in'
-                ? 'text-white'
-                : 'text-[#8b8b8b]'
-            "
-          >
-            {{ row.original.statusLabel }}
-          </span>
+          <span class="text-[#8b8b8b]">{{ row.original.statusLabel }}</span>
         </template>
         <template #actions-cell="{ row }">
-          <UDropdownMenu
-            :items="getActionItems(row.original)"
-            @click.stop
-          >
+          <UDropdownMenu :items="getActionItems(row.original)">
             <UButton
               size="xl"
               icon="i-mdi-dots-vertical"
               color="neutral"
               variant="ghost"
               class="text-muted"
-              @click.stop
             />
           </UDropdownMenu>
         </template>
       </UTable>
     </div>
 
-    <div class="mt-6 flex items-center justify-end pt-2">
+    <div class="flex items-center justify-end pt-2">
       <UPagination
         v-model:page="page"
         :total="total"
