@@ -574,7 +574,7 @@ const active = computed({
             {{ cardBadgeLabel }}
           </UBadge>
         </div>
-        <p class="text-sm leading-[20px] text-muted ml-0 sm:ml-10">
+        <p class="text-sm leading-5 text-muted ml-0 sm:ml-10">
           Manage your contact information, QR, and wallpaper.
         </p>
       </div>
@@ -651,7 +651,7 @@ const active = computed({
           </div>
 
           <div class="space-y-8">
-            <p class="text-sm leading-[21px] text-muted">
+            <p class="text-sm leading-5.25 text-muted">
               Please scan the QR code below to complete your payment. Make sure
               that account name is
               <span class="font-bold text-white">Yan Aung Hein</span>.

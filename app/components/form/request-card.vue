@@ -677,7 +677,7 @@ function onFormError(event: FormErrorEvent) {
             />
             <div
               v-else
-              class="flex h-[121px] w-[200px] items-center justify-center rounded-[4px] bg-[#2a2a2a] text-xs text-[#8b8b8b]"
+              class="flex h-30.25 w-50 items-center justify-center rounded-[4px] bg-[#2a2a2a] text-xs text-[#8b8b8b]"
             >
               No card back image
             </div>
@@ -686,7 +686,7 @@ function onFormError(event: FormErrorEvent) {
       </URadioGroup>
     </UFormField>
 
-    <p class="text-sm leading-[21px] text-white">
+    <p class="text-sm leading-5.25 text-white">
       Please provide the details you'd like to appear on this card.
     </p>
 
@@ -897,7 +897,7 @@ function onFormError(event: FormErrorEvent) {
     </div>
 
     <div v-if="showPricingSummary" class="space-y-8">
-      <p class="text-sm leading-[21px] text-muted">
+      <p class="text-sm leading-5.25 text-muted">
         Please scan the QR code below to complete your payment. Make sure that
         account name is <span class="font-bold text-white">Yan Aung Hein</span>.
       </p>

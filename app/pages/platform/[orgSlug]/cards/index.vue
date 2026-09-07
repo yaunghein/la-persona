@@ -176,7 +176,11 @@ const cardFooterActionSize = 'sm';
           variant="ghost"
           class="flex items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323] cursor-pointer"
           aria-label="Open cards information"
-          @click="isInfoOpen = true"
+          @click="
+            () => {
+              isInfoOpen = true;
+            }
+          "
         />
       </div>
 
@@ -185,7 +189,11 @@ const cardFooterActionSize = 'sm';
         leading-icon="i-lucide-plus"
         color="neutral"
         class="fixed z-20 bottom-5 left-1/2 -translate-x-1/2 sm:static sm:translate-x-0 h-10 cursor-pointer flex items-center justify-center rounded-full border-2 border-[#232323] bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
-        @click="isSlideoverOpen = true"
+        @click="
+          () => {
+            isSlideoverOpen = true;
+          }
+        "
       />
     </div>
 
@@ -213,8 +221,7 @@ const cardFooterActionSize = 'sm';
       v-model:open="isInfoOpen"
       title="What is cards?"
       :ui="{
-        content:
-          'sm:max-w-[480px] rounded-lg bg-[#171717]',
+        content: 'sm:max-w-[480px] rounded-lg bg-[#171717]',
         title: 'text-sm font-medium uppercase tracking-widest text-white',
         body: 'px-5 py-4 sm:px-6 sm:py-5',
       }"
@@ -244,7 +251,7 @@ const cardFooterActionSize = 'sm';
               <div class="flex items-start gap-3">
                 <UIcon
                   :name="item.icon"
-                  class="shrink-0 mt-0.5 size-[18px] text-white sm:size-5"
+                  class="shrink-0 mt-0.5 size-4.5 text-white sm:size-5"
                 />
                 <div class="min-w-0">
                   <p class="text-sm font-medium text-white">{{ item.title }}</p>
@@ -262,7 +269,11 @@ const cardFooterActionSize = 'sm';
               label="Understood"
               color="neutral"
               class="h-10 justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
-              @click="isInfoOpen = false"
+              @click="
+                () => {
+                  isInfoOpen = false;
+                }
+              "
             />
           </div>
         </div>

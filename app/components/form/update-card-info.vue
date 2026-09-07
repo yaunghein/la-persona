@@ -631,7 +631,7 @@ onBeforeUnmount(() => {
         >
           Contact Information
         </h2>
-        <p class="max-w-160 text-sm leading-[21px] text-[#8b8b8b]">
+        <p class="max-w-160 text-sm leading-5.25 text-[#8b8b8b]">
           This information will be visible on your persona card and exchange
           contact profile. Please share only what you are comfortable.
         </p>
@@ -997,7 +997,7 @@ onBeforeUnmount(() => {
     <template #body>
       <div class="space-y-4">
         <div
-          class="relative h-[50vh] min-h-[420px] overflow-hidden rounded-lg border border-white/10 bg-[#0b0b0b]"
+          class="relative h-[50vh] min-h-105 overflow-hidden rounded-lg border border-white/10 bg-[#0b0b0b]"
         >
           <canvas ref="previewCanvasEl" class="h-full w-full"></canvas>
 

@@ -90,7 +90,7 @@ function onSubmit(event: FormSubmitEvent<Partial<UpdateCard>>) {
         >
           3D Card Information
         </h2>
-        <p class="max-w-160 text-sm leading-[21px] text-[#8b8b8b]">
+        <p class="max-w-160 text-sm leading-5.25 text-[#8b8b8b]">
           This information will be visible on your 3D business card and will
           take 24-36 hours to update. We are working on a more seamless updating
           experience.

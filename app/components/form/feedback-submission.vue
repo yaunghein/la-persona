@@ -161,10 +161,10 @@ function clearServerError() {
         >
           Something Went Wrong
         </div>
-        <p class="text-sm leading-[21px] text-white">
+        <p class="text-sm leading-5.25 text-white">
           We could not submit your feedback just yet.
         </p>
-        <p class="text-sm leading-[21px] text-[#8b8b8b] whitespace-pre-line">
+        <p class="text-sm leading-5.25 text-[#8b8b8b] whitespace-pre-line">
           {{ serverErrorMessage }}
         </p>
       </div>

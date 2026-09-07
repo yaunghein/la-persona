@@ -266,7 +266,9 @@ function getStatusLabel(status: string) {
         color="neutral"
         variant="ghost"
         class="fixed top-3.75 right-4 z-20 flex items-center justify-center sm:hidden cursor-pointer text-muted"
-        :aria-label="viewMode === 'list' ? 'Switch to grid view' : 'Switch to list view'"
+        :aria-label="
+          viewMode === 'list' ? 'Switch to grid view' : 'Switch to list view'
+        "
         @click="toggleViewMode"
       />
 
@@ -334,7 +336,7 @@ function getStatusLabel(status: string) {
             tr: 'bg-transparent',
             empty: 'py-16 text-center text-sm text-muted',
           }"
-          class="w-full min-w-[980px]"
+          class="w-full min-w-245"
         >
           <template #action-cell>
             <UButton
