@@ -39,18 +39,18 @@ const selectedTab = computed({
           <UButton
             icon="i-lucide-chevron-left"
             color="primary"
-            class="size-9! bg-white/5 mt-1 mr-1 sm:mr-2 text-white hover:bg-white/10 active:hover:bg-white/20 flex items-center justify-center"
+            class="size-7! bg-white/5 mt-1 mr-1 sm:mr-2 text-white hover:bg-white/10 active:hover:bg-white/20 flex items-center justify-center"
             aria-label="Back to events"
             @click="emit('back')"
           />
-          <div class="flex min-w-0 flex-wrap items-start gap-x-0 gap-y-2">
+          <div class="flex min-w-0 flex-wrap items-start gap-x-4 gap-y-2">
             <h1
               class="max-w-124 text-xl font-normal leading-[1.2] tracking-[0.175rem] uppercase text-white sm:text-[1.75rem]"
             >
               {{ title }}
             </h1>
             <span
-              class="mt-1 rounded-md bg-white/10 px-2 py-1 text-[0.625rem] font-medium tracking-wider text-white uppercase"
+              class="mt-1 rounded-md bg-white/10 px-2 py-1.25 text-[0.625rem] font-medium tracking-wider text-white uppercase"
             >
               {{ status === 'upcoming' ? 'Upcoming' : 'Past' }}
             </span>

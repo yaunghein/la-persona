@@ -24,6 +24,7 @@ const eventId = computed(() => String(route.params.eventId || ''));
 const activeTab = ref<CommunityEventDetailTab>('overview');
 const isProfileOpen = ref(false);
 const isScannerOpen = ref(false);
+const isWalkInOpen = ref(false);
 const isEditOpen = ref(false);
 const selectedAttendee = ref<EventAttendee | null>(null);
 
@@ -155,6 +156,10 @@ function onOpenScanner() {
   isScannerOpen.value = true;
 }
 
+function onOpenWalkIn() {
+  isWalkInOpen.value = true;
+}
+
 function onEdit() {
   isEditOpen.value = true;
 }
@@ -231,6 +236,8 @@ async function onShare() {
       v-else-if="activeTab === 'check-in'"
       :attendees="eventDetail.attendees"
       @open-scanner="onOpenScanner"
+      @open-walk-in="onOpenWalkIn"
+      @select="onSelectAttendee"
     />
   </CommunityEventDetailShell>
 
@@ -244,6 +251,11 @@ async function onShare() {
     v-if="eventDetail"
     v-model:open="isScannerOpen"
     :attendees="eventDetail.attendees"
+    :walk-in-url="walkInUrl"
+  />
+
+  <CommunityEventWalkInRegistrationSlideover
+    v-model:open="isWalkInOpen"
     :walk-in-url="walkInUrl"
   />
 

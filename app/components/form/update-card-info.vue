@@ -643,6 +643,9 @@ onBeforeUnmount(() => {
             :src="displayAvatar || undefined"
             icon="i-lucide-user"
             class="size-16 sm:size-20 rounded-full object-cover"
+            :ui="{
+              icon: 'size-10',
+            }"
           />
           <UButton
             v-if="displayAvatar"
