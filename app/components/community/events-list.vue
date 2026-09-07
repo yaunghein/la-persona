@@ -151,11 +151,11 @@ function onView(event: CommunityEvent) {
           color="neutral"
           variant="pill"
           :ui="{
-            root: 'w-fit',
-            list: 'bg-[#171717] w-fit rounded-lg p-1',
+            root: 'w-full sm:w-fit',
+            list: 'bg-[#171717] w-full sm:w-fit rounded-lg p-1',
             indicator: 'bg-[#232323]',
             trigger:
-              'data-[state=active]:text-white data-[state=inactive]:text-[#8b8b8b] rounded-md px-4 py-2.5 grow-0',
+              'data-[state=active]:text-white data-[state=inactive]:text-[#8b8b8b] rounded-md px-4 py-2.5 grow-0 text-center sm:text-left w-full sm:w-fit',
           }"
         />
       </div>
@@ -194,7 +194,7 @@ function onView(event: CommunityEvent) {
             <p
               class="flex items-center gap-x-2 text-xs leading-5 text-[#8b8b8b]"
             >
-              <span>{{ event.dateLabel }}</span>
+              <span class="whitespace-nowrap">{{ event.dateLabel }}</span>
               <span>•</span>
               <span class="line-clamp-1">{{ event.location }}</span>
             </p>
@@ -231,7 +231,9 @@ function onView(event: CommunityEvent) {
         v-if="!pagedEvents.length"
         class="col-span-full flex items-center justify-center py-20 text-sm text-[#8b8b8b]"
       >
-        No events match your search.
+        {{
+          searchQuery.trim() ? 'No events match your search.' : 'No events yet.'
+        }}
       </div>
     </div>
 

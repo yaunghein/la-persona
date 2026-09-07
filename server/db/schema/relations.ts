@@ -8,11 +8,13 @@ import { subscriptionPlan } from './subscription-plan';
 import { cardRequest } from './card-request';
 import { feedbackSubmission } from './feedback-submission';
 import { onboardingInvitation } from './onboarding-invitation';
+import { event } from './event';
 
 export const userRelations = relations(user, ({ many }) => ({
   cards: many(card),
   submittedSubscriptionPayments: many(subscriptionPayment),
   feedbackSubmissions: many(feedbackSubmission),
+  events: many(event),
   createdOnboardingInvitations: many(onboardingInvitation, {
     relationName: 'onboarding_invitation_created_by',
   }),
@@ -27,6 +29,7 @@ export const organizationSubscriptionRelations = relations(
     subscriptionPayments: many(subscriptionPayment),
     feedbackSubmissions: many(feedbackSubmission),
     onboardingInvitations: many(onboardingInvitation),
+    events: many(event),
   })
 );
 
@@ -163,3 +166,14 @@ export const onboardingInvitationRelations = relations(
     }),
   })
 );
+
+export const eventRelations = relations(event, ({ one }) => ({
+  organization: one(organization, {
+    fields: [event.organizationId],
+    references: [organization.id],
+  }),
+  user: one(user, {
+    fields: [event.userId],
+    references: [user.id],
+  }),
+}));

@@ -1,15 +1,12 @@
+import type { EventDTO } from '~~/shared/types/event';
+import {
+  eventStatus,
+  formatEventDateLabel,
+  formatEventDateValue,
+  formatEventTimeValue,
+} from '~~/shared/utils/event-datetime';
+
 export type CommunityEventStatus = 'upcoming' | 'past';
-
-export type CommunityEventCategory =
-  | 'networking'
-  | 'workshop'
-  | 'meetup'
-  | 'conference'
-  | 'other';
-
-export type CommunityEventRegistration = 'open' | 'closed' | 'invite_only';
-
-export type CommunityEventApproval = 'everyone' | 'manual';
 
 export type CommunityEvent = {
   id: string;
@@ -18,13 +15,13 @@ export type CommunityEvent = {
   location: string;
   imageUrl: string;
   status: CommunityEventStatus;
-  category: CommunityEventCategory;
   description: string;
   date: string;
   startTime: string;
   endTime: string;
-  registration: CommunityEventRegistration;
-  approval: CommunityEventApproval;
+  capacity: number | null;
+  coverUrl: string;
+  photoUrls: string[];
 };
 
 export type CommunityEventsFilterOption = {
@@ -46,13 +43,30 @@ export type CommunityEventsData = {
 
 export type CommunityEventFormValues = {
   title: string;
-  category: CommunityEventCategory;
   description: string;
   date: string;
   startTime: string;
   endTime: string;
   location: string;
-  imageUrl: string;
-  registration: CommunityEventRegistration;
-  approval: CommunityEventApproval;
+  coverUrl: string;
+  photoUrls: string[];
+  capacity: number | null;
 };
+
+export function toCommunityEvent(event: EventDTO): CommunityEvent {
+  return {
+    id: event.id,
+    title: event.title,
+    dateLabel: formatEventDateLabel(event.startsAt),
+    location: event.location,
+    imageUrl: event.coverUrl,
+    status: eventStatus(event.endsAt),
+    description: event.description ?? '',
+    date: formatEventDateValue(event.startsAt),
+    startTime: formatEventTimeValue(event.startsAt),
+    endTime: formatEventTimeValue(event.endsAt),
+    capacity: event.capacity,
+    coverUrl: event.coverUrl,
+    photoUrls: event.photoUrls ?? [],
+  };
+}

@@ -1,14 +1,9 @@
 <script setup lang="ts">
-import type {
-  CommunityEventFormValues,
-} from '~~/shared/types/community-events';
+import type { CommunityEventFormValues } from '~~/shared/types/community-events';
 
 const props = defineProps<{
   mode: 'create' | 'edit';
   modelValue: CommunityEventFormValues;
-  categoryOptions: { label: string; value: string }[];
-  registrationOptions: { label: string; value: string }[];
-  approvalOptions: { label: string; value: string }[];
   timeOptions: { label: string; value: string }[];
 }>();
 
@@ -19,9 +14,7 @@ const emit = defineEmits<{
   delete: [];
 }>();
 
-const toast = useToast();
 const isInfoOpen = ref(false);
-const fileInputRef = ref<HTMLInputElement | null>(null);
 
 const form = computed({
   get: () => props.modelValue,
@@ -66,22 +59,14 @@ function closeInfo() {
   isInfoOpen.value = false;
 }
 
-function triggerUpload() {
-  fileInputRef.value?.click();
-}
-
-function onFileChange(event: Event) {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-  if (!file) return;
-
-  // Mock upload until media API exists — keep favicon placeholder behavior.
-  toast.add({
-    title: 'Photo selected',
-    description: `${file.name} will upload when event media is wired.`,
-    color: 'neutral',
-  });
-  input.value = '';
+function onCapacityInput(value: string | number) {
+  const raw = String(value).trim();
+  if (!raw) {
+    patch('capacity', null);
+    return;
+  }
+  const parsed = Number(raw);
+  patch('capacity', Number.isInteger(parsed) && parsed > 0 ? parsed : null);
 }
 </script>
 
@@ -98,17 +83,13 @@ function onFileChange(event: Event) {
         color="neutral"
         variant="ghost"
         class="size-5 cursor-pointer p-0 text-white hover:bg-transparent"
-        aria-label="Open create event information"
+        aria-label="Open event information"
         @click="openInfo"
       />
     </div>
 
-    <div
-      class="flex w-full flex-col gap-8 rounded-lg bg-[#171717] p-6 sm:p-8"
-    >
-      <section
-        class="flex flex-col gap-8 border-b border-[#232323] pb-8"
-      >
+    <div class="flex w-full flex-col gap-8 rounded-lg bg-[#171717] p-6 sm:p-8">
+      <section class="flex flex-col gap-8 border-b border-[#232323] pb-8">
         <div class="space-y-4">
           <h2
             class="text-xl font-medium tracking-[0.125rem] uppercase text-white"
@@ -123,55 +104,26 @@ function onFileChange(event: Event) {
         <div class="flex flex-col gap-3">
           <p class="text-sm font-medium text-white">Cover Image</p>
           <div
-            class="relative aspect-[1/0.75] w-full max-w-90.75 overflow-hidden rounded-lg border border-[#232323]"
+            class="relative aspect-4/3 w-full max-w-90.75 overflow-hidden rounded-lg border border-[#232323]"
           >
             <img
-              :src="form.imageUrl"
+              v-if="form.coverUrl"
+              :src="form.coverUrl"
               alt="Event cover"
               class="size-full object-cover"
-            />
-            <div class="absolute inset-0 bg-dark/50" />
-            <div class="absolute inset-0 flex items-center justify-center">
-              <UButton
-                label="Upload New Photo"
-                leading-icon="i-lucide-upload"
-                color="neutral"
-                class="h-9 cursor-pointer rounded-full bg-[#232323] py-2 pr-6 pl-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
-                @click="triggerUpload"
-              />
-            </div>
-            <input
-              ref="fileInputRef"
-              type="file"
-              accept="image/*"
-              class="hidden"
-              @change="onFileChange"
             />
           </div>
         </div>
 
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <UFormField label="Event Name" :class="formFieldClass">
-            <UInput
-              :model-value="form.title"
-              placeholder="Tech Leaders Networking Night 2026"
-              class="w-full"
-              :ui="inputUi"
-              @update:model-value="patch('title', String($event))"
-            />
-          </UFormField>
-
-          <UFormField label="Category" :class="formFieldClass">
-            <USelect
-              :model-value="form.category"
-              :items="categoryOptions"
-              color="neutral"
-              class="w-full"
-              :ui="selectUi"
-              @update:model-value="patch('category', $event as any)"
-            />
-          </UFormField>
-        </div>
+        <UFormField label="Event Name" :class="formFieldClass">
+          <UInput
+            :model-value="form.title"
+            placeholder="Tech Leaders Networking Night 2026"
+            class="w-full"
+            :ui="inputUi"
+            @update:model-value="patch('title', String($event))"
+          />
+        </UFormField>
 
         <UFormField label="Description" :class="formFieldClass">
           <UTextarea
@@ -229,38 +181,18 @@ function onFileChange(event: Event) {
             @update:model-value="patch('location', String($event))"
           />
         </UFormField>
-      </section>
 
-      <section class="flex flex-col gap-8 pb-2">
-        <h2
-          class="text-xl font-medium tracking-[0.125rem] uppercase text-white"
-        >
-          Registration Settings
-        </h2>
-
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <UFormField label="Registration" :class="formFieldClass">
-            <USelect
-              :model-value="form.registration"
-              :items="registrationOptions"
-              color="neutral"
-              class="w-full"
-              :ui="selectUi"
-              @update:model-value="patch('registration', $event as any)"
-            />
-          </UFormField>
-
-          <UFormField label="Approval" :class="formFieldClass">
-            <USelect
-              :model-value="form.approval"
-              :items="approvalOptions"
-              color="neutral"
-              class="w-full"
-              :ui="selectUi"
-              @update:model-value="patch('approval', $event as any)"
-            />
-          </UFormField>
-        </div>
+        <UFormField label="Capacity" :class="formFieldClass">
+          <UInput
+            :model-value="form.capacity ?? ''"
+            type="number"
+            min="1"
+            placeholder="Unlimited"
+            class="w-full"
+            :ui="inputUi"
+            @update:model-value="onCapacityInput($event as string | number)"
+          />
+        </UFormField>
       </section>
 
       <div
@@ -301,8 +233,7 @@ function onFileChange(event: Event) {
     v-model:open="isInfoOpen"
     title="About events"
     :ui="{
-      content:
-        'sm:max-w-[480px] rounded-lg bg-[#171717]',
+      content: 'sm:max-w-[480px] rounded-lg bg-[#171717]',
       title: 'text-sm font-medium uppercase tracking-widest text-white',
       body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"
@@ -316,8 +247,8 @@ function onFileChange(event: Event) {
             Event setup
           </h3>
           <p class="text-sm leading-relaxed text-[#8b8b8b]">
-            Add cover art, schedule, location, and registration rules so members
-            know how to join.
+            Add cover art, schedule, location, and capacity so members know how
+            to join.
           </p>
         </div>
         <div class="flex justify-end">

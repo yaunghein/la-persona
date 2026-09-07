@@ -3,17 +3,30 @@ definePageMeta({
   layout: 'platform',
 });
 
-import type {
-  CommunityEvent,
-  CommunityEventsData,
+import { useQuery } from '@tanstack/vue-query';
+import type { EventDTO } from '~~/shared/types/event';
+import {
+  toCommunityEvent,
+  type CommunityEvent,
+  type CommunityEventsData,
 } from '~~/shared/types/community-events';
 
 const toast = useToast();
 const route = useRoute();
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
+const isCreateOpen = ref(false);
+const isEditOpen = ref(false);
+const editingEvent = ref<EventDTO | null>(null);
 
-/** Mock until community events API / schema exists. */
-const eventsMock = computed<CommunityEventsData>(() => ({
+const { data, isLoading, refetch } = useQuery<{ events: EventDTO[] }>({
+  queryKey: ['events', orgSlug],
+  queryFn: () =>
+    $fetch('/api/events', {
+      query: { organizationSlug: orgSlug.value },
+    }),
+});
+
+const eventsListData = computed<CommunityEventsData>(() => ({
   title: 'Events in Your Community',
   searchPlaceholder: 'Search Events',
   statusOptions: [
@@ -39,107 +52,17 @@ const eventsMock = computed<CommunityEventsData>(() => ({
       description: 'Send event links so your community can RSVP and show up.',
     },
   ],
-  events: [
-    {
-      id: '1',
-      title: 'Tech Leaders Networking Night 2026',
-      dateLabel: '15 May 2026',
-      location: 'The Strand Ballroom, Yangon',
-      imageUrl: '/images/event-placeholder-1.jpg',
-      status: 'upcoming',
-      category: 'networking',
-      description:
-        'Connect with founders, investors and professionals over an evening of meaningful conversations.',
-      date: '2026-05-15',
-      startTime: '18:00',
-      endTime: '21:00',
-      registration: 'open',
-      approval: 'everyone',
-    },
-    {
-      id: '2',
-      title: 'Founders & Investors Dinner',
-      dateLabel: '08 June 2026',
-      location: 'Rosewood Yangon',
-      imageUrl: '/images/event-placeholder-2.jpg',
-      status: 'upcoming',
-      category: 'networking',
-      description: 'An intimate dinner for founders and investors.',
-      date: '2026-06-08',
-      startTime: '19:00',
-      endTime: '22:00',
-      registration: 'invite_only',
-      approval: 'manual',
-    },
-    {
-      id: '3',
-      title: 'Startup Mixer Yangon #12',
-      dateLabel: '02 April 2026',
-      location: 'Impact Hub Yangon',
-      imageUrl: '/images/event-placeholder-3.jpg',
-      status: 'past',
-      category: 'meetup',
-      description: 'Monthly mixer for the Yangon startup community.',
-      date: '2026-04-02',
-      startTime: '18:30',
-      endTime: '21:00',
-      registration: 'open',
-      approval: 'everyone',
-    },
-    {
-      id: '4',
-      title: 'Product Design Workshop',
-      dateLabel: '22 July 2026',
-      location: 'Junction City, Yangon',
-      imageUrl: '/images/event-placeholder-1.jpg',
-      status: 'upcoming',
-      category: 'workshop',
-      description: 'Hands-on workshop for product and design leads.',
-      date: '2026-07-22',
-      startTime: '14:00',
-      endTime: '17:00',
-      registration: 'open',
-      approval: 'everyone',
-    },
-    {
-      id: '5',
-      title: 'Community AMA: Scaling Teams',
-      dateLabel: '10 March 2026',
-      location: 'Online',
-      imageUrl: '/images/event-placeholder-2.jpg',
-      status: 'past',
-      category: 'meetup',
-      description: 'Ask anything about hiring and scaling early teams.',
-      date: '2026-03-10',
-      startTime: '19:00',
-      endTime: '20:30',
-      registration: 'open',
-      approval: 'everyone',
-    },
-    {
-      id: '6',
-      title: 'Yangon Tech Summit Preview',
-      dateLabel: '30 August 2026',
-      location: 'Sedona Hotel Yangon',
-      imageUrl: '/images/event-placeholder-3.jpg',
-      status: 'upcoming',
-      category: 'conference',
-      description: 'Preview night ahead of Yangon Tech Summit.',
-      date: '2026-08-30',
-      startTime: '17:00',
-      endTime: '20:00',
-      registration: 'closed',
-      approval: 'manual',
-    },
-  ],
+  events: (data.value?.events ?? []).map(toCommunityEvent),
 }));
 
 function onCreate() {
-  navigateTo(`/platform/${orgSlug.value}/events/create`);
+  isCreateOpen.value = true;
 }
 
 function onEdit(event: CommunityEvent) {
-  navigateTo(`/platform/${orgSlug.value}/events/${event.id}/edit`);
+  editingEvent.value =
+    data.value?.events.find((item) => item.id === event.id) ?? null;
+  isEditOpen.value = true;
 }
 
 function onView(event: CommunityEvent) {
@@ -147,7 +70,7 @@ function onView(event: CommunityEvent) {
 }
 
 async function onShare(event: CommunityEvent) {
-  const shareUrl = `${window.location.origin}/platform/${orgSlug.value}/events?event=${event.id}`;
+  const shareUrl = `${window.location.origin}/platform/${orgSlug.value}/events/${event.id}`;
   try {
     await navigator.clipboard.writeText(shareUrl);
     toast.add({
@@ -166,11 +89,37 @@ async function onShare(event: CommunityEvent) {
 </script>
 
 <template>
-  <CommunityEventsList
-    :data="eventsMock"
-    @create="onCreate"
-    @edit="onEdit"
-    @share="onShare"
-    @view="onView"
+  <div class="flex min-h-[calc(100dvh-11rem)] flex-col">
+    <div v-if="isLoading" class="flex flex-1 flex-col gap-6 pt-2 sm:pt-0">
+      <USkeleton class="h-8 w-64 rounded-md" />
+      <USkeleton class="h-10 w-full rounded-full" />
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+        <USkeleton
+          v-for="index in 3"
+          :key="index"
+          class="aspect-[1/0.9] w-full rounded-lg"
+        />
+      </div>
+    </div>
+
+    <CommunityEventsList
+      v-else
+      :data="eventsListData"
+      @create="onCreate"
+      @edit="onEdit"
+      @share="onShare"
+      @view="onView"
+    />
+  </div>
+
+  <CommunityCreateEventSlideover
+    v-model:open="isCreateOpen"
+    @created="() => refetch()"
+  />
+  <CommunityCreateEventSlideover
+    v-model:open="isEditOpen"
+    :event="editingEvent"
+    @updated="() => refetch()"
+    @deleted="() => refetch()"
   />
 </template>

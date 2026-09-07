@@ -212,7 +212,7 @@ function onViewPersona() {
           label="Remove"
           color="neutral"
           variant="ghost"
-          class="px-2 text-sm font-medium text-white hover:bg-transparent hover:text-white/80"
+          class="h-9 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
           @click="onRemove"
         />
         <UButton

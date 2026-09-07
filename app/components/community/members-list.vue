@@ -33,11 +33,24 @@ const tabCounts = computed(() => {
   };
 });
 
-const tabItems = computed<TabsItem[]>(() => [
-  { label: `All Members (${tabCounts.value.all})`, value: 'all' },
-  { label: `Active Members (${tabCounts.value.active})`, value: 'active' },
-  { label: `Pending Members (${tabCounts.value.pending})`, value: 'pending' },
-]);
+const isSmUp = useMediaQuery('(min-width: 640px)');
+
+const tabItems = computed<TabsItem[]>(() => {
+  const counts = tabCounts.value;
+  if (isSmUp.value) {
+    return [
+      { label: `All Members (${counts.all})`, value: 'all' },
+      { label: `Active Members (${counts.active})`, value: 'active' },
+      { label: `Pending Members (${counts.pending})`, value: 'pending' },
+    ];
+  }
+
+  return [
+    { label: `All (${counts.all})`, value: 'all' },
+    { label: `Active (${counts.active})`, value: 'active' },
+    { label: `Pending (${counts.pending})`, value: 'pending' },
+  ];
+});
 
 const selectedTab = computed({
   get: () => activeTab.value,
@@ -190,17 +203,19 @@ function closeInfo() {
           color="neutral"
           variant="pill"
           :ui="{
-            root: 'w-fit',
-            list: 'bg-[#171717] w-fit rounded-lg p-1',
+            root: 'w-full sm:w-fit',
+            list: 'bg-[#171717] w-full sm:w-fit rounded-lg p-1',
             indicator: 'bg-[#232323]',
             trigger:
-              'data-[state=active]:text-white data-[state=inactive]:text-[#8b8b8b] rounded-md px-4 py-2.5 grow-0',
+              'data-[state=active]:text-white data-[state=inactive]:text-[#8b8b8b] rounded-md px-4 py-2.5 grow-0 whitespace-nowrap text-center sm:text-left w-full sm:w-fit',
           }"
         />
       </div>
     </div>
 
-    <div class="hide-scrollbar flex-1 overflow-x-auto pt-2 pb-6">
+    <div
+      class="hide-scrollbar shrink-0 overflow-x-auto overflow-y-hidden pt-2 pb-6"
+    >
       <UTable
         :data="pagedMembers"
         :columns="columns"
@@ -252,7 +267,7 @@ function closeInfo() {
       </UTable>
     </div>
 
-    <div class="mt-auto flex items-center justify-end pt-2">
+    <div class="flex items-center justify-end pt-2">
       <UPagination
         v-model:page="page"
         :total="total"

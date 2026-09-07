@@ -47,7 +47,7 @@ const selectedTab = computed({
             <h1
               class="max-w-124 text-xl font-normal leading-[1.2] tracking-[0.175rem] uppercase text-white sm:text-[1.75rem]"
             >
-              {{ title }}sss
+              {{ title }}
             </h1>
             <span
               class="mt-1 rounded-md bg-white/10 px-2 py-1 text-[0.625rem] font-medium tracking-wider text-white uppercase"

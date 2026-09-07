@@ -10,5 +10,6 @@ export * from './subscription-payment';
 export * from './card-subscription';
 export * from './feedback-submission';
 export * from './onboarding-invitation';
+export * from './event';
 
 import './relations';
