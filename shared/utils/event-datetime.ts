@@ -25,6 +25,14 @@ export function formatEventDateLabel(startsAt: Date | string) {
   );
 }
 
+export function formatEventWeekdayDateLabel(startsAt: Date | string) {
+  const value = typeof startsAt === 'string' ? new Date(startsAt) : startsAt;
+  return format(
+    new Date(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()),
+    'EEE, d MMM yyyy'
+  );
+}
+
 export function formatEventTimeValue(startsAt: Date | string) {
   const value = typeof startsAt === 'string' ? new Date(startsAt) : startsAt;
   const hours = String(value.getUTCHours()).padStart(2, '0');

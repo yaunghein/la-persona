@@ -17,7 +17,9 @@ const orgSlug = computed(() => String(route.params.orgSlug || ''));
 const { data: userOrgs } = useUserOrganizations();
 const isCreateOpen = ref(false);
 const isEditOpen = ref(false);
+const isViewOpen = ref(false);
 const editingEvent = ref<EventDTO | null>(null);
+const viewingEvent = ref<EventDTO | null>(null);
 
 const currentOrg = computed(() =>
   (userOrgs.value || []).find((org) => org.slug === orgSlug.value)
@@ -92,7 +94,14 @@ function onEdit(event: CommunityEvent) {
 }
 
 function onView(event: CommunityEvent) {
-  navigateTo(`/platform/${orgSlug.value}/events/${event.id}`);
+  if (canManageEvents.value) {
+    navigateTo(`/platform/${orgSlug.value}/events/${event.id}`);
+    return;
+  }
+
+  viewingEvent.value =
+    data.value?.events.find((item) => item.id === event.id) ?? null;
+  isViewOpen.value = true;
 }
 
 async function onShare(event: CommunityEvent) {
@@ -113,10 +122,18 @@ async function onShare(event: CommunityEvent) {
   }
 }
 
-function onRegister(event: CommunityEvent) {
+function onRegister(event: Pick<CommunityEvent, 'title'>) {
   toast.add({
     title: 'Registration coming soon',
     description: `You’ll be able to register for “${event.title}” here.`,
+    color: 'neutral',
+  });
+}
+
+function onViewOrganizer() {
+  toast.add({
+    title: 'View organizer',
+    description: 'Organizer profiles are not wired yet.',
     color: 'neutral',
   });
 }
@@ -159,5 +176,11 @@ function onRegister(event: CommunityEvent) {
     :event="editingEvent"
     @updated="() => refetch()"
     @deleted="() => refetch()"
+  />
+  <CommunityEventViewSlideover
+    v-model:open="isViewOpen"
+    :event="viewingEvent"
+    @register="onRegister"
+    @view-organizer="onViewOrganizer"
   />
 </template>

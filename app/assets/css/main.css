@@ -1,6 +1,5 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
-@import 'swiper/css/bundle';
 
 html {
   scroll-behavior: smooth;

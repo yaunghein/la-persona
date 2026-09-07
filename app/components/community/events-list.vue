@@ -207,10 +207,7 @@ function onRegister(event: CommunityEvent) {
             </p>
           </div>
 
-          <div
-            v-if="canManage"
-            class="flex items-center justify-end gap-3"
-          >
+          <div v-if="canManage" class="flex items-center justify-end gap-3">
             <UButton
               icon="i-lucide-scan-eye"
               color="primary"
@@ -234,12 +231,19 @@ function onRegister(event: CommunityEvent) {
               @click="onShare(event)"
             />
           </div>
-          <div v-else class="flex items-center justify-between gap-3">
+          <div v-else class="flex items-center justify-end gap-3">
             <UButton
               label="Register"
               color="neutral"
-              class="h-9 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+              class="h-8 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
               @click="onRegister(event)"
+            />
+            <UButton
+              icon="i-lucide-scan-eye"
+              color="primary"
+              size="sm"
+              class="ml-auto bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
+              @click="onView(event)"
             />
             <UButton
               icon="material-symbols:ios-share-rounded"
