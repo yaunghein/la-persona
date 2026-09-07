@@ -52,6 +52,17 @@ export default defineNuxtConfig({
   colorMode: {
     preference: 'dark',
   },
+  vite: {
+    optimizeDeps: {
+      include: [
+        '@nuxt/ui > prosemirror-state',
+        '@nuxt/ui > prosemirror-transform',
+        '@nuxt/ui > prosemirror-model',
+        '@nuxt/ui > prosemirror-view',
+        '@nuxt/ui > prosemirror-gapcursor',
+      ],
+    },
+  },
   runtimeConfig: {
     public: {
       awsRegion: process.env.AWS_REGION,
@@ -65,6 +76,7 @@ export default defineNuxtConfig({
   },
   routeRules: {
     '/': { prerender: true },
+    '/platform': { ssr: false },
     '/platform/**': { ssr: false },
     '/thakhin/**': { ssr: false },
   },

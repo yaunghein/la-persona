@@ -29,6 +29,20 @@
       "when": 1788752571611,
       "tag": "0003_lean_wallop",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788783569690,
+      "tag": "0004_tense_black_knight",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788784220798,
+      "tag": "0005_majestic_la_nuit",
+      "breakpoints": true
     }
   ]
 }

@@ -1,25 +1,19 @@
 <script setup lang="ts">
-import type {
-  CommunityJoinPolicy,
-  CommunitySettingsFormValues,
-} from '~~/shared/types/community-settings';
+import type { CommunitySettingsFormValues } from '~~/shared/types/community-settings';
 
 const props = defineProps<{
   modelValue: CommunitySettingsFormValues;
-  joinOptions: { label: string; value: CommunityJoinPolicy }[];
+  saving?: boolean;
 }>();
 
 const emit = defineEmits<{
   'update:modelValue': [value: CommunitySettingsFormValues];
   submit: [];
-  cancel: [];
   delete: [];
 }>();
 
 const toast = useToast();
 const isInfoOpen = ref(false);
-const coverInputRef = ref<HTMLInputElement | null>(null);
-const logoInputRef = ref<HTMLInputElement | null>(null);
 
 const form = computed({
   get: () => props.modelValue,
@@ -40,29 +34,6 @@ const inputUi = {
   base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
 };
 
-const selectUi = {
-  base: 'h-[47px] w-full rounded-[4px] border border-[#2a2a2a] bg-[#232323] px-4 text-sm text-white',
-  content: 'border border-[#2a2a2a] bg-[#171717]',
-  item: 'text-white data-[highlighted]:bg-[#232323]',
-  value: 'text-white',
-  trailingIcon: 'text-[#8b8b8b]',
-};
-
-const notificationItems = [
-  {
-    key: 'notifyNewMember' as const,
-    label: 'New member joins',
-  },
-  {
-    key: 'notifyMembershipRequests' as const,
-    label: 'Membership requests',
-  },
-  {
-    key: 'notifyEventRegistrations' as const,
-    label: 'Event registrations',
-  },
-];
-
 function openInfo() {
   isInfoOpen.value = true;
 }
@@ -71,30 +42,17 @@ function closeInfo() {
   isInfoOpen.value = false;
 }
 
-function triggerCoverUpload() {
-  coverInputRef.value?.click();
-}
-
-function triggerLogoUpload() {
-  logoInputRef.value?.click();
-}
-
-function onFileSelected(kind: 'cover' | 'logo', event: Event) {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-  if (!file) return;
-
+function onUploadClick() {
   toast.add({
-    title: 'Photo selected',
-    description: `${file.name} will upload when community media is wired.`,
+    title: 'Images are fixed for now',
+    description: 'Cover and logo uploads are not wired yet.',
     color: 'neutral',
   });
-  input.value = '';
 }
 </script>
 
 <template>
-  <div class="flex min-h-[calc(100dvh-11rem)] flex-col gap-8 pb-8">
+  <div class="flex flex-col gap-8">
     <div class="flex items-center gap-3">
       <h1
         class="text-xl font-normal leading-5 tracking-[0.175rem] uppercase text-white sm:text-[1.75rem]"
@@ -111,8 +69,10 @@ function onFileSelected(kind: 'cover' | 'logo', event: Event) {
       />
     </div>
 
-    <div class="flex w-full flex-col gap-8 rounded-lg bg-[#171717] p-6 sm:p-8">
-      <section class="flex flex-col gap-8 border-b border-[#232323] pb-8">
+    <div
+      class="flex w-full flex-col gap-8 rounded-lg bg-[#171717] p-6 pb-10 sm:p-8 sm:pb-12"
+    >
+      <section class="flex flex-col gap-8">
         <div class="space-y-4">
           <h2
             class="text-xl font-medium tracking-[0.125rem] uppercase text-white"
@@ -139,16 +99,9 @@ function onFileSelected(kind: 'cover' | 'logo', event: Event) {
                 leading-icon="i-lucide-upload"
                 color="neutral"
                 class="h-9 cursor-pointer rounded-full bg-[#232323] py-2 pr-6 pl-4 text-sm font-medium text-white hover:bg-[#2a2a2a]"
-                @click="triggerCoverUpload"
+                @click="onUploadClick"
               />
             </div>
-            <input
-              ref="coverInputRef"
-              type="file"
-              accept="image/*"
-              class="hidden"
-              @change="onFileSelected('cover', $event)"
-            />
           </div>
         </div>
 
@@ -175,14 +128,7 @@ function onFileSelected(kind: 'cover' | 'logo', event: Event) {
               leading-icon="i-lucide-upload"
               color="neutral"
               class="h-9 cursor-pointer rounded-full bg-[#232323] py-2 pr-6 pl-4 text-sm font-medium text-white hover:bg-[#2a2a2a]"
-              @click="triggerLogoUpload"
-            />
-            <input
-              ref="logoInputRef"
-              type="file"
-              accept="image/*"
-              class="hidden"
-              @change="onFileSelected('logo', $event)"
+              @click="onUploadClick"
             />
           </div>
         </div>
@@ -190,7 +136,7 @@ function onFileSelected(kind: 'cover' | 'logo', event: Event) {
         <UFormField label="Organization Name" :class="formFieldClass">
           <UInput
             :model-value="form.name"
-            placeholder="Tech Leaders Myanmar"
+            placeholder="Yangon Runners Club"
             class="w-full"
             :ui="inputUi"
             @update:model-value="patch('name', String($event))"
@@ -198,80 +144,28 @@ function onFileSelected(kind: 'cover' | 'logo', event: Event) {
         </UFormField>
 
         <UFormField label="Description" :class="formFieldClass">
-          <UTextarea
+          <CommunityRichTextEditor
             :model-value="form.description"
             placeholder="Describe your community"
-            :rows="3"
-            class="w-full"
-            :ui="{
-              base: 'min-h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
-            }"
-            @update:model-value="patch('description', String($event))"
+            @update:model-value="patch('description', $event)"
           />
         </UFormField>
-      </section>
 
-      <section class="flex flex-col gap-8 border-b border-[#232323] pb-8">
-        <div class="space-y-4">
-          <h2
-            class="text-xl font-medium tracking-[0.125rem] uppercase text-white"
-          >
-            Membership
-          </h2>
-          <p class="text-sm text-[#8b8b8b]">
-            Control how people join your organization.
-          </p>
-        </div>
-
-        <UFormField label="Who can join?" :class="formFieldClass">
-          <USelect
-            :model-value="form.whoCanJoin"
-            :items="joinOptions"
-            color="neutral"
-            class="w-full"
-            :ui="selectUi"
-            @update:model-value="patch('whoCanJoin', $event as CommunityJoinPolicy)"
+        <UFormField label="Community Guidelines" :class="formFieldClass">
+          <CommunityRichTextEditor
+            :model-value="form.guidelines"
+            placeholder="Add community guidelines"
+            @update:model-value="patch('guidelines', $event)"
           />
         </UFormField>
-      </section>
 
-      <section class="flex flex-col gap-8 pb-2">
-        <div class="space-y-4">
-          <h2
-            class="text-xl font-medium tracking-[0.125rem] uppercase text-white"
-          >
-            Notification
-          </h2>
-          <p class="text-sm text-[#8b8b8b]">Control community notifications.</p>
-        </div>
-
-        <div class="flex flex-col gap-3">
-          <p class="text-sm font-medium text-white">Email Notifications</p>
-          <div
-            class="flex flex-col overflow-hidden rounded-[4px] border border-[#2a2a2a]"
-          >
-            <label
-              v-for="(item, index) in notificationItems"
-              :key="item.key"
-              class="flex cursor-pointer items-center gap-2 px-4 py-3"
-              :class="
-                index < notificationItems.length - 1
-                  ? 'border-b border-[#2a2a2a]'
-                  : ''
-              "
-            >
-              <UCheckbox
-                :model-value="form[item.key]"
-                color="neutral"
-                :ui="{
-                  base: 'bg-[#232323] ring-[#2a2a2a] data-[state=checked]:bg-white data-[state=checked]:text-dark',
-                }"
-                @update:model-value="patch(item.key, Boolean($event))"
-              />
-              <span class="text-sm text-[#8b8b8b]">{{ item.label }}</span>
-            </label>
-          </div>
-        </div>
+        <UFormField label="Why Should People Join" :class="formFieldClass">
+          <CommunityRichTextEditor
+            :model-value="form.whyJoin"
+            placeholder="Tell people why they should join"
+            @update:model-value="patch('whyJoin', $event)"
+          />
+        </UFormField>
       </section>
 
       <div
@@ -282,21 +176,18 @@ function onFileSelected(kind: 'cover' | 'logo', event: Event) {
           leading-icon="i-lucide-trash-2"
           color="neutral"
           variant="ghost"
-          class="h-9 cursor-pointer justify-center rounded-full py-2 pr-6 pl-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white sm:mr-auto"
+          class="h-9 cursor-pointer justify-center rounded-full py-2 pr-6 pl-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
           @click="emit('delete')"
-        />
-        <UButton
-          label="Cancel"
-          leading-icon="i-lucide-undo-2"
-          color="neutral"
-          class="h-9 cursor-pointer justify-center rounded-full bg-[#232323] py-2 pr-6 pl-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
-          @click="emit('cancel')"
         />
         <UButton
           label="Update Changes"
           leading-icon="i-material-symbols:fitbit-check-small"
           color="neutral"
+          :loading="saving"
           class="h-9 cursor-pointer justify-center rounded-full bg-white py-2 pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+          :ui="{
+            leadingIcon: 'size-6',
+          }"
           @click="emit('submit')"
         />
       </div>
@@ -307,8 +198,7 @@ function onFileSelected(kind: 'cover' | 'logo', event: Event) {
     v-model:open="isInfoOpen"
     title="About settings"
     :ui="{
-      content:
-        'sm:max-w-[480px] rounded-lg bg-[#171717]',
+      content: 'sm:max-w-[480px] rounded-lg bg-[#171717]',
       title: 'text-sm font-medium uppercase tracking-widest text-white',
       body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"
@@ -322,8 +212,8 @@ function onFileSelected(kind: 'cover' | 'logo', event: Event) {
             Community settings
           </h3>
           <p class="text-sm leading-relaxed text-[#8b8b8b]">
-            Update branding, membership rules, and email alerts for your
-            community workspace.
+            Update your community name, description, guidelines, and why people
+            should join.
           </p>
         </div>
         <div class="flex justify-end">

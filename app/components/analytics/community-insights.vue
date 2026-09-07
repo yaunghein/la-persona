@@ -177,6 +177,8 @@ const columns: TableColumn<CommunityEventPerformance>[] = [
           :columns="columns"
           :ui="{
             th: 'px-6 py-5 border-b border-[#232323] text-xs font-semibold tracking-wide uppercase text-white',
+            tbody:
+              '[&>tr:last-child>td]:border-b-0 [&>tr:last-child>td]:pb-0',
             td: 'px-6 py-5 border-b border-[#232323] text-sm',
             tr: 'bg-transparent',
             empty: 'py-12 text-center text-sm text-muted',

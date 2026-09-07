@@ -117,12 +117,6 @@ export const auth = betterAuth({
               defaultValue: 'personal',
               input: true,
             },
-            isPersonal: {
-              type: 'boolean',
-              required: true,
-              defaultValue: false,
-              input: false,
-            },
           },
         },
       },

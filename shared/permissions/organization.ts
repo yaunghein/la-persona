@@ -49,6 +49,9 @@ export const organizationRoles = {
 };
 
 export const ORGANIZATION_PERMISSIONS = {
+  ORGANIZATION_READ: { organization: ['read'] },
+  ORGANIZATION_UPDATE: { organization: ['update'] },
+  ORGANIZATION_DELETE: { organization: ['delete'] },
   CARD_CREATE: { card: ['create'] },
   CARD_READ: { card: ['read'] },
   CARD_READ_ALL: { card: ['readAll'] },

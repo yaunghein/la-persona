@@ -100,7 +100,6 @@ export default defineEventHandler(async (event) => {
       name: isPersonal ? `${name}'s Space` : name,
       slug: normalizedSlug,
       type: type as OrganizationType,
-      isPersonal,
       createdAt: new Date(),
     })
     .returning();

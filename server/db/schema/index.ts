@@ -11,5 +11,6 @@ export * from './card-subscription';
 export * from './feedback-submission';
 export * from './onboarding-invitation';
 export * from './event';
+export * from './community-setting';
 
 import './relations';

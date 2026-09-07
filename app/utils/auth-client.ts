@@ -24,9 +24,6 @@ export const authClient = createAuthClient({
             type: {
               type: 'string',
             },
-            isPersonal: {
-              type: 'boolean',
-            },
           },
         },
       }),

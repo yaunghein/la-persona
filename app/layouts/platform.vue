@@ -1,17 +1,6 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui';
-import {
-  ORGANIZATION_TYPES,
-  type OrganizationType,
-} from '~~/shared/utils/constants';
-
-type UserOrganization = {
-  id: string;
-  name: string;
-  slug: string;
-  logo: string | null;
-  type: OrganizationType;
-};
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
 const route = useRoute();
 const toast = useToast();
@@ -20,10 +9,7 @@ const router = useRouter();
 const open = ref(false);
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
 
-const { data: userOrgs } = await useFetch<UserOrganization[]>(
-  '/api/organizations',
-  { default: () => [] }
-);
+const { data: userOrgs } = useUserOrganizations();
 
 const personalOrg = computed(() =>
   (userOrgs.value || []).find((org) => org.type === ORGANIZATION_TYPES.PERSONAL)

@@ -9,6 +9,7 @@ import { cardRequest } from './card-request';
 import { feedbackSubmission } from './feedback-submission';
 import { onboardingInvitation } from './onboarding-invitation';
 import { event } from './event';
+import { communitySetting } from './community-setting';
 
 export const userRelations = relations(user, ({ many }) => ({
   cards: many(card),
@@ -25,11 +26,15 @@ export const userRelations = relations(user, ({ many }) => ({
 
 export const organizationSubscriptionRelations = relations(
   organization,
-  ({ many }) => ({
+  ({ many, one }) => ({
     subscriptionPayments: many(subscriptionPayment),
     feedbackSubmissions: many(feedbackSubmission),
     onboardingInvitations: many(onboardingInvitation),
     events: many(event),
+    communitySetting: one(communitySetting, {
+      fields: [organization.id],
+      references: [communitySetting.organizationId],
+    }),
   })
 );
 
@@ -177,3 +182,13 @@ export const eventRelations = relations(event, ({ one }) => ({
     references: [user.id],
   }),
 }));
+
+export const communitySettingRelations = relations(
+  communitySetting,
+  ({ one }) => ({
+    organization: one(organization, {
+      fields: [communitySetting.organizationId],
+      references: [organization.id],
+    }),
+  })
+);

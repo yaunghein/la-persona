@@ -30,8 +30,6 @@ export async function insertOrganization(
       name: isPersonal ? `${name}'s Space` : name,
       slug: `${slugify(name)}-space-${nanoid()}`,
       type,
-      // Keep in sync while the column still exists.
-      isPersonal,
       createdAt: new Date(),
     })
     .returning();

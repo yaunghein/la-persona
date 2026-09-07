@@ -16,11 +16,11 @@ type UserOrganization = {
 
 const router = useRouter();
 const route = useRoute();
-const session = await authClient.useSession(useFetch);
+const { data: session } = await authClient.useSession(useFetch);
 
 const redirectTo = computed(() => getSafeInternalPath(route.query.redirectTo));
 
-const { data: userOrgs, isError: isOrgsError } = await useFetch<
+const { data: userOrgs, error: orgsError } = await useFetch<
   UserOrganization[]
 >('/api/organizations', { default: () => [] });
 
@@ -52,7 +52,7 @@ const {
 
 /** True when the watcher could not route yet and there is no redirect escape hatch. */
 const syncStuck = ref(false);
-const isError = computed(() => isOrgsError.value || isCardsError.value);
+const isError = computed(() => Boolean(orgsError.value) || isCardsError.value);
 
 watch(
   [cards, orgSlug, redirectTo],
@@ -96,7 +96,7 @@ watch(
 
 const showLoading = computed(() => {
   if (redirectTo.value) return true;
-  if (!session.data.value) return true;
+  if (!session?.value) return true;
   if (!orgSlug.value) return false;
   if (isError.value) return false;
   return isPending.value || isFetching.value;
@@ -104,7 +104,7 @@ const showLoading = computed(() => {
 
 const showSupportState = computed(() => {
   if (redirectTo.value) return false;
-  if (!session.data.value) return false;
+  if (!session?.value) return false;
   if (isError.value) return true;
   if (!orgSlug.value) return true;
   return syncStuck.value && !isPending.value && !isFetching.value;

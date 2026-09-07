@@ -95,8 +95,6 @@ export const organization = pgTable(
     logo: text('logo'),
     createdAt: timestamp('created_at').notNull(),
     metadata: text('metadata'),
-    /** @deprecated Prefer `type`. Kept for migration compatibility. */
-    isPersonal: boolean('is_personal').default(false).notNull(),
     type: text('type')
       .$type<'personal' | 'community'>()
       .default('personal')
