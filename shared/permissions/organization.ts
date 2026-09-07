@@ -4,6 +4,7 @@ export const organizationPermissionStatements = {
   organization: ['read', 'update', 'delete'],
   member: ['create', 'update', 'delete'],
   invitation: ['create', 'cancel'],
+  event: ['create', 'read', 'update', 'delete'],
   card: ['create', 'read', 'readAll', 'update', 'delete'],
   contactExchange: ['create', 'read', 'readAll', 'delete'],
   cardRequest: ['create', 'update'],
@@ -16,16 +17,14 @@ export const organizationAccessControl = createAccessControl(
 
 export const organizationMemberRole = organizationAccessControl.newRole({
   organization: ['read'],
-  card: ['create', 'read', 'update', 'delete'],
-  contactExchange: ['create', 'read', 'delete'],
-  cardRequest: ['create', 'update'],
-  media: ['upload'],
+  event: ['read'],
 });
 
 export const organizationAdminRole = organizationAccessControl.newRole({
   organization: ['read', 'update'],
   member: ['create', 'update', 'delete'],
   invitation: ['create', 'cancel'],
+  event: ['create', 'read', 'update', 'delete'],
   card: ['create', 'read', 'readAll', 'update', 'delete'],
   contactExchange: ['create', 'read', 'readAll', 'delete'],
   cardRequest: ['create', 'update'],
@@ -36,6 +35,7 @@ export const organizationOwnerRole = organizationAccessControl.newRole({
   organization: ['read', 'update', 'delete'],
   member: ['create', 'update', 'delete'],
   invitation: ['create', 'cancel'],
+  event: ['create', 'read', 'update', 'delete'],
   card: ['create', 'read', 'readAll', 'update', 'delete'],
   contactExchange: ['create', 'read', 'readAll', 'delete'],
   cardRequest: ['create', 'update'],
@@ -52,6 +52,10 @@ export const ORGANIZATION_PERMISSIONS = {
   ORGANIZATION_READ: { organization: ['read'] },
   ORGANIZATION_UPDATE: { organization: ['update'] },
   ORGANIZATION_DELETE: { organization: ['delete'] },
+  EVENT_CREATE: { event: ['create'] },
+  EVENT_READ: { event: ['read'] },
+  EVENT_UPDATE: { event: ['update'] },
+  EVENT_DELETE: { event: ['delete'] },
   CARD_CREATE: { card: ['create'] },
   CARD_READ: { card: ['read'] },
   CARD_READ_ALL: { card: ['readAll'] },
@@ -71,3 +75,18 @@ export type OrganizationPermission = {
     (typeof organizationPermissionStatements)[Resource][number]
   >;
 };
+
+export type OrganizationMemberRole = 'owner' | 'admin' | 'member';
+
+export function isOrganizationManagerRole(
+  role: string | null | undefined
+): boolean {
+  return role === 'owner' || role === 'admin';
+}
+
+export function isCommunityMemberOnly(params: {
+  type?: string | null;
+  role?: string | null;
+}) {
+  return params.type === 'community' && params.role === 'member';
+}

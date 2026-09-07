@@ -78,11 +78,25 @@ const communityItems = computed(() =>
   }))
 );
 
+const selectedCommunity = computed(() =>
+  communityOrgs.value.find((org) => org.slug === selectedCommunitySlug.value)
+);
+
+const isSelectedCommunityMember = computed(() =>
+  isCommunityMemberOnlyOrg(selectedCommunity.value)
+);
+
+function communityHomePath(slug: string) {
+  const org = communityOrgs.value.find((item) => item.slug === slug);
+  const base = `${ROUTES.PLATFORM.ROOT}/${slug}`;
+  return isCommunityMemberOnlyOrg(org) ? `${base}/events` : base;
+}
+
 async function onSelectCommunity(slug: unknown) {
   if (typeof slug !== 'string' || !slug) return;
   selectedCommunitySlug.value = slug;
   open.value = false;
-  await router.push(`${ROUTES.PLATFORM.ROOT}/${slug}`);
+  await router.push(communityHomePath(slug));
 }
 
 function closeSidebar() {
@@ -119,45 +133,55 @@ const personalLinks = computed(
     ] satisfies NavigationMenuItem[]
 );
 
-const communitiesLinks = computed(
-  () =>
-    [
-      {
-        label: 'Insights',
-        icon: 'i-gg:insights',
-        to: communitiesBasePath.value || undefined,
-        disabled: !communitiesBasePath.value,
-        onSelect: closeSidebar,
-      },
-      {
-        label: 'Members',
-        icon: 'i-ri:team-line',
-        to: communitiesBasePath.value
-          ? `${communitiesBasePath.value}/members`
-          : undefined,
-        disabled: !communitiesBasePath.value,
-        onSelect: closeSidebar,
-      },
+const communitiesLinks = computed(() => {
+  if (!communitiesBasePath.value) {
+    return [] as NavigationMenuItem[];
+  }
+
+  if (isSelectedCommunityMember.value) {
+    return [
       {
         label: 'Events',
         icon: 'i-lucide-calendar',
-        to: communitiesBasePath.value
-          ? `${communitiesBasePath.value}/events`
-          : undefined,
-        disabled: !communitiesBasePath.value,
+        to: `${communitiesBasePath.value}/events`,
         onSelect: closeSidebar,
       },
       {
-        label: 'Settings',
-        icon: 'i-lucide-settings',
-        to: communitiesBasePath.value
-          ? `${communitiesBasePath.value}/settings`
-          : undefined,
-        disabled: !communitiesBasePath.value,
+        label: 'About',
+        icon: 'i-material-symbols:info-outline',
+        to: `${communitiesBasePath.value}/about`,
         onSelect: closeSidebar,
       },
-    ] satisfies NavigationMenuItem[]
-);
+    ] satisfies NavigationMenuItem[];
+  }
+
+  return [
+    {
+      label: 'Insights',
+      icon: 'i-gg:insights',
+      to: communitiesBasePath.value,
+      onSelect: closeSidebar,
+    },
+    {
+      label: 'Members',
+      icon: 'i-ri:team-line',
+      to: `${communitiesBasePath.value}/members`,
+      onSelect: closeSidebar,
+    },
+    {
+      label: 'Events',
+      icon: 'i-lucide-calendar',
+      to: `${communitiesBasePath.value}/events`,
+      onSelect: closeSidebar,
+    },
+    {
+      label: 'Settings',
+      icon: 'i-lucide-settings',
+      to: `${communitiesBasePath.value}/settings`,
+      onSelect: closeSidebar,
+    },
+  ] satisfies NavigationMenuItem[];
+});
 
 const groups = computed(() => [
   {
@@ -238,6 +262,7 @@ const currentPageLabel = computed(() => {
   if (path.startsWith(`${basePath}/teams`)) return 'Teams';
   if (path.startsWith(`${basePath}/members`)) return 'Members';
   if (path.startsWith(`${basePath}/events`)) return 'Events';
+  if (path.startsWith(`${basePath}/about`)) return 'About';
   if (path.startsWith(`${basePath}/settings`)) return 'Settings';
 
   return '';

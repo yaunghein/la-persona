@@ -1,11 +1,12 @@
-import { eq } from 'drizzle-orm';
+import { count, eq } from 'drizzle-orm';
 import { db } from '~~/server/db';
-import { organization } from '~~/server/db/schema';
+import { event as eventTable, member, organization } from '~~/server/db/schema';
 import { ensureCommunitySetting } from '~~/server/db/queries/community-setting';
 import { handleApiError } from '~~/server/utils/errors';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
-import { toCommunitySettingsDTO } from '~~/shared/types/community-settings';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+import type { CommunityAboutDTO } from '~~/shared/types/community-about';
+import { toCommunitySettingsDTO } from '~~/shared/types/community-settings';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
 export default defineEventHandler(async (event) => {
@@ -22,6 +23,7 @@ export default defineEventHandler(async (event) => {
         name: true,
         logo: true,
         type: true,
+        createdAt: true,
       },
     });
 
@@ -35,7 +37,7 @@ export default defineEventHandler(async (event) => {
     if (org.type !== ORGANIZATION_TYPES.COMMUNITY) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Community settings are only available for community organizations',
+        statusMessage: 'About is only available for community organizations',
       });
     }
 
@@ -44,22 +46,43 @@ export default defineEventHandler(async (event) => {
     if (!setting) {
       throw createError({
         statusCode: 500,
-        statusMessage: 'Failed to load community settings',
+        statusMessage: 'Failed to load community about',
       });
     }
 
-    return toCommunitySettingsDTO({
-      name: org.name,
-      logo: org.logo,
-      coverUrl: setting.coverUrl,
-      description: setting.description,
-      guidelines: setting.guidelines,
-      whyJoin: setting.whyJoin,
-    });
+    const [memberRow] = await db
+      .select({ value: count() })
+      .from(member)
+      .where(eq(member.organizationId, org.id));
+
+    const [eventRow] = await db
+      .select({ value: count() })
+      .from(eventTable)
+      .where(eq(eventTable.organizationId, org.id));
+
+    const foundedYear = org.createdAt
+      ? new Date(org.createdAt).getFullYear()
+      : new Date().getFullYear();
+
+    const payload: CommunityAboutDTO = {
+      ...toCommunitySettingsDTO({
+        name: org.name,
+        logo: org.logo,
+        coverUrl: setting.coverUrl,
+        description: setting.description,
+        guidelines: setting.guidelines,
+        whyJoin: setting.whyJoin,
+      }),
+      memberCount: memberRow?.value ?? 0,
+      eventCount: eventRow?.value ?? 0,
+      foundedYear,
+    };
+
+    return payload;
   } catch (error) {
     handleApiError(error, {
       statusCode: 500,
-      statusMessage: 'Failed to load community settings',
+      statusMessage: 'Failed to load community about',
     });
   }
 });

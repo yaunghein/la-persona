@@ -4,13 +4,17 @@ import {
   updateEventByIdAndOrganizationId,
 } from '~~/server/db/queries/event';
 import { handleApiError } from '~~/server/utils/errors';
-import { requireOrganizationSession } from '~~/server/utils/organization-permissions';
+import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
 import { updateEventBodySchema } from '~~/shared/types/event';
 import { wallClockDate } from '~~/shared/utils/event-datetime';
 import { resolveUpdatedEventImageUrls } from '~~/shared/utils/event-media';
+import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
 
 export default defineEventHandler(async (event) => {
-  const session = await requireOrganizationSession(event);
+  const session = await requireOrganizationPermission(
+    event,
+    ORGANIZATION_PERMISSIONS.EVENT_UPDATE
+  );
   const eventId = getRouterParam(event, 'eventId');
   const body = await readValidatedBody(event, updateEventBodySchema.safeParse);
 

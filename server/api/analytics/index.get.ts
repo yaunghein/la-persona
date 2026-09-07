@@ -1,7 +1,9 @@
 import { and, eq, sql, gte } from 'drizzle-orm';
 import { db } from '~~/server/db';
-import { analytics, card, member } from '~~/server/db/schema';
+import { analytics, card, member, organization } from '~~/server/db/schema';
 import { requireOrganizationSession } from '~~/server/utils/organization-permissions';
+import { isOrganizationManagerRole } from '~~/shared/permissions/organization';
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 import {
   OTHER_LINK_LABELS,
   SOCIAL_MEDIA_LINK_LABELS,
@@ -31,7 +33,20 @@ export default defineEventHandler(async (event) => {
   if (!userMemberInfo) {
     throw createError({ statusCode: 403, statusMessage: 'Forbidden' });
   }
-  const isOwner = userMemberInfo.role === 'owner';
+
+  const org = await db.query.organization.findFirst({
+    where: eq(organization.id, orgId),
+    columns: { type: true },
+  });
+
+  if (
+    org?.type === ORGANIZATION_TYPES.COMMUNITY &&
+    !isOrganizationManagerRole(userMemberInfo.role)
+  ) {
+    throw createError({ statusCode: 403, statusMessage: 'Forbidden' });
+  }
+
+  const isOwner = isOrganizationManagerRole(userMemberInfo.role);
 
   let conditions = [eq(analytics.organizationId, orgId)];
   if (!isOwner) {

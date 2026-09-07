@@ -7,6 +7,7 @@ import type {
 
 const props = defineProps<{
   data: CommunityEventsData;
+  canManage?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -14,6 +15,7 @@ const emit = defineEmits<{
   edit: [event: CommunityEvent];
   share: [event: CommunityEvent];
   view: [event: CommunityEvent];
+  register: [event: CommunityEvent];
 }>();
 
 type EventsTab = 'upcoming' | 'past';
@@ -96,6 +98,10 @@ function onEdit(event: CommunityEvent) {
 function onView(event: CommunityEvent) {
   emit('view', event);
 }
+
+function onRegister(event: CommunityEvent) {
+  emit('register', event);
+}
 </script>
 
 <template>
@@ -121,6 +127,7 @@ function onView(event: CommunityEvent) {
         </div>
 
         <UButton
+          v-if="canManage"
           label="Create Event"
           leading-icon="i-material-symbols:add"
           color="neutral"
@@ -185,7 +192,7 @@ function onView(event: CommunityEvent) {
         </div>
 
         <div
-          class="flex justify-between gap-2 rounded-b-lg bg-[#171717] px-5 pt-5 pb-6"
+          class="flex flex-col gap-4 rounded-b-lg bg-[#171717] px-5 pt-5 pb-6"
         >
           <div class="flex min-w-0 flex-col gap-1">
             <h2 class="line-clamp-1 text-base leading-5 text-white">
@@ -200,7 +207,10 @@ function onView(event: CommunityEvent) {
             </p>
           </div>
 
-          <div class="flex items-center gap-3 justify-between">
+          <div
+            v-if="canManage"
+            class="flex items-center justify-end gap-3"
+          >
             <UButton
               icon="i-lucide-scan-eye"
               color="primary"
@@ -215,6 +225,21 @@ function onView(event: CommunityEvent) {
               class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
               @click="onEdit(event)"
               :ui="{ leadingIcon: 'size-4' }"
+            />
+            <UButton
+              icon="material-symbols:ios-share-rounded"
+              color="primary"
+              size="sm"
+              class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
+              @click="onShare(event)"
+            />
+          </div>
+          <div v-else class="flex items-center justify-between gap-3">
+            <UButton
+              label="Register"
+              color="neutral"
+              class="h-9 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+              @click="onRegister(event)"
             />
             <UButton
               icon="material-symbols:ios-share-rounded"

@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { auth } from '~~/server/auth';
 import { db } from '~~/server/db';
 import { member, organization } from '~~/server/db/schema';
+import type { OrganizationMemberRole } from '~~/shared/permissions/organization';
 import type { OrganizationType } from '~~/shared/utils/constants';
 
 export type UserOrganization = {
@@ -10,6 +11,7 @@ export type UserOrganization = {
   slug: string;
   logo: string | null;
   type: OrganizationType;
+  role: OrganizationMemberRole;
 };
 
 export default defineEventHandler(async (event) => {
@@ -25,10 +27,14 @@ export default defineEventHandler(async (event) => {
       slug: organization.slug,
       logo: organization.logo,
       type: organization.type,
+      role: member.role,
     })
     .from(organization)
     .innerJoin(member, eq(member.organizationId, organization.id))
     .where(eq(member.userId, session.user.id));
 
-  return rows;
+  return rows.map((row) => ({
+    ...row,
+    role: row.role as OrganizationMemberRole,
+  }));
 });

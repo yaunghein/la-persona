@@ -14,9 +14,53 @@ import {
 const toast = useToast();
 const route = useRoute();
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
+const { data: userOrgs } = useUserOrganizations();
 const isCreateOpen = ref(false);
 const isEditOpen = ref(false);
 const editingEvent = ref<EventDTO | null>(null);
+
+const currentOrg = computed(() =>
+  (userOrgs.value || []).find((org) => org.slug === orgSlug.value)
+);
+const canManageEvents = computed(() => isCommunityManager(currentOrg.value));
+
+const memberInfoItems = [
+  {
+    icon: 'i-lucide-calendar',
+    title: 'Find events',
+    description: 'Browse upcoming community runs, mixers, and gatherings.',
+  },
+  {
+    icon: 'i-lucide-user-plus',
+    title: 'Register',
+    description: 'Sign up for events you want to attend. Registration comes next.',
+  },
+  {
+    icon: 'i-lucide-share-2',
+    title: 'Share',
+    description: 'Copy an event link and send it to other members.',
+  },
+];
+
+const ownerInfoItems = [
+  {
+    icon: 'i-lucide-calendar-plus',
+    title: 'Create events',
+    description:
+      'Publish upcoming gatherings with cover art, schedule, and venue details.',
+  },
+  {
+    icon: 'i-lucide-user-check',
+    title: 'Control registration',
+    description:
+      'Choose open or invite-only registration and how approvals work.',
+  },
+  {
+    icon: 'i-lucide-share-2',
+    title: 'Share with members',
+    description: 'Send event links so your community can RSVP and show up.',
+  },
+];
 
 const { data, isLoading, refetch } = useQuery<{ events: EventDTO[] }>({
   queryKey: ['events', orgSlug],
@@ -27,31 +71,13 @@ const { data, isLoading, refetch } = useQuery<{ events: EventDTO[] }>({
 });
 
 const eventsListData = computed<CommunityEventsData>(() => ({
-  title: 'Events in Your Community',
+  title: canManageEvents.value ? 'Events in Your Community' : 'Events',
   searchPlaceholder: 'Search Events',
   statusOptions: [
     { label: 'Upcoming Events', value: 'upcoming' },
     { label: 'Past Events', value: 'past' },
   ],
-  infoItems: [
-    {
-      icon: 'i-lucide-calendar-plus',
-      title: 'Create events',
-      description:
-        'Publish upcoming gatherings with cover art, schedule, and venue details.',
-    },
-    {
-      icon: 'i-lucide-user-check',
-      title: 'Control registration',
-      description:
-        'Choose open or invite-only registration and how approvals work.',
-    },
-    {
-      icon: 'i-lucide-share-2',
-      title: 'Share with members',
-      description: 'Send event links so your community can RSVP and show up.',
-    },
-  ],
+  infoItems: canManageEvents.value ? ownerInfoItems : memberInfoItems,
   events: (data.value?.events ?? []).map(toCommunityEvent),
 }));
 
@@ -86,6 +112,14 @@ async function onShare(event: CommunityEvent) {
     });
   }
 }
+
+function onRegister(event: CommunityEvent) {
+  toast.add({
+    title: 'Registration coming soon',
+    description: `You’ll be able to register for “${event.title}” here.`,
+    color: 'neutral',
+  });
+}
 </script>
 
 <template>
@@ -105,18 +139,22 @@ async function onShare(event: CommunityEvent) {
     <CommunityEventsList
       v-else
       :data="eventsListData"
+      :can-manage="canManageEvents"
       @create="onCreate"
       @edit="onEdit"
       @share="onShare"
       @view="onView"
+      @register="onRegister"
     />
   </div>
 
   <CommunityCreateEventSlideover
+    v-if="canManageEvents"
     v-model:open="isCreateOpen"
     @created="() => refetch()"
   />
   <CommunityCreateEventSlideover
+    v-if="canManageEvents"
     v-model:open="isEditOpen"
     :event="editingEvent"
     @updated="() => refetch()"
