@@ -1,267 +1,397 @@
 <script setup lang="ts">
+import { Application } from '@splinetool/runtime';
 import type { EventAttendee } from '~~/shared/types/community-event-detail';
 
-type ScannerState = 'idle' | 'success' | 'already' | 'walkin';
+// defineOptions({ name: 'CommunityEventCheckInScanner' });
+
+type ScannerState = 'scanning' | 'success' | 'already' | 'not-found';
 
 const props = defineProps<{
   attendees: EventAttendee[];
-  walkInUrl: string;
 }>();
 
 const open = defineModel<boolean>('open', { default: false });
 
-const state = ref<ScannerState>('idle');
-const isScanning = ref(false);
-const scanCount = ref(0);
+const toast = useToast();
+
+const state = ref<ScannerState>('scanning');
 const scannedAttendee = ref<EventAttendee | null>(null);
-const qrDataUrl = ref('');
+const cameraError = ref('');
+const isSplineLoading = ref(false);
+const mockScanCount = ref(0);
 
-watch(
-  () => props.walkInUrl,
-  async (url) => {
-    if (!url || !import.meta.client) return;
-    try {
-      const qrModule = await import('qrcode');
-      const qrFactory = (qrModule as { default?: typeof import('qrcode') }).default || qrModule;
-      qrDataUrl.value = await qrFactory.toDataURL(url, {
-        width: 220,
-        margin: 1,
-        color: {
-          dark: '#ffffff',
-          light: '#121212',
-        },
-      });
-    } catch {
-      qrDataUrl.value = '';
-    }
-  },
-  { immediate: true }
-);
+const videoEl = ref<HTMLVideoElement | null>(null);
+const splineCanvasEl = ref<HTMLCanvasElement | null>(null);
 
-watch(open, (isOpen) => {
-  if (!isOpen) {
-    state.value = 'idle';
-    isScanning.value = false;
-    scannedAttendee.value = null;
-  }
+let mediaStream: MediaStream | null = null;
+let splineApp: Application | null = null;
+let cameraStartId = 0;
+let splineLoadId = 0;
+
+const slideoverTitle = computed(() => {
+  if (state.value === 'success') return 'Welcome';
+  if (state.value === 'already') return 'Already Checked-in';
+  return 'QR Scanner';
 });
 
-function showWalkIn() {
-  state.value = 'walkin';
-}
+const slideoverDescription = computed(() => {
+  if (state.value !== 'already') return undefined;
+  return scannedAttendee.value?.checkedInAt || undefined;
+});
 
-function closeModal() {
+const closeActionButtonClass =
+  'h-13 w-full cursor-pointer justify-center rounded-full bg-[#232323] px-6 text-sm font-bold text-white hover:bg-[#2a2a2a]';
+
+function closeSlideover() {
   open.value = false;
 }
 
-async function startScan() {
-  if (isScanning.value || !props.attendees.length) return;
+function resetScanner() {
+  state.value = 'scanning';
+  scannedAttendee.value = null;
+  cameraError.value = '';
+  mockScanCount.value = 0;
+}
 
-  isScanning.value = true;
-  scanCount.value += 1;
+function stopCamera() {
+  mediaStream?.getTracks().forEach((track) => track.stop());
+  mediaStream = null;
 
-  await new Promise((resolve) => setTimeout(resolve, 1200));
+  if (videoEl.value) {
+    videoEl.value.srcObject = null;
+  }
+}
 
-  const checkedInAttendees = props.attendees.filter(
-    (a) => a.status === 'checked_in'
-  );
-  const registeredAttendees = props.attendees.filter(
-    (a) => a.status === 'registered'
-  );
+function disposeSpline() {
+  splineApp?.dispose();
+  splineApp = null;
+  isSplineLoading.value = false;
+}
 
-  if (scanCount.value === 1 && registeredAttendees.length) {
-    scannedAttendee.value = registeredAttendees[0] ?? null;
-    state.value = 'success';
-  } else if (Math.random() > 0.5 && checkedInAttendees.length) {
-    scannedAttendee.value = checkedInAttendees[0] ?? null;
-    state.value = 'already';
-  } else if (registeredAttendees.length) {
+async function startCamera() {
+  if (!import.meta.client) return;
+
+  const startId = ++cameraStartId;
+  stopCamera();
+  cameraError.value = '';
+
+  await nextTick();
+
+  const video = videoEl.value;
+  if (!video || startId !== cameraStartId) return;
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+      },
+    });
+
+    if (startId !== cameraStartId) {
+      stream.getTracks().forEach((track) => track.stop());
+      return;
+    }
+
+    mediaStream = stream;
+    video.srcObject = stream;
+    // Keep the preview un-mirrored so a held QR stays readable. Front
+    // webcams look “backwards” compared to a selfie mirror — do not
+    // scaleX(-1) here or later QR detection will see a flipped image.
+    video.style.transform = 'none';
+    await video.play();
+  } catch {
+    if (startId !== cameraStartId) return;
+    cameraError.value = 'Camera access is needed to scan attendee QR codes.';
+  }
+}
+
+async function loadPlaceholderSpline() {
+  if (!import.meta.client) return;
+
+  const loadId = ++splineLoadId;
+  disposeSpline();
+  await nextTick();
+
+  const canvas = splineCanvasEl.value;
+  if (!canvas || loadId !== splineLoadId) return;
+
+  isSplineLoading.value = true;
+  const spline = new Application(canvas);
+  splineApp = spline;
+
+  try {
+    // TODO: Load the scanned attendee’s Spline scene from their persona
+    // card (`splineUrl`) instead of this founder placeholder.
+    await spline.load(
+      `https://prod.spline.design/Mu3aeSb6RERM23Q7/scene.splinecode?v=${Date.now()}`
+    );
+    if (loadId !== splineLoadId) {
+      spline.dispose();
+    }
+  } catch {
+    if (loadId !== splineLoadId) return;
+    toast.add({
+      title: 'Unable to load card',
+      description: 'The 3D card preview could not be loaded.',
+      color: 'error',
+    });
+  } finally {
+    if (loadId === splineLoadId) {
+      isSplineLoading.value = false;
+    }
+  }
+}
+
+function resolveMockScan() {
+  // TODO: Replace this mock with real QR decoding.
+  // After a code is read, look up the attendee and route to:
+  // - `success` when they are registered and not yet checked in
+  // - `already` when they are already checked in (see already-checked-in UI)
+  // - `not-found` when no registration matches the scanned code
+  mockScanCount.value += 1;
+  const cycle = mockScanCount.value % 3;
+
+  if (cycle === 1) {
     scannedAttendee.value =
-      registeredAttendees[scanCount.value % registeredAttendees.length] ?? null;
+      props.attendees.find((attendee) => attendee.status === 'registered') ??
+      props.attendees[0] ??
+      null;
     state.value = 'success';
-  } else {
-    scannedAttendee.value = props.attendees[0] ?? null;
-    state.value = 'already';
+    return;
   }
 
-  isScanning.value = false;
+  if (cycle === 2) {
+    scannedAttendee.value =
+      props.attendees.find((attendee) => attendee.status === 'checked_in') ??
+      props.attendees[0] ??
+      null;
+    state.value = 'already';
+    return;
+  }
+
+  scannedAttendee.value = null;
+  state.value = 'not-found';
 }
 
-function resetScanner() {
-  state.value = 'idle';
+async function resumeScanning() {
   scannedAttendee.value = null;
+  disposeSpline();
+  state.value = 'scanning';
 }
+
+function confirmCheckIn() {
+  if (!scannedAttendee.value) return;
+
+  toast.add({
+    title: 'Checked in',
+    description: `${scannedAttendee.value.name} has been checked in.`,
+    color: 'success',
+  });
+
+  resumeScanning();
+}
+
+watch(open, (isOpen) => {
+  if (isOpen) {
+    resetScanner();
+    return;
+  }
+
+  cameraStartId += 1;
+  splineLoadId += 1;
+  stopCamera();
+  disposeSpline();
+  resetScanner();
+});
+
+watch(videoEl, async (el) => {
+  if (el && open.value && state.value === 'scanning' && !mediaStream) {
+    await startCamera();
+  }
+});
+
+watch(splineCanvasEl, async (el) => {
+  if (el && open.value && state.value === 'success' && !splineApp) {
+    await loadPlaceholderSpline();
+  }
+});
+
+watch(
+  () => [open.value, state.value] as const,
+  async ([isOpen, currentState]) => {
+    if (!isOpen) return;
+
+    if (currentState === 'scanning') {
+      disposeSpline();
+      await startCamera();
+      return;
+    }
+
+    stopCamera();
+
+    if (currentState === 'success') {
+      await loadPlaceholderSpline();
+      return;
+    }
+
+    disposeSpline();
+  }
+);
+
+onBeforeUnmount(() => {
+  stopCamera();
+  disposeSpline();
+});
 </script>
 
 <template>
-  <UModal
+  <USlideover
     v-model:open="open"
+    side="right"
+    inset
+    :title="slideoverTitle"
+    :description="slideoverDescription"
+    close-icon="i-material-symbols:close-small"
+    unmount-on-hide
     :ui="{
-      content:
-        'sm:max-w-md rounded-lg bg-[#171717]',
-      body: 'px-5 py-6 sm:px-6',
+      content: 'bg-[#171717]',
+      header: 'border-b-2 border-[#232323] px-6 py-6',
+      title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+      description: 'mt-2 text-sm text-[#8b8b8b]',
+      body: 'flex flex-1 flex-col p-0!',
+      footer: 'p-4 sm:p-6  justify-end',
     }"
   >
     <template #body>
-      <!-- Idle -->
-      <div v-if="state === 'idle'" class="flex flex-col items-center gap-6">
-        <h2
-          class="text-sm font-medium tracking-[1.4px] uppercase text-white"
-        >
-          QR Scanner
-        </h2>
-        <div
-          class="relative flex aspect-square w-full max-w-64 items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-[#232323] bg-dark"
-        >
-          <UIcon
-            name="i-lucide-qr-code"
-            class="size-20 text-[#8b8b8b]"
-            :class="{ 'animate-pulse': isScanning }"
-          />
-          <div
-            v-if="isScanning"
-            class="absolute inset-x-4 top-1/2 h-0.5 -translate-y-1/2 animate-pulse bg-white/60"
-          />
-        </div>
-        <UButton
-          label="Start Scan"
-          color="neutral"
-          :loading="isScanning"
-          class="h-10 w-full cursor-pointer justify-center rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
-          @click="startScan"
-        />
-        <button
-          type="button"
-          class="cursor-pointer text-sm text-[#8b8b8b] underline hover:text-white"
-          @click="showWalkIn"
-        >
-          Show Walk-in Registration QR
-        </button>
-      </div>
-
-      <!-- Success -->
-      <div v-else-if="state === 'success' && scannedAttendee" class="space-y-6">
-        <h2
-          class="text-center text-sm font-medium tracking-[1.4px] uppercase text-white"
-        >
-          Welcome
-        </h2>
-        <div class="rounded-lg bg-[#232323] p-5">
-          <p class="text-lg font-medium text-white">
-            {{ scannedAttendee.name }}
-          </p>
-          <p class="mt-1 text-sm text-[#8b8b8b]">
-            {{ scannedAttendee.role }}
-          </p>
-          <div class="mt-4 space-y-2 border-t border-[#2a2a2a] pt-4">
-            <p
-              v-if="scannedAttendee.phone"
-              class="text-sm text-[#8b8b8b]"
-            >
-              {{ scannedAttendee.phone }}
-            </p>
-            <p
-              v-if="scannedAttendee.email"
-              class="text-sm text-[#8b8b8b]"
-            >
-              {{ scannedAttendee.email }}
-            </p>
-          </div>
-        </div>
-        <UButton
-          label="Got it"
-          color="neutral"
-          class="h-10 w-full cursor-pointer justify-center rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
-          @click="closeModal"
-        />
-      </div>
-
-      <!-- Already checked in -->
       <div
-        v-else-if="state === 'already' && scannedAttendee"
-        class="space-y-6"
+        v-if="state === 'scanning'"
+        class="flex h-full flex-col items-center justify-center gap-6 py-8"
       >
-        <div class="text-center">
-          <h2
-            class="text-sm font-medium tracking-[1.4px] uppercase text-white"
+        <div
+          class="relative size-50 shrink-0 overflow-hidden rounded-xl border border-[#232323] bg-dark"
+        >
+          <div
+            class="absolute inset-2 overflow-hidden rounded-[4px] border border-[#8b8b8b] bg-dark"
           >
-            Already Checked-in
-          </h2>
-          <p v-if="scannedAttendee.checkedInAt" class="mt-2 text-sm text-[#8b8b8b]">
-            {{ scannedAttendee.checkedInAt }}
-          </p>
-        </div>
-        <div class="rounded-lg bg-[#232323] p-5">
-          <p class="text-lg font-medium text-white">
-            {{ scannedAttendee.name }}
-          </p>
-          <p class="mt-1 text-sm text-[#8b8b8b]">
-            {{ scannedAttendee.role }}
-          </p>
-          <div class="mt-4 space-y-2 border-t border-[#2a2a2a] pt-4">
-            <p
-              v-if="scannedAttendee.phone"
-              class="text-sm text-[#8b8b8b]"
+            <video
+              ref="videoEl"
+              class="absolute inset-0 size-full object-cover"
+              autoplay
+              muted
+              playsinline
+            />
+            <div
+              v-if="cameraError"
+              class="absolute inset-0 flex items-center justify-center bg-dark px-4 text-center"
             >
-              {{ scannedAttendee.phone }}
-            </p>
-            <p
-              v-if="scannedAttendee.email"
-              class="text-sm text-[#8b8b8b]"
-            >
-              {{ scannedAttendee.email }}
-            </p>
+              <p class="text-xs leading-normal text-[#8b8b8b]">
+                {{ cameraError }}
+              </p>
+            </div>
           </div>
+          <!-- TODO: Remove this mock click once real QR detection is wired. -->
+          <button
+            type="button"
+            class="absolute inset-0 z-10"
+            aria-label="Simulate scan"
+            @click="resolveMockScan"
+          />
         </div>
-        <UButton
-          label="Got it"
-          color="neutral"
-          class="h-10 w-full cursor-pointer justify-center rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
-          @click="closeModal"
-        />
+        <p class="text-sm font-medium text-[#8b8b8b]">
+          Place QR code inside frame
+        </p>
       </div>
 
-      <!-- Walk-in QR -->
-      <div v-else-if="state === 'walkin'" class="flex flex-col items-center gap-6">
-        <h2
-          class="text-sm font-medium tracking-[1.4px] uppercase text-white"
-        >
-          Walk-in Registration
-        </h2>
-        <p class="text-center text-sm text-[#8b8b8b]">
-          Scan this QR code to register on-site.
-        </p>
+      <div v-else-if="state === 'success'" class="relative h-full w-full">
+        <canvas ref="splineCanvasEl" class="size-full" />
         <div
-          class="flex size-56 items-center justify-center rounded-xl border border-[#232323] bg-dark p-2"
+          v-if="isSplineLoading"
+          class="absolute inset-0 flex items-center justify-center"
         >
-          <img
-            v-if="qrDataUrl"
-            :src="qrDataUrl"
-            alt="Walk-in registration QR code"
-            class="size-52 rounded-[4px]"
-          />
           <UIcon
-            v-else
-            name="i-lucide-qr-code"
-            class="size-16 text-[#8b8b8b]"
+            name="i-lucide-loader-circle"
+            class="size-6 animate-spin text-[#8b8b8b]"
           />
         </div>
-        <div class="flex w-full flex-col gap-2">
-          <UButton
-            label="Close"
-            color="neutral"
-            class="h-10 w-full cursor-pointer justify-center rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
-            @click="closeModal"
-          />
-          <UButton
-            label="Back to Scanner"
-            color="neutral"
-            variant="ghost"
-            class="h-10 w-full cursor-pointer justify-center text-[#8b8b8b] hover:text-white"
-            @click="resetScanner"
-          />
+      </div>
+
+      <div
+        v-else-if="state === 'already'"
+        class="flex h-full flex-col items-center justify-center gap-3 py-8 text-center"
+      >
+        <!-- TODO: After QR decoding is wired, confirm the attendee is
+             already checked in and show their live checked-in time here. -->
+        <p v-if="scannedAttendee" class="text-lg font-medium text-white">
+          {{ scannedAttendee.name }}
+        </p>
+        <p v-if="scannedAttendee" class="text-sm text-[#8b8b8b]">
+          {{ scannedAttendee.role }}
+          <template v-if="scannedAttendee.company">
+            • {{ scannedAttendee.company }}
+          </template>
+        </p>
+      </div>
+
+      <div
+        v-else
+        class="flex h-full flex-col items-center justify-center gap-8 py-8"
+      >
+        <UIcon name="i-lucide-user-x" class="size-12 text-[#8b8b8b]" />
+        <div class="flex max-w-108 flex-col items-center gap-3 text-center">
+          <p class="text-xl font-medium tracking-[2px] uppercase text-white">
+            Attendee not found
+          </p>
+          <p class="text-sm text-[#8b8b8b]">
+            This QR code does not match a registered attendee. Close the scanner
+            and register them as a walk-in instead.
+          </p>
         </div>
       </div>
     </template>
-  </UModal>
+
+    <template #footer>
+      <div
+        v-if="state === 'scanning' || state === 'not-found'"
+        class="flex w-full"
+      >
+        <UButton
+          label="Close scanner"
+          color="neutral"
+          :class="closeActionButtonClass"
+          @click="closeSlideover"
+        />
+      </div>
+
+      <div
+        v-else-if="state === 'success'"
+        class="flex flex-col w-full items-center justify-end gap-4"
+      >
+        <UButton
+          label="Check-in"
+          color="neutral"
+          class="h-9 w-full cursor-pointer justify-center rounded-full bg-white py-2 pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+          @click="confirmCheckIn"
+        />
+        <UButton
+          label="Cancel"
+          color="neutral"
+          variant="ghost"
+          class="h-9 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          @click="resumeScanning"
+        />
+      </div>
+
+      <div v-else class="flex w-full justify-end">
+        <UButton
+          label="Got it"
+          color="neutral"
+          class="h-9 cursor-pointer justify-center rounded-full bg-[#232323] py-2 pr-6 pl-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+          @click="resumeScanning"
+        />
+      </div>
+    </template>
+  </USlideover>
 </template>

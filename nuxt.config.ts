@@ -11,6 +11,9 @@ export default defineNuxtConfig({
   ],
   security: {
     headers: {
+      permissionsPolicy: {
+        camera: ['self'],
+      },
       contentSecurityPolicy: {
         'img-src': [
           "'self'",

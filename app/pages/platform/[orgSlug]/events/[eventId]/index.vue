@@ -251,7 +251,6 @@ async function onShare() {
     v-if="eventDetail"
     v-model:open="isScannerOpen"
     :attendees="eventDetail.attendees"
-    :walk-in-url="walkInUrl"
   />
 
   <CommunityEventWalkInRegistrationSlideover
