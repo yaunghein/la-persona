@@ -142,6 +142,10 @@ function onEdit(event: CommunityEvent) {
   navigateTo(`/platform/${orgSlug.value}/events/${event.id}/edit`);
 }
 
+function onView(event: CommunityEvent) {
+  navigateTo(`/platform/${orgSlug.value}/events/${event.id}`);
+}
+
 async function onShare(event: CommunityEvent) {
   const shareUrl = `${window.location.origin}/platform/${orgSlug.value}/events?event=${event.id}`;
   try {
@@ -167,5 +171,6 @@ async function onShare(event: CommunityEvent) {
     @create="onCreate"
     @edit="onEdit"
     @share="onShare"
+    @view="onView"
   />
 </template>

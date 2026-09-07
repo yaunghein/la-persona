@@ -13,6 +13,7 @@ const emit = defineEmits<{
   create: [];
   edit: [event: CommunityEvent];
   share: [event: CommunityEvent];
+  view: [event: CommunityEvent];
 }>();
 
 type EventsTab = 'upcoming' | 'past';
@@ -91,6 +92,10 @@ function onShare(event: CommunityEvent) {
 function onEdit(event: CommunityEvent) {
   emit('edit', event);
 }
+
+function onView(event: CommunityEvent) {
+  emit('view', event);
+}
 </script>
 
 <template>
@@ -164,7 +169,9 @@ function onEdit(event: CommunityEvent) {
         :key="event.id"
         class="flex flex-col rounded-lg"
       >
-        <div class="relative aspect-[1/0.67] w-full overflow-hidden rounded-t-lg">
+        <div
+          class="relative aspect-[1/0.67] w-full overflow-hidden rounded-t-lg"
+        >
           <img
             :src="event.imageUrl"
             :alt="event.title"
@@ -195,27 +202,26 @@ function onEdit(event: CommunityEvent) {
 
           <div class="flex items-center gap-3 justify-between">
             <UButton
+              icon="i-lucide-scan-eye"
+              color="primary"
+              size="sm"
+              class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
+              @click="onView(event)"
+            />
+            <UButton
               icon="i-lucide-pencil"
-              color="neutral"
-              class="group cursor-pointer rounded-[6px] bg-[#232323] text-white hover:bg-[#2a2a2a]"
-              aria-label="Edit event"
+              color="primary"
+              size="sm"
+              class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
               @click="onEdit(event)"
-              :ui="{
-                leadingIcon:
-                  'size-5 opacity-50 transition-opacity group-hover:opacity-100',
-              }"
+              :ui="{ leadingIcon: 'size-4' }"
             />
             <UButton
               icon="material-symbols:ios-share-rounded"
-              color="neutral"
-              variant="ghost"
-              class="group cursor-pointer rounded-[6px] bg-[#232323] text-white hover:bg-[#2a2a2a]"
-              aria-label="Share event"
+              color="primary"
+              size="sm"
+              class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
               @click="onShare(event)"
-              :ui="{
-                leadingIcon:
-                  'size-5.5 opacity-50 transition-opacity group-hover:opacity-100',
-              }"
             />
           </div>
         </div>

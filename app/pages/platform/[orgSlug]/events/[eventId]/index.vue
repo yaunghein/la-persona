@@ -7,7 +7,6 @@ import type {
   CommunityEventDetailData,
   CommunityEventDetailTab,
   EventAttendee,
-  EventDetailSettings,
 } from '~~/shared/types/community-event-detail';
 
 const toast = useToast();
@@ -19,7 +18,6 @@ const activeTab = ref<CommunityEventDetailTab>('overview');
 const isProfileOpen = ref(false);
 const isScannerOpen = ref(false);
 const selectedAttendee = ref<EventAttendee | null>(null);
-const settingsDraft = ref<EventDetailSettings | null>(null);
 
 const mockAttendees: EventAttendee[] = [
   {
@@ -282,16 +280,6 @@ const eventDetailsMap: Record<string, CommunityEventDetailData> = {
 
 const eventDetail = computed(() => eventDetailsMap[eventId.value] ?? null);
 
-watch(
-  eventDetail,
-  (detail) => {
-    if (detail) {
-      settingsDraft.value = { ...detail.settings };
-    }
-  },
-  { immediate: true }
-);
-
 const walkInUrl = computed(() => {
   if (!import.meta.client) return '';
   return `${window.location.origin}/platform/${orgSlug.value}/events/${eventId.value}/walkin`;
@@ -310,20 +298,28 @@ function onOpenScanner() {
   isScannerOpen.value = true;
 }
 
-function onUpdateSettings() {
-  toast.add({
-    title: 'Event updated',
-    description: 'Changes saved locally (mock).',
-    color: 'success',
-  });
+function onEdit() {
+  navigateTo(`/platform/${orgSlug.value}/events/${eventId.value}/edit`);
 }
 
-function onDeleteEvent() {
-  toast.add({
-    title: 'Delete event',
-    description: 'Event deletion is not wired yet.',
-    color: 'warning',
-  });
+async function onShare() {
+  if (!eventDetail.value) return;
+
+  const shareUrl = `${window.location.origin}/platform/${orgSlug.value}/events/${eventId.value}`;
+  try {
+    await navigator.clipboard.writeText(shareUrl);
+    toast.add({
+      title: 'Link copied',
+      description: `Share link for “${eventDetail.value.title}” copied.`,
+      color: 'success',
+    });
+  } catch {
+    toast.add({
+      title: 'Copy failed',
+      description: 'Could not copy event link.',
+      color: 'error',
+    });
+  }
 }
 </script>
 
@@ -345,6 +341,8 @@ function onDeleteEvent() {
     :status="eventDetail.status"
     :active-tab="activeTab"
     @back="goBack"
+    @edit="onEdit"
+    @share="onShare"
     @update:active-tab="activeTab = $event"
   >
     <CommunityEventOverview
@@ -362,14 +360,6 @@ function onDeleteEvent() {
       v-else-if="activeTab === 'check-in'"
       :attendees="eventDetail.attendees"
       @open-scanner="onOpenScanner"
-    />
-
-    <CommunityEventDetailSettings
-      v-else-if="activeTab === 'settings' && settingsDraft"
-      :model-value="settingsDraft"
-      @update:model-value="settingsDraft = $event"
-      @submit="onUpdateSettings"
-      @delete="onDeleteEvent"
     />
   </CommunityEventDetailShell>
 
