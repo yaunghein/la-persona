@@ -192,7 +192,7 @@ function onRegister(event: CommunityEvent) {
         </div>
 
         <div
-          class="flex flex-col gap-4 rounded-b-lg bg-[#171717] px-5 pt-5 pb-6"
+          class="flex gap-4 rounded-b-lg bg-[#171717] px-5 pt-5 pb-6 justify-between"
         >
           <div class="flex min-w-0 flex-col gap-1">
             <h2 class="line-clamp-1 text-base leading-5 text-white">
