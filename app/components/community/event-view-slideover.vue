@@ -65,11 +65,11 @@ function onViewOrganizer() {
     close-icon="i-material-symbols:close-small"
     unmount-on-hide
     :ui="{
-      content: 'bg-[#171717] sm:max-w-[480px]',
+      content: 'bg-[#171717] sm:max-w-[480px] divide-y-0',
       header: 'border-b-2 border-[#232323] px-6 py-6',
       title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
       body: 'p-6',
-      footer: 'p-6 justify-end!',
+      footer: 'p-6 justify-end! border-t-0',
     }"
   >
     <template v-if="event" #body>
@@ -119,11 +119,11 @@ function onViewOrganizer() {
           </p>
         </div>
 
-        <div class="flex flex-col">
+        <div class="flex flex-col divide-y divide-[#2a2a2a]">
           <div
             v-for="item in details"
             :key="item.label"
-            class="flex items-start justify-between gap-4 border-b border-[#2a2a2a] px-4 py-3"
+            class="flex items-start justify-between gap-4 px-4 py-3"
           >
             <span class="shrink-0 text-sm font-normal text-[#8b8b8b]">
               {{ item.label }}

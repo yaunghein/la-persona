@@ -18,8 +18,10 @@ const { data: userOrgs } = useUserOrganizations();
 const isCreateOpen = ref(false);
 const isEditOpen = ref(false);
 const isViewOpen = ref(false);
+const isRegisterOpen = ref(false);
 const editingEvent = ref<EventDTO | null>(null);
 const viewingEvent = ref<EventDTO | null>(null);
+const registeringEvent = ref<EventDTO | null>(null);
 
 const currentOrg = computed(() =>
   (userOrgs.value || []).find((org) => org.slug === orgSlug.value)
@@ -35,7 +37,8 @@ const memberInfoItems = [
   {
     icon: 'i-lucide-user-plus',
     title: 'Register',
-    description: 'Sign up for events you want to attend. Registration comes next.',
+    description:
+      'Sign up for events you want to attend. Registration comes next.',
   },
   {
     icon: 'i-lucide-share-2',
@@ -122,12 +125,23 @@ async function onShare(event: CommunityEvent) {
   }
 }
 
-function onRegister(event: Pick<CommunityEvent, 'title'>) {
-  toast.add({
-    title: 'Registration coming soon',
-    description: `You’ll be able to register for “${event.title}” here.`,
-    color: 'neutral',
-  });
+const organizer = computed(() =>
+  currentOrg.value
+    ? {
+        name: currentOrg.value.name,
+        logoUrl: currentOrg.value.logo,
+      }
+    : null
+);
+
+function findEventById(id: string) {
+  return data.value?.events.find((item) => item.id === id) ?? null;
+}
+
+function onRegister(event: { id: string }) {
+  registeringEvent.value = findEventById(event.id);
+  if (!registeringEvent.value) return;
+  isRegisterOpen.value = true;
 }
 
 function onViewOrganizer() {
@@ -181,6 +195,12 @@ function onViewOrganizer() {
     v-model:open="isViewOpen"
     :event="viewingEvent"
     @register="onRegister"
+    @view-organizer="onViewOrganizer"
+  />
+  <CommunityEventRegisterSlideover
+    v-model:open="isRegisterOpen"
+    :event="registeringEvent"
+    :organizer="organizer"
     @view-organizer="onViewOrganizer"
   />
 </template>
