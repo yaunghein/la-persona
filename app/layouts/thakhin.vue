@@ -38,6 +38,14 @@ const links = [
     },
   },
   {
+    label: 'Users',
+    icon: 'i-lucide-users',
+    to: ROUTES.THAKHIN.USERS,
+    onSelect: () => {
+      open.value = false;
+    },
+  },
+  {
     label: 'Cards',
     icon: 'i-lucide-credit-card',
     to: ROUTES.THAKHIN.CARDS,
@@ -60,6 +68,7 @@ const pageLabel: Record<string, string> = {
   [ROUTES.THAKHIN.REQUESTS]: 'Requests',
   [ROUTES.THAKHIN.PAYMENTS]: 'Payments',
   [ROUTES.THAKHIN.ORGANIZATIONS]: 'Organizations',
+  [ROUTES.THAKHIN.USERS]: 'Users',
   [ROUTES.THAKHIN.CARDS]: 'Cards',
   [ROUTES.THAKHIN.INVITATIONS]: 'Invitations',
 };

@@ -14,6 +14,7 @@ export const ROUTES = {
     REQUESTS: `${THAKHIN_ROOT}/requests`,
     PAYMENTS: `${THAKHIN_ROOT}/payments`,
     ORGANIZATIONS: `${THAKHIN_ROOT}/organizations`,
+    USERS: `${THAKHIN_ROOT}/users`,
     CARDS: `${THAKHIN_ROOT}/cards`,
     INVITATIONS: `${THAKHIN_ROOT}/invitations`,
   },

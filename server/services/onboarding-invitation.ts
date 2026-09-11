@@ -1,4 +1,4 @@
-import { and, eq, gt } from 'drizzle-orm';
+import { and, desc, eq, gt, sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { db } from '~~/server/db';
 import {
@@ -25,6 +25,27 @@ export function addMonths(base: Date, months: number) {
 
 export function normalizeEmail(value: string) {
   return String(value || '').trim().toLowerCase();
+}
+
+export async function getPendingOnboardingInvitationByEmail(email: string) {
+  const normalized = normalizeEmail(email);
+  if (!normalized) return null;
+
+  const now = new Date();
+  const [invite] = await db
+    .select({ id: onboardingInvitation.id })
+    .from(onboardingInvitation)
+    .where(
+      and(
+        sql`lower(${onboardingInvitation.email}) = ${normalized}`,
+        eq(onboardingInvitation.status, 'pending'),
+        gt(onboardingInvitation.expiresAt, now)
+      )
+    )
+    .orderBy(desc(onboardingInvitation.createdAt))
+    .limit(1);
+
+  return invite ?? null;
 }
 
 export async function createOnboardingInvitation(params: {

@@ -57,6 +57,8 @@ export const signInWithSocial = async (provider: SocialProvider) => {
   await authClient.signIn.social({
     provider,
     callbackURL: getAuthCallbackURL(),
+    newUserCallbackURL: getAuthCallbackURL(),
+    errorCallbackURL: getAuthErrorCallbackURL(),
   });
 };
 

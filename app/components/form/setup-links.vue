@@ -94,11 +94,6 @@ const { mutate: submitRequest, isPending: isSubmitting } = useMutation({
     });
   },
   onSuccess: () => {
-    toast.add({
-      title: 'Update Requested',
-      description: 'Your profile changes are now pending review.',
-      color: 'success',
-    });
     emit('completed');
   },
   onError: (err: any) => {

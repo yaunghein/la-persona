@@ -12,6 +12,8 @@ export default defineEventHandler(async (event) => {
       name: user.name,
       email: user.email,
       image: user.image,
+      role: user.role,
+      createdAt: user.createdAt,
     })
     .from(user)
     .orderBy(asc(user.name));
@@ -20,6 +22,8 @@ export default defineEventHandler(async (event) => {
     id: row.id,
     name: row.name,
     email: row.email,
+    role: row.role,
+    createdAt: row.createdAt,
     label: row.name ? `${row.name} (${row.email})` : row.email,
     avatar: row.image ? { src: row.image } : undefined,
   }));

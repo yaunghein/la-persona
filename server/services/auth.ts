@@ -1,15 +1,9 @@
 import { nanoid } from 'nanoid';
-import { eq, and, ne, inArray, sql } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 import { db } from '~~/server/db';
-import {
-  organization,
-  member,
-  onboardingInvitation,
-  card,
-} from '~~/server/db/schema';
-import { getMembersByUserId } from '~~/server/db/queries/auth';
+import { organization, member } from '~~/server/db/schema';
 import { insertDefaultCard } from '~~/server/services/card';
-import { normalizeEmail } from '~~/server/services/onboarding-invitation';
+import { getPendingOnboardingInvitationByEmail } from '~~/server/services/onboarding-invitation';
 import { env } from '~~/server/utils/env';
 import type { User } from 'better-auth';
 import {
@@ -69,18 +63,10 @@ export async function setupDefaultOrganization(user: User) {
     return;
   }
 
-  const existingMemberships = await getMembersByUserId(user.id);
-  if (existingMemberships.length > 0) {
-    return;
-  }
-
-  const existingInvitation = await getOnboardingInvitationByEmail(user.email);
+  const existingInvitation = await getPendingOnboardingInvitationByEmail(
+    user.email
+  );
   if (existingInvitation) {
-    return;
-  }
-
-  const existingInvitedCard = await getExistingInvitedCardByEmail(user.email);
-  if (existingInvitedCard) {
     return;
   }
 
@@ -90,42 +76,6 @@ export async function setupDefaultOrganization(user: User) {
   );
   await insertMember(user.id, newOrg.id, 'owner');
   await insertDefaultCard(user, newOrg.id);
-}
-
-export async function getOnboardingInvitationByEmail(email: string) {
-  const normalized = normalizeEmail(email);
-  if (!normalized) return null;
-
-  const [invite] = await db
-    .select()
-    .from(onboardingInvitation)
-    .where(
-      and(
-        sql`lower(${onboardingInvitation.email}) = ${normalized}`,
-        inArray(onboardingInvitation.status, ['pending', 'accepted'])
-      )
-    )
-    .limit(1);
-
-  return invite ?? null;
-}
-
-export async function getExistingInvitedCardByEmail(email: string) {
-  const normalized = normalizeEmail(email);
-  if (!normalized) return null;
-
-  const [existing] = await db
-    .select({ id: card.id })
-    .from(card)
-    .where(
-      and(
-        sql`lower(trim(coalesce(${card.email}, ''))) = ${normalized}`,
-        ne(card.organizationId, env.PLACEHOLDER_ORGANIZATION_ID)
-      )
-    )
-    .limit(1);
-
-  return existing ?? null;
 }
 
 export async function getPersonalOrganizationByUserId(userId: string) {
@@ -153,4 +103,27 @@ export async function getAnyOrganizationByUserId(userId: string) {
     .limit(1);
   const first = result[0];
   return first ? first.organization : null;
+}
+
+export async function deletePersonalOrganizationsForUser(userId: string) {
+  const personalOrgs = await db
+    .select({ id: organization.id })
+    .from(organization)
+    .innerJoin(member, eq(member.organizationId, organization.id))
+    .where(
+      and(
+        eq(member.userId, userId),
+        eq(member.role, 'owner'),
+        eq(organization.type, ORGANIZATION_TYPES.PERSONAL)
+      )
+    );
+
+  const ids = personalOrgs
+    .map((row) => row.id)
+    .filter((id) => id !== env.PLACEHOLDER_ORGANIZATION_ID);
+
+  if (ids.length === 0) return [];
+
+  await db.delete(organization).where(inArray(organization.id, ids));
+  return ids;
 }

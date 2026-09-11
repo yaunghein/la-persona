@@ -54,10 +54,7 @@ async function onAccept() {
       color: 'success',
     });
     const orgSlug = invitation.value?.organizationSlug;
-    const cardSlug = invitation.value?.cardSlug;
-    const cardsPath = orgSlug && cardSlug
-      ? `${ROUTES.PLATFORM.ROOT}/${orgSlug}/cards/${cardSlug}/setup`
-      : orgSlug
+    const cardsPath = orgSlug
       ? `${ROUTES.PLATFORM.ROOT}/${orgSlug}/cards`
       : ROUTES.PLATFORM.ROOT;
     await navigateTo(cardsPath);

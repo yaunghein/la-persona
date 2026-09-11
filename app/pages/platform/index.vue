@@ -20,9 +20,34 @@ const { data: session } = await authClient.useSession(useFetch);
 
 const redirectTo = computed(() => getSafeInternalPath(route.query.redirectTo));
 
-const { data: userOrgs, error: orgsError } = await useFetch<
-  UserOrganization[]
->('/api/organizations', { default: () => [] });
+const {
+  data: userOrgs,
+  error: orgsError,
+} = await useFetch<UserOrganization[]>('/api/organizations', {
+  default: () => [],
+});
+
+const pendingInvitationId = ref<string | null>(null);
+const isResolvingInvite = ref(false);
+
+if (session.value && !orgsError.value && !(userOrgs.value || []).length) {
+  isResolvingInvite.value = true;
+  try {
+    const pending = await $fetch<{ id: string } | null>(
+      '/api/onboarding-invitation/pending'
+    );
+    if (pending?.id) {
+      pendingInvitationId.value = pending.id;
+      await navigateTo(
+        `${ROUTES.PLATFORM.ROOT}/invitations/${pending.id}`
+      );
+    }
+  } catch {
+    // Fall through to the unavailable state if lookup fails.
+  } finally {
+    isResolvingInvite.value = false;
+  }
+}
 
 const workspaceOrg = computed(() => {
   const orgs = userOrgs.value || [];
@@ -97,6 +122,7 @@ watch(
 const showLoading = computed(() => {
   if (redirectTo.value) return true;
   if (!session?.value) return true;
+  if (isResolvingInvite.value || pendingInvitationId.value) return true;
   if (!orgSlug.value) return false;
   if (isError.value) return false;
   return isPending.value || isFetching.value;
@@ -105,6 +131,7 @@ const showLoading = computed(() => {
 const showSupportState = computed(() => {
   if (redirectTo.value) return false;
   if (!session?.value) return false;
+  if (isResolvingInvite.value || pendingInvitationId.value) return false;
   if (isError.value) return true;
   if (!orgSlug.value) return true;
   return syncStuck.value && !isPending.value && !isFetching.value;
