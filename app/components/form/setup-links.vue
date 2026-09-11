@@ -31,7 +31,7 @@ const linkTypeItems = computed<string[][]>(() =>
   createLinkTypeItemsWithCustom(CARD_LINK_SELECT_ITEMS)
 );
 
-const { data: card } = useQuery<SelectCard>({
+const { data: card, isPending: isCardPending } = useQuery<SelectCard>({
   queryKey: ['cards', orgSlug, slug],
   queryFn: () =>
     $fetch(`/api/cards/${slug.value}`, {
@@ -106,18 +106,7 @@ const { mutate: submitRequest, isPending: isSubmitting } = useMutation({
 });
 
 function onSubmit() {
-  const hasAtLeastOneLink = state.socials.some(
-    (item) => String(item.value || '').trim().length > 0
-  );
-  if (!hasAtLeastOneLink) {
-    toast.add({
-      title: 'Input Required',
-      description: 'Please add at least one link.',
-      color: 'warning',
-    });
-    return;
-  }
-
+  if (isCardPending.value) return;
   submitRequest(state);
 }
 
@@ -326,7 +315,7 @@ watch(isSocialSlideoverOpen, (open) => {
       <div class="space-y-4">
         <div class="flex justify-between items-center">
           <p class="text-sm font-medium text-gray-200">
-            Social / Professional Links <span class="text-red-500">*</span>
+            Social / Professional Links
           </p>
           <UButton
             type="button"
@@ -336,6 +325,13 @@ watch(isSocialSlideoverOpen, (open) => {
             class="rounded-full bg-[#232323] text-xs px-3 text-white hover:bg-[#2a2a2a]"
             @click="openCreateLinkSlideover"
           />
+        </div>
+
+        <div
+          v-if="!state.socials.length"
+          class="rounded-[6px] border border-dashed border-white/10 px-4 py-6 text-center text-sm text-muted"
+        >
+          Optional — add links now, or continue without them.
         </div>
 
         <div ref="socialsListEl" class="relative flex flex-col gap-3">
@@ -397,6 +393,7 @@ watch(isSocialSlideoverOpen, (open) => {
           color="primary"
           icon="material-symbols:fitbit-check-small"
           :loading="isSubmitting"
+          :disabled="isCardPending"
         >
           Complete Setup
         </UButton>

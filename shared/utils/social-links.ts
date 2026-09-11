@@ -1,4 +1,7 @@
-import { CARD_LINK_LABELS } from '~~/shared/constants/card-link-options';
+import {
+  CARD_LINK_LABELS,
+  DEFAULT_CARD_LINK_LABEL,
+} from '~~/shared/constants/card-link-options';
 
 export const CUSTOM_SOCIAL_LABEL = 'Custom';
 
@@ -54,6 +57,37 @@ export function resolveSocialLinksForSubmission(
       value: String(link.value || '').trim(),
     };
   });
+}
+
+export function upsertWebsiteSocial(
+  socials:
+    | Array<{ label?: string | null; value?: string | null }>
+    | null
+    | undefined,
+  website: string
+): SocialSubmitLink[] {
+  const nextWebsite = String(website || '').trim();
+  const existing = (socials || [])
+    .map((link) => ({
+      label: String(link.label || '').trim(),
+      value: String(link.value || '').trim(),
+    }))
+    .filter((link) => link.label && link.value);
+
+  if (!nextWebsite) return existing;
+
+  const websiteIndex = existing.findIndex(
+    (link) => link.label === DEFAULT_CARD_LINK_LABEL
+  );
+  const websiteLink = { label: DEFAULT_CARD_LINK_LABEL, value: nextWebsite };
+
+  if (websiteIndex === -1) {
+    return [websiteLink, ...existing];
+  }
+
+  return existing.map((link, index) =>
+    index === websiteIndex ? websiteLink : link
+  );
 }
 
 export function getCustomSocialLabelMissingIndexes(

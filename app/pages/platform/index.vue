@@ -20,12 +20,12 @@ const { data: session } = await authClient.useSession(useFetch);
 
 const redirectTo = computed(() => getSafeInternalPath(route.query.redirectTo));
 
-const {
-  data: userOrgs,
-  error: orgsError,
-} = await useFetch<UserOrganization[]>('/api/organizations', {
-  default: () => [],
-});
+const { data: userOrgs, error: orgsError } = await useFetch<UserOrganization[]>(
+  '/api/organizations',
+  {
+    default: () => [],
+  }
+);
 
 const pendingInvitationId = ref<string | null>(null);
 const isResolvingInvite = ref(false);
@@ -38,9 +38,7 @@ if (session.value && !orgsError.value && !(userOrgs.value || []).length) {
     );
     if (pending?.id) {
       pendingInvitationId.value = pending.id;
-      await navigateTo(
-        `${ROUTES.PLATFORM.ROOT}/invitations/${pending.id}`
-      );
+      await navigateTo(`${ROUTES.PLATFORM.ROOT}/invitations/${pending.id}`);
     }
   } catch {
     // Fall through to the unavailable state if lookup fails.
@@ -107,7 +105,11 @@ watch(
     if (newCards.length === 1) {
       const card = newCards[0];
 
-      if (card && card.socials && card.socials?.length === 0) {
+      if (
+        card &&
+        (!card.socials || card.socials.length === 0) &&
+        card.website == null
+      ) {
         router.push(`/platform/${slug}/cards/${card.slug}/setup`);
       } else {
         router.push(`/platform/${slug}`);
@@ -199,4 +201,3 @@ const showSupportState = computed(() => {
     </div>
   </div>
 </template>
-

@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { useQuery, useMutation } from '@tanstack/vue-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import type { FormError, FormSubmitEvent } from '#ui/types';
+import { upsertWebsiteSocial } from '~~/shared/utils/social-links';
+import { useUrlNormalization } from '~~/app/composables/url-normalization';
 
 const emit = defineEmits<{
   continued: [];
@@ -8,8 +10,10 @@ const emit = defineEmits<{
 
 const route = useRoute();
 const toast = useToast();
+const queryClient = useQueryClient();
 const slug = computed(() => route.params.slug as string);
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
+const { normalizeUrlWithHttps, isValidPublicWebUrl } = useUrlNormalization();
 
 const { data: card, isLoading } = useQuery<SelectCard>({
   queryKey: ['cards', orgSlug, slug],
@@ -49,16 +53,28 @@ const { mutate: submitRequest, isPending: isSubmitting } = useMutation({
   mutationFn: async (formData: UpdateCardUpdateRequest) => {
     // dont remove this early return for now, its for testing
     // return true;
+    const website = normalizeUrlWithHttps(formData.website);
+    const body: Record<string, unknown> = {
+      ...formData,
+      website,
+      id: formData.cardId,
+    };
+
+    if (website) {
+      body.socials = upsertWebsiteSocial(card.value?.socials, website);
+    }
+
     return await $fetch(`/api/cards`, {
       method: 'PATCH',
       query: { organizationSlug: orgSlug.value },
-      body: {
-        ...formData,
-        id: formData.cardId,
-      },
+      body,
     });
   },
-  onSuccess: () => {
+  onSuccess: async (updatedCard) => {
+    if (updatedCard) {
+      queryClient.setQueryData(['cards', orgSlug, slug], updatedCard);
+    }
+    await queryClient.invalidateQueries({ queryKey: ['cards'] });
     emit('continued');
     // toast.add({
     //   title: 'Updated Successfully',
@@ -108,6 +124,14 @@ function validate(formData: Partial<UpdateCardUpdateRequest>): FormError[] {
         message: 'Please enter a valid email address.',
       });
     }
+  }
+
+  const website = String(formData.website || '').trim();
+  if (website && !isValidPublicWebUrl(website)) {
+    errors.push({
+      name: 'website',
+      message: 'Please enter a valid URL.',
+    });
   }
 
   return errors;
