@@ -317,7 +317,7 @@ const sidebarSelectUi = {
             />
           </div>
 
-          <div class="flex flex-col gap-4">
+          <div v-if="communityItems.length > 0" class="flex flex-col gap-4">
             <p v-if="!collapsed" :class="sectionHeadingClass">Communities</p>
             <USelect
               v-if="!collapsed"
@@ -325,12 +325,10 @@ const sidebarSelectUi = {
               :items="communityItems"
               placeholder="Select community"
               color="neutral"
-              :disabled="communityItems.length === 0"
               :ui="sidebarSelectUi"
               @update:model-value="onSelectCommunity"
             />
             <UNavigationMenu
-              v-if="communityItems.length > 0"
               :collapsed="collapsed"
               :items="communitiesLinks"
               orientation="vertical"
@@ -338,9 +336,6 @@ const sidebarSelectUi = {
               popover
               class="[&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1 [&_a]:py-2 [&_a]:font-semibold"
             />
-            <p v-else-if="!collapsed" class="px-2 text-sm text-[#8b8b8b]">
-              No communities yet
-            </p>
           </div>
         </div>
 
