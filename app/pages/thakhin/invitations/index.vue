@@ -4,6 +4,12 @@ definePageMeta({
 });
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
+import { useThakhinTable } from '~/composables/thakhin-table';
+import {
+  THAKHIN_ACTIONS_COLUMN,
+  THAKHIN_TABLE_UI,
+  thakhinSortableHeader,
+} from '~/utils/thakhin-table';
 
 type InvitationRow = {
   id: string;
@@ -53,6 +59,33 @@ const { data: optionsData } = await useFetch<OptionsResponse>(
 );
 
 const rows = computed(() => invitationsData.value || []);
+const statusFilter = ref<'all' | 'pending' | 'accepted' | 'cancelled'>('all');
+
+const statusFilterItems = [
+  { label: 'All statuses', value: 'all' },
+  { label: 'Pending', value: 'pending' },
+  { label: 'Accepted', value: 'accepted' },
+  { label: 'Cancelled', value: 'cancelled' },
+];
+
+const filteredRows = computed(() => {
+  if (statusFilter.value === 'all') return rows.value;
+  return rows.value.filter((row) => row.status === statusFilter.value);
+});
+
+const {
+  globalFilter,
+  sorting,
+  pagination,
+  paginationOptions,
+  paginationTotal,
+  resetPage,
+  onPageChange,
+} = useThakhinTable(() => filteredRows.value.length, {
+  defaultSort: [{ id: 'expiresAt', desc: true }],
+});
+
+watch(statusFilter, resetPage);
 const cardItems = computed(() =>
   (optionsData.value?.cards || []).map((item) => ({
     label: item.subtitle ? `${item.label} - ${item.subtitle}` : item.label,
@@ -65,19 +98,6 @@ const planItems = computed(() =>
     value: item.code,
   }))
 );
-
-const page = ref(1);
-const itemsPerPage = 10;
-const total = computed(() => rows.value.length);
-const pagedRows = computed(() => {
-  const start = (page.value - 1) * itemsPerPage;
-  return rows.value.slice(start, start + itemsPerPage);
-});
-
-watch(rows, () => {
-  const maxPage = Math.max(1, Math.ceil(total.value / itemsPerPage));
-  if (page.value > maxPage) page.value = maxPage;
-});
 
 function formatDate(value?: string | null) {
   if (!value) return '-';
@@ -184,15 +204,23 @@ function getActionItems(row: InvitationRow): DropdownMenuItem[][] {
 }
 
 const columns: TableColumn<InvitationRow>[] = [
-  { accessorKey: 'email', header: 'EMAIL' },
-  { accessorKey: 'organizationName', header: 'ORGANIZATION' },
-  { id: 'cardName', header: 'CARD' },
-  { accessorKey: 'planName', header: 'PLAN' },
-  { accessorKey: 'freeMonths', header: 'FREE MONTHS' },
-  { accessorKey: 'expiresAt', header: 'EXPIRES AT' },
-  { accessorKey: 'status', header: 'STATUS' },
-  { accessorKey: 'lastSentAt', header: 'LAST SENT' },
-  { id: 'actions', header: '' },
+  { accessorKey: 'email', header: thakhinSortableHeader('EMAIL') },
+  {
+    accessorKey: 'organizationName',
+    header: thakhinSortableHeader('ORGANIZATION'),
+  },
+  {
+    id: 'cardName',
+    header: thakhinSortableHeader('CARD'),
+    accessorFn: (row) =>
+      `${row.cardFirstName} ${row.cardLastName || ''}`.trim(),
+  },
+  { accessorKey: 'planName', header: thakhinSortableHeader('PLAN') },
+  { accessorKey: 'freeMonths', header: thakhinSortableHeader('FREE MONTHS') },
+  { accessorKey: 'expiresAt', header: thakhinSortableHeader('EXPIRES AT') },
+  { accessorKey: 'status', header: thakhinSortableHeader('STATUS') },
+  { accessorKey: 'lastSentAt', header: thakhinSortableHeader('LAST SENT') },
+  THAKHIN_ACTIONS_COLUMN,
 ];
 
 /** Matches thakhin cards slideover + `app/components/form/manual-contact.vue` */
@@ -213,34 +241,50 @@ const selectUi = {
 
 <template>
   <div class="flex min-h-[calc(100dvh-11rem)] flex-col gap-6">
-    <div class="flex items-center justify-between gap-3">
+    <div class="flex flex-wrap items-center justify-between gap-3">
       <h1
         class="text-[1.75rem] font-normal leading-tight tracking-widest uppercase"
       >
         Onboarding Invitations
       </h1>
-      <UButton
-        size="xl"
-        label="Create Invitation"
-        icon="i-lucide-plus"
-        color="neutral"
-        class="rounded-full"
-        @click="isCreateOpen = true"
-      />
+      <div class="flex flex-wrap items-center gap-2">
+        <UInput
+          v-model="globalFilter"
+          icon="i-lucide-search"
+          placeholder="Search email, org, or card"
+          class="w-64"
+          size="xl"
+        />
+        <USelect
+          v-model="statusFilter"
+          :items="statusFilterItems"
+          class="w-44"
+          size="xl"
+        />
+        <UButton
+          size="xl"
+          label="Create Invitation"
+          icon="i-lucide-plus"
+          color="neutral"
+          class="rounded-full"
+          @click="() => { isCreateOpen = true }"
+        />
+      </div>
     </div>
 
     <div class="hide-scrollbar flex-1 overflow-x-auto overflow-y-hidden">
       <UTable
-        :data="pagedRows"
+        ref="table"
+        v-model:global-filter="globalFilter"
+        v-model:sorting="sorting"
+        v-model:pagination="pagination"
+        :data="filteredRows"
         :columns="columns"
         :loading="pending"
-        :ui="{
-          th: 'px-4 py-4 border-b border-[#232323] text-xs font-semibold tracking-wide uppercase text-white',
-          td: 'px-4 py-4 border-b border-[#232323] text-sm text-[#8b8b8b]',
-          tr: 'bg-transparent',
-          empty: 'py-16 text-center text-sm text-muted',
-        }"
-        class="w-full min-w-[1150px]"
+        :pagination-options="paginationOptions"
+        :get-row-id="(row) => row.id"
+        :ui="THAKHIN_TABLE_UI"
+        class="w-full min-w-287.5"
       >
         <template #email-cell="{ row }">
           <span class="font-medium text-white">{{ row.original.email }}</span>
@@ -282,9 +326,10 @@ const selectUi = {
 
     <div class="mt-auto flex items-center justify-end pt-4">
       <UPagination
-        v-model:page="page"
-        :total="total"
-        :items-per-page="itemsPerPage"
+        :page="pagination.pageIndex + 1"
+        :total="paginationTotal"
+        :items-per-page="pagination.pageSize"
+        @update:page="onPageChange"
         show-controls
         show-edges
         color="neutral"
@@ -397,7 +442,7 @@ const selectUi = {
               color="neutral"
               variant="ghost"
               class="rounded-full px-5 text-white hover:bg-[#232323]"
-              @click="isCreateOpen = false"
+              @click="() => { isCreateOpen = false }"
             />
             <UButton
               size="xl"

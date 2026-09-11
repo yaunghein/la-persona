@@ -9,6 +9,12 @@ import {
   ORGANIZATION_TYPE_LABELS,
   type OrganizationType,
 } from '~~/shared/utils/constants';
+import { useThakhinTable } from '~/composables/thakhin-table';
+import {
+  THAKHIN_ACTIONS_COLUMN,
+  THAKHIN_TABLE_UI,
+  thakhinSortableHeader,
+} from '~/utils/thakhin-table';
 
 type OrgRow = {
   id: string;
@@ -75,19 +81,29 @@ const { data: usersData, pending: usersPending } = await useFetch<UserOption[]>(
 const userItems = computed(() => usersData.value || []);
 
 const rows = computed(() => orgsData.value || []);
+const typeFilter = ref<'all' | OrganizationType>('all');
 
-const page = ref(1);
-const itemsPerPage = 10;
-const total = computed(() => rows.value.length);
-const pagedRows = computed(() => {
-  const start = (page.value - 1) * itemsPerPage;
-  return rows.value.slice(start, start + itemsPerPage);
+const typeFilterItems = [
+  { label: 'All types', value: 'all' },
+  ...typeItems,
+];
+
+const filteredRows = computed(() => {
+  if (typeFilter.value === 'all') return rows.value;
+  return rows.value.filter((row) => row.type === typeFilter.value);
 });
 
-watch(rows, () => {
-  const maxPage = Math.max(1, Math.ceil(total.value / itemsPerPage));
-  if (page.value > maxPage) page.value = maxPage;
-});
+const {
+  globalFilter,
+  sorting,
+  pagination,
+  paginationOptions,
+  paginationTotal,
+  resetPage,
+  onPageChange,
+} = useThakhinTable(() => filteredRows.value.length);
+
+watch(typeFilter, resetPage);
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
@@ -215,13 +231,13 @@ function typeBadgeColor(type: OrganizationType) {
 }
 
 const columns: TableColumn<OrgRow>[] = [
-  { accessorKey: 'name', header: 'NAME' },
-  { accessorKey: 'slug', header: 'SLUG' },
-  { accessorKey: 'memberCount', header: 'MEMBERS' },
-  { accessorKey: 'cardCount', header: 'CARDS' },
-  { id: 'type', header: 'TYPE' },
-  { accessorKey: 'createdAt', header: 'CREATED' },
-  { id: 'actions', header: '' },
+  { accessorKey: 'name', header: thakhinSortableHeader('NAME') },
+  { accessorKey: 'slug', header: thakhinSortableHeader('SLUG') },
+  { accessorKey: 'memberCount', header: thakhinSortableHeader('MEMBERS') },
+  { accessorKey: 'cardCount', header: thakhinSortableHeader('CARDS') },
+  { accessorKey: 'type', header: thakhinSortableHeader('TYPE') },
+  { accessorKey: 'createdAt', header: thakhinSortableHeader('CREATED') },
+  THAKHIN_ACTIONS_COLUMN,
 ];
 
 const formFieldClass =
@@ -257,15 +273,18 @@ const selectMenuUi = {
         Organizations
       </h1>
       <div class="flex flex-wrap items-center gap-2">
-        <UButton
+        <UInput
+          v-model="globalFilter"
+          icon="i-lucide-search"
+          placeholder="Search name or slug"
+          class="w-64"
           size="xl"
-          label="Refresh"
-          icon="i-lucide-refresh-cw"
-          color="neutral"
-          variant="outline"
-          class="rounded-full"
-          :loading="pending"
-          @click="refresh()"
+        />
+        <USelect
+          v-model="typeFilter"
+          :items="typeFilterItems"
+          class="w-44"
+          size="xl"
         />
         <UButton
           size="xl"
@@ -280,15 +299,16 @@ const selectMenuUi = {
 
     <div class="hide-scrollbar flex-1 overflow-x-auto overflow-y-hidden">
       <UTable
-        :data="pagedRows"
+        ref="table"
+        v-model:global-filter="globalFilter"
+        v-model:sorting="sorting"
+        v-model:pagination="pagination"
+        :data="filteredRows"
         :columns="columns"
         :loading="pending"
-        :ui="{
-          th: 'px-4 py-4 border-b border-[#232323] text-xs font-semibold tracking-wide uppercase text-white',
-          td: 'px-4 py-4 border-b border-[#232323] text-sm text-[#8b8b8b]',
-          tr: 'bg-transparent',
-          empty: 'py-16 text-center text-sm text-muted',
-        }"
+        :pagination-options="paginationOptions"
+        :get-row-id="(row) => row.id"
+        :ui="THAKHIN_TABLE_UI"
         class="w-full min-w-225"
       >
         <template #name-cell="{ row }">
@@ -331,9 +351,10 @@ const selectMenuUi = {
 
     <div class="mt-auto flex items-center justify-end pt-4">
       <UPagination
-        v-model:page="page"
-        :total="total"
-        :items-per-page="itemsPerPage"
+        :page="pagination.pageIndex + 1"
+        :total="paginationTotal"
+        :items-per-page="pagination.pageSize"
+        @update:page="onPageChange"
         show-controls
         show-edges
         color="neutral"

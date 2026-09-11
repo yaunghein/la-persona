@@ -4,6 +4,12 @@ definePageMeta({
 });
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
+import { useThakhinTable } from '~/composables/thakhin-table';
+import {
+  THAKHIN_ACTIONS_COLUMN,
+  THAKHIN_TABLE_UI,
+  thakhinSortableHeader,
+} from '~/utils/thakhin-table';
 
 type UserRow = {
   id: string;
@@ -24,37 +30,38 @@ const {
 } = await useFetch<UserRow[]>('/api/users/admin', { default: () => [] });
 
 const rows = computed(() => usersData.value || []);
-const globalQuery = ref('');
-const page = ref(1);
-const itemsPerPage = 10;
+const roleFilter = ref<'all' | 'admin' | 'user'>('all');
 
 const isDeleteOpen = ref(false);
 const isDeleting = ref(false);
 const userToDelete = ref<UserRow | null>(null);
 
 const filteredRows = computed(() => {
-  const q = globalQuery.value.trim().toLowerCase();
-  if (!q) return rows.value;
+  if (roleFilter.value === 'all') return rows.value;
 
   return rows.value.filter((row) => {
-    return (
-      row.name.toLowerCase().includes(q) ||
-      row.email.toLowerCase().includes(q) ||
-      (row.role || '').toLowerCase().includes(q)
-    );
+    const role = row.role === 'admin' ? 'admin' : 'user';
+    return role === roleFilter.value;
   });
 });
 
-const total = computed(() => filteredRows.value.length);
-const pagedRows = computed(() => {
-  const start = (page.value - 1) * itemsPerPage;
-  return filteredRows.value.slice(start, start + itemsPerPage);
-});
+const {
+  globalFilter,
+  sorting,
+  pagination,
+  paginationOptions,
+  paginationTotal,
+  resetPage,
+  onPageChange,
+} = useThakhinTable(() => filteredRows.value.length);
 
-watch([filteredRows, total], () => {
-  const maxPage = Math.max(1, Math.ceil(total.value / itemsPerPage));
-  if (page.value > maxPage) page.value = maxPage;
-});
+watch(roleFilter, resetPage);
+
+const roleFilterItems = [
+  { label: 'All roles', value: 'all' },
+  { label: 'Admin', value: 'admin' },
+  { label: 'User', value: 'user' },
+];
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
@@ -120,11 +127,15 @@ function getActionItems(row: UserRow): DropdownMenuItem[][] {
 }
 
 const columns: TableColumn<UserRow>[] = [
-  { accessorKey: 'name', header: 'NAME' },
-  { accessorKey: 'email', header: 'EMAIL' },
-  { accessorKey: 'role', header: 'ROLE' },
-  { accessorKey: 'createdAt', header: 'CREATED' },
-  { id: 'actions', header: '' },
+  { accessorKey: 'name', header: thakhinSortableHeader('NAME') },
+  { accessorKey: 'email', header: thakhinSortableHeader('EMAIL') },
+  {
+    accessorKey: 'role',
+    header: thakhinSortableHeader('ROLE'),
+    accessorFn: (row) => row.role || 'user',
+  },
+  { accessorKey: 'createdAt', header: thakhinSortableHeader('CREATED') },
+  THAKHIN_ACTIONS_COLUMN,
 ];
 </script>
 
@@ -138,36 +149,33 @@ const columns: TableColumn<UserRow>[] = [
       </h1>
       <div class="flex flex-wrap items-center gap-2">
         <UInput
-          v-model="globalQuery"
+          v-model="globalFilter"
           icon="i-lucide-search"
           placeholder="Search name or email"
           class="w-64"
           size="xl"
         />
-        <UButton
+        <USelect
+          v-model="roleFilter"
+          :items="roleFilterItems"
+          class="w-40"
           size="xl"
-          label="Refresh"
-          icon="i-lucide-refresh-cw"
-          color="neutral"
-          variant="outline"
-          class="rounded-full"
-          :loading="pending"
-          @click="refresh()"
         />
       </div>
     </div>
 
     <div class="hide-scrollbar flex-1 overflow-x-auto overflow-y-hidden">
       <UTable
-        :data="pagedRows"
+        ref="table"
+        v-model:global-filter="globalFilter"
+        v-model:sorting="sorting"
+        v-model:pagination="pagination"
+        :data="filteredRows"
         :columns="columns"
         :loading="pending"
-        :ui="{
-          th: 'px-4 py-4 border-b border-[#232323] text-xs font-semibold tracking-wide uppercase text-white',
-          td: 'px-4 py-4 border-b border-[#232323] text-sm text-[#8b8b8b]',
-          tr: 'bg-transparent',
-          empty: 'py-16 text-center text-sm text-muted',
-        }"
+        :pagination-options="paginationOptions"
+        :get-row-id="(row) => row.id"
+        :ui="THAKHIN_TABLE_UI"
         class="w-full min-w-225"
       >
         <template #name-cell="{ row }">
@@ -204,9 +212,10 @@ const columns: TableColumn<UserRow>[] = [
 
     <div class="mt-auto flex items-center justify-end pt-4">
       <UPagination
-        v-model:page="page"
-        :total="total"
-        :items-per-page="itemsPerPage"
+        :page="pagination.pageIndex + 1"
+        :total="paginationTotal"
+        :items-per-page="pagination.pageSize"
+        @update:page="onPageChange"
         show-controls
         show-edges
         color="neutral"

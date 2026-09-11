@@ -4,6 +4,12 @@ definePageMeta({
 });
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
+import { useThakhinTable } from '~/composables/thakhin-table';
+import {
+  THAKHIN_ACTIONS_COLUMN,
+  THAKHIN_TABLE_UI,
+  thakhinSortableHeader,
+} from '~/utils/thakhin-table';
 
 type PaymentRow = {
   id: string;
@@ -42,13 +48,9 @@ watch(
   { immediate: true }
 );
 
-const globalQuery = ref('');
 const filterPayer = ref('');
 const filterStatus = ref<'all' | 'submitted' | 'approved' | 'rejected'>('all');
 const filterLink = ref<'all' | 'linked' | 'standalone'>('all');
-
-const page = ref(1);
-const itemsPerPage = 10;
 
 function getS3Url(path?: string | null) {
   if (!path) return '';
@@ -61,21 +63,9 @@ function getS3Url(path?: string | null) {
 }
 
 const filteredRows = computed(() => {
-  const q = globalQuery.value.trim().toLowerCase();
-
   return rows.value.filter((row) => {
     const payerName = (row.payerName || '').toLowerCase();
     const payerEmail = (row.payerEmail || '').toLowerCase();
-    const status = (row.status || '').toLowerCase();
-    const note = (row.note || '').toLowerCase();
-
-    const matchesGlobal =
-      !q ||
-      row.id.toLowerCase().includes(q) ||
-      payerName.includes(q) ||
-      payerEmail.includes(q) ||
-      status.includes(q) ||
-      note.includes(q);
 
     const matchesPayer =
       !filterPayer.value.trim() ||
@@ -89,25 +79,21 @@ const filteredRows = computed(() => {
       (filterLink.value === 'linked' && Boolean(row.linkedRequestId)) ||
       (filterLink.value === 'standalone' && !row.linkedRequestId);
 
-    return matchesGlobal && matchesPayer && matchesStatus && matchesLink;
+    return matchesPayer && matchesStatus && matchesLink;
   });
 });
 
-const total = computed(() => filteredRows.value.length);
-const maxPage = computed(() =>
-  Math.max(1, Math.ceil(total.value / itemsPerPage))
-);
+const {
+  globalFilter,
+  sorting,
+  pagination,
+  paginationOptions,
+  paginationTotal,
+  resetPage,
+  onPageChange,
+} = useThakhinTable(() => filteredRows.value.length);
 
-const pagedRows = computed(() => {
-  const start = (page.value - 1) * itemsPerPage;
-  return filteredRows.value.slice(start, start + itemsPerPage);
-});
-
-watch([filteredRows, maxPage], () => {
-  if (page.value > maxPage.value) {
-    page.value = maxPage.value;
-  }
-});
+watch([filterPayer, filterStatus, filterLink], resetPage);
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
@@ -212,48 +198,49 @@ function getActionItems(row: PaymentRow): DropdownMenuItem[][] {
 }
 
 const columns: TableColumn<PaymentRow>[] = [
-  { accessorKey: 'id', header: 'PAYMENT ID' },
-  { accessorKey: 'payerName', header: 'PAYER' },
-  { accessorKey: 'payerEmail', header: 'EMAIL' },
-  { accessorKey: 'itemCount', header: 'ITEMS' },
-  { accessorKey: 'totalAmountMinor', header: 'AMOUNT' },
-  { accessorKey: 'receiptUrl', header: 'RECEIPT' },
-  { accessorKey: 'linkedRequestId', header: 'LINKED REQUEST' },
-  { accessorKey: 'status', header: 'STATUS' },
-  { accessorKey: 'createdAt', header: 'CREATED AT' },
-  { id: 'actions', header: '' },
+  { accessorKey: 'id', header: thakhinSortableHeader('PAYMENT ID') },
+  { accessorKey: 'payerName', header: thakhinSortableHeader('PAYER') },
+  { accessorKey: 'payerEmail', header: thakhinSortableHeader('EMAIL') },
+  { accessorKey: 'itemCount', header: thakhinSortableHeader('ITEMS') },
+  {
+    accessorKey: 'totalAmountMinor',
+    header: thakhinSortableHeader('AMOUNT'),
+  },
+  {
+    accessorKey: 'receiptUrl',
+    header: 'RECEIPT',
+    enableSorting: false,
+    enableGlobalFilter: false,
+  },
+  {
+    accessorKey: 'linkedRequestId',
+    header: thakhinSortableHeader('LINKED REQUEST'),
+  },
+  { accessorKey: 'status', header: thakhinSortableHeader('STATUS') },
+  { accessorKey: 'createdAt', header: thakhinSortableHeader('CREATED AT') },
+  THAKHIN_ACTIONS_COLUMN,
 ];
 </script>
 
 <template>
   <div class="flex min-h-[calc(100dvh-11rem)] flex-col gap-6">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <h1
-        class="text-[1.75rem] font-normal leading-tight tracking-widest uppercase"
-      >
-        Subscription Payments
-      </h1>
-      <UButton
-        size="xl"
-        label="Refresh"
-        icon="i-lucide-refresh-cw"
-        color="neutral"
-        variant="outline"
-        class="rounded-full"
-        :loading="pending"
-        @click="refresh()"
-      />
-    </div>
+    <h1
+      class="text-[1.75rem] font-normal leading-tight tracking-widest uppercase"
+    >
+      Subscription Payments
+    </h1>
 
-    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
+    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
       <UInput
-        v-model="globalQuery"
-        placeholder="Global search..."
+        v-model="globalFilter"
+        placeholder="Search payments..."
         icon="i-lucide-search"
+        size="xl"
       />
-      <UInput v-model="filterPayer" placeholder="Filter payer..." />
+      <UInput v-model="filterPayer" placeholder="Filter payer..." size="xl" />
       <USelect
         v-model="filterStatus"
+        size="xl"
         :items="[
           { label: 'All Status', value: 'all' },
           { label: 'Submitted', value: 'submitted' },
@@ -263,26 +250,28 @@ const columns: TableColumn<PaymentRow>[] = [
       />
       <USelect
         v-model="filterLink"
+        size="xl"
         :items="[
           { label: 'All Payment Types', value: 'all' },
           { label: 'Linked to Request', value: 'linked' },
           { label: 'Standalone Payment', value: 'standalone' },
         ]"
       />
-      <div />
     </div>
 
     <div class="hide-scrollbar flex-1 overflow-x-auto overflow-y-hidden">
       <UTable
-        :data="pagedRows"
+        ref="table"
+        v-model:global-filter="globalFilter"
+        v-model:sorting="sorting"
+        v-model:pagination="pagination"
+        :data="filteredRows"
         :columns="columns"
-        :ui="{
-          th: 'px-4 py-4 border-b border-[#232323] text-xs font-semibold tracking-wide uppercase text-white',
-          td: 'px-4 py-4 border-b border-[#232323] text-sm text-[#8b8b8b]',
-          tr: 'bg-transparent',
-          empty: 'py-16 text-center text-sm text-muted',
-        }"
-        class="w-full min-w-[1100px]"
+        :loading="pending"
+        :pagination-options="paginationOptions"
+        :get-row-id="(row) => row.id"
+        :ui="THAKHIN_TABLE_UI"
+        class="w-full min-w-275"
       >
         <template #payerName-cell="{ row }">
           <span class="text-white font-medium">
@@ -358,9 +347,10 @@ const columns: TableColumn<PaymentRow>[] = [
 
     <div class="mt-auto flex items-center justify-end pt-4">
       <UPagination
-        v-model:page="page"
-        :total="total"
-        :items-per-page="itemsPerPage"
+        :page="pagination.pageIndex + 1"
+        :total="paginationTotal"
+        :items-per-page="pagination.pageSize"
+        @update:page="onPageChange"
         show-controls
         show-edges
         color="neutral"

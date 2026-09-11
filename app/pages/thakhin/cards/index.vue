@@ -5,6 +5,12 @@ definePageMeta({
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import { getThakhinCardPlanAssetDefaults } from '~~/shared/constants/thakhin-card-plan-assets';
+import { useThakhinTable } from '~/composables/thakhin-table';
+import {
+  THAKHIN_ACTIONS_COLUMN,
+  THAKHIN_TABLE_UI,
+  thakhinSortableHeader,
+} from '~/utils/thakhin-table';
 
 type CardRow = {
   id: string;
@@ -107,6 +113,49 @@ const { data: onboardingOptions } = await useFetch<{
 }>('/api/onboarding-invitation/options');
 
 const rows = computed(() => cardsData.value || []);
+const claimFilter = ref<'all' | 'linked' | 'unclaimed'>('all');
+const orgFilter = ref('all');
+
+const claimFilterItems = [
+  { label: 'All cards', value: 'all' },
+  { label: 'Linked', value: 'linked' },
+  { label: 'Unclaimed', value: 'unclaimed' },
+];
+
+const orgFilterItems = computed(() => {
+  const names = [
+    ...new Set(rows.value.map((row) => row.organizationName).filter(Boolean)),
+  ].sort((a, b) => a.localeCompare(b));
+
+  return [
+    { label: 'All organizations', value: 'all' },
+    ...names.map((name) => ({ label: name, value: name })),
+  ];
+});
+
+const filteredRows = computed(() => {
+  return rows.value.filter((row) => {
+    const matchesClaim =
+      claimFilter.value === 'all' ||
+      (claimFilter.value === 'linked' && Boolean(row.userId)) ||
+      (claimFilter.value === 'unclaimed' && !row.userId);
+    const matchesOrg =
+      orgFilter.value === 'all' || row.organizationName === orgFilter.value;
+    return matchesClaim && matchesOrg;
+  });
+});
+
+const {
+  globalFilter,
+  sorting,
+  pagination,
+  paginationOptions,
+  paginationTotal,
+  resetPage,
+  onPageChange,
+} = useThakhinTable(() => filteredRows.value.length);
+
+watch([claimFilter, orgFilter], resetPage);
 const orgSelectItems = computed(() =>
   (orgOptions.value || []).map((o) => ({ label: o.name, value: o.id }))
 );
@@ -166,19 +215,6 @@ function closeDelete() {
   isDeleteOpen.value = false;
   cardToDelete.value = null;
 }
-
-const page = ref(1);
-const itemsPerPage = 10;
-const total = computed(() => rows.value.length);
-const pagedRows = computed(() => {
-  const start = (page.value - 1) * itemsPerPage;
-  return rows.value.slice(start, start + itemsPerPage);
-});
-
-watch(rows, () => {
-  const maxPage = Math.max(1, Math.ceil(total.value / itemsPerPage));
-  if (page.value > maxPage) page.value = maxPage;
-});
 
 function displayName(row: CardRow) {
   return `${row.firstName} ${row.lastName || ''}`.trim();
@@ -293,14 +329,28 @@ function getActionItems(row: CardRow): DropdownMenuItem[][] {
 }
 
 const columns: TableColumn<CardRow>[] = [
-  { id: 'displayName', header: 'NAME' },
-  { accessorKey: 'slug', header: 'SLUG' },
-  { accessorKey: 'organizationName', header: 'ORGANIZATION' },
-  { accessorKey: 'position', header: 'ROLE' },
-  { id: 'claimStatus', header: 'USER' },
-  { accessorKey: 'email', header: 'CARD EMAIL' },
-  { accessorKey: 'createdAt', header: 'CREATED' },
-  { id: 'actions', header: '' },
+  {
+    id: 'displayName',
+    header: thakhinSortableHeader('NAME'),
+    accessorFn: (row) => displayName(row),
+  },
+  { accessorKey: 'slug', header: thakhinSortableHeader('SLUG') },
+  {
+    accessorKey: 'organizationName',
+    header: thakhinSortableHeader('ORGANIZATION'),
+  },
+  { accessorKey: 'position', header: thakhinSortableHeader('ROLE') },
+  {
+    id: 'claimStatus',
+    header: thakhinSortableHeader('USER'),
+    accessorFn: (row) =>
+      row.userId
+        ? `Linked ${row.linkedUserEmail || ''}`.trim()
+        : 'Unclaimed',
+  },
+  { accessorKey: 'email', header: thakhinSortableHeader('CARD EMAIL') },
+  { accessorKey: 'createdAt', header: thakhinSortableHeader('CREATED') },
+  THAKHIN_ACTIONS_COLUMN,
 ];
 
 /** Matches `app/components/form/manual-contact.vue` / `update-card-info.vue` */
@@ -328,15 +378,24 @@ const selectUi = {
         Cards
       </h1>
       <div class="flex flex-wrap items-center gap-2">
-        <UButton
+        <UInput
+          v-model="globalFilter"
+          icon="i-lucide-search"
+          placeholder="Search name, email, or slug"
+          class="w-64"
           size="xl"
-          label="Refresh"
-          icon="i-lucide-refresh-cw"
-          color="neutral"
-          variant="outline"
-          class="rounded-full"
-          :loading="pending"
-          @click="refresh()"
+        />
+        <USelect
+          v-model="claimFilter"
+          :items="claimFilterItems"
+          class="w-40"
+          size="xl"
+        />
+        <USelect
+          v-model="orgFilter"
+          :items="orgFilterItems"
+          class="w-52"
+          size="xl"
         />
         <UButton
           size="xl"
@@ -351,15 +410,16 @@ const selectUi = {
 
     <div class="hide-scrollbar flex-1 overflow-x-auto overflow-y-hidden">
       <UTable
-        :data="pagedRows"
+        ref="table"
+        v-model:global-filter="globalFilter"
+        v-model:sorting="sorting"
+        v-model:pagination="pagination"
+        :data="filteredRows"
         :columns="columns"
         :loading="pending"
-        :ui="{
-          th: 'px-4 py-4 border-b border-[#232323] text-xs font-semibold tracking-wide uppercase text-white',
-          td: 'px-4 py-4 border-b border-[#232323] text-sm text-[#8b8b8b]',
-          tr: 'bg-transparent',
-          empty: 'py-16 text-center text-sm text-muted',
-        }"
+        :pagination-options="paginationOptions"
+        :get-row-id="(row) => row.id"
+        :ui="THAKHIN_TABLE_UI"
         class="w-full min-w-275"
       >
         <template #displayName-cell="{ row }">
@@ -405,9 +465,10 @@ const selectUi = {
 
     <div class="mt-auto flex items-center justify-end pt-4">
       <UPagination
-        v-model:page="page"
-        :total="total"
-        :items-per-page="itemsPerPage"
+        :page="pagination.pageIndex + 1"
+        :total="paginationTotal"
+        :items-per-page="pagination.pageSize"
+        @update:page="onPageChange"
         show-controls
         show-edges
         color="neutral"

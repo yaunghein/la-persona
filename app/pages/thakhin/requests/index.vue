@@ -4,6 +4,12 @@ definePageMeta({
 });
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
+import { useThakhinTable } from '~/composables/thakhin-table';
+import {
+  THAKHIN_ACTIONS_COLUMN,
+  THAKHIN_TABLE_UI,
+  thakhinSortableHeader,
+} from '~/utils/thakhin-table';
 
 type CardRequestRow = {
   id: string;
@@ -41,14 +47,10 @@ watch(
   { immediate: true }
 );
 
-const globalQuery = ref('');
 const filterName = ref('');
 const filterEmail = ref('');
 const filterType = ref<'all' | 'new_design' | 'existing_design'>('all');
 const filterStatus = ref<'all' | 'pending' | 'approved' | 'declined'>('all');
-
-const page = ref(1);
-const itemsPerPage = 10;
 
 function getS3Url(path?: string | null) {
   if (!path) return '';
@@ -61,23 +63,9 @@ function getS3Url(path?: string | null) {
 }
 
 const filteredRows = computed(() => {
-  const q = globalQuery.value.trim().toLowerCase();
-
   return rows.value.filter((row) => {
-    const cardName = row.cardData?.name?.toLowerCase() || '';
     const requesterName = (row.requesterName || '').toLowerCase();
     const requesterEmail = (row.requesterEmail || '').toLowerCase();
-    const status = (row.status || '').toLowerCase();
-    const type = (row.type || '').toLowerCase();
-
-    const matchesGlobal =
-      !q ||
-      row.id.toLowerCase().includes(q) ||
-      cardName.includes(q) ||
-      requesterName.includes(q) ||
-      requesterEmail.includes(q) ||
-      status.includes(q) ||
-      type.includes(q);
 
     const matchesName =
       !filterName.value.trim() ||
@@ -93,31 +81,21 @@ const filteredRows = computed(() => {
     const matchesStatus =
       filterStatus.value === 'all' || row.status === filterStatus.value;
 
-    return (
-      matchesGlobal &&
-      matchesName &&
-      matchesEmail &&
-      matchesType &&
-      matchesStatus
-    );
+    return matchesName && matchesEmail && matchesType && matchesStatus;
   });
 });
 
-const total = computed(() => filteredRows.value.length);
-const maxPage = computed(() =>
-  Math.max(1, Math.ceil(total.value / itemsPerPage))
-);
+const {
+  globalFilter,
+  sorting,
+  pagination,
+  paginationOptions,
+  paginationTotal,
+  resetPage,
+  onPageChange,
+} = useThakhinTable(() => filteredRows.value.length);
 
-const pagedRows = computed(() => {
-  const start = (page.value - 1) * itemsPerPage;
-  return filteredRows.value.slice(start, start + itemsPerPage);
-});
-
-watch([filteredRows, maxPage], () => {
-  if (page.value > maxPage.value) {
-    page.value = maxPage.value;
-  }
-});
+watch([filterName, filterEmail, filterType, filterStatus], resetPage);
 
 function typeLabel(type: CardRequestRow['type']) {
   return type === 'existing_design' ? 'Existing Design' : 'New Design';
@@ -191,48 +169,55 @@ function getActionItems(row: CardRequestRow): DropdownMenuItem[][] {
 }
 
 const columns: TableColumn<CardRequestRow>[] = [
-  { accessorKey: 'id', header: 'REQUEST ID' },
-  { accessorKey: 'requesterName', header: 'REQUESTER' },
-  { accessorKey: 'requesterEmail', header: 'EMAIL' },
-  { accessorKey: 'type', header: 'TYPE' },
-  { accessorKey: 'cardData.name', id: 'cardName', header: 'CARD NAME' },
-  { accessorKey: 'paymentReceiptUrl', header: 'RECEIPT' },
-  { accessorKey: 'status', header: 'STATUS' },
-  { accessorKey: 'createdAt', header: 'CREATED AT' },
-  { id: 'actions', header: '' },
+  { accessorKey: 'id', header: thakhinSortableHeader('REQUEST ID') },
+  {
+    accessorKey: 'requesterName',
+    header: thakhinSortableHeader('REQUESTER'),
+  },
+  { accessorKey: 'requesterEmail', header: thakhinSortableHeader('EMAIL') },
+  { accessorKey: 'type', header: thakhinSortableHeader('TYPE') },
+  {
+    accessorKey: 'cardData.name',
+    id: 'cardName',
+    header: thakhinSortableHeader('CARD NAME'),
+    accessorFn: (row) => row.cardData?.name || '',
+  },
+  {
+    accessorKey: 'paymentReceiptUrl',
+    header: 'RECEIPT',
+    enableSorting: false,
+    enableGlobalFilter: false,
+  },
+  { accessorKey: 'status', header: thakhinSortableHeader('STATUS') },
+  { accessorKey: 'createdAt', header: thakhinSortableHeader('CREATED AT') },
+  THAKHIN_ACTIONS_COLUMN,
 ];
 </script>
 
 <template>
   <div class="flex min-h-[calc(100dvh-11rem)] flex-col gap-6">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <h1
-        class="text-[1.75rem] font-normal leading-tight tracking-widest uppercase"
-      >
-        Card Requests
-      </h1>
-      <UButton
-        size="xl"
-        label="Refresh"
-        icon="i-lucide-refresh-cw"
-        color="neutral"
-        variant="outline"
-        class="rounded-full"
-        :loading="pending"
-        @click="refresh()"
-      />
-    </div>
+    <h1
+      class="text-[1.75rem] font-normal leading-tight tracking-widest uppercase"
+    >
+      Card Requests
+    </h1>
 
     <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
       <UInput
-        v-model="globalQuery"
-        placeholder="Global search..."
+        v-model="globalFilter"
+        placeholder="Search requests..."
         icon="i-lucide-search"
+        size="xl"
       />
-      <UInput v-model="filterName" placeholder="Filter requester..." />
-      <UInput v-model="filterEmail" placeholder="Filter email..." />
+      <UInput
+        v-model="filterName"
+        placeholder="Filter requester..."
+        size="xl"
+      />
+      <UInput v-model="filterEmail" placeholder="Filter email..." size="xl" />
       <USelect
         v-model="filterType"
+        size="xl"
         :items="[
           { label: 'All Types', value: 'all' },
           { label: 'New Design', value: 'new_design' },
@@ -241,6 +226,7 @@ const columns: TableColumn<CardRequestRow>[] = [
       />
       <USelect
         v-model="filterStatus"
+        size="xl"
         :items="[
           { label: 'All Status', value: 'all' },
           { label: 'Pending', value: 'pending' },
@@ -252,15 +238,17 @@ const columns: TableColumn<CardRequestRow>[] = [
 
     <div class="hide-scrollbar flex-1 overflow-x-auto overflow-y-hidden">
       <UTable
-        :data="pagedRows"
+        ref="table"
+        v-model:global-filter="globalFilter"
+        v-model:sorting="sorting"
+        v-model:pagination="pagination"
+        :data="filteredRows"
         :columns="columns"
-        :ui="{
-          th: 'px-4 py-4 border-b border-[#232323] text-xs font-semibold tracking-wide uppercase text-white',
-          td: 'px-4 py-4 border-b border-[#232323] text-sm text-[#8b8b8b]',
-          tr: 'bg-transparent',
-          empty: 'py-16 text-center text-sm text-muted',
-        }"
-        class="w-full min-w-[1100px]"
+        :loading="pending"
+        :pagination-options="paginationOptions"
+        :get-row-id="(row) => row.id"
+        :ui="THAKHIN_TABLE_UI"
+        class="w-full min-w-275"
       >
         <template #requesterName-cell="{ row }">
           <span class="text-white font-medium">
@@ -321,9 +309,10 @@ const columns: TableColumn<CardRequestRow>[] = [
 
     <div class="mt-auto flex items-center justify-end pt-4">
       <UPagination
-        v-model:page="page"
-        :total="total"
-        :items-per-page="itemsPerPage"
+        :page="pagination.pageIndex + 1"
+        :total="paginationTotal"
+        :items-per-page="pagination.pageSize"
+        @update:page="onPageChange"
         show-controls
         show-edges
         color="neutral"
