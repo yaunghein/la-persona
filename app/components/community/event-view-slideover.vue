@@ -4,6 +4,7 @@ import {
   formatEventTimeLabel,
   formatEventWeekdayDateLabel,
 } from '~~/shared/utils/event-datetime';
+import { eventGalleryImages } from '~~/shared/utils/event-media';
 
 const props = defineProps<{
   event?: EventDTO | null;
@@ -18,12 +19,7 @@ const emit = defineEmits<{
 
 const galleryImages = computed(() => {
   if (!props.event) return [];
-
-  const urls = [props.event.coverUrl, ...(props.event.photoUrls ?? [])]
-    .map((url) => String(url || '').trim())
-    .filter(Boolean);
-
-  return [...new Set(urls)];
+  return eventGalleryImages(props.event.coverUrl, props.event.photoUrls);
 });
 
 const details = computed(() => {
@@ -80,7 +76,9 @@ function onViewOrganizer() {
           <UCarousel
             v-if="galleryImages.length > 1"
             v-slot="{ item }"
+            loop
             dots
+            align="start"
             :items="galleryImages"
             class="size-full"
             :ui="{

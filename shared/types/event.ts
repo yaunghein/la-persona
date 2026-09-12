@@ -20,13 +20,21 @@ export type EventDTO = Omit<
   updatedAt: string;
 };
 
+export type EventOrganizer = {
+  name: string;
+  logoUrl?: string | null;
+  slug?: string;
+};
+
+export type PublicEventDTO = EventDTO & {
+  organizer: EventOrganizer;
+};
+
 export const createEventBodySchema = z.object({
   title: z.string().trim().min(1, 'Event name is required'),
   description: z.string().trim().optional().or(z.literal('')),
   location: z.string().trim().min(1, 'Location is required'),
-  date: z
-    .string()
-    .refine(isEventDateValue, { message: 'Date is required' }),
+  date: z.string().refine(isEventDateValue, { message: 'Date is required' }),
   startTime: z
     .string()
     .refine(isEventTimeValue, { message: 'Start time is required' }),
@@ -34,11 +42,9 @@ export const createEventBodySchema = z.object({
     .string()
     .refine(isEventTimeValue, { message: 'End time is required' }),
   capacity: z.number().int().positive().nullable(),
-  hasCover: z
-    .boolean()
-    .refine((value) => value === true, {
-      message: 'Cover photo is required',
-    }),
+  hasCover: z.boolean().refine((value) => value === true, {
+    message: 'Cover photo is required',
+  }),
   extraPhotoCount: z.number().int().min(0).max(EVENT_MAX_EXTRA_PHOTOS),
 });
 
@@ -55,7 +61,8 @@ export const updateEventBodySchema = createEventBodySchema
   })
   .refine(
     (value) =>
-      value.keptPhotoUrls.length + value.newPhotoCount <= EVENT_MAX_EXTRA_PHOTOS,
+      value.keptPhotoUrls.length + value.newPhotoCount <=
+      EVENT_MAX_EXTRA_PHOTOS,
     { message: 'You can add up to 4 extra photos' }
   );
 

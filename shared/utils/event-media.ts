@@ -40,6 +40,18 @@ export function eventImageUpdatePayload(
   };
 }
 
+export function eventGalleryImages(
+  coverUrl?: string | null,
+  photoUrls?: string[] | null
+) {
+  const cover = String(coverUrl || '').trim();
+  const extras = (photoUrls ?? [])
+    .map((url) => String(url || '').trim())
+    .filter(Boolean);
+
+  return cover ? [cover, ...extras] : extras;
+}
+
 export function nextEventPlaceholderUrl(exclude: string[] = []) {
   return (
     EVENT_PLACEHOLDER_URLS.find((url) => !exclude.includes(url)) ??

@@ -1,6 +1,6 @@
 import { and, desc, eq } from 'drizzle-orm';
 import { db } from '../../db';
-import { event } from '../schema';
+import { event, organization } from '../schema';
 import type { EventDTO, InsertEvent, SelectEvent } from '~~/shared/types/event';
 
 export function toEventDTO(row: SelectEvent): EventDTO {
@@ -32,6 +32,22 @@ export const findEventByIdAndOrganizationId = async (
     .limit(1);
 
   return row;
+};
+
+export const findPublicEventById = async (id: string) => {
+  const [row] = await db
+    .select({
+      event,
+      organizationName: organization.name,
+      organizationLogo: organization.logo,
+      organizationSlug: organization.slug,
+    })
+    .from(event)
+    .innerJoin(organization, eq(organization.id, event.organizationId))
+    .where(eq(event.id, id))
+    .limit(1);
+
+  return row ?? null;
 };
 
 export const insertEvent = async (values: InsertEvent) => {
