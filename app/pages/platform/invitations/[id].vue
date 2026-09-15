@@ -3,6 +3,8 @@ definePageMeta({
   layout: 'platform',
 });
 
+import { useQuery } from '@tanstack/vue-query';
+
 type InvitationDetails = {
   id: string;
   email: string;
@@ -30,13 +32,17 @@ const invitationId = computed(() => String(route.params.id || ''));
 
 const {
   data: invitation,
-  pending,
+  isLoading: pending,
   error,
-  refresh,
-} = await useFetch<InvitationDetails>(
-  () => `/api/onboarding-invitation/${invitationId.value}`,
-  { watch: [invitationId] }
-);
+  refetch: refresh,
+} = useQuery({
+  queryKey: ['onboarding-invitation', invitationId],
+  queryFn: () =>
+    $fetch<InvitationDetails>(
+      `/api/onboarding-invitation/${invitationId.value}`
+    ),
+  enabled: () => !!invitationId.value,
+});
 
 async function onAccept() {
   if (!invitationId.value) return;

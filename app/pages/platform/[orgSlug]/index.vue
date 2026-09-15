@@ -4,27 +4,13 @@ definePageMeta({
 });
 
 import type { CommunityInsightsData } from '~~/shared/types/community-insights';
-import {
-  ORGANIZATION_TYPES,
-  type OrganizationType,
-} from '~~/shared/utils/constants';
-
-type UserOrganization = {
-  id: string;
-  name: string;
-  slug: string;
-  logo: string | null;
-  type: OrganizationType;
-};
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
 const route = useRoute();
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
 
 const { data: session } = await authClient.useSession(useFetch);
-const { data: userOrgs } = await useFetch<UserOrganization[]>(
-  '/api/organizations',
-  { default: () => [] }
-);
+const { data: userOrgs, isLoading: isOrgsLoading } = useUserOrganizations();
 
 const currentOrg = computed(() =>
   (userOrgs.value || []).find((org) => org.slug === orgSlug.value)
@@ -109,8 +95,18 @@ const communityPeriod = ref('7d');
 </script>
 
 <template>
+  <div
+    v-if="isOrgsLoading"
+    class="flex min-h-[calc(100dvh-11rem)] flex-col gap-4"
+  >
+    <USkeleton class="h-8 w-64 rounded-md" />
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+      <USkeleton v-for="i in 4" :key="i" class="h-32 rounded-lg" />
+    </div>
+    <USkeleton class="h-80 w-full rounded-lg" />
+  </div>
   <AnalyticsCommunityInsights
-    v-if="isCommunity"
+    v-else-if="isCommunity"
     v-model:period="communityPeriod"
     :data="communityInsightsMock"
   />

@@ -4,6 +4,7 @@ definePageMeta({
 });
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
+import { useQuery, useQueryClient } from '@tanstack/vue-query';
 import { useThakhinTable } from '~/composables/thakhin-table';
 import {
   THAKHIN_ACTIONS_COLUMN,
@@ -33,19 +34,14 @@ type CardRequestRow = {
 
 const toast = useToast();
 const runtimeConfig = useRuntimeConfig();
+const queryClient = useQueryClient();
 
-const { data, pending, refresh } =
-  await useFetch<CardRequestRow[]>('/api/card-requests');
+const { data, isLoading: pending } = useQuery({
+  queryKey: QUERY_KEYS.cardRequests,
+  queryFn: () => $fetch<CardRequestRow[]>('/api/card-requests'),
+});
 
-const rows = ref<CardRequestRow[]>([]);
-
-watch(
-  data,
-  (value) => {
-    rows.value = value || [];
-  },
-  { immediate: true }
-);
+const rows = computed(() => data.value || []);
 
 const filterName = ref('');
 const filterEmail = ref('');
@@ -114,7 +110,7 @@ function statusColor(status: string) {
 async function approveRequest(row: CardRequestRow) {
   try {
     await $fetch(`/api/card-requests/${row.id}/approve`, { method: 'POST' });
-    await refresh();
+    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.cardRequests });
     toast.add({
       title: 'Request approved',
       description: `${row.cardData?.name || 'Request'} is now approved.`,

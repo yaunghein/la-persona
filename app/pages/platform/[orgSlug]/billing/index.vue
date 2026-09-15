@@ -4,6 +4,7 @@ definePageMeta({
 });
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
+import { useQuery } from '@tanstack/vue-query';
 
 type BillingRow = {
   id: string;
@@ -47,12 +48,14 @@ const sortOrder = ref<'desc' | 'asc'>(parseSortOrder(route.query.sort));
 const page = ref(parsePage(route.query.page));
 
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
-const { data, pending, refresh } = await useFetch<BillingRow[]>(
-  '/api/subscriptions/billing',
-  {
-    query: { organizationSlug: orgSlug },
-  }
-);
+const { data, isLoading: pending } = useQuery({
+  queryKey: ['billing', orgSlug],
+  queryFn: () =>
+    $fetch<BillingRow[]>('/api/subscriptions/billing', {
+      query: { organizationSlug: orgSlug.value },
+    }),
+  enabled: () => !!orgSlug.value,
+});
 
 const rows = computed(() => data.value || []);
 

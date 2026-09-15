@@ -4,6 +4,7 @@ definePageMeta({
 });
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
+import { useQuery, useQueryClient } from '@tanstack/vue-query';
 import { useThakhinTable } from '~/composables/thakhin-table';
 import {
   THAKHIN_ACTIONS_COLUMN,
@@ -21,13 +22,13 @@ type UserRow = {
 };
 
 const toast = useToast();
+const queryClient = useQueryClient();
 const { data: session } = await authClient.useSession(useFetch);
 
-const {
-  data: usersData,
-  pending,
-  refresh,
-} = await useFetch<UserRow[]>('/api/users/admin', { default: () => [] });
+const { data: usersData, isLoading: pending } = useQuery({
+  queryKey: QUERY_KEYS.adminUsers,
+  queryFn: () => $fetch<UserRow[]>('/api/users/admin'),
+});
 
 const rows = computed(() => usersData.value || []);
 const roleFilter = ref<'all' | 'admin' | 'user'>('all');
@@ -86,7 +87,7 @@ async function onConfirmDelete() {
     await $fetch(`/api/users/admin/${userToDelete.value.id}`, {
       method: 'DELETE',
     });
-    await refresh();
+    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminUsers });
     toast.add({
       title: 'User deleted',
       description: `${userToDelete.value.email} and their personal workspace were removed.`,

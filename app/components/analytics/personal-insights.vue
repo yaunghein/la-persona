@@ -66,7 +66,7 @@ watch(
   }
 );
 
-const { data: stats } = useQuery<DashboardStats>({
+const { data: stats, isLoading } = useQuery<DashboardStats>({
   queryKey: ['analytics', () => props.orgSlug, selectedCardId],
   queryFn: async () =>
     $fetch<DashboardStats>('/api/analytics', {
@@ -287,7 +287,17 @@ function closeInfo() {
 </script>
 
 <template>
-  <div class="space-y-4 pb-17 sm:pb-0">
+  <div
+    v-if="isLoading"
+    class="flex min-h-[calc(100dvh-11rem)] flex-col gap-4 pb-17 sm:pb-0"
+  >
+    <USkeleton class="h-8 w-64 rounded-md" />
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+      <USkeleton v-for="i in 4" :key="i" class="h-32 rounded-lg" />
+    </div>
+    <USkeleton class="h-80 w-full rounded-lg" />
+  </div>
+  <div v-else class="space-y-4 pb-17 sm:pb-0">
     <div
       class="flex flex-col sm:flex-row gap-3 sm:gap-0 items-center justify-between"
     >

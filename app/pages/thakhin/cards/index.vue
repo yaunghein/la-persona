@@ -4,6 +4,7 @@ definePageMeta({
 });
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
+import { useQuery, useQueryClient } from '@tanstack/vue-query';
 import { getThakhinCardPlanAssetDefaults } from '~~/shared/constants/thakhin-card-plan-assets';
 import { useThakhinTable } from '~/composables/thakhin-table';
 import {
@@ -38,6 +39,7 @@ type CardRow = {
 type OrgOption = { id: string; name: string; slug: string };
 
 const toast = useToast();
+const queryClient = useQueryClient();
 
 const isFormOpen = ref(false);
 const editingId = ref<string | null>(null);
@@ -100,17 +102,21 @@ function fillForm(row: CardRow) {
   form.cardBackUrl = row.cardBackUrl || '';
 }
 
-const {
-  data: cardsData,
-  pending,
-  refresh,
-} = await useFetch<CardRow[]>('/api/cards/admin');
-const { data: orgOptions } = await useFetch<OrgOption[]>(
-  '/api/cards/admin/options'
-);
-const { data: onboardingOptions } = await useFetch<{
-  plans: { code: string; name: string }[];
-}>('/api/onboarding-invitation/options');
+const { data: cardsData, isLoading: pending } = useQuery({
+  queryKey: QUERY_KEYS.adminCards,
+  queryFn: () => $fetch<CardRow[]>('/api/cards/admin'),
+});
+const { data: orgOptions } = useQuery({
+  queryKey: QUERY_KEYS.adminCardOptions,
+  queryFn: () => $fetch<OrgOption[]>('/api/cards/admin/options'),
+});
+const { data: onboardingOptions } = useQuery({
+  queryKey: QUERY_KEYS.invitationOptions,
+  queryFn: () =>
+    $fetch<{
+      plans: { code: string; name: string }[];
+    }>('/api/onboarding-invitation/options'),
+});
 
 const rows = computed(() => cardsData.value || []);
 const claimFilter = ref<'all' | 'linked' | 'unclaimed'>('all');
@@ -264,7 +270,7 @@ async function onSubmitForm() {
       });
     }
 
-    await refresh();
+    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminCards });
     isFormOpen.value = false;
     editingId.value = null;
     resetForm();
@@ -289,7 +295,7 @@ async function onConfirmDelete() {
     await $fetch(`/api/cards/admin/${cardToDelete.value.id}`, {
       method: 'DELETE',
     });
-    await refresh();
+    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminCards });
     toast.add({
       title: 'Card deleted',
       description: `"${displayName(cardToDelete.value)}" was removed.`,

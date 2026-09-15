@@ -1,3 +1,5 @@
+import type { QueryClient } from '@tanstack/vue-query';
+import { QUERY_KEYS } from '~/utils/query-keys';
 import {
   isCommunityMemberOnly,
   type OrganizationMemberRole,
@@ -18,11 +20,19 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (typeof orgSlug !== 'string' || !orgSlug) return;
   if (!to.path.startsWith(`${ROUTES.PLATFORM.ROOT}/`)) return;
 
-  let orgs: UserOrganization[] = [];
-  try {
-    orgs = await $fetch<UserOrganization[]>('/api/organizations');
-  } catch {
-    return;
+  const queryClient = useNuxtApp().$queryClient as QueryClient | undefined;
+  const cached = queryClient?.getQueryData<UserOrganization[]>(
+    QUERY_KEYS.organizations
+  );
+
+  let orgs = cached;
+  if (!orgs) {
+    try {
+      orgs = await $fetch<UserOrganization[]>('/api/organizations');
+      queryClient?.setQueryData(QUERY_KEYS.organizations, orgs);
+    } catch {
+      return;
+    }
   }
 
   const org = orgs.find((item) => item.slug === orgSlug);

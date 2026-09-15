@@ -1,18 +1,7 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query';
 import { getSafeInternalPath } from '~~/shared/utils/safe-redirect';
-import {
-  ORGANIZATION_TYPES,
-  type OrganizationType,
-} from '~~/shared/utils/constants';
-
-type UserOrganization = {
-  id: string;
-  name: string;
-  slug: string;
-  logo: string | null;
-  type: OrganizationType;
-};
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
 const router = useRouter();
 const route = useRoute();
@@ -20,32 +9,49 @@ const { data: session } = await authClient.useSession(useFetch);
 
 const redirectTo = computed(() => getSafeInternalPath(route.query.redirectTo));
 
-const { data: userOrgs, error: orgsError } = await useFetch<UserOrganization[]>(
-  '/api/organizations',
-  {
-    default: () => [],
-  }
-);
+const {
+  data: userOrgs,
+  isError: isOrgsError,
+  isPending: isOrgsPending,
+} = useUserOrganizations();
 
 const pendingInvitationId = ref<string | null>(null);
 const isResolvingInvite = ref(false);
+const inviteLookupStarted = ref(false);
+const hasRouted = ref(false);
 
-if (session.value && !orgsError.value && !(userOrgs.value || []).length) {
-  isResolvingInvite.value = true;
-  try {
-    const pending = await $fetch<{ id: string } | null>(
-      '/api/onboarding-invitation/pending'
-    );
-    if (pending?.id) {
-      pendingInvitationId.value = pending.id;
-      await navigateTo(`${ROUTES.PLATFORM.ROOT}/invitations/${pending.id}`);
+watch(
+  [session, userOrgs, isOrgsPending, isOrgsError],
+  async () => {
+    if (
+      isOrgsPending.value ||
+      isResolvingInvite.value ||
+      inviteLookupStarted.value
+    ) {
+      return;
     }
-  } catch {
-    // Fall through to the unavailable state if lookup fails.
-  } finally {
-    isResolvingInvite.value = false;
-  }
-}
+    if (!session.value || isOrgsError.value) return;
+    if ((userOrgs.value || []).length) return;
+
+    inviteLookupStarted.value = true;
+    isResolvingInvite.value = true;
+    try {
+      const pending = await $fetch<{ id: string } | null>(
+        '/api/onboarding-invitation/pending'
+      );
+      if (pending?.id) {
+        pendingInvitationId.value = pending.id;
+        hasRouted.value = true;
+        await navigateTo(`${ROUTES.PLATFORM.ROOT}/invitations/${pending.id}`);
+      }
+    } catch {
+      // Fall through to the unavailable state if lookup fails.
+    } finally {
+      isResolvingInvite.value = false;
+    }
+  },
+  { immediate: true }
+);
 
 const workspaceOrg = computed(() => {
   const orgs = userOrgs.value || [];
@@ -62,81 +68,86 @@ const {
   data: cards,
   isError: isCardsError,
   isPending,
-  isFetching,
 } = useQuery({
-  queryKey: ['cards', () => orgSlug.value],
-  queryFn: async () => {
-    return await $fetch('/api/cards', {
+  queryKey: ['cards', orgSlug],
+  queryFn: () =>
+    $fetch('/api/cards', {
       query: { organizationSlug: orgSlug.value },
-    });
-  },
+    }),
   enabled: () => !!orgSlug.value,
 });
 
 /** True when the watcher could not route yet and there is no redirect escape hatch. */
 const syncStuck = ref(false);
-const isError = computed(() => Boolean(orgsError.value) || isCardsError.value);
+const isError = computed(() => isOrgsError.value || isCardsError.value);
 
 watch(
   [cards, orgSlug, redirectTo],
   () => {
+    if (hasRouted.value) return;
+
     const newCards = cards.value;
     const slug = orgSlug.value;
     const target = redirectTo.value;
 
     if (target) {
-      router.replace(target);
+      hasRouted.value = true;
       syncStuck.value = false;
+      router.replace(target);
       return;
     }
 
     if (!slug) {
-      syncStuck.value = true;
+      syncStuck.value = !isOrgsPending.value;
       return;
     }
 
     if (newCards == null) {
-      syncStuck.value = true;
+      syncStuck.value = !isPending.value;
       return;
     }
 
     syncStuck.value = false;
 
+    let dest = `/platform/${slug}`;
     if (newCards.length === 1) {
       const card = newCards[0];
-
       if (
         card &&
         (!card.socials || card.socials.length === 0) &&
         card.website == null
       ) {
-        router.push(`/platform/${slug}/cards/${card.slug}/setup`);
-      } else {
-        router.push(`/platform/${slug}`);
+        dest = `/platform/${slug}/cards/${card.slug}/setup`;
       }
-    } else {
-      router.push(`/platform/${slug}`);
     }
+
+    if (route.path === dest) return;
+
+    hasRouted.value = true;
+    router.replace(dest);
   },
   { immediate: true }
 );
 
 const showLoading = computed(() => {
+  if (hasRouted.value) return true;
   if (redirectTo.value) return true;
   if (!session?.value) return true;
+  if (isOrgsPending.value) return true;
   if (isResolvingInvite.value || pendingInvitationId.value) return true;
   if (!orgSlug.value) return false;
   if (isError.value) return false;
-  return isPending.value || isFetching.value;
+  return isPending.value;
 });
 
 const showSupportState = computed(() => {
+  if (hasRouted.value) return false;
   if (redirectTo.value) return false;
   if (!session?.value) return false;
   if (isResolvingInvite.value || pendingInvitationId.value) return false;
   if (isError.value) return true;
   if (!orgSlug.value) return true;
-  return syncStuck.value && !isPending.value && !isFetching.value;
+  return syncStuck.value && !isPending.value;
 });
 </script>
 

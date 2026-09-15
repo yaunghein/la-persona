@@ -281,7 +281,18 @@ const cardFooterActionSize = 'sm';
     </UModal>
 
     <div
-      v-if="cards"
+      v-if="pending"
+      class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 sm:gap-6"
+    >
+      <USkeleton
+        v-for="index in 3"
+        :key="index"
+        class="aspect-5/3 w-full rounded-lg"
+      />
+    </div>
+
+    <div
+      v-else-if="cards?.length"
       class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 sm:gap-6"
     >
       <UCard

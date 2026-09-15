@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useQuery } from '@tanstack/vue-query';
+
 useSeoMeta({ ...getSeoTitle('Generate Invite - LA PERSONA') });
 
 const toast = useToast();
@@ -11,9 +13,13 @@ const state: any = reactive({
 const generatedUrl = ref('');
 const isSubmitting = ref(false);
 
-// Fetch unowned cards for the select menu
-const { data: cards, pending: loadingCards } =
-  await useFetch('/api/cards/unowned');
+const { data: cards, isLoading: loadingCards } = useQuery({
+  queryKey: QUERY_KEYS.unownedCards,
+  queryFn: () =>
+    $fetch<{ id: string; label: string; subtitle?: string }[]>(
+      '/api/cards/unowned'
+    ),
+});
 
 async function handleGenerate() {
   if (!state.cardId) return;

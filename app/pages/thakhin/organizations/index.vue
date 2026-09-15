@@ -4,6 +4,7 @@ definePageMeta({
 });
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
+import { useQuery, useQueryClient } from '@tanstack/vue-query';
 import {
   ORGANIZATION_TYPES,
   ORGANIZATION_TYPE_LABELS,
@@ -29,6 +30,7 @@ type OrgRow = {
 };
 
 const toast = useToast();
+const queryClient = useQueryClient();
 
 const isEditOpen = ref(false);
 const isCreateOpen = ref(false);
@@ -67,16 +69,15 @@ type UserOption = {
   avatar?: { src: string };
 };
 
-const {
-  data: orgsData,
-  pending,
-  refresh,
-} = await useFetch<OrgRow[]>('/api/organizations/admin');
+const { data: orgsData, isLoading: pending } = useQuery({
+  queryKey: QUERY_KEYS.adminOrganizations,
+  queryFn: () => $fetch<OrgRow[]>('/api/organizations/admin'),
+});
 
-const { data: usersData, pending: usersPending } = await useFetch<UserOption[]>(
-  '/api/users/admin',
-  { default: () => [] }
-);
+const { data: usersData, isLoading: usersPending } = useQuery({
+  queryKey: QUERY_KEYS.adminUsers,
+  queryFn: () => $fetch<UserOption[]>('/api/users/admin'),
+});
 
 const userItems = computed(() => usersData.value || []);
 
@@ -152,7 +153,9 @@ async function onSaveEdit() {
       method: 'PATCH',
       body: { name, slug },
     });
-    await refresh();
+    await queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.adminOrganizations,
+    });
     toast.add({
       title: 'Organization updated',
       color: 'success',
@@ -194,7 +197,9 @@ async function onCreate() {
         ownerUserId: createForm.ownerUserId || undefined,
       },
     });
-    await refresh();
+    await queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.adminOrganizations,
+    });
     toast.add({
       title: 'Organization created',
       color: 'success',

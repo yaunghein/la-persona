@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/vue-query';
+import { QUERY_KEYS } from '~/utils/query-keys';
 import {
   isCommunityMemberOnly,
   isOrganizationManagerRole,
@@ -18,7 +19,7 @@ export type UserOrganization = {
   role: OrganizationMemberRole;
 };
 
-export const userOrganizationsQueryKey = ['organizations'] as const;
+export const userOrganizationsQueryKey = QUERY_KEYS.organizations;
 
 export function useUserOrganizations() {
   return useQuery({

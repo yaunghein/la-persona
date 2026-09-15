@@ -4,6 +4,7 @@ definePageMeta({
 });
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
+import { useQuery, useQueryClient } from '@tanstack/vue-query';
 import { useThakhinTable } from '~/composables/thakhin-table';
 import {
   THAKHIN_ACTIONS_COLUMN,
@@ -35,6 +36,7 @@ type OptionsResponse = {
 };
 
 const toast = useToast();
+const queryClient = useQueryClient();
 const isCreateOpen = ref(false);
 const isCreating = ref(false);
 const isSendingById = ref<Record<string, boolean>>({});
@@ -49,14 +51,14 @@ const createState = reactive({
   sendNow: false,
 });
 
-const {
-  data: invitationsData,
-  pending,
-  refresh,
-} = await useFetch<InvitationRow[]>('/api/onboarding-invitation');
-const { data: optionsData } = await useFetch<OptionsResponse>(
-  '/api/onboarding-invitation/options'
-);
+const { data: invitationsData, isLoading: pending } = useQuery({
+  queryKey: QUERY_KEYS.invitations,
+  queryFn: () => $fetch<InvitationRow[]>('/api/onboarding-invitation'),
+});
+const { data: optionsData } = useQuery({
+  queryKey: QUERY_KEYS.invitationOptions,
+  queryFn: () => $fetch<OptionsResponse>('/api/onboarding-invitation/options'),
+});
 
 const rows = computed(() => invitationsData.value || []);
 const statusFilter = ref<'all' | 'pending' | 'accepted' | 'cancelled'>('all');
@@ -117,7 +119,7 @@ async function onCreateInvitation() {
       method: 'POST',
       body: createState,
     });
-    await refresh();
+    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations });
     isCreateOpen.value = false;
     createState.email = '';
     createState.organizationName = '';
@@ -151,7 +153,7 @@ async function onSendInvitation(row: InvitationRow) {
     await $fetch(`/api/onboarding-invitation/${row.id}/send`, {
       method: 'POST',
     });
-    await refresh();
+    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations });
     toast.add({
       title: row.resendCount > 0 ? 'Invitation resent' : 'Invitation sent',
       description: `Email sent to ${row.email}.`,

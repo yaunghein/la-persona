@@ -4,6 +4,7 @@ definePageMeta({
 });
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
+import { useQuery, useQueryClient } from '@tanstack/vue-query';
 import { useThakhinTable } from '~/composables/thakhin-table';
 import {
   THAKHIN_ACTIONS_COLUMN,
@@ -33,20 +34,14 @@ type PaymentRow = {
 
 const toast = useToast();
 const runtimeConfig = useRuntimeConfig();
+const queryClient = useQueryClient();
 
-const { data, pending, refresh } = await useFetch<PaymentRow[]>(
-  '/api/subscriptions/payments'
-);
+const { data, isLoading: pending } = useQuery({
+  queryKey: QUERY_KEYS.payments,
+  queryFn: () => $fetch<PaymentRow[]>('/api/subscriptions/payments'),
+});
 
-const rows = ref<PaymentRow[]>([]);
-
-watch(
-  data,
-  (value) => {
-    rows.value = value || [];
-  },
-  { immediate: true }
-);
+const rows = computed(() => data.value || []);
 
 const filterPayer = ref('');
 const filterStatus = ref<'all' | 'submitted' | 'approved' | 'rejected'>('all');
@@ -115,7 +110,7 @@ async function approvePayment(row: PaymentRow) {
     await $fetch(`/api/subscriptions/payments/${row.id}/approve`, {
       method: 'POST',
     });
-    await refresh();
+    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.payments });
     toast.add({
       title: 'Payment approved',
       description: `${row.id} is now approved.`,
@@ -137,7 +132,7 @@ async function rejectPayment(row: PaymentRow) {
       method: 'POST',
       body: {},
     });
-    await refresh();
+    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.payments });
     toast.add({
       title: 'Payment rejected',
       description: `${row.id} was marked rejected.`,

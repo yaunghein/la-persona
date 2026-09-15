@@ -14,7 +14,12 @@ export default defineNuxtPlugin((nuxt) => {
   const vueQueryState = useState<DehydratedState | null>('vue-query');
 
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { staleTime: 5000 } },
+    defaultOptions: {
+      queries: {
+        staleTime: 1000 * 60 * 5,
+        gcTime: 1000 * 60 * 30,
+      },
+    },
   });
   const options: VueQueryPluginOptions = { queryClient };
 
@@ -29,4 +34,10 @@ export default defineNuxtPlugin((nuxt) => {
   if (import.meta.client) {
     hydrate(queryClient, vueQueryState.value);
   }
+
+  return {
+    provide: {
+      queryClient,
+    },
+  };
 });
