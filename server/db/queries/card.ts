@@ -47,6 +47,72 @@ export const findCardsByUserId = async (userId: string) => {
   }));
 };
 
+export const findCardByUserIdAndOrganization = async (
+  userId: string,
+  organizationId: string
+) => {
+  const [row] = await db
+    .select()
+    .from(card)
+    .where(and(eq(card.userId, userId), eq(card.organizationId, organizationId)))
+    .orderBy(desc(card.createdAt))
+    .limit(1);
+
+  return row ?? null;
+};
+
+export const findCardBySlugAndOrganization = async (
+  slug: string,
+  organizationId: string
+) => {
+  const [row] = await db
+    .select()
+    .from(card)
+    .where(and(eq(card.slug, slug), eq(card.organizationId, organizationId)))
+    .limit(1);
+
+  return row ?? null;
+};
+
+const mapOrganizationCardRows = (
+  rows: {
+    card: typeof card.$inferSelect;
+    subscriptionStatus: string | null;
+    subscriptionPlanCode: string | null;
+    subscriptionPlanName: string | null;
+    subscriptionIsTrial: boolean | null;
+  }[]
+) =>
+  rows.map((row) => ({
+    ...row.card,
+    subscription: row.subscriptionStatus
+      ? {
+          status: row.subscriptionStatus,
+          planCode: row.subscriptionPlanCode,
+          planName: row.subscriptionPlanName,
+          isTrial: row.subscriptionIsTrial ?? false,
+        }
+      : null,
+  }));
+
+export const findCardsByOrganization = async (organizationId: string) => {
+  const rows = await db
+    .select({
+      card,
+      subscriptionStatus: cardSubscription.status,
+      subscriptionPlanCode: cardSubscription.planCode,
+      subscriptionPlanName: subscriptionPlan.name,
+      subscriptionIsTrial: cardSubscription.isTrial,
+    })
+    .from(card)
+    .leftJoin(cardSubscription, eq(cardSubscription.cardId, card.id))
+    .leftJoin(subscriptionPlan, eq(subscriptionPlan.code, cardSubscription.planCode))
+    .where(eq(card.organizationId, organizationId))
+    .orderBy(desc(card.createdAt));
+
+  return mapOrganizationCardRows(rows);
+};
+
 export const findCardsByUserIdAndOrganization = async (
   userId: string,
   organizationId: string
@@ -65,17 +131,7 @@ export const findCardsByUserIdAndOrganization = async (
     .where(and(eq(card.userId, userId), eq(card.organizationId, organizationId)))
     .orderBy(desc(card.createdAt));
 
-  return rows.map((row) => ({
-    ...row.card,
-    subscription: row.subscriptionStatus
-      ? {
-          status: row.subscriptionStatus,
-          planCode: row.subscriptionPlanCode,
-          planName: row.subscriptionPlanName,
-          isTrial: row.subscriptionIsTrial ?? false,
-        }
-      : null,
-  }));
+  return mapOrganizationCardRows(rows);
 };
 
 export const findCardsBySlug = async (slug: string) => {
@@ -116,10 +172,10 @@ export const findCardsBySlug = async (slug: string) => {
   };
 };
 
-export const findCardBySlugForUserAndOrganization = async (
+const findOrganizationCardBySlug = async (
   slug: string,
-  userId: string,
-  organizationId: string
+  organizationId: string,
+  userId?: string
 ) => {
   const rows = await db
     .select({
@@ -135,8 +191,8 @@ export const findCardBySlugForUserAndOrganization = async (
     .where(
       and(
         eq(card.slug, slug),
-        eq(card.userId, userId),
-        eq(card.organizationId, organizationId)
+        eq(card.organizationId, organizationId),
+        ...(userId ? [eq(card.userId, userId)] : [])
       )
     )
     .limit(1);
@@ -156,3 +212,14 @@ export const findCardBySlugForUserAndOrganization = async (
       : null,
   };
 };
+
+export const findCardBySlugInOrganization = async (
+  slug: string,
+  organizationId: string
+) => findOrganizationCardBySlug(slug, organizationId);
+
+export const findCardBySlugForUserAndOrganization = async (
+  slug: string,
+  userId: string,
+  organizationId: string
+) => findOrganizationCardBySlug(slug, organizationId, userId);

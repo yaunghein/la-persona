@@ -30,6 +30,46 @@ export type PublicEventDTO = EventDTO & {
   organizer: EventOrganizer;
 };
 
+export const EVENT_REGISTRATION_MODES = [
+  'open',
+  'closed',
+  'invite_only',
+] as const;
+export type EventRegistrationMode = (typeof EVENT_REGISTRATION_MODES)[number];
+
+export const EVENT_APPROVAL_MODES = ['everyone', 'manual'] as const;
+export type EventApprovalMode = (typeof EVENT_APPROVAL_MODES)[number];
+
+export const EVENT_REGISTRATION_STATUSES = [
+  'pending',
+  'registered',
+  'checked_in',
+] as const;
+export type EventRegistrationStatus =
+  (typeof EVENT_REGISTRATION_STATUSES)[number];
+
+export type ViewerRegistrationStatus = 'none' | EventRegistrationStatus;
+
+export type EventListItemDTO = EventDTO & {
+  registeredCount: number;
+  viewerRegistrationStatus: ViewerRegistrationStatus;
+};
+
+export type EventOverviewStats = {
+  registrations: number;
+  checkedIn: number;
+  attendanceRate: string;
+  newMembersJoined: number;
+  registrationTrend: {
+    labels: string[];
+    values: number[];
+  };
+};
+
+export type EventDetailDTO = EventListItemDTO & {
+  overview: EventOverviewStats;
+};
+
 export const createEventBodySchema = z.object({
   title: z.string().trim().min(1, 'Event name is required'),
   description: z.string().trim().optional().or(z.literal('')),
@@ -46,6 +86,8 @@ export const createEventBodySchema = z.object({
     message: 'Cover photo is required',
   }),
   extraPhotoCount: z.number().int().min(0).max(EVENT_MAX_EXTRA_PHOTOS),
+  registrationMode: z.enum(EVENT_REGISTRATION_MODES).default('open'),
+  approvalMode: z.enum(EVENT_APPROVAL_MODES).default('everyone'),
 });
 
 export type CreateEventBody = z.output<typeof createEventBodySchema>;

@@ -191,7 +191,7 @@ const columns: TableColumn<CardRequestRow>[] = [
 </script>
 
 <template>
-  <div class="flex min-h-[calc(100dvh-11rem)] flex-col gap-6">
+  <div class="flex flex-col gap-6">
     <h1
       class="text-[1.75rem] font-normal leading-tight tracking-widest uppercase"
     >

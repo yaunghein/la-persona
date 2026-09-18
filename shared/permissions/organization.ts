@@ -18,6 +18,8 @@ export const organizationAccessControl = createAccessControl(
 export const organizationMemberRole = organizationAccessControl.newRole({
   organization: ['read'],
   event: ['read'],
+  card: ['read', 'update'],
+  media: ['upload'],
 });
 
 export const organizationAdminRole = organizationAccessControl.newRole({
@@ -56,6 +58,11 @@ export const ORGANIZATION_PERMISSIONS = {
   EVENT_READ: { event: ['read'] },
   EVENT_UPDATE: { event: ['update'] },
   EVENT_DELETE: { event: ['delete'] },
+  MEMBER_CREATE: { member: ['create'] },
+  MEMBER_UPDATE: { member: ['update'] },
+  MEMBER_DELETE: { member: ['delete'] },
+  INVITATION_CREATE: { invitation: ['create'] },
+  INVITATION_CANCEL: { invitation: ['cancel'] },
   CARD_CREATE: { card: ['create'] },
   CARD_READ: { card: ['read'] },
   CARD_READ_ALL: { card: ['readAll'] },

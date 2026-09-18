@@ -30,7 +30,7 @@ const selectedTab = computed({
 </script>
 
 <template>
-  <div class="flex min-h-[calc(100dvh-11rem)] flex-1 flex-col gap-8 pb-8">
+  <div class="flex flex-1 flex-col gap-8 pb-8">
     <div class="flex flex-col gap-8 pt-2 sm:pt-0">
       <div
         class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"

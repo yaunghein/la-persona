@@ -3,7 +3,11 @@ import { auth } from '~~/server/auth';
 export default defineEventHandler(async (event) => {
   const path = event.path;
   const isApi = event.path.startsWith(ROUTES.API);
-  const protectedPrefixes = [ROUTES.PLATFORM.ROOT, ROUTES.THAKHIN.ROOT];
+  const protectedPrefixes = [
+    ROUTES.PLATFORM.ROOT,
+    ROUTES.THAKHIN.ROOT,
+    ROUTES.INVITE.ROOT,
+  ];
   const isProtected = protectedPrefixes.some((prefix) =>
     path.startsWith(prefix)
   );

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Application } from '@splinetool/runtime';
 import type { EventAttendee } from '~~/shared/types/community-event-detail';
+import { applyCardToSpline } from '~/utils/spline-card';
 
 // defineOptions({ name: 'CommunityEventCheckInScanner' });
 
@@ -8,17 +9,24 @@ type ScannerState = 'scanning' | 'success' | 'already' | 'not-found';
 
 const props = defineProps<{
   attendees: EventAttendee[];
+  eventId: string;
+}>();
+
+const emit = defineEmits<{
+  checkedIn: [];
 }>();
 
 const open = defineModel<boolean>('open', { default: false });
 
 const toast = useToast();
+const { withOrganizationQuery } = useOrganizationSlug();
 
 const state = ref<ScannerState>('scanning');
 const scannedAttendee = ref<EventAttendee | null>(null);
+const scannedCode = ref('');
 const cameraError = ref('');
 const isSplineLoading = ref(false);
-const mockScanCount = ref(0);
+const isLookingUp = ref(false);
 
 const videoEl = ref<HTMLVideoElement | null>(null);
 const splineCanvasEl = ref<HTMLCanvasElement | null>(null);
@@ -27,6 +35,7 @@ let mediaStream: MediaStream | null = null;
 let splineApp: Application | null = null;
 let cameraStartId = 0;
 let splineLoadId = 0;
+let scanTimer: ReturnType<typeof setInterval> | null = null;
 
 const slideoverTitle = computed(() => {
   if (state.value === 'success') return 'Welcome';
@@ -49,11 +58,13 @@ function closeSlideover() {
 function resetScanner() {
   state.value = 'scanning';
   scannedAttendee.value = null;
+  scannedCode.value = '';
   cameraError.value = '';
-  mockScanCount.value = 0;
+  isLookingUp.value = false;
 }
 
 function stopCamera() {
+  stopScanLoop();
   mediaStream?.getTracks().forEach((track) => track.stop());
   mediaStream = null;
 
@@ -102,6 +113,7 @@ async function startCamera() {
     // scaleX(-1) here or later QR detection will see a flipped image.
     video.style.transform = 'none';
     await video.play();
+    startScanLoop();
   } catch {
     if (startId !== cameraStartId) return;
     cameraError.value = 'Camera access is needed to scan attendee QR codes.';
@@ -123,13 +135,23 @@ async function loadPlaceholderSpline() {
   splineApp = spline;
 
   try {
-    // TODO: Load the scanned attendee’s Spline scene from their persona
-    // card (`splineUrl`) instead of this founder placeholder.
     await spline.load(
-      `https://prod.spline.design/Mu3aeSb6RERM23Q7/scene.splinecode?v=${Date.now()}`
+      `${scannedAttendee.value?.splineUrl || 'https://prod.spline.design/Mu3aeSb6RERM23Q7/scene.splinecode'}?v=${Date.now()}`
     );
     if (loadId !== splineLoadId) {
       spline.dispose();
+      return;
+    }
+    if (scannedAttendee.value) {
+      applyCardToSpline(spline, {
+        firstName: scannedAttendee.value.firstName,
+        lastName: scannedAttendee.value.lastName,
+        position: scannedAttendee.value.position || scannedAttendee.value.role,
+        phone: scannedAttendee.value.phone,
+        email: scannedAttendee.value.email,
+        website: scannedAttendee.value.website,
+        planCode: scannedAttendee.value.planCode,
+      });
     }
   } catch {
     if (loadId !== splineLoadId) return;
@@ -145,53 +167,160 @@ async function loadPlaceholderSpline() {
   }
 }
 
-function resolveMockScan() {
-  // TODO: Replace this mock with real QR decoding.
-  // After a code is read, look up the attendee and route to:
-  // - `success` when they are registered and not yet checked in
-  // - `already` when they are already checked in (see already-checked-in UI)
-  // - `not-found` when no registration matches the scanned code
-  mockScanCount.value += 1;
-  const cycle = mockScanCount.value % 3;
+function stopScanLoop() {
+  if (scanTimer) {
+    clearInterval(scanTimer);
+    scanTimer = null;
+  }
+}
 
-  if (cycle === 1) {
-    scannedAttendee.value =
-      props.attendees.find((attendee) => attendee.status === 'registered') ??
-      props.attendees[0] ??
-      null;
-    state.value = 'success';
+function startScanLoop() {
+  stopScanLoop();
+  scanTimer = setInterval(() => {
+    void detectQrFromCamera();
+  }, 700);
+}
+
+async function detectQrFromCamera() {
+  if (
+    !import.meta.client ||
+    state.value !== 'scanning' ||
+    isLookingUp.value ||
+    !videoEl.value
+  ) {
     return;
   }
 
-  if (cycle === 2) {
-    scannedAttendee.value =
-      props.attendees.find((attendee) => attendee.status === 'checked_in') ??
-      props.attendees[0] ??
-      null;
-    state.value = 'already';
-    return;
-  }
+  const Detector = (
+    window as Window & {
+      BarcodeDetector?: new (options: { formats: string[] }) => {
+        detect: (
+          source: CanvasImageSource
+        ) => Promise<Array<{ rawValue?: string }>>;
+      };
+    }
+  ).BarcodeDetector;
 
-  scannedAttendee.value = null;
-  state.value = 'not-found';
+  if (!Detector) return;
+
+  try {
+    const detector = new Detector({ formats: ['qr_code'] });
+    const codes = await detector.detect(videoEl.value);
+    const value = codes.find((item) => item.rawValue)?.rawValue;
+    if (value) await lookupCode(value);
+  } catch {
+    // Keep scanning.
+  }
+}
+
+async function lookupCode(code: string) {
+  if (isLookingUp.value) return;
+  isLookingUp.value = true;
+  scannedCode.value = code;
+  stopScanLoop();
+
+  try {
+    const result = await $fetch<{
+      status: 'ready' | 'already' | 'not_found';
+      attendee?: {
+        id: string;
+        name: string;
+        role: string;
+        company: string;
+        splineUrl?: string | null;
+        firstName?: string | null;
+        lastName?: string | null;
+        position?: string | null;
+        phone?: string | null;
+        email?: string | null;
+        website?: string | null;
+        planCode?: string | null;
+        slug?: string;
+        checkedInAt?: string | null;
+      };
+    }>(`/api/events/${props.eventId}/check-in/preview`, {
+      method: 'POST',
+      query: withOrganizationQuery(),
+      body: { code },
+    });
+
+    if (result.status === 'not_found' || !result.attendee) {
+      scannedAttendee.value = null;
+      state.value = 'not-found';
+      return;
+    }
+
+    scannedAttendee.value = {
+      id: result.attendee.id,
+      name: result.attendee.name,
+      role: result.attendee.role,
+      company: result.attendee.company,
+      status: result.status === 'already' ? 'checked_in' : 'registered',
+      statusLabel: result.status === 'already' ? 'Already checked in' : 'Registered',
+      membershipStatus: 'Active',
+      joinedAt: '',
+      registeredAt: '',
+      checkedInAt: result.attendee.checkedInAt
+        ? new Date(result.attendee.checkedInAt).toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+          })
+        : null,
+      eventsAttended: 0,
+      connectionsMade: 0,
+      splineUrl: result.attendee.splineUrl,
+      firstName: result.attendee.firstName,
+      lastName: result.attendee.lastName,
+      position: result.attendee.position,
+      phone: result.attendee.phone,
+      email: result.attendee.email,
+      website: result.attendee.website,
+      planCode: result.attendee.planCode,
+      cardSlug: result.attendee.slug,
+    };
+
+    state.value = result.status === 'already' ? 'already' : 'success';
+  } catch {
+    scannedAttendee.value = null;
+    state.value = 'not-found';
+  } finally {
+    isLookingUp.value = false;
+  }
 }
 
 async function resumeScanning() {
   scannedAttendee.value = null;
+  scannedCode.value = '';
   disposeSpline();
   state.value = 'scanning';
 }
 
-function confirmCheckIn() {
-  if (!scannedAttendee.value) return;
+async function confirmCheckIn() {
+  if (!scannedCode.value) return;
 
-  toast.add({
-    title: 'Checked in',
-    description: `${scannedAttendee.value.name} has been checked in.`,
-    color: 'success',
-  });
-
-  resumeScanning();
+  try {
+    await $fetch(`/api/events/${props.eventId}/check-in`, {
+      method: 'POST',
+      query: withOrganizationQuery(),
+      body: { code: scannedCode.value },
+    });
+    toast.add({
+      title: 'Checked in',
+      description: scannedAttendee.value
+        ? `${scannedAttendee.value.name} has been checked in.`
+        : 'Attendee checked in.',
+      color: 'success',
+    });
+    emit('checkedIn');
+    await resumeScanning();
+  } catch (error: any) {
+    toast.add({
+      title: 'Check-in failed',
+      description:
+        error?.data?.statusMessage || error?.statusMessage || 'Try again.',
+      color: 'error',
+    });
+  }
 }
 
 watch(open, (isOpen) => {
@@ -214,7 +343,12 @@ watch(videoEl, async (el) => {
 });
 
 watch(splineCanvasEl, async (el) => {
-  if (el && open.value && state.value === 'success' && !splineApp) {
+  if (
+    el &&
+    open.value &&
+    (state.value === 'success' || state.value === 'already') &&
+    !splineApp
+  ) {
     await loadPlaceholderSpline();
   }
 });
@@ -232,7 +366,7 @@ watch(
 
     stopCamera();
 
-    if (currentState === 'success') {
+    if (currentState === 'success' || currentState === 'already') {
       await loadPlaceholderSpline();
       return;
     }
@@ -240,6 +374,18 @@ watch(
     disposeSpline();
   }
 );
+
+async function onManualCode() {
+  if (!import.meta.client) return;
+  if (
+    (window as Window & { BarcodeDetector?: unknown }).BarcodeDetector &&
+    !cameraError.value
+  ) {
+    return;
+  }
+  const code = window.prompt('Paste the community card URL or slug');
+  if (code) await lookupCode(code);
+}
 
 onBeforeUnmount(() => {
   stopCamera();
@@ -292,12 +438,12 @@ onBeforeUnmount(() => {
               </p>
             </div>
           </div>
-          <!-- TODO: Remove this mock click once real QR detection is wired. -->
+          <!-- Fallback when BarcodeDetector is unavailable: click to enter a card URL. -->
           <button
             type="button"
             class="absolute inset-0 z-10"
-            aria-label="Simulate scan"
-            @click="resolveMockScan"
+            aria-label="Enter card URL if camera scan is unavailable"
+            @click="onManualCode"
           />
         </div>
         <p class="text-sm font-medium text-[#8b8b8b]">
@@ -305,7 +451,10 @@ onBeforeUnmount(() => {
         </p>
       </div>
 
-      <div v-else-if="state === 'success'" class="relative h-full w-full">
+      <div
+        v-else-if="state === 'success' || state === 'already'"
+        class="relative h-full w-full"
+      >
         <canvas ref="splineCanvasEl" class="size-full" />
         <div
           v-if="isSplineLoading"
@@ -316,23 +465,6 @@ onBeforeUnmount(() => {
             class="size-6 animate-spin text-[#8b8b8b]"
           />
         </div>
-      </div>
-
-      <div
-        v-else-if="state === 'already'"
-        class="flex h-full flex-col items-center justify-center gap-3 py-8 text-center"
-      >
-        <!-- TODO: After QR decoding is wired, confirm the attendee is
-             already checked in and show their live checked-in time here. -->
-        <p v-if="scannedAttendee" class="text-lg font-medium text-white">
-          {{ scannedAttendee.name }}
-        </p>
-        <p v-if="scannedAttendee" class="text-sm text-[#8b8b8b]">
-          {{ scannedAttendee.role }}
-          <template v-if="scannedAttendee.company">
-            • {{ scannedAttendee.company }}
-          </template>
-        </p>
       </div>
 
       <div

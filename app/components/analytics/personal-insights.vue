@@ -16,6 +16,10 @@ import {
   OTHER_LINK_LABELS,
   SOCIAL_MEDIA_LINK_LABELS,
 } from '~~/shared/constants/card-link-options';
+import {
+  ANALYTICS_PERIOD_OPTIONS,
+  type AnalyticsPeriod,
+} from '~~/shared/utils/analytics-period';
 
 ChartJS.register(
   Title,
@@ -30,6 +34,7 @@ ChartJS.register(
 
 interface DashboardStats {
   isOwner: boolean;
+  period?: AnalyticsPeriod;
   cards: { id: string; label: string }[];
   socialConfiguredLabels: string[];
   otherConfiguredLabels: string[];
@@ -43,9 +48,11 @@ interface DashboardStats {
 const props = defineProps<{
   orgSlug: string;
   userName?: string | null;
+  allCardsHeading?: string;
 }>();
 
 const selectedCardId = ref('all');
+const selectedPeriod = ref<AnalyticsPeriod>('7d');
 const isInfoOpen = ref(false);
 const { data: session } = await authClient.useSession(useFetch);
 const hasSeenInfoPopup = useLocalStorage(
@@ -63,15 +70,17 @@ watch(
   () => props.orgSlug,
   () => {
     selectedCardId.value = 'all';
+    selectedPeriod.value = '7d';
   }
 );
 
 const { data: stats, isLoading } = useQuery<DashboardStats>({
-  queryKey: ['analytics', () => props.orgSlug, selectedCardId],
+  queryKey: ['analytics', () => props.orgSlug, selectedCardId, selectedPeriod],
   queryFn: async () =>
     $fetch<DashboardStats>('/api/analytics', {
       query: {
         cardId: selectedCardId.value,
+        period: selectedPeriod.value,
         organizationSlug: props.orgSlug,
       },
     }),
@@ -79,9 +88,22 @@ const { data: stats, isLoading } = useQuery<DashboardStats>({
 });
 
 const isOwner = computed(() => stats.value?.isOwner === true);
+
+const { data: orgCards } = useQuery<CardDTO[]>({
+  queryKey: ['cards', () => props.orgSlug],
+  queryFn: () =>
+    $fetch<CardDTO[]>('/api/cards', {
+      query: { organizationSlug: props.orgSlug },
+    }),
+  enabled: () => !!props.orgSlug && isOwner.value,
+});
+
 const ownerCardItems = computed(() => [
   { id: 'all', label: 'All Cards' },
-  ...(stats.value?.cards || []),
+  ...(orgCards.value || []).map((item) => ({
+    id: item.id,
+    label: `${item.firstName} ${item.lastName || ''}`.trim(),
+  })),
 ]);
 const analyticsHeading = computed(() => {
   if (isOwner.value && selectedCardId.value !== 'all') {
@@ -91,9 +113,14 @@ const analyticsHeading = computed(() => {
     return `${selectedCard?.label || 'Card'}'s Analytics`;
   }
 
+  if (isOwner.value && props.allCardsHeading) {
+    return props.allCardsHeading;
+  }
+
   const displayName = props.userName || session.value?.user?.name || 'Your';
   return `${displayName}'s Analytics`;
 });
+const periodOptions = ANALYTICS_PERIOD_OPTIONS;
 
 const infoItems = [
   {
@@ -287,10 +314,7 @@ function closeInfo() {
 </script>
 
 <template>
-  <div
-    v-if="isLoading"
-    class="flex min-h-[calc(100dvh-11rem)] flex-col gap-4 pb-17 sm:pb-0"
-  >
+  <div v-if="isLoading" class="flex flex-col gap-4 pb-17 sm:pb-0">
     <USkeleton class="h-8 w-64 rounded-md" />
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
       <USkeleton v-for="i in 4" :key="i" class="h-32 rounded-lg" />
@@ -318,20 +342,39 @@ function closeInfo() {
         />
       </div>
 
-      <USelectMenu
-        v-if="isOwner"
-        v-model="selectedCardId"
-        value-key="id"
-        :items="ownerCardItems"
-        :search-input="false"
-        class="w-auto min-w-48 sm:w-48 fixed z-20 bottom-5 left-1/2 -translate-x-1/2 sm:translate-x-0 sm:static"
-        :ui="{
-          base: 'h-10 rounded-lg border-none bg-[#171717] px-4 text-white',
-          content: 'bg-[#171717] border border-[#2a2a2a]',
-          item: 'text-white data-[highlighted]:bg-[#232323]',
-          value: 'text-white',
-        }"
-      />
+      <div class="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+        <USelectMenu
+          v-model="selectedPeriod"
+          value-key="value"
+          :items="periodOptions"
+          :search-input="false"
+          class="w-auto min-w-36 sm:w-40"
+          :ui="{
+            base: 'h-10 rounded-lg border-none bg-[#171717] px-4 text-white',
+            content: 'bg-[#171717] border border-[#2a2a2a]',
+            item: 'text-white data-[highlighted]:bg-[#232323]',
+            value: 'text-white',
+          }"
+        />
+        <USelectMenu
+          v-if="isOwner"
+          v-model="selectedCardId"
+          value-key="id"
+          :items="ownerCardItems"
+          :search-input="{
+            placeholder: 'Search cards...',
+            icon: 'i-lucide-search',
+          }"
+          :filter-fields="['label']"
+          class="w-auto min-w-48 sm:w-56 fixed z-20 bottom-5 left-1/2 -translate-x-1/2 sm:translate-x-0 sm:static"
+          :ui="{
+            base: 'h-10 rounded-lg border-none bg-[#171717] px-4 text-white',
+            content: 'bg-[#171717] border border-[#2a2a2a]',
+            item: 'text-white data-[highlighted]:bg-[#232323]',
+            value: 'text-white',
+          }"
+        />
+      </div>
     </div>
 
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -552,8 +595,7 @@ function closeInfo() {
     v-model:open="isInfoOpen"
     title="What is analytics?"
     :ui="{
-      content:
-        'sm:max-w-[480px] rounded-lg bg-[#171717]',
+      content: 'sm:max-w-[480px] rounded-lg bg-[#171717]',
       title: 'text-sm font-medium uppercase tracking-widest text-white',
       body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"

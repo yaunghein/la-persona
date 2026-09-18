@@ -1,4 +1,8 @@
-import type { EventDTO } from '~~/shared/types/event';
+import type {
+  EventDTO,
+  EventListItemDTO,
+  ViewerRegistrationStatus,
+} from '~~/shared/types/event';
 import {
   eventStatus,
   formatEventDateLabel,
@@ -22,6 +26,10 @@ export type CommunityEvent = {
   capacity: number | null;
   coverUrl: string;
   photoUrls: string[];
+  registrationMode: EventDTO['registrationMode'];
+  approvalMode: EventDTO['approvalMode'];
+  registeredCount: number;
+  viewerRegistrationStatus: ViewerRegistrationStatus;
 };
 
 export type CommunityEventsFilterOption = {
@@ -51,9 +59,11 @@ export type CommunityEventFormValues = {
   coverUrl: string;
   photoUrls: string[];
   capacity: number | null;
+  registrationMode: EventDTO['registrationMode'];
+  approvalMode: EventDTO['approvalMode'];
 };
 
-export function toCommunityEvent(event: EventDTO): CommunityEvent {
+export function toCommunityEvent(event: EventListItemDTO): CommunityEvent {
   return {
     id: event.id,
     title: event.title,
@@ -68,5 +78,9 @@ export function toCommunityEvent(event: EventDTO): CommunityEvent {
     capacity: event.capacity,
     coverUrl: event.coverUrl,
     photoUrls: event.photoUrls ?? [],
+    registrationMode: event.registrationMode,
+    approvalMode: event.approvalMode,
+    registeredCount: event.registeredCount,
+    viewerRegistrationStatus: event.viewerRegistrationStatus,
   };
 }

@@ -5,8 +5,13 @@ const props = defineProps<{
   member: CommunityMember | null;
 }>();
 
-const open = defineModel<boolean>('open', { default: false });
+const emit = defineEmits<{
+  remove: [member: CommunityMember];
+  approve: [member: CommunityMember];
+  reject: [member: CommunityMember];
+}>();
 
+const open = defineModel<boolean>('open', { default: false });
 const toast = useToast();
 const runtimeConfig = useRuntimeConfig();
 
@@ -61,27 +66,13 @@ const personaCardUrl = computed(() =>
 );
 
 function onRemove() {
-  toast.add({
-    title: 'Remove member',
-    description: 'Removal is not wired yet.',
-    color: 'warning',
-  });
+  if (!props.member) return;
+  emit('remove', props.member);
 }
 
 function onReject() {
-  toast.add({
-    title: 'Reject member',
-    description: 'Pending member rejection is not wired yet.',
-    color: 'warning',
-  });
-}
-
-function onApprove() {
-  toast.add({
-    title: 'Approve member',
-    description: 'Pending member approval is not wired yet.',
-    color: 'success',
-  });
+  if (!props.member) return;
+  emit('reject', props.member);
 }
 
 function onViewPersona() {
@@ -191,20 +182,12 @@ function onViewPersona() {
     <template v-if="member" #footer>
       <div v-if="isPending" class="flex items-center justify-end gap-2.5">
         <UButton
-          label="Reject"
+          label="Cancel"
           leading-icon="i-lucide-x"
           color="neutral"
           :ui="{ leadingIcon: 'size-4' }"
           class="h-9 cursor-pointer justify-center rounded-full bg-[#232323] py-2 pr-6 pl-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
           @click="onReject"
-        />
-        <UButton
-          label="Approve"
-          leading-icon="i-lucide-check"
-          color="neutral"
-          :ui="{ leadingIcon: 'size-4' }"
-          class="h-9 cursor-pointer justify-center rounded-full bg-green py-2 pr-6 pl-5 text-sm font-medium text-dark hover:bg-green/90"
-          @click="onApprove"
         />
       </div>
       <div v-else class="flex items-center justify-end gap-4">

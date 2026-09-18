@@ -102,10 +102,24 @@ function onView(event: CommunityEvent) {
 function onRegister(event: CommunityEvent) {
   emit('register', event);
 }
+
+function registerLabel(event: CommunityEvent) {
+  if (event.viewerRegistrationStatus === 'pending') return 'Pending';
+  if (event.viewerRegistrationStatus === 'registered') return 'Registered';
+  if (event.viewerRegistrationStatus === 'checked_in') return 'Checked in';
+  return 'Register';
+}
+
+function canRegister(event: CommunityEvent) {
+  return (
+    event.registrationMode !== 'closed' &&
+    event.viewerRegistrationStatus === 'none'
+  );
+}
 </script>
 
 <template>
-  <div class="flex min-h-[calc(100dvh-11rem)] flex-col">
+  <div class="flex flex-col">
     <div class="flex flex-col gap-8 pt-2 sm:pt-0">
       <div
         class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
@@ -233,11 +247,21 @@ function onRegister(event: CommunityEvent) {
           </div>
           <div v-else class="flex items-center justify-end gap-3">
             <UButton
+              v-if="canRegister(event)"
               label="Register"
               color="neutral"
               class="h-8 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
               @click="onRegister(event)"
             />
+            <span
+              v-else-if="event.registrationMode === 'closed'"
+              class="text-sm text-[#8b8b8b]"
+            >
+              Closed
+            </span>
+            <span v-else class="text-sm text-[#8b8b8b]">
+              {{ registerLabel(event) }}
+            </span>
             <UButton
               icon="i-lucide-scan-eye"
               color="primary"

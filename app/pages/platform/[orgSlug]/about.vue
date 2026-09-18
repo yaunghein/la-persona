@@ -35,15 +35,12 @@ function onViewOrganizer() {
 </script>
 
 <template>
-  <div v-if="isLoading" class="flex min-h-[calc(100dvh-11rem)] flex-col gap-8">
+  <div v-if="isLoading" class="flex flex-col gap-8">
     <USkeleton class="h-8 w-64 rounded-md" />
     <USkeleton class="aspect-[1/0.25] w-full rounded-t-lg" />
     <USkeleton class="min-h-96 w-full rounded-b-lg" />
   </div>
-  <div
-    v-else-if="isError"
-    class="flex min-h-[calc(100dvh-11rem)] flex-col items-start gap-4"
-  >
+  <div v-else-if="isError" class="flex flex-col items-start gap-4">
     <p class="text-sm text-[#8b8b8b]">
       {{
         (error as { data?: { statusMessage?: string }; message?: string })?.data

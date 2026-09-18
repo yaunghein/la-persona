@@ -12,6 +12,9 @@ export type CommunitySettingsFormValues = {
   whyJoin: string;
   coverImageUrl: string;
   logoUrl: string;
+  splineUrl: string;
+  wallpaperUrl: string;
+  cardBackUrl: string;
 };
 
 export type CommunitySettingsDTO = CommunitySettingsFormValues;
@@ -21,6 +24,9 @@ export const updateCommunitySettingsBodySchema = z.object({
   description: z.string(),
   guidelines: z.string(),
   whyJoin: z.string(),
+  splineUrl: z.string().trim().min(1, 'Spline URL is required'),
+  wallpaperUrl: z.string().trim().min(1, 'Wallpaper URL is required'),
+  cardBackUrl: z.string().trim().min(1, 'Card back URL is required'),
 });
 
 export type UpdateCommunitySettingsBody = z.output<
@@ -34,6 +40,9 @@ export function toCommunitySettingsDTO(params: {
   description?: string | null;
   guidelines?: string | null;
   whyJoin?: string | null;
+  splineUrl?: string | null;
+  wallpaperUrl?: string | null;
+  cardBackUrl?: string | null;
 }): CommunitySettingsDTO {
   return {
     name: params.name,
@@ -42,5 +51,8 @@ export function toCommunitySettingsDTO(params: {
     description: params.description ?? '',
     guidelines: params.guidelines ?? '',
     whyJoin: params.whyJoin ?? '',
+    splineUrl: params.splineUrl?.trim() || '',
+    wallpaperUrl: params.wallpaperUrl?.trim() || '',
+    cardBackUrl: params.cardBackUrl?.trim() || '',
   };
 }

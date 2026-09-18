@@ -141,7 +141,7 @@ const columns: TableColumn<UserRow>[] = [
 </script>
 
 <template>
-  <div class="flex min-h-[calc(100dvh-11rem)] flex-col gap-6">
+  <div class="flex flex-col gap-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <h1
         class="text-[1.75rem] font-normal leading-tight tracking-widest uppercase"

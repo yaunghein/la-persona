@@ -7,6 +7,7 @@ import { member, organization } from '~~/server/db/schema';
 import {
   type OrganizationPermission,
   organizationPermissionStatements,
+  isOrganizationManagerRole,
 } from '~~/shared/permissions/organization';
 
 type SessionWithOrganization = {
@@ -107,6 +108,72 @@ export async function requireOrganizationSession(event: H3Event) {
   session.session.activeOrganizationId = organizationId;
 
   return session as SessionWithOrganization;
+}
+
+export async function requireSession(event: H3Event) {
+  const session = await auth.api.getSession({
+    headers: event.headers,
+  });
+
+  if (!session) {
+    throw createError({
+      statusCode: 401,
+      statusMessage: 'Unauthorized',
+    });
+  }
+
+  return session;
+}
+
+export async function requireCommunityOrganization(event: H3Event) {
+  const session = await requireOrganizationSession(event);
+  const org = await db.query.organization.findFirst({
+    where: eq(organization.id, session.session.activeOrganizationId),
+    columns: {
+      id: true,
+      name: true,
+      slug: true,
+      logo: true,
+      type: true,
+    },
+  });
+
+  if (!org || org.type !== 'community') {
+    throw createError({
+      statusCode: 400,
+      statusMessage:
+        'This action is only available for community organizations',
+    });
+  }
+
+  return { session, org };
+}
+
+export async function requireCommunityManager(
+  event: H3Event,
+  statusMessage = 'Forbidden'
+) {
+  const session = await requireOrganizationSession(event);
+  const membership = await db
+    .select({ role: member.role })
+    .from(member)
+    .where(
+      and(
+        eq(member.userId, session.user.id),
+        eq(member.organizationId, session.session.activeOrganizationId)
+      )
+    )
+    .limit(1)
+    .then((rows) => rows[0]);
+
+  if (!isOrganizationManagerRole(membership?.role)) {
+    throw createError({
+      statusCode: 403,
+      statusMessage,
+    });
+  }
+
+  return session;
 }
 
 export async function hasOrganizationPermission(

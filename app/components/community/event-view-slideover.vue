@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { EventDTO } from '~~/shared/types/event';
+import type { EventListItemDTO } from '~~/shared/types/event';
 import {
   formatEventTimeLabel,
   formatEventWeekdayDateLabel,
@@ -7,14 +7,14 @@ import {
 import { eventGalleryImages } from '~~/shared/utils/event-media';
 
 const props = defineProps<{
-  event?: EventDTO | null;
+  event?: EventListItemDTO | null;
 }>();
 
 const open = defineModel<boolean>('open', { default: false });
 
 const emit = defineEmits<{
-  register: [event: EventDTO];
-  viewOrganizer: [event: EventDTO];
+  register: [event: EventListItemDTO];
+  viewOrganizer: [event: EventListItemDTO];
 }>();
 
 const galleryImages = computed(() => {
@@ -143,10 +143,26 @@ function onViewOrganizer() {
           @click="onViewOrganizer"
         />
         <UButton
+          v-if="event.registrationMode !== 'closed' && event.viewerRegistrationStatus === 'none'"
           label="Register"
           color="neutral"
           class="h-9 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
           @click="onRegister"
+        />
+        <UButton
+          v-else
+          :label="
+            event.registrationMode === 'closed'
+              ? 'Closed'
+              : event.viewerRegistrationStatus === 'pending'
+                ? 'Pending'
+                : event.viewerRegistrationStatus === 'checked_in'
+                  ? 'Checked in'
+                  : 'Registered'
+          "
+          color="neutral"
+          disabled
+          class="h-9 cursor-not-allowed rounded-full bg-[#232323] px-5 text-sm font-medium text-[#8b8b8b]"
         />
       </div>
     </template>

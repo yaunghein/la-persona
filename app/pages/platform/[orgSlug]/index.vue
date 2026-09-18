@@ -3,7 +3,11 @@ definePageMeta({
   layout: 'platform',
 });
 
+import type { TabsItem } from '@nuxt/ui';
+import { useQuery } from '@tanstack/vue-query';
+import { QUERY_KEYS } from '~/utils/query-keys';
 import type { CommunityInsightsData } from '~~/shared/types/community-insights';
+import type { AnalyticsPeriod } from '~~/shared/utils/analytics-period';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
 const route = useRoute();
@@ -19,97 +23,104 @@ const currentOrg = computed(() =>
 const isCommunity = computed(
   () => currentOrg.value?.type === ORGANIZATION_TYPES.COMMUNITY
 );
+const isManager = computed(() => isCommunityManager(currentOrg.value));
 
-/** Mock until community analytics API / schema exists. */
-const communityInsightsMock: CommunityInsightsData = {
-  title: 'Community Insights',
-  periodOptions: [
-    { label: '7 Days', value: '7d' },
-    { label: '30 Days', value: '30d' },
-    { label: '90 Days', value: '90d' },
-  ],
-  metrics: [
-    { label: 'Total Members', value: '1,248' },
-    { label: 'Total Events', value: '18' },
-    { label: 'Active Members', value: '892' },
-    { label: 'Registrations', value: '3,462' },
-    { label: 'Average Attendance Rate', value: '68%' },
-    { label: 'New Members', value: '+46' },
-  ],
-  memberGrowth: {
-    labels: [
-      'Jan 10',
-      'Jan 11',
-      'Jan 12',
-      'Jan 13',
-      'Jan 14',
-      'Jan 15',
-      'Jan 16',
-    ],
-    values: [42, 58, 71, 95, 112, 138, 156],
-  },
-  eventPerformance: [
-    {
-      id: '1',
-      event: 'Tech Leaders Networking Night',
-      registered: 342,
-      checkedIn: 218,
-      attendance: '64%',
-    },
-    {
-      id: '2',
-      event: 'Startup Mixer Yangon #12',
-      registered: 280,
-      checkedIn: 201,
-      attendance: '72%',
-    },
-    {
-      id: '3',
-      event: 'Founders & Investors Dinner',
-      registered: 48,
-      checkedIn: 45,
-      attendance: '94%',
-    },
-  ],
-  infoItems: [
-    {
-      icon: 'i-lucide-users',
-      title: 'Track Membership',
-      description:
-        'See total, active, and new members across your organization.',
-    },
-    {
-      icon: 'i-lucide-calendar',
-      title: 'Measure Events',
-      description: 'Compare registrations, check-ins, and attendance by event.',
-    },
-    {
-      icon: 'i-lucide-trending-up',
-      title: 'Follow Growth',
-      description: 'Watch how your community grows over the selected period.',
-    },
-  ],
-};
+const insightsTab = ref('community');
+const communityPeriod = ref<AnalyticsPeriod>('7d');
 
-const communityPeriod = ref('7d');
+const tabItems = [
+  { label: 'Community', value: 'community', slot: 'community' },
+  { label: 'Cards', value: 'cards', slot: 'cards' },
+] satisfies TabsItem[];
+
+watch(orgSlug, () => {
+  insightsTab.value = 'community';
+  communityPeriod.value = '7d';
+});
+
+const {
+  data: communityInsights,
+  isPending: isCommunityInsightsPending,
+  isError: isCommunityInsightsError,
+} = useQuery<CommunityInsightsData>({
+  queryKey: [
+    ...QUERY_KEYS.communityInsights,
+    orgSlug,
+    communityPeriod,
+  ],
+  queryFn: () =>
+    $fetch<CommunityInsightsData>('/api/community-insights', {
+      query: {
+        period: communityPeriod.value,
+        organizationSlug: orgSlug.value,
+      },
+    }),
+  enabled: () => isCommunity.value && isManager.value && !!orgSlug.value,
+});
+
+const showCommunityTabs = computed(
+  () => isCommunity.value && isManager.value
+);
 </script>
 
 <template>
-  <div
-    v-if="isOrgsLoading"
-    class="flex min-h-[calc(100dvh-11rem)] flex-col gap-4"
-  >
+  <div v-if="isOrgsLoading" class="flex flex-col gap-4">
     <USkeleton class="h-8 w-64 rounded-md" />
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
       <USkeleton v-for="i in 4" :key="i" class="h-32 rounded-lg" />
     </div>
     <USkeleton class="h-80 w-full rounded-lg" />
   </div>
-  <AnalyticsCommunityInsights
-    v-else-if="isCommunity"
-    v-model:period="communityPeriod"
-    :data="communityInsightsMock"
-  />
+
+  <div v-else-if="showCommunityTabs" class="space-y-6">
+    <UTabs
+      v-model="insightsTab"
+      :items="tabItems"
+      color="neutral"
+      variant="pill"
+      :unmount-on-hide="false"
+      :ui="{
+        root: 'w-full',
+        list: 'bg-[#171717] w-full sm:w-fit rounded-lg p-1',
+        indicator: 'bg-[#232323]',
+        trigger:
+          'data-[state=active]:text-white data-[state=inactive]:text-[#8b8b8b] rounded-md px-4 py-2.5 grow-0 whitespace-nowrap text-center sm:text-left w-full sm:w-fit',
+        content: 'pt-6',
+      }"
+    >
+      <template #community>
+        <div
+          v-if="isCommunityInsightsPending"
+          class="flex flex-col gap-4 pb-17 sm:pb-0"
+        >
+          <USkeleton class="h-8 w-64 rounded-md" />
+          <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <USkeleton v-for="i in 6" :key="i" class="h-32 rounded-lg" />
+          </div>
+          <USkeleton class="h-80 w-full rounded-lg" />
+        </div>
+        <p
+          v-else-if="isCommunityInsightsError || !communityInsights"
+          class="text-sm text-[#8b8b8b]"
+        >
+          Could not load community insights.
+        </p>
+        <AnalyticsCommunityInsights
+          v-else
+          v-model:period="communityPeriod"
+          :data="communityInsights"
+        />
+      </template>
+      <template #cards>
+        <AnalyticsPersonalInsights
+          :org-slug="orgSlug"
+          :user-name="session?.user?.name"
+          all-cards-heading="Card Analytics"
+        />
+      </template>
+    </UTabs>
+  </div>
+
   <AnalyticsPersonalInsights
     v-else
     :org-slug="orgSlug"

@@ -9,6 +9,16 @@ export default defineNuxtConfig({
     'nuxt-gtag',
     'nuxt-security',
   ],
+  $development: {
+    security: {
+      headers: {
+        strictTransportSecurity: false,
+        contentSecurityPolicy: {
+          'upgrade-insecure-requests': false,
+        },
+      },
+    },
+  },
   security: {
     headers: {
       permissionsPolicy: {
@@ -78,6 +88,7 @@ export default defineNuxtConfig({
     '/': { prerender: true },
     '/platform': { ssr: false },
     '/platform/**': { ssr: false },
+    '/invite/**': { ssr: false },
     '/thakhin/**': { ssr: false },
   },
   app: {

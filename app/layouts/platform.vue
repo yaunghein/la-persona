@@ -87,9 +87,7 @@ const isSelectedCommunityMember = computed(() =>
 );
 
 function communityHomePath(slug: string) {
-  const org = communityOrgs.value.find((item) => item.slug === slug);
-  const base = `${ROUTES.PLATFORM.ROOT}/${slug}`;
-  return isCommunityMemberOnlyOrg(org) ? `${base}/events` : base;
+  return `${ROUTES.PLATFORM.ROOT}/${slug}`;
 }
 
 async function onSelectCommunity(slug: unknown) {
@@ -141,6 +139,18 @@ const communitiesLinks = computed(() => {
   if (isSelectedCommunityMember.value) {
     return [
       {
+        label: 'Insights',
+        icon: 'i-gg:insights',
+        to: communitiesBasePath.value,
+        onSelect: closeSidebar,
+      },
+      {
+        label: 'Cards',
+        icon: 'i-material-symbols:cards-stack-outline-sharp',
+        to: `${communitiesBasePath.value}/cards`,
+        onSelect: closeSidebar,
+      },
+      {
         label: 'Events',
         icon: 'i-lucide-calendar',
         to: `${communitiesBasePath.value}/events`,
@@ -166,6 +176,12 @@ const communitiesLinks = computed(() => {
       label: 'Members',
       icon: 'i-ri:team-line',
       to: `${communitiesBasePath.value}/members`,
+      onSelect: closeSidebar,
+    },
+    {
+      label: 'Cards',
+      icon: 'i-material-symbols:cards-stack-outline-sharp',
+      to: `${communitiesBasePath.value}/cards`,
       onSelect: closeSidebar,
     },
     {

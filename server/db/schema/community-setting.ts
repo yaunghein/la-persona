@@ -13,6 +13,12 @@ export const communitySetting = pgTable(
       .notNull()
       .references(() => organization.id, { onDelete: 'cascade' }),
     coverUrl: text(),
+    inviteToken: text()
+      .notNull()
+      .$defaultFn(() => nanoid()),
+    splineUrl: text().default('').notNull(),
+    wallpaperUrl: text().default('').notNull(),
+    cardBackUrl: text().default('').notNull(),
     description: text().default('').notNull(),
     guidelines: text().default('').notNull(),
     whyJoin: text().default('').notNull(),
@@ -24,5 +30,6 @@ export const communitySetting = pgTable(
   },
   (table) => [
     uniqueIndex('community_setting_organization_uidx').on(table.organizationId),
+    uniqueIndex('community_setting_invite_token_uidx').on(table.inviteToken),
   ]
 );

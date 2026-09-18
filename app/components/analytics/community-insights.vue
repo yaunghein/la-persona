@@ -15,6 +15,7 @@ import type {
   CommunityEventPerformance,
   CommunityInsightsData,
 } from '~~/shared/types/community-insights';
+import type { AnalyticsPeriod } from '~~/shared/utils/analytics-period';
 
 ChartJS.register(
   Title,
@@ -30,7 +31,7 @@ const props = defineProps<{
   data: CommunityInsightsData;
 }>();
 
-const selectedPeriod = defineModel<string>('period', { default: '7d' });
+const selectedPeriod = defineModel<AnalyticsPeriod>('period', { default: '7d' });
 const isInfoOpen = ref(false);
 
 function openInfo() {

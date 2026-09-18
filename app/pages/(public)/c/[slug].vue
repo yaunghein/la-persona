@@ -3,25 +3,7 @@ import { Application } from '@splinetool/runtime';
 import type { ConcreteComponent } from 'vue';
 import { SOCIAL_MEDIA_LINK_LABELS } from '~~/shared/constants/card-link-options';
 import { downloadFile } from '~/utils/share-or-download';
-
-function websiteLabelForSpline(website: string | null | undefined): string {
-  if (!website?.trim()) return '';
-  const raw = website.trim();
-  try {
-    const url = new URL(raw.includes('://') ? raw : `https://${raw}`);
-    const host = url.hostname.toUpperCase();
-    const path =
-      url.pathname && url.pathname !== '/'
-        ? url.pathname.replace(/\/$/, '').toUpperCase()
-        : '';
-    return path ? `${host}${path}` : host;
-  } catch {
-    return raw
-      .replace(/^https?:\/\//i, '')
-      .replace(/\/$/, '')
-      .toUpperCase();
-  }
-}
+import { applyCardToSpline } from '~/utils/spline-card';
 
 const { trackEvent } = useAnalytics();
 const runtimeConfig = useRuntimeConfig();
@@ -30,6 +12,14 @@ const { normalizeCardLinkValue } = useUrlNormalization();
 
 const { slug } = route.params;
 const { data: card } = await useFetch<CardDTO>(`/api/public/cards/${slug}`);
+
+if (!card.value) {
+  throw createError({
+    statusCode: 404,
+    statusMessage: 'Page not found',
+  });
+}
+
 const { data: session } = await authClient.useSession(useFetch);
 
 function getS3Url(path?: string | null) {
@@ -124,33 +114,14 @@ onMounted(async () => {
   spline.load(card.value?.splineUrl + `?v=${new Date().getTime()}`).then(() => {
     loading.value = false;
     if (!card.value) return;
-    const fullname = [card.value.firstName, card.value.lastName]
-      .filter(Boolean)
-      .join(' ')
-      .trim()
-      .toUpperCase();
-    const planCode = card.value.subscription?.planCode;
-    const isFounderSubscription =
-      planCode === 'founder' || planCode === 'founder-club';
-
-    if (isFounderSubscription) {
-      spline.setVariables({
-        firstname: card.value.firstName?.toUpperCase() || '',
-        lastname: card.value.lastName?.toUpperCase() || '',
-        position: card.value.position?.toUpperCase() || '',
-        phone: card.value.phone || '',
-        email: card.value.email?.toUpperCase() || '',
-        website: websiteLabelForSpline(card.value.website),
-      });
-      return;
-    }
-
-    spline.setVariables({
-      name: fullname,
-      position: card.value.position?.toUpperCase() || '',
-      phone: card.value.phone || '',
-      email: card.value.email?.toUpperCase() || '',
-      website: websiteLabelForSpline(card.value.website),
+    applyCardToSpline(spline, {
+      firstName: card.value.firstName,
+      lastName: card.value.lastName,
+      position: card.value.position,
+      phone: card.value.phone,
+      email: card.value.email,
+      website: card.value.website,
+      planCode: card.value.subscription?.planCode,
     });
   });
 });

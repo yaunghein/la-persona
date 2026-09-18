@@ -3,9 +3,14 @@ const props = defineProps<{
   inviteLink: string;
 }>();
 
+const emit = defineEmits<{
+  sent: [];
+}>();
+
 const open = defineModel<boolean>('open', { default: false });
 
 const toast = useToast();
+const { withOrganizationQuery } = useOrganizationSlug();
 const emailInput = ref('');
 const isSending = ref(false);
 const qrDataUrl = ref('');
@@ -68,14 +73,25 @@ async function sendInvitations() {
 
   isSending.value = true;
   try {
-    // Mock until invite API exists.
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    await $fetch('/api/community-members/invite', {
+      method: 'POST',
+      query: withOrganizationQuery(),
+      body: { email },
+    });
     toast.add({
-      title: 'Invitation queued',
-      description: `Invite will be sent to ${email}.`,
+      title: 'Invitation sent',
+      description: `Invite sent to ${email}.`,
       color: 'success',
     });
     emailInput.value = '';
+    emit('sent');
+  } catch (error: any) {
+    toast.add({
+      title: 'Could not send invite',
+      description:
+        error?.data?.statusMessage || error?.statusMessage || 'Try again.',
+      color: 'error',
+    });
   } finally {
     isSending.value = false;
   }
@@ -116,7 +132,7 @@ function downloadQr() {
           <div class="space-y-3">
             <h3 class="text-sm font-medium text-white">Invite with Link</h3>
             <p class="text-sm leading-5.25 text-[#8b8b8b]">
-              Anyone with this link can request to join.
+              Anyone with this link can join.
             </p>
           </div>
           <div

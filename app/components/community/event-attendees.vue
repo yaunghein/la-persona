@@ -8,9 +8,10 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   select: [attendee: EventAttendee];
+  approve: [attendee: EventAttendee];
 }>();
 
-type AttendeeTab = 'all' | 'registered' | 'checked_in';
+type AttendeeTab = 'all' | 'pending' | 'registered' | 'checked_in';
 
 const searchQuery = ref('');
 const activeTab = ref<AttendeeTab>('all');
@@ -19,12 +20,17 @@ const itemsPerPage = 10;
 
 const tabCounts = computed(() => ({
   all: props.attendees.length,
+  pending: props.attendees.filter((a) => a.status === 'pending').length,
   registered: props.attendees.filter((a) => a.status === 'registered').length,
   checkedIn: props.attendees.filter((a) => a.status === 'checked_in').length,
 }));
 
 const tabs = computed(() => [
   { label: `Total (${tabCounts.value.all})`, value: 'all' as const },
+  {
+    label: `Pending (${tabCounts.value.pending})`,
+    value: 'pending' as const,
+  },
   {
     label: `Registered (${tabCounts.value.registered})`,
     value: 'registered' as const,
@@ -79,15 +85,23 @@ const columns: TableColumn<EventAttendee>[] = [
 ];
 
 function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
-  return [
-    [
-      {
-        label: 'View profile',
-        icon: 'i-lucide-user',
-        onSelect: () => emit('select', attendee),
-      },
-    ],
+  const items: DropdownMenuItem[] = [
+    {
+      label: 'View profile',
+      icon: 'i-lucide-user',
+      onSelect: () => emit('select', attendee),
+    },
   ];
+
+  if (attendee.status === 'pending') {
+    items.push({
+      label: 'Approve',
+      icon: 'i-lucide-check',
+      onSelect: () => emit('approve', attendee),
+    });
+  }
+
+  return [items];
 }
 </script>
 

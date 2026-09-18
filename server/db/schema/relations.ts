@@ -9,6 +9,7 @@ import { cardRequest } from './card-request';
 import { feedbackSubmission } from './feedback-submission';
 import { onboardingInvitation } from './onboarding-invitation';
 import { event } from './event';
+import { eventRegistration } from './event-registration';
 import { communitySetting } from './community-setting';
 
 export const userRelations = relations(user, ({ many }) => ({
@@ -16,6 +17,7 @@ export const userRelations = relations(user, ({ many }) => ({
   submittedSubscriptionPayments: many(subscriptionPayment),
   feedbackSubmissions: many(feedbackSubmission),
   events: many(event),
+  eventRegistrations: many(eventRegistration),
   createdOnboardingInvitations: many(onboardingInvitation, {
     relationName: 'onboarding_invitation_created_by',
   }),
@@ -31,6 +33,7 @@ export const organizationSubscriptionRelations = relations(
     feedbackSubmissions: many(feedbackSubmission),
     onboardingInvitations: many(onboardingInvitation),
     events: many(event),
+    eventRegistrations: many(eventRegistration),
     communitySetting: one(communitySetting, {
       fields: [organization.id],
       references: [communitySetting.organizationId],
@@ -172,7 +175,7 @@ export const onboardingInvitationRelations = relations(
   })
 );
 
-export const eventRelations = relations(event, ({ one }) => ({
+export const eventRelations = relations(event, ({ one, many }) => ({
   organization: one(organization, {
     fields: [event.organizationId],
     references: [organization.id],
@@ -181,7 +184,22 @@ export const eventRelations = relations(event, ({ one }) => ({
     fields: [event.userId],
     references: [user.id],
   }),
+  registrations: many(eventRegistration),
 }));
+
+export const eventRegistrationRelations = relations(
+  eventRegistration,
+  ({ one }) => ({
+    event: one(event, {
+      fields: [eventRegistration.eventId],
+      references: [event.id],
+    }),
+    user: one(user, {
+      fields: [eventRegistration.userId],
+      references: [user.id],
+    }),
+  })
+);
 
 export const communitySettingRelations = relations(
   communitySetting,

@@ -55,6 +55,9 @@ export default defineEventHandler(async (event) => {
       description: setting.description,
       guidelines: setting.guidelines,
       whyJoin: setting.whyJoin,
+      splineUrl: setting.splineUrl,
+      wallpaperUrl: setting.wallpaperUrl,
+      cardBackUrl: setting.cardBackUrl,
     });
   } catch (error) {
     handleApiError(error, {

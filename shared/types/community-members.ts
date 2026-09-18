@@ -2,6 +2,7 @@ export type CommunityMemberStatus = 'active' | 'pending';
 
 export type CommunityMember = {
   id: string;
+  kind: 'member' | 'invitation';
   name: string;
   role: string;
   company: string;
@@ -16,6 +17,30 @@ export type CommunityMember = {
   lastName?: string | null;
   phone?: string | null;
   linkedin?: string | null;
+};
+
+export type CommunityJoinPreview = {
+  token: string;
+  organizationName: string;
+  organizationSlug: string;
+  logoUrl: string | null;
+  alreadyMember: boolean;
+};
+
+export type CommunityInvitationPreview = {
+  id: string;
+  email: string;
+  organizationName: string;
+  organizationSlug: string;
+  logoUrl: string | null;
+  alreadyMember: boolean;
+  expired: boolean;
+  status: string;
+};
+
+export type CommunityJoinResult = {
+  organizationSlug: string;
+  redirectTo: string;
 };
 
 export type CommunityMembersTab = 'all' | 'active' | 'pending';

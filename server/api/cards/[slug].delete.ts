@@ -4,17 +4,31 @@ import {
   card,
   cardRequest,
   cardSubscription,
+  organization,
   subscriptionPayment,
   subscriptionPaymentItem,
 } from '~~/server/db/schema';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
 export default defineEventHandler(async (event) => {
   const session = await requireOrganizationPermission(
     event,
     ORGANIZATION_PERMISSIONS.CARD_DELETE
   );
+
+  const org = await db.query.organization.findFirst({
+    where: eq(organization.id, session.session.activeOrganizationId),
+    columns: { type: true },
+  });
+
+  if (org?.type === ORGANIZATION_TYPES.COMMUNITY) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Community cards cannot be deleted from this page',
+    });
+  }
 
   const slug = getRouterParam(event, 'slug');
   if (!slug) {

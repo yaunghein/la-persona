@@ -166,6 +166,36 @@ function onUploadClick() {
             @update:model-value="patch('whyJoin', $event)"
           />
         </UFormField>
+
+        <UFormField label="Spline URL" :class="formFieldClass">
+          <UInput
+            :model-value="form.splineUrl"
+            placeholder="https://prod.spline.design/..."
+            class="w-full"
+            :ui="inputUi"
+            @update:model-value="patch('splineUrl', String($event))"
+          />
+        </UFormField>
+
+        <UFormField label="Wallpaper URL" :class="formFieldClass">
+          <UInput
+            :model-value="form.wallpaperUrl"
+            placeholder="https://"
+            class="w-full"
+            :ui="inputUi"
+            @update:model-value="patch('wallpaperUrl', String($event))"
+          />
+        </UFormField>
+
+        <UFormField label="Card Back URL" :class="formFieldClass">
+          <UInput
+            :model-value="form.cardBackUrl"
+            placeholder="https://"
+            class="w-full"
+            :ui="inputUi"
+            @update:model-value="patch('cardBackUrl', String($event))"
+          />
+        </UFormField>
       </section>
 
       <div
@@ -212,8 +242,8 @@ function onUploadClick() {
             Community settings
           </h3>
           <p class="text-sm leading-relaxed text-[#8b8b8b]">
-            Update your community name, description, guidelines, and why people
-            should join.
+            Update your community name, description, brand card assets, and why
+            people should join.
           </p>
         </div>
         <div class="flex justify-end">

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { EventDTO, EventOrganizer } from '~~/shared/types/event';
+import { useQueryClient } from '@tanstack/vue-query';
+import { QUERY_KEYS } from '~/utils/query-keys';
 import {
   formatEventTimeLabel,
   formatEventWeekdayDateLabel,
@@ -15,7 +17,11 @@ const props = withDefaults(
   { variant: 'slideover' }
 );
 
+const { organizationSlug, withOrganizationQuery } = useOrganizationSlug();
+const queryClient = useQueryClient();
+const toast = useToast();
 const isPage = computed(() => props.variant === 'page');
+const registrationStatus = ref<'registered' | 'pending'>('registered');
 
 const emit = defineEmits<{
   viewOrganizer: [event: EventDTO];
@@ -49,7 +55,18 @@ const details = computed(() => {
     },
   ];
 
-  if (props.event.capacity != null && !isPage.value) {
+  if (
+    'registeredCount' in props.event &&
+    typeof (props.event as { registeredCount?: number }).registeredCount ===
+      'number' &&
+    props.event.capacity != null &&
+    !isPage.value
+  ) {
+    rows.push({
+      label: 'Capacity',
+      value: `${(props.event as { registeredCount: number }).registeredCount}/${props.event.capacity}`,
+    });
+  } else if (props.event.capacity != null && !isPage.value) {
     rows.push({
       label: 'Capacity',
       value: `0/${props.event.capacity}`,
@@ -77,7 +94,7 @@ function resetStep() {
   step.value = 'confirm';
 }
 
-function startRegister() {
+async function startRegister() {
   if (step.value !== 'confirm') return;
 
   if (isPage.value) {
@@ -86,11 +103,30 @@ function startRegister() {
   }
 
   step.value = 'registering';
-  clearRegisteringTimer();
-  registeringTimer = setTimeout(() => {
+  try {
+    const result = await $fetch<{ status?: string }>(
+      `/api/events/${props.event.id}/register`,
+      {
+        method: 'POST',
+        query: withOrganizationQuery(),
+      }
+    );
+    registrationStatus.value =
+      result.status === 'pending' ? 'pending' : 'registered';
     step.value = 'success';
-    registeringTimer = null;
-  }, 2000);
+    await queryClient.invalidateQueries({
+      queryKey: [...QUERY_KEYS.events, organizationSlug.value],
+    });
+    emit('register', props.event);
+  } catch (error: any) {
+    step.value = 'confirm';
+    toast.add({
+      title: 'Could not register',
+      description:
+        error?.data?.statusMessage || error?.statusMessage || 'Try again.',
+      color: 'error',
+    });
+  }
 }
 
 function onViewOrganizer() {
@@ -227,9 +263,16 @@ onBeforeUnmount(() => {
           We'll see you there.
         </p>
         <p class="text-sm leading-normal text-white">
-          You're registered for
-          <span class="font-bold">{{ event.title }}.</span>
-          We'll send you a reminder before the event.
+          <template v-if="registrationStatus === 'pending'">
+            Your registration for
+            <span class="font-bold">{{ event.title }}</span>
+            is waiting for organizer approval.
+          </template>
+          <template v-else>
+            You're registered for
+            <span class="font-bold">{{ event.title }}.</span>
+            We'll send you a reminder before the event.
+          </template>
         </p>
       </div>
     </div>

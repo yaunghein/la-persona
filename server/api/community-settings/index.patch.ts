@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { organization } from '~~/server/db/schema';
 import { upsertCommunitySettingByOrganizationId } from '~~/server/db/queries/community-setting';
+import { updateCommunityCardsBrand } from '~~/server/services/community';
 import { handleApiError } from '~~/server/utils/errors';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
@@ -75,6 +76,9 @@ export default defineEventHandler(async (event) => {
       description: body.data.description,
       guidelines: body.data.guidelines,
       whyJoin: body.data.whyJoin,
+      splineUrl: body.data.splineUrl,
+      wallpaperUrl: body.data.wallpaperUrl,
+      cardBackUrl: body.data.cardBackUrl,
     });
 
     if (!setting) {
@@ -84,6 +88,12 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    await updateCommunityCardsBrand(org.id, {
+      splineUrl: setting.splineUrl,
+      wallpaperUrl: setting.wallpaperUrl,
+      cardBackUrl: setting.cardBackUrl,
+    });
+
     return toCommunitySettingsDTO({
       name: updatedOrg.name,
       logo: updatedOrg.logo,
@@ -91,6 +101,9 @@ export default defineEventHandler(async (event) => {
       description: setting.description,
       guidelines: setting.guidelines,
       whyJoin: setting.whyJoin,
+      splineUrl: setting.splineUrl,
+      wallpaperUrl: setting.wallpaperUrl,
+      cardBackUrl: setting.cardBackUrl,
     });
   } catch (error) {
     handleApiError(error, {

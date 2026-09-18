@@ -70,7 +70,8 @@ export async function claimUnassignedCard({
 export async function updateCard(
   userId: string,
   organizationId: string,
-  input: UpdateCard
+  input: UpdateCard,
+  options?: { scopeToUser?: boolean }
 ) {
   const { id, ...data } = input;
   const nextData = { ...data };
@@ -116,11 +117,16 @@ export async function updateCard(
     nextData.slug = normalizedSlug;
   }
 
+  const scopeToUser = options?.scopeToUser !== false;
   const [updated] = await db
     .update(card)
     .set({ ...nextData, updatedAt: new Date() })
     .where(
-      and(eq(card.id, id), eq(card.userId, userId), eq(card.organizationId, organizationId))
+      and(
+        eq(card.id, id),
+        eq(card.organizationId, organizationId),
+        ...(scopeToUser ? [eq(card.userId, userId)] : [])
+      )
     )
     .returning();
   if (!updated) {

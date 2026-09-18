@@ -13,9 +13,11 @@ const props = defineProps<{
 const emit = defineEmits<{
   invite: [];
   export: [];
+  remove: [member: CommunityMember];
+  approve: [member: CommunityMember];
+  reject: [member: CommunityMember];
 }>();
 
-const toast = useToast();
 const searchQuery = ref('');
 const activeTab = ref<CommunityMembersTab>('all');
 const page = ref(1);
@@ -104,6 +106,24 @@ const columns: TableColumn<CommunityMember>[] = [
 ];
 
 function getActionItems(member: CommunityMember): DropdownMenuItem[][] {
+  if (member.status === 'pending' || member.kind === 'invitation') {
+    return [
+      [
+        {
+          label: 'View invite',
+          icon: 'i-lucide-user',
+          onSelect: () => openProfile(member),
+        },
+        {
+          label: 'Cancel',
+          icon: 'i-lucide-x',
+          color: 'error',
+          onSelect: () => emit('reject', member),
+        },
+      ],
+    ];
+  }
+
   return [
     [
       {
@@ -115,13 +135,7 @@ function getActionItems(member: CommunityMember): DropdownMenuItem[][] {
         label: 'Remove',
         icon: 'i-lucide-user-minus',
         color: 'error',
-        onSelect: () => {
-          toast.add({
-            title: 'Remove member',
-            description: 'Removal is not wired yet.',
-            color: 'warning',
-          });
-        },
+        onSelect: () => emit('remove', member),
       },
     ],
   ];
@@ -142,7 +156,7 @@ function closeInfo() {
 </script>
 
 <template>
-  <div class="flex min-h-[calc(100dvh-11rem)] flex-col">
+  <div class="flex flex-col">
     <div class="flex flex-col gap-8 pt-2 sm:pt-0">
       <div
         class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
@@ -345,5 +359,8 @@ function closeInfo() {
   <CommunityMemberProfileSlideover
     v-model:open="isProfileOpen"
     :member="selectedMember"
+    @remove="emit('remove', $event)"
+    @approve="emit('approve', $event)"
+    @reject="emit('reject', $event)"
   />
 </template>

@@ -77,7 +77,7 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
 </script>
 
 <template>
-  <div class="flex min-h-[calc(100dvh-11rem)] flex-col gap-8">
+  <div class="flex flex-col gap-8">
     <div class="space-y-3">
       <div class="flex items-center gap-2">
         <UButton

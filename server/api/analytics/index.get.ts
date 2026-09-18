@@ -1,9 +1,9 @@
 import { and, eq, sql, gte } from 'drizzle-orm';
 import { db } from '~~/server/db';
-import { analytics, card, member, organization } from '~~/server/db/schema';
+import { analytics, card, member } from '~~/server/db/schema';
 import { requireOrganizationSession } from '~~/server/utils/organization-permissions';
 import { isOrganizationManagerRole } from '~~/shared/permissions/organization';
-import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
+import { parseAnalyticsPeriod, analyticsPeriodStart } from '~~/shared/utils/analytics-period';
 import {
   OTHER_LINK_LABELS,
   SOCIAL_MEDIA_LINK_LABELS,
@@ -21,8 +21,10 @@ const knownLabelByLower = new Map(
 export default defineEventHandler(async (event) => {
   const session = await requireOrganizationSession(event);
 
-  const { cardId } = getQuery(event);
-  const selectedCardId = typeof cardId === 'string' ? cardId : 'all';
+  const query = getQuery(event);
+  const selectedCardId = typeof query.cardId === 'string' ? query.cardId : 'all';
+  const period = parseAnalyticsPeriod(query.period);
+  const since = analyticsPeriodStart(period);
   const orgId = session.session.activeOrganizationId;
   const userId = session.user.id;
 
@@ -34,21 +36,12 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Forbidden' });
   }
 
-  const org = await db.query.organization.findFirst({
-    where: eq(organization.id, orgId),
-    columns: { type: true },
-  });
-
-  if (
-    org?.type === ORGANIZATION_TYPES.COMMUNITY &&
-    !isOrganizationManagerRole(userMemberInfo.role)
-  ) {
-    throw createError({ statusCode: 403, statusMessage: 'Forbidden' });
-  }
-
   const isOwner = isOrganizationManagerRole(userMemberInfo.role);
 
-  let conditions = [eq(analytics.organizationId, orgId)];
+  let conditions = [
+    eq(analytics.organizationId, orgId),
+    gte(analytics.createdAt, since),
+  ];
   if (!isOwner) {
     conditions.push(eq(analytics.userId, userId as string));
   }
@@ -73,9 +66,6 @@ export default defineEventHandler(async (event) => {
     conditions.push(eq(analytics.cardId, selectedCardId));
   }
 
-  const last7Days = new Date();
-  last7Days.setDate(last7Days.getDate() - 7);
-
   const cardScopeConditions = [eq(card.organizationId, orgId)];
   if (!isOwner) {
     cardScopeConditions.push(eq(card.userId, userId as string));
@@ -90,7 +80,6 @@ export default defineEventHandler(async (event) => {
     socialClicks,
     linkClicks,
     saveActions,
-    ownerCardOptions,
     scopedCardLinks,
   ] =
     await Promise.all([
@@ -109,8 +98,7 @@ export default defineEventHandler(async (event) => {
         .where(
           and(
             ...conditions,
-            eq(analytics.type, 'view'),
-            gte(analytics.createdAt, last7Days)
+            eq(analytics.type, 'view')
           )
         )
         .groupBy(sql`day`)
@@ -142,17 +130,6 @@ export default defineEventHandler(async (event) => {
         .from(analytics)
         .where(and(...conditions, eq(analytics.type, 'save_action')))
         .groupBy(sql`metadata->>'action'`),
-
-      isOwner
-        ? db
-            .select({
-              id: card.id,
-              firstName: card.firstName,
-              lastName: card.lastName,
-            })
-            .from(card)
-            .where(eq(card.organizationId, orgId))
-        : Promise.resolve([]),
 
       db
         .select({
@@ -213,9 +190,7 @@ export default defineEventHandler(async (event) => {
       ...knownOtherConfiguredLabels,
       ...customConfiguredLabels,
     ],
-    cards: ownerCardOptions.map((item) => ({
-      id: item.id,
-      label: `${item.firstName} ${item.lastName || ''}`.trim(),
-    })),
+    period,
+    cards: [],
   };
 });

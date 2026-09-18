@@ -13,6 +13,7 @@ import {
   getAnyOrganizationByUserId,
 } from '~~/server/services/auth';
 import { sendEmail } from '~~/server/utils/email';
+import { ROUTES } from '~~/shared/utils/routes';
 
 const socialProviders: {
   github?: { clientId: string; clientSecret: string };
@@ -119,6 +120,44 @@ export const auth = betterAuth({
             },
           },
         },
+      },
+      sendInvitationEmail: async ({ email, id, organization: invitedOrg, inviter }) => {
+        const inviteUrl = `${env.BASE_URL}${ROUTES.INVITE.COMMUNITY_ACCEPT(id)}`;
+        const safeUrl = escapeHtml(inviteUrl);
+        const orgName = escapeHtml(invitedOrg.name);
+        const inviterName = escapeHtml(inviter.user.name || 'A community organizer');
+        await sendEmail({
+          to: [email],
+          subject: `You're invited to join ${invitedOrg.name} on LA PERSONA`,
+          html: `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111111;">
+              <h2 style="margin: 0 0 12px;">Join ${orgName}</h2>
+              <p style="margin: 0 0 16px;">
+                ${inviterName} invited you to join ${orgName} on LA PERSONA.
+              </p>
+              <a
+                href="${safeUrl}"
+                style="
+                  display: inline-block;
+                  padding: 10px 18px;
+                  border-radius: 9999px;
+                  background: #111111;
+                  color: #ffffff;
+                  text-decoration: none;
+                  font-weight: 600;
+                "
+              >
+                Accept invitation
+              </a>
+              <p style="margin: 16px 0 0; font-size: 12px; color: #6b7280;">
+                If the button does not work, paste this URL in your browser:
+              </p>
+              <p style="margin: 8px 0 0; font-size: 12px; word-break: break-all; color: #6b7280;">
+                ${safeUrl}
+              </p>
+            </div>
+          `,
+        });
       },
     }),
   ],

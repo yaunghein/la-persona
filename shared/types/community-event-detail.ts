@@ -4,7 +4,7 @@ export type CommunityEventDetailTab =
   | 'check-in'
   | 'settings';
 
-export type EventAttendeeStatus = 'registered' | 'checked_in';
+export type EventAttendeeStatus = 'pending' | 'registered' | 'checked_in';
 
 export type EventAttendee = {
   id: string;
@@ -23,6 +23,12 @@ export type EventAttendee = {
   email?: string;
   avatarUrl?: string;
   cardSlug?: string;
+  splineUrl?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  position?: string | null;
+  website?: string | null;
+  planCode?: string | null;
 };
 
 export type EventDetailOverview = {

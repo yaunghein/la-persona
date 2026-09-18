@@ -30,5 +30,11 @@ export const analytics = pgTable(
     index('analytics_org_idx').on(table.organizationId),
     index('analytics_card_idx').on(table.cardId),
     index('analytics_type_date_idx').on(table.type, table.createdAt),
+    index('analytics_org_created_idx').on(table.organizationId, table.createdAt),
+    index('analytics_org_type_created_idx').on(
+      table.organizationId,
+      table.type,
+      table.createdAt
+    ),
   ]
 );

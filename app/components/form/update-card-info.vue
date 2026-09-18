@@ -16,6 +16,7 @@ import {
   resolveSocialLinksForSubmission,
   type SocialFormLink,
 } from '~~/shared/utils/social-links';
+import { applyCardToSpline } from '~/utils/spline-card';
 
 const route = useRoute();
 const queryClient = useQueryClient();
@@ -441,43 +442,17 @@ function confirmRemoveLink() {
   closeDeleteSocialConfirm();
 }
 
-function websiteLabelForSpline(website: string | null | undefined): string {
-  if (!website?.trim()) return '';
-  const raw = website.trim();
-  try {
-    const url = new URL(raw.includes('://') ? raw : `https://${raw}`);
-    const host = url.hostname.toUpperCase();
-    const path =
-      url.pathname && url.pathname !== '/'
-        ? url.pathname.replace(/\/$/, '').toUpperCase()
-        : '';
-    return path ? `${host}${path}` : host;
-  } catch {
-    return raw
-      .replace(/^https?:\/\//i, '')
-      .replace(/\/$/, '')
-      .toUpperCase();
-  }
-}
-
 function updatePreviewSplineVariables() {
   if (!previewSpline.value) return;
 
-  const firstName = state.firstName || card.value?.firstName || '';
-  const lastName = state.lastName || card.value?.lastName || '';
-  const fullname = [firstName, lastName]
-    .filter(Boolean)
-    .join(' ')
-    .trim()
-    .toUpperCase();
-
-  previewSpline.value.setVariables({
-    name: fullname,
-    position:
-      (state.position || card.value?.position || '').toUpperCase() || '',
+  applyCardToSpline(previewSpline.value, {
+    firstName: state.firstName || card.value?.firstName || '',
+    lastName: state.lastName || card.value?.lastName || '',
+    position: state.position || card.value?.position || '',
     phone: state.phone || card.value?.phone || '',
-    email: (state.email || card.value?.email || '').toUpperCase() || '',
-    website: websiteLabelForSpline(state.website || card.value?.website),
+    email: state.email || card.value?.email || '',
+    website: state.website || card.value?.website,
+    planCode: card.value?.subscription?.planCode,
   });
 }
 

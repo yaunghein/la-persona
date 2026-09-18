@@ -2,6 +2,7 @@
 import { parseDate } from '@internationalized/date';
 import type { DateValue } from '@internationalized/date';
 import { useMutation, useQueryClient } from '@tanstack/vue-query';
+import { QUERY_KEYS } from '~/utils/query-keys';
 import type { FormErrorEvent, FormSubmitEvent } from '@nuxt/ui';
 import { format, parseISO } from 'date-fns';
 import { z } from 'zod';
@@ -49,6 +50,8 @@ const schema = z.object({
     .string()
     .refine(isEventTimeValue, { message: 'End time is required' }),
   capacity: z.number().int().positive().nullable(),
+  registrationMode: z.enum(['open', 'closed', 'invite_only']),
+  approvalMode: z.enum(['everyone', 'manual']),
 });
 
 type FormState = z.output<typeof schema>;
@@ -73,6 +76,8 @@ const state = reactive<FormState>({
   startTime: '18:00',
   endTime: '21:00',
   capacity: null,
+  registrationMode: 'open',
+  approvalMode: 'everyone',
 });
 
 const timeOptions = eventTimeOptions();
@@ -147,6 +152,8 @@ function hydrateFromEvent(event: EventDTO) {
   state.startTime = formatEventTimeValue(event.startsAt);
   state.endTime = formatEventTimeValue(event.endsAt);
   state.capacity = event.capacity;
+  state.registrationMode = event.registrationMode || 'open';
+  state.approvalMode = event.approvalMode || 'everyone';
   capacityDraft.value = '';
   isDatePickerOpen.value = false;
   isCapacityEditorOpen.value = false;
@@ -169,6 +176,8 @@ function resetForm() {
   state.startTime = '18:00';
   state.endTime = '21:00';
   state.capacity = null;
+  state.registrationMode = 'open';
+  state.approvalMode = 'everyone';
   capacityDraft.value = '';
   isDatePickerOpen.value = false;
   isCapacityEditorOpen.value = false;
@@ -302,7 +311,7 @@ const { mutate: createEvent, isPending: isCreating } = useMutation({
     createdEvent.value = created;
     success.value = true;
     queryClient.invalidateQueries({
-      queryKey: ['events', organizationSlug.value],
+      queryKey: [...QUERY_KEYS.events, organizationSlug.value],
     });
     emit('created', created);
   },
@@ -336,7 +345,7 @@ const { mutate: updateEvent, isPending: isUpdating } = useMutation({
   },
   onSuccess: (updated) => {
     queryClient.invalidateQueries({
-      queryKey: ['events', organizationSlug.value],
+      queryKey: [...QUERY_KEYS.events, organizationSlug.value],
     });
     emit('updated', updated);
     open.value = false;
@@ -370,7 +379,7 @@ const { mutate: deleteEvent, isPending: isDeleting } = useMutation({
   },
   onSuccess: (deleted) => {
     queryClient.invalidateQueries({
-      queryKey: ['events', organizationSlug.value],
+      queryKey: [...QUERY_KEYS.events, organizationSlug.value],
     });
     isDeleteConfirmOpen.value = false;
     emit('deleted', deleted.id);
@@ -756,6 +765,45 @@ async function copyEventLink() {
               />
             </div>
           </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <UFormField
+            label="Registration"
+            name="registrationMode"
+            :class="formFieldClass"
+          >
+            <USelect
+              v-model="state.registrationMode"
+              :items="[
+                { label: 'Open', value: 'open' },
+                { label: 'Closed', value: 'closed' },
+                { label: 'Invite Only', value: 'invite_only' },
+              ]"
+              value-key="value"
+              color="neutral"
+              class="w-full"
+              :ui="selectUi"
+            />
+          </UFormField>
+
+          <UFormField
+            label="Approval"
+            name="approvalMode"
+            :class="formFieldClass"
+          >
+            <USelect
+              v-model="state.approvalMode"
+              :items="[
+                { label: 'Everyone', value: 'everyone' },
+                { label: 'Manual Approval', value: 'manual' },
+              ]"
+              value-key="value"
+              color="neutral"
+              class="w-full"
+              :ui="selectUi"
+            />
+          </UFormField>
         </div>
       </UForm>
     </template>

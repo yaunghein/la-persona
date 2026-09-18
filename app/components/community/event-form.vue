@@ -71,7 +71,7 @@ function onCapacityInput(value: string | number) {
 </script>
 
 <template>
-  <div class="flex min-h-[calc(100dvh-11rem)] flex-col gap-8 pb-8">
+  <div class="flex flex-col gap-8 pb-8">
     <div class="flex items-center gap-3">
       <h1
         class="text-xl font-normal leading-5 tracking-[0.175rem] uppercase text-white sm:text-[1.75rem]"
@@ -193,6 +193,59 @@ function onCapacityInput(value: string | number) {
             @update:model-value="onCapacityInput($event as string | number)"
           />
         </UFormField>
+      </section>
+
+      <section class="flex flex-col gap-8 border-b border-[#232323] pb-8">
+        <div class="space-y-4">
+          <h2
+            class="text-xl font-medium tracking-[0.125rem] uppercase text-white"
+          >
+            Registration
+          </h2>
+          <p class="text-sm text-[#8b8b8b]">
+            Choose who can register and whether approval is automatic.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <UFormField label="Registration" :class="formFieldClass">
+            <USelect
+              :model-value="form.registrationMode"
+              :items="[
+                { label: 'Open', value: 'open' },
+                { label: 'Closed', value: 'closed' },
+                { label: 'Invite Only', value: 'invite_only' },
+              ]"
+              color="neutral"
+              class="w-full"
+              :ui="selectUi"
+              @update:model-value="
+                patch(
+                  'registrationMode',
+                  $event as CommunityEventFormValues['registrationMode']
+                )
+              "
+            />
+          </UFormField>
+          <UFormField label="Approval" :class="formFieldClass">
+            <USelect
+              :model-value="form.approvalMode"
+              :items="[
+                { label: 'Everyone', value: 'everyone' },
+                { label: 'Manual Approval', value: 'manual' },
+              ]"
+              color="neutral"
+              class="w-full"
+              :ui="selectUi"
+              @update:model-value="
+                patch(
+                  'approvalMode',
+                  $event as CommunityEventFormValues['approvalMode']
+                )
+              "
+            />
+          </UFormField>
+        </div>
       </section>
 
       <div

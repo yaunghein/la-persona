@@ -37,6 +37,8 @@ export default defineEventHandler(async (event) => {
       capacity: body.data.capacity,
       coverUrl,
       photoUrls,
+      registrationMode: body.data.registrationMode,
+      approvalMode: body.data.approvalMode,
     });
 
     if (!inserted) {

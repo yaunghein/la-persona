@@ -21,6 +21,14 @@ export const event = pgTable(
     capacity: integer(),
     coverUrl: text().notNull(),
     photoUrls: jsonb().$type<string[]>().default([]).notNull(),
+    registrationMode: text()
+      .$type<'open' | 'closed' | 'invite_only'>()
+      .default('open')
+      .notNull(),
+    approvalMode: text()
+      .$type<'everyone' | 'manual'>()
+      .default('everyone')
+      .notNull(),
     createdAt: timestamp().defaultNow().notNull(),
     updatedAt: timestamp()
       .defaultNow()

@@ -9,4 +9,10 @@ export const QUERY_KEYS = {
   cardRequests: ['card-requests'] as const,
   invitations: ['onboarding-invitation'] as const,
   invitationOptions: ['onboarding-invitation', 'options'] as const,
+  communityMembers: ['community-members'] as const,
+  communitySettings: ['community-settings'] as const,
+  communityInsights: ['community-insights'] as const,
+  events: ['events'] as const,
+  event: ['event'] as const,
+  eventAttendees: ['event-attendees'] as const,
 } as const;

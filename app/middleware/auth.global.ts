@@ -1,9 +1,12 @@
+import { isProtectedInvitePath } from '~~/shared/utils/routes';
+
 export default defineNuxtRouteMiddleware(async (to) => {
   const sessionState = await authClient.useSession(useFetch);
   const session = sessionState?.data;
   const isPlatformRoute = to.path.startsWith(ROUTES.PLATFORM.ROOT);
   const isThakhinRoute = to.path.startsWith(ROUTES.THAKHIN.ROOT);
-  const isProtected = isPlatformRoute || isThakhinRoute;
+  const isInviteRoute = isProtectedInvitePath(to.path);
+  const isProtected = isPlatformRoute || isThakhinRoute || isInviteRoute;
 
   if (!session?.value && isProtected) {
     return navigateTo({

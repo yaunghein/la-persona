@@ -39,7 +39,15 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (!isCommunityMemberOnly({ type: org?.type, role: org?.role })) return;
 
   const base = `${ROUTES.PLATFORM.ROOT}/${orgSlug}`;
-  if (to.path === `${base}/events` || to.path === `${base}/about`) return;
+  if (
+    to.path === base ||
+    to.path === `${base}/events` ||
+    to.path === `${base}/about` ||
+    to.path === `${base}/cards` ||
+    to.path.startsWith(`${base}/cards/`)
+  ) {
+    return;
+  }
 
-  return navigateTo(`${base}/events`);
+  return navigateTo(base);
 });

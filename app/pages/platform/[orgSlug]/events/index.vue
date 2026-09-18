@@ -4,7 +4,8 @@ definePageMeta({
 });
 
 import { useQuery } from '@tanstack/vue-query';
-import type { EventDTO } from '~~/shared/types/event';
+import { QUERY_KEYS } from '~/utils/query-keys';
+import type { EventListItemDTO } from '~~/shared/types/event';
 import {
   toCommunityEvent,
   type CommunityEvent,
@@ -19,9 +20,9 @@ const isCreateOpen = ref(false);
 const isEditOpen = ref(false);
 const isViewOpen = ref(false);
 const isRegisterOpen = ref(false);
-const editingEvent = ref<EventDTO | null>(null);
-const viewingEvent = ref<EventDTO | null>(null);
-const registeringEvent = ref<EventDTO | null>(null);
+const editingEvent = ref<EventListItemDTO | null>(null);
+const viewingEvent = ref<EventListItemDTO | null>(null);
+const registeringEvent = ref<EventListItemDTO | null>(null);
 
 const currentOrg = computed(() =>
   (userOrgs.value || []).find((org) => org.slug === orgSlug.value)
@@ -67,8 +68,8 @@ const ownerInfoItems = [
   },
 ];
 
-const { data, isLoading, refetch } = useQuery<{ events: EventDTO[] }>({
-  queryKey: ['events', orgSlug],
+const { data, isLoading, refetch } = useQuery<{ events: EventListItemDTO[] }>({
+  queryKey: computed(() => [...QUERY_KEYS.events, orgSlug.value]),
   queryFn: () =>
     $fetch('/api/events', {
       query: { organizationSlug: orgSlug.value },
@@ -154,7 +155,7 @@ function onViewOrganizer() {
 </script>
 
 <template>
-  <div class="flex min-h-[calc(100dvh-11rem)] flex-col">
+  <div class="flex flex-col">
     <div v-if="isLoading" class="flex flex-1 flex-col gap-6 pt-2 sm:pt-0">
       <USkeleton class="h-8 w-64 rounded-md" />
       <USkeleton class="h-10 w-full rounded-full" />

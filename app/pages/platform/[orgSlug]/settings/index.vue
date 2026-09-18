@@ -24,6 +24,9 @@ const emptyForm = (): CommunitySettingsFormValues => ({
   whyJoin: '',
   coverImageUrl: '',
   logoUrl: '',
+  splineUrl: '',
+  wallpaperUrl: '',
+  cardBackUrl: '',
 });
 
 const form = ref<CommunitySettingsFormValues>(emptyForm());
@@ -55,6 +58,9 @@ const { mutate: saveSettings, isPending: isSaving } = useMutation({
         description: values.description,
         guidelines: values.guidelines,
         whyJoin: values.whyJoin,
+        splineUrl: values.splineUrl,
+        wallpaperUrl: values.wallpaperUrl,
+        cardBackUrl: values.cardBackUrl,
       },
     }),
   onSuccess: async (saved) => {
@@ -102,6 +108,19 @@ function onSubmit() {
     return;
   }
 
+  if (
+    !form.value.splineUrl.trim() ||
+    !form.value.wallpaperUrl.trim() ||
+    !form.value.cardBackUrl.trim()
+  ) {
+    toast.add({
+      title: 'Brand URLs required',
+      description: 'Spline, wallpaper, and card back URLs are required.',
+      color: 'warning',
+    });
+    return;
+  }
+
   saveSettings(form.value);
 }
 
@@ -115,14 +134,11 @@ function onDelete() {
 </script>
 
 <template>
-  <div v-if="isLoading" class="flex min-h-[calc(100dvh-11rem)] flex-col gap-8">
+  <div v-if="isLoading" class="flex flex-col gap-8">
     <USkeleton class="h-8 w-64 rounded-md" />
     <USkeleton class="min-h-96 w-full rounded-lg" />
   </div>
-  <div
-    v-else-if="isError"
-    class="flex min-h-[calc(100dvh-11rem)] flex-col items-start gap-4"
-  >
+  <div v-else-if="isError" class="flex flex-col items-start gap-4">
     <p class="text-sm text-[#8b8b8b]">
       {{
         (error as { data?: { statusMessage?: string }; message?: string })?.data

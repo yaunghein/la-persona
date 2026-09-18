@@ -1,5 +1,8 @@
 import { updateCard } from '~~/server/services/card';
-import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
+import {
+  hasOrganizationPermission,
+  requireOrganizationPermission,
+} from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
 
 export default defineEventHandler(async (event) => {
@@ -20,7 +23,14 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    return await updateCard(session.user.id, organizationId, result.data);
+    const canUpdateAny = await hasOrganizationPermission(
+      event,
+      ORGANIZATION_PERMISSIONS.CARD_READ_ALL,
+      organizationId
+    );
+    return await updateCard(session.user.id, organizationId, result.data, {
+      scopeToUser: !canUpdateAny,
+    });
   } catch (e) {
     handleApiError(e, {
       statusMessage: 'Failed to update card',

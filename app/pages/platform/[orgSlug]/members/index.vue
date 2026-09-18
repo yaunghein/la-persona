@@ -3,192 +3,151 @@ definePageMeta({
   layout: 'platform',
 });
 
-import { useQuery } from '@tanstack/vue-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
+import { QUERY_KEYS } from '~/utils/query-keys';
 import type {
   CommunityMember,
   CommunityMembersData,
 } from '~~/shared/types/community-members';
 
 const toast = useToast();
-const route = useRoute();
-const orgSlug = computed(() => String(route.params.orgSlug || ''));
+const queryClient = useQueryClient();
+const { organizationSlug, withOrganizationQuery } = useOrganizationSlug();
 const isInviteOpen = ref(false);
+const memberToRemove = ref<CommunityMember | null>(null);
+const isRemoveOpen = ref(false);
 
-const { data: cards } = useQuery<CardDTO[]>({
-  queryKey: ['cards', orgSlug],
+const { data } = useQuery<{
+  inviteLink: string;
+  members: CommunityMember[];
+}>({
+  queryKey: computed(() => [
+    ...QUERY_KEYS.communityMembers,
+    organizationSlug.value,
+  ]),
   queryFn: () =>
-    $fetch('/api/cards', {
-      query: { organizationSlug: orgSlug.value },
+    $fetch('/api/community-members', {
+      query: withOrganizationQuery(),
     }),
+  enabled: () => !!organizationSlug.value,
 });
 
-function cardDisplayName(card: CardDTO) {
-  return [card.firstName, card.lastName].filter(Boolean).join(' ').trim();
+const membersData = computed<CommunityMembersData>(() => ({
+  title: 'Members in Your Community',
+  searchPlaceholder: 'Search members by name, keywords, or role',
+  inviteLink: data.value?.inviteLink || '',
+  statusOptions: [
+    { label: 'Status', value: 'all' },
+    { label: 'Active', value: 'active' },
+    { label: 'Pending', value: 'pending' },
+  ],
+  participationOptions: [
+    { label: 'Participation', value: 'all' },
+    { label: 'Attended events', value: 'attended' },
+    { label: 'No events yet', value: 'none' },
+  ],
+  infoItems: [
+    {
+      icon: 'i-lucide-user-plus',
+      title: 'Invite people',
+      description:
+        'Share a link, send email invites, or display a QR code at events.',
+    },
+    {
+      icon: 'i-lucide-filter',
+      title: 'Filter membership',
+      description: 'Find members by status, participation, role, or company.',
+    },
+    {
+      icon: 'i-lucide-activity',
+      title: 'Track engagement',
+      description:
+        'See connections and event attendance across your community.',
+    },
+  ],
+  members: data.value?.members ?? [],
+}));
+
+function invalidateMembers() {
+  return queryClient.invalidateQueries({
+    queryKey: [...QUERY_KEYS.communityMembers, organizationSlug.value],
+  });
 }
 
-/** Mock until community members API / schema exists. */
-const mockMembers: CommunityMember[] = [
-  {
-    id: '1',
-    name: 'Aye Min Thura',
-    role: 'Founder',
-    company: 'Wave Ventures',
-    connections: 42,
-    eventsAttended: 8,
-    status: 'active',
-    email: 'thura@waveventures.co',
-    joinedAt: 'Jan 12, 2026',
+const { mutate: removeMember, isPending: isRemoving } = useMutation({
+  mutationFn: (member: CommunityMember) =>
+    $fetch(`/api/community-members/${member.id}`, {
+      method: 'DELETE',
+      query: withOrganizationQuery(),
+    }),
+  onSuccess: async () => {
+    isRemoveOpen.value = false;
+    memberToRemove.value = null;
+    await invalidateMembers();
+    toast.add({
+      title: 'Member removed',
+      description:
+        'Their community card, analytics, and event attendance in this community were removed. Their personal account was not.',
+      color: 'success',
+    });
   },
-  {
-    id: '2',
-    name: 'May Zin Oo',
-    role: 'Strategy Consultant',
-    company: 'Deloitte Myanmar',
-    connections: 18,
-    eventsAttended: 5,
-    status: 'active',
-    email: 'may@deloitte.com',
-    joinedAt: 'Feb 03, 2026',
+  onError: (error: { data?: { statusMessage?: string }; message?: string }) => {
+    toast.add({
+      title: 'Could not remove member',
+      description:
+        error.data?.statusMessage || error.message || 'Please try again.',
+      color: 'error',
+    });
   },
-  {
-    id: '3',
-    name: 'Ethan Wong',
-    role: 'Product Manager',
-    company: 'Nexus Labs',
-    connections: 67,
-    eventsAttended: 12,
-    status: 'active',
-    email: 'ethan@nexuslabs.io',
-    joinedAt: 'Dec 20, 2025',
-  },
-  {
-    id: '4',
-    name: 'Su Su Hlaing',
-    firstName: 'Su Su',
-    lastName: 'Hlaing',
-    role: 'UX Designer',
-    company: 'Freelance',
-    connections: 0,
-    eventsAttended: 0,
-    status: 'pending',
-    email: 'susu@design.mm',
-    phone: '+95 9 456 789 012',
-    linkedin: 'https://linkedin.com/in/susuhlaing',
-    joinedAt: 'Jan 08, 2026',
-  },
-  {
-    id: '5',
-    name: 'Ko Ko Aung',
-    role: 'Community Lead',
-    company: 'Yangon Tech Hub',
-    connections: 31,
-    eventsAttended: 9,
-    status: 'active',
-    email: 'aung@yangontechhub.com',
-    joinedAt: 'Nov 01, 2025',
-  },
-  {
-    id: '6',
-    name: 'Hnin Ei Phyu',
-    role: 'Marketing Manager',
-    company: 'Wave Ventures',
-    connections: 24,
-    eventsAttended: 4,
-    status: 'active',
-    email: 'hnin@waveventures.co',
-    joinedAt: 'Mar 12, 2026',
-  },
-  {
-    id: '7',
-    name: 'James Chen',
-    role: 'Investor',
-    company: 'Horizon Capital',
-    connections: 55,
-    eventsAttended: 7,
-    status: 'active',
-    email: 'james@horizon.capital',
-    joinedAt: 'Oct 18, 2025',
-  },
-  {
-    id: '8',
-    name: 'Thiri Kyaw',
-    firstName: 'Thiri',
-    lastName: 'Kyaw',
-    role: 'Operations',
-    company: 'Nexus Labs',
-    connections: 9,
-    eventsAttended: 2,
-    status: 'pending',
-    email: 'thiri@nexuslabs.io',
-    phone: '+95 9 567 890 123',
-    linkedin: 'https://linkedin.com/in/thirikyaw',
-    joinedAt: 'Apr 02, 2026',
-  },
-];
+});
 
-const membersMock = computed<CommunityMembersData>(() => {
-  const orgCards = cards.value ?? [];
-  const members = mockMembers.map((member, index) => {
-    const matchedCard = orgCards.find(
-      (item) =>
-        cardDisplayName(item).toLowerCase() === member.name.toLowerCase()
-    );
-    const card = matchedCard || (index === 0 ? orgCards[0] : undefined);
-    if (!card) return member;
+const { mutate: approveInvitation } = useMutation({
+  mutationFn: (member: CommunityMember) =>
+    $fetch(`/api/community-members/invitations/${member.id}/approve`, {
+      method: 'POST',
+      query: withOrganizationQuery(),
+    }),
+  onSuccess: async (result: { added?: boolean; resent?: boolean }) => {
+    await invalidateMembers();
+    toast.add({
+      title: result.added ? 'Member added' : 'Invitation resent',
+      description: result.added
+        ? 'They now have a community card.'
+        : 'They do not have an account yet, so the invite was sent again.',
+      color: 'success',
+    });
+  },
+  onError: (error: { data?: { statusMessage?: string }; message?: string }) => {
+    toast.add({
+      title: 'Could not approve',
+      description:
+        error.data?.statusMessage || error.message || 'Please try again.',
+      color: 'error',
+    });
+  },
+});
 
-    if (matchedCard) {
-      return {
-        ...member,
-        role: card.position || member.role,
-        company: card.company || member.company,
-        email: card.email || member.email,
-        avatarUrl: card.avatarUrl,
-        cardSlug: card.slug,
-      };
-    }
-
-    return {
-      ...member,
-      avatarUrl: card.avatarUrl,
-      cardSlug: card.slug,
-    };
-  });
-
-  return {
-    title: 'Members in Your Community',
-    searchPlaceholder: 'Search members by name, keywords, or role',
-    inviteLink: `https://lapersona.app/invite/${orgSlug.value || 'TLM-8F24'}`,
-    statusOptions: [
-      { label: 'Status', value: 'all' },
-      { label: 'Active', value: 'active' },
-      { label: 'Pending', value: 'pending' },
-    ],
-    participationOptions: [
-      { label: 'Participation', value: 'all' },
-      { label: 'Attended events', value: 'attended' },
-      { label: 'No events yet', value: 'none' },
-    ],
-    infoItems: [
-      {
-        icon: 'i-lucide-user-plus',
-        title: 'Invite people',
-        description:
-          'Share a link, send email invites, or display a QR code at events.',
-      },
-      {
-        icon: 'i-lucide-filter',
-        title: 'Filter membership',
-        description: 'Find members by status, participation, role, or company.',
-      },
-      {
-        icon: 'i-lucide-activity',
-        title: 'Track engagement',
-        description:
-          'See connections and event attendance across your community.',
-      },
-    ],
-    members,
-  };
+const { mutate: rejectInvitation } = useMutation({
+  mutationFn: (member: CommunityMember) =>
+    $fetch(`/api/community-members/invitations/${member.id}/cancel`, {
+      method: 'POST',
+      query: withOrganizationQuery(),
+    }),
+  onSuccess: async () => {
+    await invalidateMembers();
+    toast.add({
+      title: 'Invitation cancelled',
+      color: 'success',
+    });
+  },
+  onError: (error: { data?: { statusMessage?: string }; message?: string }) => {
+    toast.add({
+      title: 'Could not cancel',
+      description:
+        error.data?.statusMessage || error.message || 'Please try again.',
+      color: 'error',
+    });
+  },
 });
 
 function onExport() {
@@ -198,16 +157,71 @@ function onExport() {
     color: 'neutral',
   });
 }
+
+function onAskRemove(member: CommunityMember) {
+  memberToRemove.value = member;
+  isRemoveOpen.value = true;
+}
+
+function confirmRemove() {
+  if (!memberToRemove.value) return;
+  removeMember(memberToRemove.value);
+}
 </script>
 
 <template>
   <CommunityMembersList
-    :data="membersMock"
+    :data="membersData"
     @invite="isInviteOpen = true"
     @export="onExport"
+    @remove="onAskRemove"
+    @approve="approveInvitation"
+    @reject="rejectInvitation"
   />
   <CommunityInviteMembersSlideover
     v-model:open="isInviteOpen"
-    :invite-link="membersMock.inviteLink"
+    :invite-link="membersData.inviteLink"
+    @sent="invalidateMembers"
   />
+  <UModal
+    v-model:open="isRemoveOpen"
+    :close="false"
+    :dismissible="!isRemoving"
+    title="Remove member?"
+    :ui="{
+      content: 'bg-[#171717] max-w-md',
+      title: 'text-white',
+      body: 'pt-4',
+      footer: 'justify-end gap-2',
+    }"
+  >
+    <template #body>
+      <p class="text-sm leading-relaxed text-[#bcbcbc]">
+        This cannot be undone. Removing
+        <span class="font-medium text-white">
+          {{ memberToRemove?.name }}
+        </span>
+        deletes their community card, its analytics and contact exchanges, and
+        their event registrations in this community. Their LA PERSONA account
+        and personal card stay.
+      </p>
+    </template>
+    <template #footer>
+      <UButton
+        label="Cancel"
+        color="neutral"
+        variant="ghost"
+        class="rounded-full px-5"
+        :disabled="isRemoving"
+        @click="isRemoveOpen = false"
+      />
+      <UButton
+        label="Remove"
+        color="error"
+        class="rounded-full px-6 font-medium"
+        :loading="isRemoving"
+        @click="confirmRemove"
+      />
+    </template>
+  </UModal>
 </template>

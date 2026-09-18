@@ -3,13 +3,14 @@ definePageMeta({
   layout: 'platform',
 });
 
-import { useQuery } from '@tanstack/vue-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
+import { QUERY_KEYS } from '~/utils/query-keys';
 import type {
   CommunityEventDetailData,
   CommunityEventDetailTab,
   EventAttendee,
 } from '~~/shared/types/community-event-detail';
-import type { EventDTO } from '~~/shared/types/event';
+import type { EventDetailDTO } from '~~/shared/types/event';
 import {
   eventStatus,
   formatEventDateTimeRange,
@@ -17,6 +18,7 @@ import {
 } from '~~/shared/utils/event-datetime';
 
 const toast = useToast();
+const queryClient = useQueryClient();
 const route = useRoute();
 const { organizationSlug, withOrganizationQuery } = useOrganizationSlug();
 const eventId = computed(() => String(route.params.eventId || ''));
@@ -28,80 +30,57 @@ const isWalkInOpen = ref(false);
 const isEditOpen = ref(false);
 const selectedAttendee = ref<EventAttendee | null>(null);
 
-const mockAttendees: EventAttendee[] = [
-  {
-    id: 'a1',
-    name: 'Aye Min Thura',
-    role: 'Founder',
-    company: 'Wave Ventures',
-    status: 'checked_in',
-    statusLabel: 'Checked-in at 6:42 PM',
-    membershipStatus: 'Active',
-    joinedAt: 'Jan 12, 2026',
-    registeredAt: 'Apr 02, 2026',
-    checkedInAt: '6:42 PM',
-    eventsAttended: 8,
-    connectionsMade: 42,
-    phone: '+95 9 123 456 789',
-    email: 'thura@waveventures.co',
-  },
-  {
-    id: 'a2',
-    name: 'May Zin Oo',
-    role: 'Strategy Consultant',
-    company: 'Deloitte Myanmar',
-    status: 'checked_in',
-    statusLabel: 'Checked-in at 6:42 PM',
-    membershipStatus: 'Active',
-    joinedAt: 'Feb 03, 2026',
-    registeredAt: 'Apr 10, 2026',
-    checkedInAt: '6:42 PM',
-    eventsAttended: 2,
-    connectionsMade: 8,
-    phone: '+95 9 234 567 890',
-    email: 'may@deloittemyanmar.com',
-  },
-  {
-    id: 'a3',
-    name: 'Ethan Wong',
-    role: 'Product Manager',
-    company: 'Nexus Labs',
-    status: 'registered',
-    statusLabel: 'Registered',
-    membershipStatus: 'Active',
-    joinedAt: 'Dec 20, 2025',
-    registeredAt: 'Apr 28, 2026',
-    checkedInAt: null,
-    eventsAttended: 6,
-    connectionsMade: 24,
-    phone: '+95 9 345 678 901',
-    email: 'ethan@nexuslab.com',
-  },
-  {
-    id: 'a4',
-    name: 'Su Su Hlaing',
-    role: 'UX Designer',
-    company: 'Freelance',
-    status: 'checked_in',
-    statusLabel: 'Checked-in at 6:18 PM',
-    membershipStatus: 'Active',
-    joinedAt: 'Jan 08, 2026',
-    registeredAt: 'May 01, 2026',
-    checkedInAt: '6:18 PM',
-    eventsAttended: 3,
-    connectionsMade: 11,
-    phone: '+95 9 456 789 012',
-    email: 'susuhlaing1999@gmail.com',
-  },
-];
-
-const { data: event, isLoading } = useQuery<EventDTO>({
-  queryKey: ['events', organizationSlug, eventId],
+const { data: event, isLoading } = useQuery<EventDetailDTO>({
+  queryKey: computed(() => [
+    ...QUERY_KEYS.event,
+    organizationSlug.value,
+    eventId.value,
+  ]),
   queryFn: () =>
     $fetch(`/api/events/${eventId.value}`, {
       query: withOrganizationQuery(),
     }),
   enabled: () => !!eventId.value && !!organizationSlug.value,
+});
+
+const { data: attendeesData, refetch: refetchAttendees } = useQuery<{
+  attendees: EventAttendee[];
+}>({
+  queryKey: computed(() => [
+    ...QUERY_KEYS.eventAttendees,
+    organizationSlug.value,
+    eventId.value,
+  ]),
+  queryFn: () =>
+    $fetch(`/api/events/${eventId.value}/attendees`, {
+      query: withOrganizationQuery(),
+    }),
+  enabled: () => !!eventId.value && !!organizationSlug.value,
+});
+
+const { mutate: approveAttendee } = useMutation({
+  mutationFn: (attendee: EventAttendee) =>
+    $fetch(`/api/events/${eventId.value}/attendees/${attendee.id}/approve`, {
+      method: 'POST',
+      query: withOrganizationQuery(),
+    }),
+  onSuccess: async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: [...QUERY_KEYS.event, organizationSlug.value, eventId.value],
+      }),
+      refetchAttendees(),
+    ]);
+    toast.add({ title: 'Registration approved', color: 'success' });
+  },
+  onError: (error: { data?: { statusMessage?: string }; message?: string }) => {
+    toast.add({
+      title: 'Could not approve',
+      description:
+        error.data?.statusMessage || error.message || 'Please try again.',
+      color: 'error',
+    });
+  },
 });
 
 const eventDetail = computed<CommunityEventDetailData | null>(() => {
@@ -117,23 +96,21 @@ const eventDetail = computed<CommunityEventDetailData | null>(() => {
         event.value.endsAt
       ),
       place: event.value.location,
-      registrationStatus: 'open',
-      registrations: 0,
-      checkedIn: 0,
-      attendanceRate: '—',
-      newMembersJoined: 0,
-      registrationTrend: {
-        labels: ['—'],
-        values: [0],
-      },
+      registrationStatus:
+        event.value.registrationMode === 'closed' ? 'closed' : 'open',
+      registrations: event.value.overview.registrations,
+      checkedIn: event.value.overview.checkedIn,
+      attendanceRate: event.value.overview.attendanceRate,
+      newMembersJoined: event.value.overview.newMembersJoined,
+      registrationTrend: event.value.overview.registrationTrend,
     },
-    attendees: mockAttendees,
+    attendees: attendeesData.value?.attendees ?? [],
     settings: {
       title: event.value.title,
       date: formatEventDateValue(event.value.startsAt),
       location: event.value.location,
-      registration: 'open',
-      approval: 'everyone',
+      registration: event.value.registrationMode,
+      approval: event.value.approvalMode,
     },
   };
 });
@@ -183,13 +160,19 @@ async function onShare() {
     });
   }
 }
+
+async function onCheckedIn() {
+  await Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: [...QUERY_KEYS.event, organizationSlug.value, eventId.value],
+    }),
+    refetchAttendees(),
+  ]);
+}
 </script>
 
 <template>
-  <div
-    v-if="isLoading"
-    class="flex min-h-[calc(100dvh-11rem)] flex-col gap-6 py-2"
-  >
+  <div v-if="isLoading" class="flex flex-col gap-6 py-2">
     <USkeleton class="h-8 w-80 rounded-md" />
     <USkeleton class="h-10 w-72 rounded-md" />
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -199,7 +182,7 @@ async function onShare() {
 
   <div
     v-else-if="!eventDetail"
-    class="flex min-h-[calc(100dvh-11rem)] flex-col items-center justify-center gap-6 py-20"
+    class="flex flex-col items-center justify-center gap-6 py-20"
   >
     <p class="text-sm text-[#8b8b8b]">Event not found.</p>
     <UButton
@@ -230,6 +213,7 @@ async function onShare() {
       v-else-if="activeTab === 'attendees'"
       :attendees="eventDetail.attendees"
       @select="onSelectAttendee"
+      @approve="approveAttendee"
     />
 
     <CommunityEventCheckIn
@@ -250,7 +234,9 @@ async function onShare() {
   <CommunityEventCheckInScanner
     v-if="eventDetail"
     v-model:open="isScannerOpen"
+    :event-id="eventId"
     :attendees="eventDetail.attendees"
+    @checked-in="onCheckedIn"
   />
 
   <CommunityEventWalkInRegistrationSlideover
@@ -263,5 +249,11 @@ async function onShare() {
     v-model:open="isEditOpen"
     :event="event"
     @deleted="goBack"
+    @updated="
+      () =>
+        queryClient.invalidateQueries({
+          queryKey: [...QUERY_KEYS.event, organizationSlug, eventId],
+        })
+    "
   />
 </template>

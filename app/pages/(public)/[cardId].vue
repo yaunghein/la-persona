@@ -6,7 +6,14 @@ import { downloadUrl } from '~/utils/share-or-download';
 const { cardId } = useRoute().params;
 const card = cards.find((card) => card.id === cardId);
 
-useSeoMeta({ ...getSeoTitle(`${card?.name}`) });
+if (!card) {
+  throw createError({
+    statusCode: 404,
+    statusMessage: 'Page not found',
+  });
+}
+
+useSeoMeta({ ...getSeoTitle(`${card.name}`) });
 
 const isMenuOpen = ref(false);
 const isFormOpen = ref(false);
