@@ -3,7 +3,6 @@ definePageMeta({
   layout: 'platform',
 });
 
-import type { TabsItem } from '@nuxt/ui';
 import { useQuery } from '@tanstack/vue-query';
 import { QUERY_KEYS } from '~/utils/query-keys';
 import type { CommunityInsightsData } from '~~/shared/types/community-insights';
@@ -25,13 +24,8 @@ const isCommunity = computed(
 );
 const isManager = computed(() => isCommunityManager(currentOrg.value));
 
-const insightsTab = ref('community');
+const insightsTab = ref<'community' | 'cards'>('community');
 const communityPeriod = ref<AnalyticsPeriod>('7d');
-
-const tabItems = [
-  { label: 'Community', value: 'community', slot: 'community' },
-  { label: 'Cards', value: 'cards', slot: 'cards' },
-] satisfies TabsItem[];
 
 watch(orgSlug, () => {
   insightsTab.value = 'community';
@@ -43,11 +37,7 @@ const {
   isPending: isCommunityInsightsPending,
   isError: isCommunityInsightsError,
 } = useQuery<CommunityInsightsData>({
-  queryKey: [
-    ...QUERY_KEYS.communityInsights,
-    orgSlug,
-    communityPeriod,
-  ],
+  queryKey: [...QUERY_KEYS.communityInsights, orgSlug, communityPeriod],
   queryFn: () =>
     $fetch<CommunityInsightsData>('/api/community-insights', {
       query: {
@@ -72,53 +62,45 @@ const showCommunityTabs = computed(
     <USkeleton class="h-80 w-full rounded-lg" />
   </div>
 
-  <div v-else-if="showCommunityTabs" class="space-y-6">
-    <UTabs
-      v-model="insightsTab"
-      :items="tabItems"
-      color="neutral"
-      variant="pill"
-      :unmount-on-hide="false"
-      :ui="{
-        root: 'w-full',
-        list: 'bg-[#171717] w-full sm:w-fit rounded-lg p-1',
-        indicator: 'bg-[#232323]',
-        trigger:
-          'data-[state=active]:text-white data-[state=inactive]:text-[#8b8b8b] rounded-md px-4 py-2.5 grow-0 whitespace-nowrap text-center sm:text-left w-full sm:w-fit',
-        content: 'pt-6',
-      }"
+  <div v-else-if="showCommunityTabs">
+    <div
+      v-if="insightsTab === 'community' && isCommunityInsightsPending"
+      class="flex flex-col gap-4 pb-17 sm:pb-0"
     >
-      <template #community>
-        <div
-          v-if="isCommunityInsightsPending"
-          class="flex flex-col gap-4 pb-17 sm:pb-0"
-        >
-          <USkeleton class="h-8 w-64 rounded-md" />
-          <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <USkeleton v-for="i in 6" :key="i" class="h-32 rounded-lg" />
-          </div>
-          <USkeleton class="h-80 w-full rounded-lg" />
-        </div>
-        <p
-          v-else-if="isCommunityInsightsError || !communityInsights"
-          class="text-sm text-[#8b8b8b]"
-        >
-          Could not load community insights.
-        </p>
-        <AnalyticsCommunityInsights
-          v-else
-          v-model:period="communityPeriod"
-          :data="communityInsights"
-        />
+      <USkeleton class="h-8 w-64 rounded-md" />
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <USkeleton v-for="i in 6" :key="i" class="h-32 rounded-lg" />
+      </div>
+      <USkeleton class="h-80 w-full rounded-lg" />
+    </div>
+    <p
+      v-else-if="
+        insightsTab === 'community' &&
+        (isCommunityInsightsError || !communityInsights)
+      "
+      class="text-sm text-[#8b8b8b]"
+    >
+      Could not load community insights.
+    </p>
+    <AnalyticsCommunityInsights
+      v-else-if="insightsTab === 'community' && communityInsights"
+      v-model:period="communityPeriod"
+      :data="communityInsights"
+    >
+      <template #header-actions>
+        <AnalyticsInsightsScopeSwitch v-model="insightsTab" />
       </template>
-      <template #cards>
-        <AnalyticsPersonalInsights
-          :org-slug="orgSlug"
-          :user-name="session?.user?.name"
-          all-cards-heading="Card Analytics"
-        />
+    </AnalyticsCommunityInsights>
+    <AnalyticsPersonalInsights
+      v-else
+      :org-slug="orgSlug"
+      :user-name="session?.user?.name"
+      all-cards-heading="Card Analytics"
+    >
+      <template #header-actions>
+        <AnalyticsInsightsScopeSwitch v-model="insightsTab" />
       </template>
-    </UTabs>
+    </AnalyticsPersonalInsights>
   </div>
 
   <AnalyticsPersonalInsights

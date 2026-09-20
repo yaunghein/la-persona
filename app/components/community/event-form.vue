@@ -74,7 +74,7 @@ function onCapacityInput(value: string | number) {
   <div class="flex flex-col gap-8 pb-8">
     <div class="flex items-center gap-3">
       <h1
-        class="text-xl font-normal leading-5 tracking-[0.175rem] uppercase text-white sm:text-[1.75rem]"
+        class="text-xl font-normal leading-tight tracking-widest uppercase text-white sm:text-2xl"
       >
         {{ pageTitle }}
       </h1>

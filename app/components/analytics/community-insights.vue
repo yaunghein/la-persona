@@ -108,7 +108,7 @@ const columns: TableColumn<CommunityEventPerformance>[] = [
     >
       <div class="flex items-center gap-2">
         <h1
-          class="text-xl font-medium leading-tight tracking-widest uppercase sm:text-[1.75rem]"
+          class="text-xl font-medium leading-tight tracking-widest uppercase sm:text-2xl"
         >
           {{ data.title }}
         </h1>
@@ -123,19 +123,22 @@ const columns: TableColumn<CommunityEventPerformance>[] = [
         />
       </div>
 
-      <USelectMenu
-        v-model="selectedPeriod"
-        value-key="value"
-        :items="data.periodOptions"
-        :search-input="false"
-        class="w-auto min-w-36 sm:w-40"
-        :ui="{
-          base: 'h-12 rounded-lg border-none bg-[#171717] px-6 text-white',
-          content: 'bg-[#171717] border border-[#2a2a2a]',
-          item: 'text-white data-[highlighted]:bg-[#232323]',
-          value: 'text-white',
-        }"
-      />
+      <div class="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center">
+        <slot name="header-actions" />
+        <USelectMenu
+          v-model="selectedPeriod"
+          value-key="value"
+          :items="data.periodOptions"
+          :search-input="false"
+          class="w-auto min-w-36 sm:w-40"
+          :ui="{
+            base: 'h-10 rounded-lg border-none bg-[#171717] px-4 text-white',
+            content: 'bg-[#171717] border border-[#2a2a2a]',
+            item: 'text-white data-[highlighted]:bg-[#232323]',
+            value: 'text-white',
+          }"
+        />
+      </div>
     </div>
 
     <div class="grid grid-cols-2 gap-4 md:grid-cols-3">

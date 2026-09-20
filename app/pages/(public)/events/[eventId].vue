@@ -2,6 +2,12 @@
 import { Application } from '@splinetool/runtime';
 import type { PublicEventDTO } from '~~/shared/types/event';
 import { parseEventOnboardingStep } from '~~/shared/utils/event-onboarding';
+import {
+  communitySetupSignInPath,
+  resolveEventFlowPath,
+  type EventFlowViewer,
+} from '~~/shared/utils/event-flow';
+import { ROUTES } from '~~/shared/utils/routes';
 
 const route = useRoute();
 const toast = useToast();
@@ -10,10 +16,13 @@ const onboardingStep = computed(() =>
   parseEventOnboardingStep(route.query.onboarding)
 );
 
+const { data: session } = await authClient.useSession(useFetch);
+
 const {
   data: event,
   pending,
   error,
+  refresh,
 } = await useFetch<PublicEventDTO>(() => `/api/public/events/${eventId.value}`);
 
 useSeoMeta({
@@ -23,6 +32,58 @@ useSeoMeta({
 const splineCanvasEl = ref<HTMLCanvasElement | null>(null);
 let splineApp: Application | null = null;
 let mediaQuery: MediaQueryList | null = null;
+const showHowToUse = ref(false);
+const justRegistered = ref(false);
+
+const orgSlug = computed(() => event.value?.organizer?.slug || '');
+
+const viewer = computed<EventFlowViewer>(() => {
+  if (!session.value) {
+    return {
+      isAuthenticated: false,
+      isMember: false,
+      cardSlug: null,
+      cardComplete: false,
+      viewerRegistrationStatus: 'none',
+    };
+  }
+
+  return {
+    isAuthenticated: true,
+    isMember: event.value?.viewer?.isMember ?? false,
+    cardSlug: event.value?.viewer?.cardSlug ?? null,
+    cardComplete: event.value?.viewer?.cardComplete ?? false,
+    viewerRegistrationStatus:
+      event.value?.viewer?.viewerRegistrationStatus ?? 'none',
+  };
+});
+
+const canRegister = computed(
+  () =>
+    viewer.value.isMember &&
+    viewer.value.cardComplete &&
+    viewer.value.viewerRegistrationStatus === 'none' &&
+    event.value?.registrationMode === 'open'
+);
+
+watch(
+  [onboardingStep, session, event],
+  () => {
+    if (onboardingStep.value !== 'mingalarbar' || !session.value || !event.value) {
+      return;
+    }
+    const next = resolveEventFlowPath({
+      eventId: eventId.value,
+      orgSlug: orgSlug.value,
+      viewer: viewer.value,
+      source: 'mingalarbar',
+    });
+    if (next !== route.fullPath) {
+      navigateTo(next);
+    }
+  },
+  { immediate: true }
+);
 
 async function loadSpline() {
   const canvas = splineCanvasEl.value;
@@ -71,7 +132,62 @@ function onViewOrganizer() {
 }
 
 function onRegister() {
-  return navigateTo(`${route.path}?onboarding=mingalarbar`);
+  if (canRegister.value) {
+    justRegistered.value = true;
+    refresh();
+    return;
+  }
+
+  if (!event.value || !orgSlug.value) return;
+
+  if (event.value.registrationMode === 'invite_only') {
+    toast.add({
+      title: 'Invite only',
+      description: 'This event is invite only.',
+      color: 'neutral',
+    });
+    return;
+  }
+
+  if (event.value.registrationMode === 'closed') {
+    toast.add({
+      title: 'Registration closed',
+      description: 'Registration is closed for this event.',
+      color: 'neutral',
+    });
+    return;
+  }
+
+  const next = resolveEventFlowPath({
+    eventId: eventId.value,
+    orgSlug: orgSlug.value,
+    viewer: viewer.value,
+    source: 'register',
+  });
+
+  if (!viewer.value.isAuthenticated) {
+    return navigateTo(ROUTES.EVENTS.PUBLIC_MINGALARBAR(eventId.value));
+  }
+
+  return navigateTo(next);
+}
+
+function onCreateAccount() {
+  if (!orgSlug.value) return;
+  return navigateTo(communitySetupSignInPath(orgSlug.value, eventId.value));
+}
+
+function onCancelOnboarding() {
+  return navigateTo(ROUTES.EVENTS.PUBLIC(eventId.value));
+}
+
+function onHowToUse() {
+  showHowToUse.value = true;
+}
+
+function onHowToUseDone() {
+  showHowToUse.value = false;
+  justRegistered.value = false;
 }
 </script>
 
@@ -104,10 +220,18 @@ function onRegister() {
           </p>
         </div>
 
-        <CommunityEventOnboardingFlow
-          v-else-if="onboardingStep && event"
+        <CommunityEventOnboardingMingalarbar
+          v-else-if="onboardingStep === 'mingalarbar'"
           class="min-h-0 flex-1"
-          :event="event"
+          :organizer-name="event.organizer?.name || 'this community'"
+          @next="onCreateAccount"
+          @cancel="onCancelOnboarding"
+        />
+
+        <CommunityEventOnboardingHowToUse
+          v-else-if="showHowToUse"
+          class="min-h-0 flex-1"
+          @done="onHowToUseDone"
         />
 
         <CommunityEventRegisterFlow
@@ -116,8 +240,13 @@ function onRegister() {
           variant="page"
           :event="event"
           :organizer="event.organizer"
+          :organization-slug="orgSlug"
+          :can-register="canRegister"
+          :viewer-registration-status="viewer.viewerRegistrationStatus"
+          :how-to-use="justRegistered"
           @register="onRegister"
           @view-organizer="onViewOrganizer"
+          @how-to-use="onHowToUse"
         />
       </div>
     </div>

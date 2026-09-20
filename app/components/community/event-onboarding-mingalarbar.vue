@@ -47,9 +47,8 @@ const benefits = [
             Welcome to <span class="text-white">{{ organizerName }}</span>.
           </p>
           <p>
-            You don't have a La Persona Account yet. Create your free La Persona
-            account to register for the event and receive your Community Persona
-            Card.
+            Sign in or create your free La Persona account to register for the
+            event and receive your Community Persona Card.
           </p>
         </div>
 

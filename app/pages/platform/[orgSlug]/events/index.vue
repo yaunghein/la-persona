@@ -11,6 +11,7 @@ import {
   type CommunityEvent,
   type CommunityEventsData,
 } from '~~/shared/types/community-events';
+import { publicEventAbsoluteUrl } from '~~/shared/utils/routes';
 
 const toast = useToast();
 const route = useRoute();
@@ -109,7 +110,7 @@ function onView(event: CommunityEvent) {
 }
 
 async function onShare(event: CommunityEvent) {
-  const shareUrl = `${window.location.origin}/platform/${orgSlug.value}/events/${event.id}`;
+  const shareUrl = publicEventAbsoluteUrl(event.id);
   try {
     await navigator.clipboard.writeText(shareUrl);
     toast.add({

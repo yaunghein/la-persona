@@ -1,19 +1,70 @@
 <script setup lang="ts">
 import { SOCIAL_MEDIA_LINK_LABELS } from '~~/shared/constants/card-link-options';
+import { useUrlNormalization } from '~~/app/composables/url-normalization';
+
+const props = defineProps<{
+  firstName?: string | null;
+  lastName?: string | null;
+  position?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  socials?: { label: string; value: string }[] | null;
+  submitting?: boolean;
+}>();
 
 const emit = defineEmits<{
-  next: [];
+  submit: [
+    payload: {
+      firstName: string;
+      lastName: string;
+      position: string;
+      phone: string;
+      email: string;
+      socials: { label: string; value: string }[];
+    },
+  ];
   cancel: [];
 }>();
 
-const form = reactive({
-  firstName: '',
-  lastName: '',
-  position: '',
-  phone: '',
-  email: '',
-  social: '',
+const toast = useToast();
+const { normalizeCardLinkValue, isValidCardLinkValue } = useUrlNormalization();
+
+const firstSocial = computed(() => {
+  const links = props.socials || [];
+  return (
+    links.find((link) =>
+      (SOCIAL_MEDIA_LINK_LABELS as readonly string[]).includes(link.label)
+    ) || links[0]
+  );
 });
+
+const form = reactive({
+  firstName: props.firstName || '',
+  lastName: props.lastName || '',
+  position: props.position || '',
+  phone: props.phone || '',
+  email: props.email || '',
+  social: firstSocial.value?.label || '',
+  socialUrl: firstSocial.value?.value || '',
+});
+
+watch(
+  () => props,
+  (value) => {
+    form.firstName = value.firstName || '';
+    form.lastName = value.lastName || '';
+    form.position = value.position || '';
+    form.phone = value.phone || '';
+    form.email = value.email || '';
+    const social =
+      (value.socials || []).find((link) =>
+        (SOCIAL_MEDIA_LINK_LABELS as readonly string[]).includes(link.label)
+      ) || value.socials?.[0];
+    form.social = social?.label || '';
+    form.socialUrl = social?.value || '';
+  },
+  { deep: true }
+);
 
 const socialItems = SOCIAL_MEDIA_LINK_LABELS.map((label) => ({
   label,
@@ -35,6 +86,43 @@ const selectUi = {
   placeholder: 'text-white',
   trailingIcon: 'text-[#8b8b8b]',
 };
+
+function onSubmit() {
+  if (props.submitting) return;
+  const firstName = form.firstName.trim();
+  const position = form.position.trim();
+  const phone = form.phone.trim();
+  const email = form.email.trim();
+  const social = form.social.trim();
+  const socialUrl = normalizeCardLinkValue(form.socialUrl, social);
+
+  if (!firstName || !position || !phone || !email || !social || !socialUrl) {
+    toast.add({
+      title: 'Missing details',
+      description: 'Please fill in every required field.',
+      color: 'error',
+    });
+    return;
+  }
+
+  if (!email.includes('@') || !isValidCardLinkValue(socialUrl, social)) {
+    toast.add({
+      title: 'Check your details',
+      description: 'Enter a valid email and social link.',
+      color: 'error',
+    });
+    return;
+  }
+
+  emit('submit', {
+    firstName,
+    lastName: form.lastName.trim(),
+    position,
+    phone,
+    email,
+    socials: [{ label: social, value: socialUrl }],
+  });
+}
 </script>
 
 <template>
@@ -136,6 +224,12 @@ const selectUi = {
               class="w-full"
               :ui="selectUi"
             />
+            <UInput
+              v-model="form.socialUrl"
+              placeholder="https://"
+              class="w-full"
+              :ui="inputUi"
+            />
           </div>
         </div>
 
@@ -160,9 +254,9 @@ const selectUi = {
     </div>
 
     <CommunityEventOnboardingFooter
-      primary-label="Get Community Card"
+      :primary-label="submitting ? 'Saving...' : 'Get Community Card'"
       secondary-label="Cancel"
-      @primary="emit('next')"
+      @primary="onSubmit"
       @secondary="emit('cancel')"
     />
   </div>

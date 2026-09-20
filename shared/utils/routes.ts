@@ -5,6 +5,29 @@ const INVITE_ROOT = '/invite';
 export const ROUTES = {
   HOME: '/',
   SIGN_IN: '/sign-in',
+  EVENTS: {
+    PUBLIC: (eventId: string) => `/events/${eventId}`,
+    PUBLIC_MINGALARBAR: (eventId: string) =>
+      `/events/${eventId}?onboarding=mingalarbar`,
+    PLATFORM: (orgSlug: string, eventId: string) =>
+      `${PLATFORM_ROOT}/${orgSlug}/events/${eventId}`,
+  },
+  COMMUNITY_SETUP: {
+    BOOTSTRAP: (orgSlug: string, eventId: string) =>
+      `${PLATFORM_ROOT}/${orgSlug}/community-setup/${eventId}`,
+    CARD: (
+      orgSlug: string,
+      cardSlug: string,
+      params?: { step?: string; eventId?: string }
+    ) => {
+      const path = `${PLATFORM_ROOT}/${orgSlug}/cards/${cardSlug}/community-setup`;
+      const query = new URLSearchParams();
+      if (params?.step) query.set('step', params.step);
+      if (params?.eventId) query.set('eventId', params.eventId);
+      const qs = query.toString();
+      return qs ? `${path}?${qs}` : path;
+    },
+  },
   INVITE: {
     ROOT: INVITE_ROOT,
     CARD: (token: string) => `${INVITE_ROOT}/card/${token}`,
@@ -34,4 +57,15 @@ export function isProtectedInvitePath(path: string) {
     /^\/invite\/card\/[^/]+\/?$/.test(path) ||
     /^\/invite\/community\/(?:accept|join)\/[^/]+\/?$/.test(path)
   );
+}
+
+export function parsePlatformEventDetailPath(path: string) {
+  const match = path.match(/^\/platform\/([^/]+)\/events\/([^/]+)\/?$/);
+  if (!match) return null;
+  return { orgSlug: match[1], eventId: match[2] };
+}
+
+export function publicEventAbsoluteUrl(eventId: string) {
+  if (!import.meta.client) return ROUTES.EVENTS.PUBLIC(eventId);
+  return `${window.location.origin}${ROUTES.EVENTS.PUBLIC(eventId)}`;
 }

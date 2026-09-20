@@ -26,10 +26,6 @@ export type EventOrganizer = {
   slug?: string;
 };
 
-export type PublicEventDTO = EventDTO & {
-  organizer: EventOrganizer;
-};
-
 export const EVENT_REGISTRATION_MODES = [
   'open',
   'closed',
@@ -49,6 +45,18 @@ export type EventRegistrationStatus =
   (typeof EVENT_REGISTRATION_STATUSES)[number];
 
 export type ViewerRegistrationStatus = 'none' | EventRegistrationStatus;
+
+export type PublicEventViewer = {
+  isMember: boolean;
+  cardSlug: string | null;
+  cardComplete: boolean;
+  viewerRegistrationStatus: ViewerRegistrationStatus;
+};
+
+export type PublicEventDTO = EventDTO & {
+  organizer: EventOrganizer;
+  viewer: PublicEventViewer | null;
+};
 
 export type EventListItemDTO = EventDTO & {
   registeredCount: number;

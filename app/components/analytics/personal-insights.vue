@@ -343,6 +343,7 @@ function closeInfo() {
       </div>
 
       <div class="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+        <slot name="header-actions" />
         <USelectMenu
           v-model="selectedPeriod"
           value-key="value"

@@ -39,7 +39,7 @@ const foundedLabel = computed(() => `Founded in ${props.data.foundedYear}`);
   <div class="flex flex-col">
     <div class="flex items-center gap-3 pb-6 pt-2">
       <h1
-        class="text-[1.75rem] font-normal leading-5 tracking-[0.175rem] uppercase text-white"
+        class="text-xl font-normal leading-tight tracking-widest uppercase text-white sm:text-2xl"
       >
         About community
       </h1>

@@ -44,6 +44,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     to.path === `${base}/events` ||
     to.path === `${base}/about` ||
     to.path === `${base}/cards` ||
+    to.path.startsWith(`${base}/community-setup`) ||
     to.path.startsWith(`${base}/cards/`)
   ) {
     return;

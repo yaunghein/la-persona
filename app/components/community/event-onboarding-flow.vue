@@ -42,7 +42,7 @@ function goHome() {
   />
   <CommunityEventOnboardingCreateCard
     v-else-if="step === 'create-card'"
-    @next="goNext"
+    @submit="goNext"
     @cancel="goHome"
   />
   <CommunityEventOnboardingSettingUp

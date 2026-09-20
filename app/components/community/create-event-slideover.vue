@@ -7,6 +7,7 @@ import type { FormErrorEvent, FormSubmitEvent } from '@nuxt/ui';
 import { format, parseISO } from 'date-fns';
 import { z } from 'zod';
 import type { EventDTO } from '~~/shared/types/event';
+import { publicEventAbsoluteUrl } from '~~/shared/utils/routes';
 import {
   eventTimeOptions,
   formatEventDateValue,
@@ -117,7 +118,7 @@ const selectUi = {
 
 const shareUrl = computed(() => {
   if (!createdEvent.value || !import.meta.client) return '';
-  return `${window.location.origin}/platform/${organizationSlug.value}/events/${createdEvent.value.id}`;
+  return publicEventAbsoluteUrl(createdEvent.value.id);
 });
 
 function createMediaItem(file: File): EventMediaItem {

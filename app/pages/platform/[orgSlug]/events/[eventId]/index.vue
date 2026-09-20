@@ -11,6 +11,7 @@ import type {
   EventAttendee,
 } from '~~/shared/types/community-event-detail';
 import type { EventDetailDTO } from '~~/shared/types/event';
+import { publicEventAbsoluteUrl } from '~~/shared/utils/routes';
 import {
   eventStatus,
   formatEventDateTimeRange,
@@ -144,7 +145,7 @@ function onEdit() {
 async function onShare() {
   if (!eventDetail.value) return;
 
-  const shareUrl = `${window.location.origin}/platform/${organizationSlug.value}/events/${eventId.value}`;
+  const shareUrl = publicEventAbsoluteUrl(eventId.value);
   try {
     await navigator.clipboard.writeText(shareUrl);
     toast.add({

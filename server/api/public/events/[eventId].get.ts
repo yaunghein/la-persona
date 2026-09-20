@@ -1,6 +1,51 @@
+import { and, eq } from 'drizzle-orm';
+import { db } from '~~/server/db';
+import { member } from '~~/server/db/schema';
 import { findPublicEventById, toEventDTO } from '~~/server/db/queries/event';
+import { findCardByUserIdAndOrganization } from '~~/server/db/queries/card';
+import {
+  findRegistrationByEventAndUser,
+  toViewerStatus,
+} from '~~/server/db/queries/event-registration';
 import { handleApiError } from '~~/server/utils/errors';
-import type { PublicEventDTO } from '~~/shared/types/event';
+import { auth } from '~~/server/auth';
+import { isCommunityCardComplete } from '~~/shared/utils/event-flow';
+import type { PublicEventDTO, PublicEventViewer } from '~~/shared/types/event';
+
+async function buildViewer(
+  userId: string,
+  organizationId: string,
+  eventId: string
+): Promise<PublicEventViewer> {
+  const [membership] = await db
+    .select({ id: member.id })
+    .from(member)
+    .where(
+      and(eq(member.userId, userId), eq(member.organizationId, organizationId))
+    )
+    .limit(1);
+
+  if (!membership) {
+    return {
+      isMember: false,
+      cardSlug: null,
+      cardComplete: false,
+      viewerRegistrationStatus: 'none',
+    };
+  }
+
+  const [card, registration] = await Promise.all([
+    findCardByUserIdAndOrganization(userId, organizationId),
+    findRegistrationByEventAndUser(eventId, userId),
+  ]);
+
+  return {
+    isMember: true,
+    cardSlug: card?.slug || null,
+    cardComplete: card ? isCommunityCardComplete(card) : false,
+    viewerRegistrationStatus: toViewerStatus(registration?.status),
+  };
+}
 
 export default defineEventHandler(async (event) => {
   const eventId = getRouterParam(event, 'eventId');
@@ -22,6 +67,14 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    const session = await auth.api.getSession({
+      headers: event.headers,
+    });
+
+    const viewer = session?.user?.id
+      ? await buildViewer(session.user.id, row.event.organizationId, eventId)
+      : null;
+
     const payload: PublicEventDTO = {
       ...toEventDTO(row.event),
       organizer: {
@@ -29,6 +82,7 @@ export default defineEventHandler(async (event) => {
         logoUrl: row.organizationLogo,
         slug: row.organizationSlug,
       },
+      viewer,
     };
 
     return payload;

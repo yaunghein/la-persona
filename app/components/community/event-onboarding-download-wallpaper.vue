@@ -1,7 +1,38 @@
 <script setup lang="ts">
+const props = defineProps<{
+  firstName?: string | null;
+  lastName?: string | null;
+  position?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  wallpaperUrl?: string | null;
+}>();
+
 const emit = defineEmits<{
   next: [];
+  skip: [];
 }>();
+
+const toast = useToast();
+
+const displayName = computed(() =>
+  [props.firstName, props.lastName].filter(Boolean).join(' ').trim() || 'Your name'
+);
+
+async function onDownload() {
+  if (!props.wallpaperUrl) {
+    toast.add({
+      title: 'Wallpaper not ready',
+      description: 'You can download it later from your community card page.',
+      color: 'neutral',
+    });
+    emit('skip');
+    return;
+  }
+
+  window.open(props.wallpaperUrl, '_blank', 'noopener,noreferrer');
+  emit('next');
+}
 </script>
 
 <template>
@@ -19,8 +50,12 @@ const emit = defineEmits<{
             Keep your card ready
           </h1>
           <p class="text-sm leading-normal text-[#8b8b8b]">
-            Set the lock screen wallpaper on your phone for faster checkin at
+            Set the lock screen wallpaper on your phone for faster check-in at
             the event and to share your contact with other members faster.
+          </p>
+          <p class="text-sm leading-normal text-[#8b8b8b]">
+            You can always download this wallpaper later from your community
+            card page.
           </p>
         </div>
 
@@ -30,14 +65,15 @@ const emit = defineEmits<{
           >
             <div class="flex flex-col gap-1">
               <p class="text-base font-medium leading-5 text-white">
-                Aung Pyae Kyaw
+                {{ displayName }}
               </p>
-              <p class="text-xs leading-5 text-[#8b8b8b]">Designer</p>
+              <p class="text-xs leading-5 text-[#8b8b8b]">
+                {{ position || 'Member' }}
+              </p>
             </div>
             <div class="flex flex-col gap-1 text-xs leading-5 text-[#8b8b8b]">
-              <p>+66 1234 5678</p>
-              <p>aung@la-persona.com</p>
-              <p>N/A</p>
+              <p>{{ phone || '—' }}</p>
+              <p>{{ email || '—' }}</p>
             </div>
           </div>
         </div>
@@ -46,7 +82,9 @@ const emit = defineEmits<{
 
     <CommunityEventOnboardingFooter
       primary-label="Download Wallpaper"
-      @primary="emit('next')"
+      secondary-label="Skip"
+      @primary="onDownload"
+      @secondary="emit('skip')"
     />
   </div>
 </template>

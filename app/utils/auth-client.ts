@@ -50,7 +50,7 @@ function getAuthErrorCallbackURL() {
     return ROUTES.SIGN_IN;
   }
 
-  return `${ROUTES.SIGN_IN}?redirectTo=${redirectTo}`;
+  return `${ROUTES.SIGN_IN}?redirectTo=${encodeURIComponent(redirectTo)}`;
 }
 
 export const signInWithSocial = async (provider: SocialProvider) => {

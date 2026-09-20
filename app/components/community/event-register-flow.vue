@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import type { EventDTO, EventOrganizer } from '~~/shared/types/event';
+import type {
+  EventDTO,
+  EventOrganizer,
+  ViewerRegistrationStatus,
+} from '~~/shared/types/event';
 import { useQueryClient } from '@tanstack/vue-query';
 import { QUERY_KEYS } from '~/utils/query-keys';
 import {
@@ -13,26 +17,44 @@ const props = withDefaults(
     event: EventDTO;
     organizer?: EventOrganizer | null;
     variant?: 'slideover' | 'page';
+    organizationSlug?: string;
+    canRegister?: boolean;
+    viewerRegistrationStatus?: ViewerRegistrationStatus;
+    howToUse?: boolean;
   }>(),
-  { variant: 'slideover' }
+  {
+    variant: 'slideover',
+    canRegister: true,
+    viewerRegistrationStatus: 'none',
+    howToUse: false,
+  }
 );
 
 const { organizationSlug, withOrganizationQuery } = useOrganizationSlug();
 const queryClient = useQueryClient();
 const toast = useToast();
 const isPage = computed(() => props.variant === 'page');
-const registrationStatus = ref<'registered' | 'pending'>('registered');
+const registrationStatus = ref<'registered' | 'pending'>(
+  props.viewerRegistrationStatus === 'pending' ? 'pending' : 'registered'
+);
+
+const resolvedOrgSlug = computed(
+  () => props.organizationSlug || organizationSlug.value
+);
 
 const emit = defineEmits<{
   viewOrganizer: [event: EventDTO];
   register: [event: EventDTO];
   completed: [];
   stepChange: [step: RegisterStep];
+  howToUse: [];
 }>();
 
 type RegisterStep = 'confirm' | 'registering' | 'success';
 
-const step = ref<RegisterStep>('confirm');
+const step = ref<RegisterStep>(
+  props.viewerRegistrationStatus !== 'none' ? 'success' : 'confirm'
+);
 let registeringTimer: ReturnType<typeof setTimeout> | null = null;
 
 const galleryImages = computed(() =>
@@ -97,7 +119,7 @@ function resetStep() {
 async function startRegister() {
   if (step.value !== 'confirm') return;
 
-  if (isPage.value) {
+  if (isPage.value && !props.canRegister) {
     emit('register', props.event);
     return;
   }
@@ -108,14 +130,16 @@ async function startRegister() {
       `/api/events/${props.event.id}/register`,
       {
         method: 'POST',
-        query: withOrganizationQuery(),
+        query: resolvedOrgSlug.value
+          ? { organizationSlug: resolvedOrgSlug.value }
+          : withOrganizationQuery(),
       }
     );
     registrationStatus.value =
       result.status === 'pending' ? 'pending' : 'registered';
     step.value = 'success';
     await queryClient.invalidateQueries({
-      queryKey: [...QUERY_KEYS.events, organizationSlug.value],
+      queryKey: [...QUERY_KEYS.events, resolvedOrgSlug.value],
     });
     emit('register', props.event);
   } catch (error: any) {
@@ -134,6 +158,10 @@ function onViewOrganizer() {
 }
 
 function onGotIt() {
+  if (isPage.value && props.howToUse) {
+    emit('howToUse');
+    return;
+  }
   emit('completed');
   if (!isPage.value) resetStep();
 }
@@ -331,7 +359,9 @@ onBeforeUnmount(() => {
         </template>
         <UButton
           v-else
-          label="Got it"
+          :label="
+            howToUse ? 'Learn How to Use Community Card' : 'Got it'
+          "
           color="neutral"
           class="h-13 w-full cursor-pointer justify-center rounded-full bg-[#232323] px-2.5 text-sm font-bold text-white hover:bg-[#2a2a2a]"
           @click="onGotIt"

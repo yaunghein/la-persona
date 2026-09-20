@@ -45,7 +45,7 @@ const selectedTab = computed({
           />
           <div class="flex min-w-0 flex-wrap items-start gap-x-4 gap-y-2">
             <h1
-              class="max-w-124 text-xl font-normal leading-[1.2] tracking-[0.175rem] uppercase text-white sm:text-[1.75rem]"
+              class="max-w-124 text-xl font-normal leading-[1.2] tracking-widest uppercase text-white sm:text-2xl"
             >
               {{ title }}
             </h1>
