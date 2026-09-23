@@ -43,6 +43,13 @@
       "when": 1788784220798,
       "tag": "0005_majestic_la_nuit",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790131638097,
+      "tag": "0006_pale_wrecking_crew",
+      "breakpoints": true
     }
   ]
 }

@@ -16,6 +16,7 @@ export const card = pgTable(
     splineUrl: text(),
     company: text(),
     phone: text(),
+    phoneCountryCode: text(),
     email: text(),
     website: text(),
     avatarUrl: text(),

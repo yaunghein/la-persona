@@ -2,7 +2,14 @@
 import { onClickOutside } from '@vueuse/core';
 import { countries } from 'country-codes-flags-phone-codes';
 
-const dialCode = ref(countries.find((c) => c.code === 'MM')?.dialCode);
+defineProps<{
+  splitCountry?: boolean;
+}>();
+
+const countryCode = ref('MM');
+const dialCode = computed(
+  () => countries.find((country) => country.code === countryCode.value)?.dialCode
+);
 const phone = ref('');
 const search = ref('');
 const searchFocus = ref(false);
@@ -26,7 +33,7 @@ watch(open, (isOpen) => {
 });
 
 const selectCountry = (country: (typeof countries)[0]) => {
-  dialCode.value = country.dialCode;
+  countryCode.value = country.code;
   open.value = false;
 };
 </script>
@@ -112,7 +119,13 @@ const selectCountry = (country: (typeof countries)[0]) => {
         @focus="open = false"
         class="h-[2.8rem] w-full appearance-none border border-white/10 bg-transparent pl-15 pr-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:pl-18 sm:pr-6"
       />
-      <input type="hidden" name="phone" :value="dialCode + phone" />
+      <input
+        v-if="splitCountry"
+        type="hidden"
+        name="phoneCountryCode"
+        :value="countryCode"
+      />
+      <input v-else type="hidden" name="phone" :value="`${dialCode || ''}${phone}`" />
     </div>
   </label>
 </template>

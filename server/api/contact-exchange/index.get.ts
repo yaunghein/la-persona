@@ -74,6 +74,7 @@ export default defineEventHandler(async (event) => {
         id: contactExchange.id,
         name: contactExchange.name,
         phone: contactExchange.phone,
+        phoneCountryCode: contactExchange.phoneCountryCode,
         email: contactExchange.email,
         company: contactExchange.company,
         position: contactExchange.position,

@@ -15,6 +15,7 @@ export default defineEventHandler(async (event) => {
       position: card.position,
       company: card.company,
       phone: card.phone,
+      phoneCountryCode: card.phoneCountryCode,
       email: card.email,
       website: card.website,
       splineUrl: card.splineUrl,

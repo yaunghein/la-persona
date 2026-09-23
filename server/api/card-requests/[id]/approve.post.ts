@@ -10,6 +10,7 @@ import {
   subscriptionPaymentItem,
 } from '~~/server/db/schema';
 import { splitName } from '~~/server/services/card';
+import { resolvedPhoneFields } from '~~/shared/utils/phone';
 import { getPersonalOrganizationByUserId } from '~~/server/services/auth';
 import { requireAdminSession } from '~~/server/utils/admin-permissions';
 
@@ -182,6 +183,10 @@ export default defineEventHandler(async (event) => {
 
       const requestCardData = existing.cardData || {};
       const { firstName, lastName } = splitName(requestCardData.name);
+      const phoneFields = resolvedPhoneFields(
+        requestCardData.phone,
+        requestCardData.phoneCountryCode
+      );
 
       const [createdCard] = await tx
         .insert(card)
@@ -191,7 +196,8 @@ export default defineEventHandler(async (event) => {
           slug: `${slugify(requestCardData.name || `${firstName} ${lastName}`)}-${nanoid(6)}`,
           position: requestCardData.position || 'Professional',
           company: requestCardData.company || null,
-          phone: requestCardData.phone || null,
+          phone: phoneFields.phone,
+          phoneCountryCode: phoneFields.phoneCountryCode,
           email: requestCardData.email || null,
           website: requestCardData.website || null,
           socials: requestCardData.socials || [],

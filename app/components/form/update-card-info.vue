@@ -16,6 +16,7 @@ import {
   resolveSocialLinksForSubmission,
   type SocialFormLink,
 } from '~~/shared/utils/social-links';
+import { resolvedPhoneFields } from '~~/shared/utils/phone';
 
 const route = useRoute();
 const queryClient = useQueryClient();
@@ -48,6 +49,7 @@ const state = reactive({
   position: '',
   company: '',
   phone: '',
+  phoneCountryCode: 'MM',
   email: '',
   website: '',
   avatarUrl: '',
@@ -162,6 +164,7 @@ watch(
     state.position = val.position ?? '';
     state.company = val.company ?? '';
     state.phone = val.phone ?? '';
+    state.phoneCountryCode = val.phoneCountryCode || 'MM';
     state.email = val.email ?? '';
     state.website = val.website ?? '';
     state.avatarUrl = val.avatarUrl ?? '';
@@ -245,11 +248,17 @@ const { mutate: updateCard, isPending: isSaving } = useMutation({
       resolveSocialLinksForSubmission(state.socials)
     );
 
+    const phoneFields = resolvedPhoneFields(
+      state.phone,
+      state.phoneCountryCode
+    );
+
     return await $fetch('/api/cards', {
       method: 'PATCH',
       query: { organizationSlug: orgSlug.value },
       body: {
         ...formData,
+        ...phoneFields,
         website: normalizeUrlWithHttps(formData.website),
         avatarUrl: finalAvatarUrl,
         id: card.value?.id,
@@ -746,9 +755,10 @@ onBeforeUnmount(() => {
           name="phone"
           class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
         >
-          <UInput
+          <FormPhoneField
             v-model="state.phone"
-            class="w-full"
+            v-model:country-code="state.phoneCountryCode"
+            name="phone"
             :ui="{
               base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
             }"

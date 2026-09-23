@@ -5,6 +5,7 @@ import { db } from '~~/server/db';
 import { card, contactExchange } from '~~/server/db/schema';
 import { getPersonalOrganizationByUserId } from '~~/server/services/auth';
 import { handleApiError } from '~~/server/utils/errors';
+import { normalizePhoneCountryCode } from '~~/shared/utils/phone';
 
 const seamlessExchangeSchema = z
   .object({
@@ -29,6 +30,9 @@ function toSeamlessContactRow(params: {
     cardId: params.targetCard.id,
     name: getCardDisplayName(params.contactCard),
     phone: params.contactCard.phone || '',
+    phoneCountryCode: params.contactCard.phone
+      ? normalizePhoneCountryCode(params.contactCard.phoneCountryCode)
+      : null,
     email: params.contactCard.email || null,
     company: params.contactCard.company || null,
     position: params.contactCard.position || null,
@@ -123,6 +127,7 @@ export default defineEventHandler(async (event) => {
             set: {
               name: values.name,
               phone: values.phone,
+              phoneCountryCode: values.phoneCountryCode,
               email: values.email,
               company: values.company,
               position: values.position,

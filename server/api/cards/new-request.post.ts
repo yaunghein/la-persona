@@ -10,6 +10,7 @@ import {
 import { and, eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { splitName } from '~~/server/services/card';
+import { resolvedPhoneFields } from '~~/shared/utils/phone';
 import { derivePlanCodeFromSource } from '~~/shared/utils/subscription';
 import { notifySubscriptionSubmissionEmails } from '~~/server/utils/subscription-email-notifications';
 import { env } from '~~/server/utils/env';
@@ -113,9 +114,18 @@ export default defineEventHandler(async (event) => {
 
       const now = new Date();
       const payload = await db.transaction(async (tx) => {
-        const { name, position, company, phone, email, website, socials } =
-          body.data.cardData || {};
+        const {
+          name,
+          position,
+          company,
+          phone,
+          phoneCountryCode,
+          email,
+          website,
+          socials,
+        } = body.data.cardData || {};
         const { firstName, lastName } = splitName(name);
+        const phoneFields = resolvedPhoneFields(phone, phoneCountryCode);
 
         const [createdCard] = await tx
           .insert(card)
@@ -125,7 +135,8 @@ export default defineEventHandler(async (event) => {
             slug: `${slugify(name || `${firstName} ${lastName}`)}-${nanoid(6)}`,
             position: position || '',
             company: company || null,
-            phone: phone || null,
+            phone: phoneFields.phone,
+            phoneCountryCode: phoneFields.phoneCountryCode,
             email: email || null,
             website: website || null,
             socials: socials || [],
@@ -273,9 +284,18 @@ export default defineEventHandler(async (event) => {
     const now = new Date();
 
     const payload = await db.transaction(async (tx) => {
-      const { name, position, company, phone, email, website, socials } =
-        body.data.cardData || {};
+      const {
+        name,
+        position,
+        company,
+        phone,
+        phoneCountryCode,
+        email,
+        website,
+        socials,
+      } = body.data.cardData || {};
       const { firstName, lastName } = splitName(name);
+      const phoneFields = resolvedPhoneFields(phone, phoneCountryCode);
 
       const [createdCard] = await tx
         .insert(card)
@@ -285,7 +305,8 @@ export default defineEventHandler(async (event) => {
           slug: `${slugify(name || `${firstName} ${lastName}`)}-${nanoid(6)}`,
           position: position || 'Professional',
           company,
-          phone,
+          phone: phoneFields.phone,
+          phoneCountryCode: phoneFields.phoneCountryCode,
           email,
           website,
           socials: socials || [],

@@ -21,6 +21,7 @@ type RequestCardFormState = {
   position: string;
   company: string;
   phone: string;
+  phoneCountryCode: string;
   email: string;
   website: string;
   sourceCardId: string;
@@ -45,6 +46,7 @@ const state = reactive<RequestCardFormState>({
   position: '',
   company: '',
   phone: '',
+  phoneCountryCode: 'MM',
   email: '',
   website: '',
   sourceCardId: '',
@@ -457,6 +459,7 @@ function buildPayloadForValidation(formData: RequestCardFormState) {
       position: formData.position.trim(),
       company: formData.company.trim(),
       phone: formData.phone.trim(),
+      phoneCountryCode: formData.phoneCountryCode,
       email: formData.email.trim(),
       website: normalizeUrlWithHttps(formData.website),
       sourceCardId:
@@ -477,6 +480,7 @@ function normalizeFormState(
     position: formData.position || '',
     company: formData.company || '',
     phone: formData.phone || '',
+    phoneCountryCode: formData.phoneCountryCode || 'MM',
     email: formData.email || '',
     website: formData.website || '',
     sourceCardId: formData.sourceCardId || '',
@@ -741,10 +745,11 @@ function onFormError(event: FormErrorEvent) {
         name="phone"
         class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
       >
-        <UInput
+          <FormPhoneField
           v-model="state.phone"
-          class="w-full"
-          placeholder="+1 (555) 123-4567"
+          v-model:country-code="state.phoneCountryCode"
+          name="phone"
+          placeholder="Phone number"
           :ui="{
             base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
           }"

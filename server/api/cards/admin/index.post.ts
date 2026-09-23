@@ -11,6 +11,7 @@ import {
   optionalHttpUrl,
   optionalS3ObjectKey,
 } from '~~/server/utils/zod-admin-card';
+import { resolvedPhoneFields } from '~~/shared/utils/phone';
 
 const adminCreateCardSchema = z.object({
   /** Omit to use `PLACEHOLDER_ORGANIZATION_ID` (Thakhin “create card” flow). */
@@ -20,6 +21,7 @@ const adminCreateCardSchema = z.object({
   position: z.string().trim().optional().nullable(),
   company: z.string().trim().optional().nullable(),
   phone: z.string().trim().optional().nullable(),
+  phoneCountryCode: z.string().trim().optional().nullable(),
   email: z
     .union([z.string().email(), z.literal('')])
     .optional()
@@ -61,6 +63,10 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  const phoneFields = resolvedPhoneFields(
+    result.data.phone,
+    result.data.phoneCountryCode
+  );
   const firstName = result.data.firstName?.trim() || 'Card';
   const lastName = result.data.lastName?.trim() || null;
   const position = result.data.position?.trim() || 'Professional';
@@ -76,7 +82,8 @@ export default defineEventHandler(async (event) => {
         slug,
         position,
         company: result.data.company || null,
-        phone: result.data.phone || null,
+        phone: phoneFields.phone,
+        phoneCountryCode: phoneFields.phoneCountryCode,
         email: result.data.email,
         website: result.data.website || null,
         splineUrl: result.data.splineUrl ?? null,

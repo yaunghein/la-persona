@@ -5,11 +5,19 @@ import {
   contactExchangeBeforePlatform,
 } from '~~/server/db/schema';
 import { InsertContactExchange, InsertLegacyExchange } from '~~/shared/types';
+import { normalizePhoneCountryCode } from '~~/shared/utils/phone';
 
 export const insertContactExchange = async (contact: InsertContactExchange) => {
+  const phone = contact.phone.trim();
   const [inserted] = await db
     .insert(contactExchange)
-    .values(contact)
+    .values({
+      ...contact,
+      phone,
+      phoneCountryCode: phone
+        ? normalizePhoneCountryCode(contact.phoneCountryCode)
+        : null,
+    })
     .returning();
   return inserted;
 };

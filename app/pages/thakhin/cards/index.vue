@@ -5,6 +5,7 @@ definePageMeta({
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import { getThakhinCardPlanAssetDefaults } from '~~/shared/constants/thakhin-card-plan-assets';
+import { resolvedPhoneFields } from '~~/shared/utils/phone';
 import { useThakhinTable } from '~/composables/thakhin-table';
 import {
   THAKHIN_ACTIONS_COLUMN,
@@ -20,6 +21,7 @@ type CardRow = {
   position: string;
   company: string | null;
   phone: string | null;
+  phoneCountryCode: string | null;
   email: string | null;
   website: string | null;
   splineUrl: string | null;
@@ -53,6 +55,7 @@ const form = reactive({
   position: '',
   company: '',
   phone: '',
+  phoneCountryCode: 'MM',
   email: '',
   website: '',
   splineUrl: '',
@@ -77,6 +80,7 @@ function resetForm() {
   form.position = '';
   form.company = '';
   form.phone = '';
+  form.phoneCountryCode = 'MM';
   form.email = '';
   form.website = '';
   form.splineUrl = '';
@@ -92,6 +96,7 @@ function fillForm(row: CardRow) {
   form.position = row.position;
   form.company = row.company || '';
   form.phone = row.phone || '';
+  form.phoneCountryCode = row.phoneCountryCode || 'MM';
   form.email = row.email || '';
   form.website = row.website || '';
   form.splineUrl = row.splineUrl || '';
@@ -236,7 +241,7 @@ async function onSubmitForm() {
       lastName: form.lastName.trim() || null,
       position: form.position.trim(),
       company: form.company.trim() || null,
-      phone: form.phone.trim() || null,
+      ...resolvedPhoneFields(form.phone, form.phoneCountryCode),
       email: form.email.trim() || null,
       website: form.website.trim() || null,
       splineUrl: form.splineUrl.trim() || null,
@@ -558,10 +563,11 @@ const selectUi = {
               />
             </UFormField>
             <UFormField label="Phone" :class="formFieldClass">
-              <UInput
+              <FormPhoneField
                 v-model="form.phone"
+                v-model:country-code="form.phoneCountryCode"
+                name="phone"
                 placeholder="Phone number"
-                class="w-full"
                 size="xl"
                 :ui="inputUi"
               />
