@@ -1,8 +1,11 @@
+import { internationalPhone } from '~~/shared/utils/phone';
+
 export type SplineCardFields = {
   firstName?: string | null;
   lastName?: string | null;
   position?: string | null;
   phone?: string | null;
+  phoneCountryCode?: string | null;
   email?: string | null;
   website?: string | null;
   planCode?: string | null;
@@ -38,13 +41,16 @@ export function splineVariablesForCard(card: SplineCardFields) {
   const planCode = card.planCode;
   const isFounderSubscription =
     planCode === 'founder' || planCode === 'founder-club';
+  const phone = card.phone?.trim()
+    ? internationalPhone(card.phone, card.phoneCountryCode)
+    : '';
 
   if (isFounderSubscription) {
     return {
       firstname: firstName,
       lastname: lastName,
       position: card.position?.toUpperCase() || '',
-      phone: card.phone || '',
+      phone,
       email: card.email?.toUpperCase() || '',
       website: websiteLabelForSpline(card.website),
     };
@@ -53,7 +59,7 @@ export function splineVariablesForCard(card: SplineCardFields) {
   return {
     name: fullname,
     position: card.position?.toUpperCase() || '',
-    phone: card.phone || '',
+    phone,
     email: card.email?.toUpperCase() || '',
     website: websiteLabelForSpline(card.website),
   };

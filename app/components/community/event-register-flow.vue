@@ -366,7 +366,7 @@ onBeforeUnmount(() => {
           class="h-13 w-full cursor-pointer justify-center rounded-full bg-[#232323] px-2.5 text-sm font-bold text-white hover:bg-[#2a2a2a]"
           @click="onGotIt"
         />
-        <PoweredByLaPersona />
+        <PoweredByLaPersona v-if="isPage" />
       </div>
     </div>
   </div>

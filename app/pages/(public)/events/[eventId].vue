@@ -33,7 +33,7 @@ const splineCanvasEl = ref<HTMLCanvasElement | null>(null);
 let splineApp: Application | null = null;
 let mediaQuery: MediaQueryList | null = null;
 const showHowToUse = ref(false);
-const justRegistered = ref(false);
+const justRegistered = ref(String(route.query.registered || '') === '1');
 
 const orgSlug = computed(() => event.value?.organizer?.slug || '');
 
@@ -185,9 +185,9 @@ function onHowToUse() {
   showHowToUse.value = true;
 }
 
-function onHowToUseDone() {
-  showHowToUse.value = false;
-  justRegistered.value = false;
+function onFlowDone() {
+  if (!orgSlug.value) return;
+  return navigateTo(ROUTES.EVENTS.PLATFORM_LIST(orgSlug.value));
 }
 </script>
 
@@ -231,7 +231,7 @@ function onHowToUseDone() {
         <CommunityEventOnboardingHowToUse
           v-else-if="showHowToUse"
           class="min-h-0 flex-1"
-          @done="onHowToUseDone"
+          @done="onFlowDone"
         />
 
         <CommunityEventRegisterFlow
@@ -246,6 +246,7 @@ function onHowToUseDone() {
           :how-to-use="justRegistered"
           @register="onRegister"
           @view-organizer="onViewOrganizer"
+          @completed="onFlowDone"
           @how-to-use="onHowToUse"
         />
       </div>

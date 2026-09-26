@@ -148,6 +148,7 @@ async function loadPlaceholderSpline() {
         lastName: scannedAttendee.value.lastName,
         position: scannedAttendee.value.position || scannedAttendee.value.role,
         phone: scannedAttendee.value.phone,
+        phoneCountryCode: scannedAttendee.value.phoneCountryCode,
         email: scannedAttendee.value.email,
         website: scannedAttendee.value.website,
         planCode: scannedAttendee.value.planCode,
@@ -232,6 +233,7 @@ async function lookupCode(code: string) {
         lastName?: string | null;
         position?: string | null;
         phone?: string | null;
+        phoneCountryCode?: string | null;
         email?: string | null;
         website?: string | null;
         planCode?: string | null;
@@ -273,6 +275,7 @@ async function lookupCode(code: string) {
       lastName: result.attendee.lastName,
       position: result.attendee.position,
       phone: result.attendee.phone,
+      phoneCountryCode: result.attendee.phoneCountryCode,
       email: result.attendee.email,
       website: result.attendee.website,
       planCode: result.attendee.planCode,

@@ -102,7 +102,12 @@ export function resolveEventFlowPath(input: {
     });
   }
 
-  if (source === 'setup' && input.setupStep === 'download-wallpaper') {
+  const continueToWallpaper =
+    source === 'setup' &&
+    (input.setupStep === 'download-wallpaper' ||
+      input.setupStep === 'create-card');
+
+  if (continueToWallpaper) {
     if (!viewer.cardSlug) return eventHome(eventId, orgSlug);
     return ROUTES.COMMUNITY_SETUP.CARD(orgSlug, viewer.cardSlug, {
       step: 'download-wallpaper',

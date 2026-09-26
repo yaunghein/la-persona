@@ -50,12 +50,7 @@ export const upsertCommunitySettingByOrganizationId = async (
   organizationId: string,
   values: Pick<
     InsertCommunitySetting,
-    | 'description'
-    | 'guidelines'
-    | 'whyJoin'
-    | 'splineUrl'
-    | 'wallpaperUrl'
-    | 'cardBackUrl'
+    'description' | 'guidelines' | 'whyJoin'
   >
 ) => {
   const existing = await findCommunitySettingByOrganizationId(organizationId);
@@ -68,9 +63,6 @@ export const upsertCommunitySettingByOrganizationId = async (
         description: values.description,
         guidelines: values.guidelines,
         whyJoin: values.whyJoin,
-        splineUrl: values.splineUrl || defaults.splineUrl,
-        wallpaperUrl: values.wallpaperUrl || defaults.wallpaperUrl,
-        cardBackUrl: values.cardBackUrl || defaults.cardBackUrl,
       })
       .where(eq(communitySetting.organizationId, organizationId))
       .returning();
@@ -84,9 +76,7 @@ export const upsertCommunitySettingByOrganizationId = async (
     description: values.description,
     guidelines: values.guidelines,
     whyJoin: values.whyJoin,
-    splineUrl: values.splineUrl || defaults.splineUrl,
-    wallpaperUrl: values.wallpaperUrl || defaults.wallpaperUrl,
-    cardBackUrl: values.cardBackUrl || defaults.cardBackUrl,
+    ...defaults,
   });
 };
 

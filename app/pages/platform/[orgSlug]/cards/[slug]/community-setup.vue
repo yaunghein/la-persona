@@ -134,6 +134,7 @@ async function onCreateCard(payload: {
   lastName: string;
   position: string;
   phone: string;
+  phoneCountryCode: string;
   email: string;
   socials: { label: string; value: string }[];
 }) {
@@ -149,6 +150,7 @@ async function onCreateCard(payload: {
         lastName: payload.lastName || null,
         position: payload.position,
         phone: payload.phone,
+        phoneCountryCode: payload.phoneCountryCode,
         email: payload.email,
         socials: payload.socials,
       },
@@ -167,18 +169,55 @@ async function onCreateCard(payload: {
   }
 }
 
-function onSettingUpNext() {
-  isSettingUp.value = false;
-  return navigateTo(
+async function onSettingUpNext() {
+  await navigateTo(
     ROUTES.COMMUNITY_SETUP.CARD(orgSlug.value, cardSlug.value, {
       step: 'download-wallpaper',
       eventId: eventId.value || undefined,
     })
   );
+  isSettingUp.value = false;
 }
 
 function goToEvent() {
   return navigateTo(eventHome());
+}
+
+const finishing = ref(false);
+
+async function finishSetup() {
+  if (finishing.value) return;
+  if (!eventId.value) {
+    return navigateTo(
+      orgSlug.value
+        ? `${ROUTES.PLATFORM.ROOT}/${orgSlug.value}`
+        : ROUTES.PLATFORM.ROOT
+    );
+  }
+
+  finishing.value = true;
+  try {
+    await $fetch(`/api/events/${eventId.value}/register`, {
+      method: 'POST',
+      query: { organizationSlug: orgSlug.value },
+    });
+    return navigateTo({
+      path: ROUTES.EVENTS.PUBLIC(eventId.value),
+      query: { registered: '1' },
+    });
+  } catch (error: any) {
+    toast.add({
+      title: 'Could not register',
+      description:
+        error?.data?.statusMessage ||
+        error?.statusMessage ||
+        'Your card is ready. You can register from the event page.',
+      color: 'error',
+    });
+    return navigateTo(ROUTES.EVENTS.PUBLIC(eventId.value));
+  } finally {
+    finishing.value = false;
+  }
 }
 </script>
 
@@ -214,6 +253,7 @@ function goToEvent() {
           :last-name="card.lastName"
           :position="card.position"
           :phone="card.phone"
+          :phone-country-code="card.phoneCountryCode"
           :email="card.email"
           :socials="card.socials"
           :submitting="submitting"
@@ -242,10 +282,14 @@ function goToEvent() {
           :last-name="card.lastName"
           :position="card.position"
           :phone="card.phone"
+          :phone-country-code="card.phoneCountryCode"
           :email="card.email"
+          :website="card.website"
+          :plan-code="card.subscription?.planCode"
+          :spline-url="card.splineUrl"
           :wallpaper-url="card.wallpaperUrl"
-          @next="goToEvent"
-          @skip="goToEvent"
+          @next="finishSetup"
+          @skip="finishSetup"
         />
       </div>
     </div>

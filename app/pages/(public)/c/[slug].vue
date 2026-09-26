@@ -120,6 +120,7 @@ onMounted(async () => {
       lastName: card.value.lastName,
       position: card.value.position,
       phone: card.value.phone,
+      phoneCountryCode: card.value.phoneCountryCode,
       email: card.value.email,
       website: card.value.website,
       planCode: card.value.subscription?.planCode,

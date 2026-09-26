@@ -24,9 +24,6 @@ export const updateCommunitySettingsBodySchema = z.object({
   description: z.string(),
   guidelines: z.string(),
   whyJoin: z.string(),
-  splineUrl: z.string().trim().min(1, 'Spline URL is required'),
-  wallpaperUrl: z.string().trim().min(1, 'Wallpaper URL is required'),
-  cardBackUrl: z.string().trim().min(1, 'Card back URL is required'),
 });
 
 export type UpdateCommunitySettingsBody = z.output<

@@ -1,10 +1,17 @@
 <script setup lang="ts">
+import { Application } from '@splinetool/runtime';
+import { applyCardToSpline } from '~/utils/spline-card';
+
 const props = defineProps<{
   firstName?: string | null;
   lastName?: string | null;
   position?: string | null;
   phone?: string | null;
+  phoneCountryCode?: string | null;
   email?: string | null;
+  website?: string | null;
+  planCode?: string | null;
+  splineUrl?: string | null;
   wallpaperUrl?: string | null;
 }>();
 
@@ -14,10 +21,65 @@ const emit = defineEmits<{
 }>();
 
 const toast = useToast();
+const canvasEl = ref<HTMLCanvasElement | null>(null);
+const splineLoading = ref(false);
+const splineFailed = ref(false);
+let splineApp: Application | null = null;
 
-const displayName = computed(() =>
-  [props.firstName, props.lastName].filter(Boolean).join(' ').trim() || 'Your name'
-);
+const cardFields = computed(() => ({
+  firstName: props.firstName,
+  lastName: props.lastName,
+  position: props.position,
+  phone: props.phone,
+  phoneCountryCode: props.phoneCountryCode,
+  email: props.email,
+  website: props.website,
+  planCode: props.planCode,
+}));
+
+function applyVariables() {
+  if (!splineApp) return;
+  applyCardToSpline(splineApp, cardFields.value);
+}
+
+function disposeSpline() {
+  splineApp?.dispose();
+  splineApp = null;
+}
+
+async function loadSpline() {
+  const url = props.splineUrl?.trim();
+  if (!import.meta.client || !url) {
+    splineFailed.value = !url;
+    return;
+  }
+
+  await nextTick();
+  const canvas = canvasEl.value;
+  if (!canvas) return;
+
+  disposeSpline();
+  splineLoading.value = true;
+  splineFailed.value = false;
+  const spline = new Application(canvas);
+  splineApp = spline;
+
+  try {
+    await spline.load(`${url}?v=${Date.now()}`);
+    applyVariables();
+  } catch {
+    splineFailed.value = true;
+    disposeSpline();
+  } finally {
+    splineLoading.value = false;
+  }
+}
+
+watch(cardFields, () => applyVariables());
+watch(() => props.splineUrl, () => loadSpline());
+
+onMounted(loadSpline);
+onBeforeUnmount(disposeSpline);
 
 async function onDownload() {
   if (!props.wallpaperUrl) {
@@ -59,23 +121,29 @@ async function onDownload() {
           </p>
         </div>
 
-        <div class="flex flex-1 items-center justify-center py-8">
+        <div
+          class="relative min-h-96 w-full flex-1 overflow-hidden rounded-lg bg-[#0b0b0b]"
+        >
+          <canvas
+            v-show="splineUrl && !splineFailed"
+            ref="canvasEl"
+            class="absolute inset-0 size-full"
+          />
           <div
-            class="flex w-70 flex-col gap-6 rounded-lg border border-[#2a2a2a] bg-[#232323] p-5"
+            v-if="splineLoading"
+            class="absolute inset-0 flex items-center justify-center"
           >
-            <div class="flex flex-col gap-1">
-              <p class="text-base font-medium leading-5 text-white">
-                {{ displayName }}
-              </p>
-              <p class="text-xs leading-5 text-[#8b8b8b]">
-                {{ position || 'Member' }}
-              </p>
-            </div>
-            <div class="flex flex-col gap-1 text-xs leading-5 text-[#8b8b8b]">
-              <p>{{ phone || '—' }}</p>
-              <p>{{ email || '—' }}</p>
-            </div>
+            <UIcon
+              name="i-lucide-loader-circle"
+              class="size-6 animate-spin text-[#8b8b8b]"
+            />
           </div>
+          <p
+            v-else-if="!splineUrl || splineFailed"
+            class="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-[#8b8b8b]"
+          >
+            This community card scene is not ready yet.
+          </p>
         </div>
       </div>
     </div>
@@ -83,6 +151,7 @@ async function onDownload() {
     <CommunityEventOnboardingFooter
       primary-label="Download Wallpaper"
       secondary-label="Skip"
+      :show-powered-by="false"
       @primary="onDownload"
       @secondary="emit('skip')"
     />

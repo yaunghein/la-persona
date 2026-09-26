@@ -42,8 +42,5 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </div>
-    <div class="shrink-0 px-6 py-4 sm:px-8 lg:px-16">
-      <PoweredByLaPersona />
-    </div>
   </div>
 </template>

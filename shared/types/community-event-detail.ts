@@ -20,6 +20,7 @@ export type EventAttendee = {
   eventsAttended: number;
   connectionsMade: number;
   phone?: string;
+  phoneCountryCode?: string | null;
   email?: string;
   avatarUrl?: string;
   cardSlug?: string;

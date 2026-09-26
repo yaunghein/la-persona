@@ -459,6 +459,8 @@ function updatePreviewSplineVariables() {
     lastName: state.lastName || card.value?.lastName || '',
     position: state.position || card.value?.position || '',
     phone: state.phone || card.value?.phone || '',
+    phoneCountryCode:
+      state.phoneCountryCode || card.value?.phoneCountryCode || '',
     email: state.email || card.value?.email || '',
     website: state.website || card.value?.website,
     planCode: card.value?.subscription?.planCode,
@@ -563,6 +565,7 @@ watch(
     () => state.lastName,
     () => state.position,
     () => state.phone,
+    () => state.phoneCountryCode,
     () => state.email,
     () => state.website,
   ],

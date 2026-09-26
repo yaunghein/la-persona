@@ -89,6 +89,7 @@ export default defineEventHandler(async (event) => {
       lastName: communityCard.lastName,
       position: communityCard.position,
       phone: communityCard.phone,
+      phoneCountryCode: communityCard.phoneCountryCode,
       email: communityCard.email,
       website: communityCard.website,
       planCode: subscription?.planCode || null,

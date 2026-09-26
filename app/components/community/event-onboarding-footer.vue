@@ -1,9 +1,17 @@
 <script setup lang="ts">
-defineProps<{
-  primaryLabel: string;
-  primaryMuted?: boolean;
-  secondaryLabel?: string;
-}>();
+withDefaults(
+  defineProps<{
+    primaryLabel: string;
+    primaryMuted?: boolean;
+    primaryType?: 'button' | 'submit';
+    secondaryLabel?: string;
+    showPoweredBy?: boolean;
+  }>(),
+  {
+    primaryType: 'button',
+    showPoweredBy: true,
+  }
+);
 
 const emit = defineEmits<{
   primary: [];
@@ -20,14 +28,14 @@ const emit = defineEmits<{
     >
       <div class="flex w-full flex-col items-center gap-6">
         <button
-          type="button"
+          :type="primaryType"
           class="flex h-13 w-full cursor-pointer items-center justify-center rounded-full px-2.5 text-sm font-bold"
           :class="
             primaryMuted
               ? 'bg-[#232323] text-white hover:bg-[#2a2a2a]'
               : 'bg-white text-dark hover:bg-white/90'
           "
-          @click="emit('primary')"
+          @click="primaryType === 'button' ? emit('primary') : undefined"
         >
           {{ primaryLabel }}
         </button>
@@ -40,7 +48,7 @@ const emit = defineEmits<{
           {{ secondaryLabel }}
         </button>
       </div>
-      <PoweredByLaPersona />
+      <PoweredByLaPersona v-if="showPoweredBy" />
     </div>
   </div>
 </template>

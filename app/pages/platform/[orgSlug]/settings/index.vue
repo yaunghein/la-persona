@@ -58,9 +58,6 @@ const { mutate: saveSettings, isPending: isSaving } = useMutation({
         description: values.description,
         guidelines: values.guidelines,
         whyJoin: values.whyJoin,
-        splineUrl: values.splineUrl,
-        wallpaperUrl: values.wallpaperUrl,
-        cardBackUrl: values.cardBackUrl,
       },
     }),
   onSuccess: async (saved) => {
@@ -103,19 +100,6 @@ function onSubmit() {
     toast.add({
       title: 'Name required',
       description: 'Organization name cannot be empty.',
-      color: 'warning',
-    });
-    return;
-  }
-
-  if (
-    !form.value.splineUrl.trim() ||
-    !form.value.wallpaperUrl.trim() ||
-    !form.value.cardBackUrl.trim()
-  ) {
-    toast.add({
-      title: 'Brand URLs required',
-      description: 'Spline, wallpaper, and card back URLs are required.',
       color: 'warning',
     });
     return;
