@@ -1,9 +1,10 @@
 import { and, eq, sql, gte } from 'drizzle-orm';
 import { db } from '~~/server/db';
-import { analytics, card, member } from '~~/server/db/schema';
+import { analytics, card, member, organization } from '~~/server/db/schema';
 import { requireOrganizationSession } from '~~/server/utils/organization-permissions';
 import { isOrganizationManagerRole } from '~~/shared/permissions/organization';
 import { parseAnalyticsPeriod, analyticsPeriodStart } from '~~/shared/utils/analytics-period';
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 import {
   OTHER_LINK_LABELS,
   SOCIAL_MEDIA_LINK_LABELS,
@@ -36,7 +37,15 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Forbidden' });
   }
 
-  const isOwner = isOrganizationManagerRole(userMemberInfo.role);
+  const org = await db.query.organization.findFirst({
+    where: eq(organization.id, orgId),
+    columns: { type: true },
+  });
+
+  // Community managers see community insights, not every member's card analytics.
+  const isOwner =
+    isOrganizationManagerRole(userMemberInfo.role) &&
+    org?.type !== ORGANIZATION_TYPES.COMMUNITY;
 
   let conditions = [
     eq(analytics.organizationId, orgId),

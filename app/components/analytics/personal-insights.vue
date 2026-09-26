@@ -48,7 +48,6 @@ interface DashboardStats {
 const props = defineProps<{
   orgSlug: string;
   userName?: string | null;
-  allCardsHeading?: string;
 }>();
 
 const selectedCardId = ref('all');
@@ -111,10 +110,6 @@ const analyticsHeading = computed(() => {
       (item) => item.id === selectedCardId.value
     );
     return `${selectedCard?.label || 'Card'}'s Analytics`;
-  }
-
-  if (isOwner.value && props.allCardsHeading) {
-    return props.allCardsHeading;
   }
 
   const displayName = props.userName || session.value?.user?.name || 'Your';
@@ -343,7 +338,6 @@ function closeInfo() {
       </div>
 
       <div class="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
-        <slot name="header-actions" />
         <USelectMenu
           v-model="selectedPeriod"
           value-key="value"

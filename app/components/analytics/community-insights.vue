@@ -124,7 +124,6 @@ const columns: TableColumn<CommunityEventPerformance>[] = [
       </div>
 
       <div class="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center">
-        <slot name="header-actions" />
         <USelectMenu
           v-model="selectedPeriod"
           value-key="value"
