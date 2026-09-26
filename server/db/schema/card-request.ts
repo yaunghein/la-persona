@@ -18,6 +18,7 @@ export const cardRequest = pgTable(
         position?: string;
         company?: string;
         phone?: string;
+        phoneCountryCode?: string;
         email?: string;
         website?: string;
         socials?: { label: string; value: string }[];

@@ -6,6 +6,7 @@ definePageMeta({
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import { useQuery } from '@tanstack/vue-query';
 import { downloadFile } from '~/utils/share-or-download';
+import { vcfPhoneLines } from '~~/shared/utils/phone';
 
 type Contact = {
   id: string;
@@ -13,6 +14,7 @@ type Contact = {
   role: string;
   company: string;
   phone: string;
+  phoneCountryCode: string | null;
   email: string;
   origin: string;
   originTo?: string;
@@ -25,6 +27,7 @@ type ContactActionItem = {
   role: string;
   company: string;
   phone: string;
+  phoneCountryCode: string | null;
   email: string;
   personaCardTo?: string;
 };
@@ -36,6 +39,7 @@ type ContactRow = {
   nameRole: string;
   company: string;
   phone: string;
+  phoneCountryCode: string | null;
   email: string;
   origin: string;
   originTo?: string;
@@ -47,6 +51,7 @@ type ContactExchangeDTO = {
   id: string;
   name: string;
   phone: string;
+  phoneCountryCode: string | null;
   email: string | null;
   position: string | null;
   company: string | null;
@@ -194,6 +199,7 @@ const contacts = computed<ContactRow[]>(() =>
       nameRole: `${item.name}\n${role}`,
       company: item.company || 'N/A',
       phone: item.phone || 'N/A',
+      phoneCountryCode: item.phoneCountryCode,
       email: item.email || 'N/A',
       origin: originLabel,
       originTo,
@@ -235,6 +241,7 @@ const gridContacts = computed<Contact[]>(() =>
     role: contact.role,
     company: index % 3 === 0 ? 'N/A' : contact.company,
     phone: contact.phone,
+    phoneCountryCode: contact.phoneCountryCode,
     email: contact.email,
     origin: contact.origin,
     originTo: contact.originTo,
@@ -343,7 +350,9 @@ function createVcfContent(contact: ContactActionItem) {
     'VERSION:3.0',
     `FN;CHARSET=UTF-8:${escapeVcfValue(fullName)}`,
     `N;CHARSET=UTF-8:${escapeVcfValue(lastName)};${escapeVcfValue(firstName)};;;`,
-    phone ? `TEL;TYPE=CELL:${escapeVcfValue(phone)}` : '',
+    ...vcfPhoneLines(phone, contact.phoneCountryCode).map(
+      (value) => `TEL;TYPE=CELL:${escapeVcfValue(value)}`
+    ),
     email ? `EMAIL;CHARSET=UTF-8;TYPE=INTERNET:${escapeVcfValue(email)}` : '',
     title ? `TITLE;CHARSET=UTF-8:${escapeVcfValue(title)}` : '',
     org ? `ORG;CHARSET=UTF-8:${escapeVcfValue(org)}` : '',

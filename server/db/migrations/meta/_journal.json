@@ -47,15 +47,22 @@
     {
       "idx": 6,
       "version": "7",
-      "when": 1789708951603,
+      "when": 1790132000000,
       "tag": "0006_green_scream",
       "breakpoints": true
     },
     {
       "idx": 7,
       "version": "7",
-      "when": 1789762243679,
+      "when": 1790132800000,
       "tag": "0007_superb_monster_badoon",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790133558122,
+      "tag": "0008_late_betty_brant",
       "breakpoints": true
     }
   ]

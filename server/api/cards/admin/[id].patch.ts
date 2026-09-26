@@ -7,6 +7,7 @@ import {
   optionalHttpUrl,
   optionalS3ObjectKey,
 } from '~~/server/utils/zod-admin-card';
+import { resolvedPhoneFields } from '~~/shared/utils/phone';
 
 const adminUpdateCardSchema = z.object({
   organizationId: z.string().min(1).optional(),
@@ -21,6 +22,7 @@ const adminUpdateCardSchema = z.object({
   ),
   company: z.string().trim().optional().nullable(),
   phone: z.string().trim().optional().nullable(),
+  phoneCountryCode: z.string().trim().optional().nullable(),
   email: z
     .union([z.string().email(), z.literal('')])
     .optional()
@@ -75,6 +77,15 @@ export default defineEventHandler(async (event) => {
   if (payload.lastName !== undefined) {
     const trimmed = payload.lastName?.trim();
     payload.lastName = trimmed || null;
+  }
+
+  if (payload.phone !== undefined) {
+    const phoneFields = resolvedPhoneFields(
+      payload.phone,
+      payload.phoneCountryCode
+    );
+    payload.phone = phoneFields.phone;
+    payload.phoneCountryCode = phoneFields.phoneCountryCode;
   }
 
   const [updated] = await db

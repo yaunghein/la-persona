@@ -12,6 +12,7 @@ export const contactExchange = pgTable(
       .$defaultFn(() => nanoid()),
     name: text().notNull(),
     phone: text().notNull(),
+    phoneCountryCode: text(),
     email: text(),
     company: text(),
     position: text(),

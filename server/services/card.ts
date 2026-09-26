@@ -5,6 +5,7 @@ import { card } from '~~/server/db/schema';
 import { env } from '~~/server/utils/env';
 import { ensureCardTrialSubscription } from '~~/server/services/subscription';
 import type { UpdateCard } from '~~/shared/types';
+import { resolvedPhoneFields } from '~~/shared/utils/phone';
 import { slugify } from '~~/shared/utils/slugify';
 
 import type { User } from 'better-auth';
@@ -75,6 +76,12 @@ export async function updateCard(
 ) {
   const { id, ...data } = input;
   const nextData = { ...data };
+
+  if (Object.prototype.hasOwnProperty.call(data, 'phone')) {
+    const resolved = resolvedPhoneFields(data.phone, data.phoneCountryCode);
+    nextData.phone = resolved.phone;
+    nextData.phoneCountryCode = resolved.phoneCountryCode;
+  }
 
   if (!id) {
     throw createError({

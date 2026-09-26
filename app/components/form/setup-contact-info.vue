@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import type { FormError, FormSubmitEvent } from '#ui/types';
 import { upsertWebsiteSocial } from '~~/shared/utils/social-links';
 import { useUrlNormalization } from '~~/app/composables/url-normalization';
+import { resolvedPhoneFields } from '~~/shared/utils/phone';
 
 const emit = defineEmits<{
   continued: [];
@@ -23,11 +24,12 @@ const { data: card, isLoading } = useQuery<SelectCard>({
     }),
 });
 
-const state = reactive<UpdateCardUpdateRequest>({
+const state = reactive<UpdateCardUpdateRequest & { phoneCountryCode: string }>({
   firstName: undefined,
   lastName: undefined,
   position: undefined,
-  phone: undefined,
+  phone: '',
+  phoneCountryCode: 'MM',
   email: undefined,
   website: undefined,
   note: undefined,
@@ -42,6 +44,7 @@ watch(
     state.lastName = val.lastName || '';
     state.position = val.position || '';
     state.phone = val.phone || '';
+    state.phoneCountryCode = val.phoneCountryCode || 'MM';
     state.email = val.email || '';
     state.website = val.website || '';
     state.cardId = val.id;
@@ -54,8 +57,13 @@ const { mutate: submitRequest, isPending: isSubmitting } = useMutation({
     // dont remove this early return for now, its for testing
     // return true;
     const website = normalizeUrlWithHttps(formData.website);
+    const phoneFields = resolvedPhoneFields(
+      state.phone,
+      state.phoneCountryCode
+    );
     const body: Record<string, unknown> = {
       ...formData,
+      ...phoneFields,
       website,
       id: formData.cardId,
     };
@@ -198,7 +206,13 @@ function onSubmit(event: FormSubmitEvent<UpdateCardUpdateRequest>) {
       </UFormField>
 
       <UFormField label="Phone Number" name="phone">
-        <UInput v-model="state.phone" variant="soft" class="w-full" size="xl" />
+        <FormPhoneField
+          v-model="state.phone"
+          v-model:country-code="state.phoneCountryCode"
+          name="phone"
+          variant="soft"
+          size="xl"
+        />
       </UFormField>
 
       <UFormField label="Email Address" name="email" required>

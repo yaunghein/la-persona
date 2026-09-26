@@ -4,6 +4,7 @@ import type { ConcreteComponent } from 'vue';
 import { SOCIAL_MEDIA_LINK_LABELS } from '~~/shared/constants/card-link-options';
 import { downloadFile } from '~/utils/share-or-download';
 import { applyCardToSpline } from '~/utils/spline-card';
+import { vcfPhoneLines } from '~~/shared/utils/phone';
 
 const { trackEvent } = useAnalytics();
 const runtimeConfig = useRuntimeConfig();
@@ -242,6 +243,7 @@ const onSubmit = async (e: SubmitEvent) => {
         name: data.name,
         email: data.email,
         phone: data.phone,
+        phoneCountryCode: data.phoneCountryCode,
         company: data.company,
         position: data.position,
         cardId: card.value!.id,
@@ -406,7 +408,9 @@ function buildCardVcf(photo: { base64: string; imageType: string } | null) {
     `FN;CHARSET=UTF-8:${escapeVcfValue(fullName)}`,
     `N;CHARSET=UTF-8:${escapeVcfValue(lastName)};${escapeVcfValue(firstName)};;;`,
     photo ? `PHOTO;ENCODING=b;TYPE=${photo.imageType}:${photo.base64}` : '',
-    card.value.phone ? `TEL;TYPE=CELL:${escapeVcfValue(card.value.phone)}` : '',
+    ...vcfPhoneLines(card.value.phone, card.value.phoneCountryCode).map(
+      (value) => `TEL;TYPE=CELL:${escapeVcfValue(value)}`
+    ),
     card.value.email
       ? `EMAIL;CHARSET=UTF-8;TYPE=INTERNET:${escapeVcfValue(card.value.email)}`
       : '',
@@ -589,7 +593,7 @@ async function onSaveContact() {
                 class="h-[2.8rem] w-full appearance-none border border-[#494949] bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
-            <PhoneInput />
+            <PhoneInput split-country />
             <label
               class="flex flex-col gap-3 text-xs font-light tracking-[0.1rem]"
             >

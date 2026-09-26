@@ -81,6 +81,7 @@ const cardRequestDataSchema = z.object({
   position: z.string().optional(),
   company: z.string().optional(),
   phone: z.string().optional(),
+  phoneCountryCode: z.string().optional(),
   email: z.string().email('Invalid email').optional().or(z.literal('')),
   website: z.string().url('Invalid URL').optional().or(z.literal('')),
   socials: z.array(socialLinkSchema).optional(),

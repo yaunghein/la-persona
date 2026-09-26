@@ -8,6 +8,7 @@ import {
   requireOrganizationPermission,
 } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+import { resolvedPhoneFields } from '~~/shared/utils/phone';
 
 const createManualContactSchema = z.object({
   firstName: z.string().trim().min(1, 'First name is required'),
@@ -15,6 +16,7 @@ const createManualContactSchema = z.object({
   position: z.string().trim().min(1, 'Professional title / role is required'),
   company: z.string().trim().optional(),
   phone: z.string().trim().min(1, 'Phone number is required'),
+  phoneCountryCode: z.string().trim().optional().nullable(),
   email: z.string().email('Invalid email').optional().or(z.literal('')),
   cardId: z.string().optional(),
 });
@@ -65,11 +67,17 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    const phoneFields = resolvedPhoneFields(
+      body.data.phone,
+      body.data.phoneCountryCode
+    );
+
     const [inserted] = await db
       .insert(contactExchange)
       .values({
         name: `${body.data.firstName} ${body.data.lastName}`.trim(),
-        phone: body.data.phone,
+        phone: phoneFields.phone || body.data.phone,
+        phoneCountryCode: phoneFields.phoneCountryCode,
         email: body.data.email || null,
         position: body.data.position,
         company: body.data.company?.trim() || null,

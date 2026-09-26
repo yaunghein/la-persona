@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import * as z from 'zod';
 import type { FormSubmitEvent } from '@nuxt/ui';
+import { resolvedPhoneFields } from '~~/shared/utils/phone';
 
 definePageMeta({
   layout: 'platform',
@@ -18,6 +19,7 @@ const schema = z.object({
   position: z.string().trim().min(1, 'Professional title / role is required'),
   company: z.string().trim().optional(),
   phone: z.string().trim().min(1, 'Phone number is required'),
+  phoneCountryCode: z.string().trim().optional(),
   email: z.string().email('Invalid email').optional().or(z.literal('')),
 });
 
@@ -29,6 +31,7 @@ const state = reactive<Partial<Schema>>({
   position: '',
   company: '',
   phone: '',
+  phoneCountryCode: 'MM',
   email: '',
 });
 
@@ -44,6 +47,7 @@ const resetForm = () => {
   state.position = '';
   state.company = '';
   state.phone = '';
+  state.phoneCountryCode = 'MM';
   state.email = '';
 };
 
@@ -53,7 +57,10 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
     await $fetch('/api/contact-exchange/manual', {
       method: 'POST',
       query: { organizationSlug: orgSlug.value },
-      body: event.data,
+      body: {
+        ...event.data,
+        ...resolvedPhoneFields(event.data.phone, event.data.phoneCountryCode),
+      },
     });
 
     toast.add({
@@ -189,10 +196,11 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
             name="phone"
             class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
           >
-            <UInput
+            <FormPhoneField
               v-model="state.phone"
-              placeholder="+1 (555) 123-4567"
-              class="w-full"
+              v-model:country-code="state.phoneCountryCode"
+              name="phone"
+              placeholder="Phone number"
               :ui="{
                 base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
               }"
