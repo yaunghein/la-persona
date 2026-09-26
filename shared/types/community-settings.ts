@@ -24,6 +24,8 @@ export const updateCommunitySettingsBodySchema = z.object({
   description: z.string(),
   guidelines: z.string(),
   whyJoin: z.string(),
+  logoUrl: z.string(),
+  coverImageUrl: z.string(),
 });
 
 export type UpdateCommunitySettingsBody = z.output<

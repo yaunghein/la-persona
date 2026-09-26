@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/vue-query';
 import { QUERY_KEYS } from '~/utils/query-keys';
 import type { CommunityInsightsData } from '~~/shared/types/community-insights';
 import type { AnalyticsPeriod } from '~~/shared/utils/analytics-period';
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
 const route = useRoute();
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
@@ -20,6 +21,25 @@ const currentOrg = computed(() =>
 
 const showCommunityInsights = computed(() =>
   isCommunityManager(currentOrg.value)
+);
+const isCommunityMember = computed(
+  () =>
+    currentOrg.value?.type === ORGANIZATION_TYPES.COMMUNITY &&
+    !showCommunityInsights.value
+);
+const isPersonalDashboard = computed(
+  () => currentOrg.value?.type === ORGANIZATION_TYPES.PERSONAL
+);
+
+watch(
+  isCommunityMember,
+  (isMember) => {
+    if (!isMember) return;
+    navigateTo(`${ROUTES.PLATFORM.ROOT}/${orgSlug.value}/events`, {
+      replace: true,
+    });
+  },
+  { immediate: true }
 );
 
 const communityPeriod = ref<AnalyticsPeriod>('7d');
@@ -80,7 +100,8 @@ const {
   </div>
 
   <AnalyticsPersonalInsights
-    v-else
+    v-else-if="isPersonalDashboard"
+    workspace
     :org-slug="orgSlug"
     :user-name="session?.user?.name"
   />

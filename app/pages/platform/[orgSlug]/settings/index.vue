@@ -58,6 +58,8 @@ const { mutate: saveSettings, isPending: isSaving } = useMutation({
         description: values.description,
         guidelines: values.guidelines,
         whyJoin: values.whyJoin,
+        logoUrl: values.logoUrl,
+        coverImageUrl: values.coverImageUrl,
       },
     }),
   onSuccess: async (saved) => {
@@ -67,7 +69,7 @@ const { mutate: saveSettings, isPending: isSaving } = useMutation({
       (orgs: UserOrganization[] | undefined) =>
         (orgs ?? []).map((org) =>
           org.slug === organizationSlug.value
-            ? { ...org, name: saved.name }
+            ? { ...org, name: saved.name, logo: saved.logoUrl || null }
             : org
         )
     );

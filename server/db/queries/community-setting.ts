@@ -50,7 +50,7 @@ export const upsertCommunitySettingByOrganizationId = async (
   organizationId: string,
   values: Pick<
     InsertCommunitySetting,
-    'description' | 'guidelines' | 'whyJoin'
+    'description' | 'guidelines' | 'whyJoin' | 'coverUrl'
   >
 ) => {
   const existing = await findCommunitySettingByOrganizationId(organizationId);
@@ -63,6 +63,7 @@ export const upsertCommunitySettingByOrganizationId = async (
         description: values.description,
         guidelines: values.guidelines,
         whyJoin: values.whyJoin,
+        coverUrl: values.coverUrl,
       })
       .where(eq(communitySetting.organizationId, organizationId))
       .returning();
@@ -76,6 +77,7 @@ export const upsertCommunitySettingByOrganizationId = async (
     description: values.description,
     guidelines: values.guidelines,
     whyJoin: values.whyJoin,
+    coverUrl: values.coverUrl,
     ...defaults,
   });
 };

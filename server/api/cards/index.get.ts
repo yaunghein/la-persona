@@ -6,6 +6,7 @@ import {
   findCardsByUserIdAndOrganization,
 } from '~~/server/db/queries/card';
 import { ensureCommunityCard } from '~~/server/services/community';
+import { loadWorkspaceCards } from '~~/server/services/workspace-cards';
 import {
   hasOrganizationPermission,
   requireOrganizationPermission,
@@ -18,6 +19,11 @@ export default defineEventHandler(async (event) => {
     event,
     ORGANIZATION_PERMISSIONS.CARD_READ
   );
+
+  const requestQuery = getQuery(event);
+  if (requestQuery.scope === 'workspace') {
+    return loadWorkspaceCards(session.user.id);
+  }
 
   const org = await db.query.organization.findFirst({
     where: eq(organization.id, session.session.activeOrganizationId),

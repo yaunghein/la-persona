@@ -1,7 +1,11 @@
-import { and, desc, eq, ilike, or } from 'drizzle-orm';
+import { and, desc, eq, ilike, inArray, or, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { db } from '~~/server/db';
-import { card, contactExchange } from '~~/server/db/schema';
+import { card, contactExchange, organization } from '~~/server/db/schema';
+import {
+  loadWorkspaceCards,
+  workspaceCardLabel,
+} from '~~/server/services/workspace-cards';
 import {
   hasOrganizationPermission,
   requireOrganizationPermission,
@@ -16,11 +20,12 @@ export default defineEventHandler(async (event) => {
     ORGANIZATION_PERMISSIONS.CONTACT_EXCHANGE_READ
   );
 
-  const { cardId, q } = getQuery(event);
+  const { cardId, q, scope } = getQuery(event);
   const selectedCardId = typeof cardId === 'string' ? cardId : 'all';
   const searchQuery = typeof q === 'string' ? q.trim() : '';
   const orgId = session.session.activeOrganizationId;
   const userId = session.user.id;
+  const isWorkspace = scope === 'workspace';
 
   const canReadAllContacts = await hasOrganizationPermission(
     event,
@@ -28,30 +33,55 @@ export default defineEventHandler(async (event) => {
     orgId
   );
 
-  const conditions = [
-    canReadAllContacts
-      ? eq(card.organizationId, orgId)
-      : and(eq(card.organizationId, orgId), eq(card.userId, userId)),
-  ];
+  const workspaceCards = isWorkspace ? await loadWorkspaceCards(userId) : [];
+  const workspaceCardIds = workspaceCards.map((item) => item.id);
 
-  if (selectedCardId !== 'all') {
-    const accessibleCard = await db.query.card.findFirst({
-      where: and(
-        eq(card.id, selectedCardId),
-        eq(card.organizationId, orgId),
-        ...(canReadAllContacts ? [] : [eq(card.userId, userId)])
-      ),
-      columns: { id: true },
-    });
+  const conditions: SQL[] = [];
 
-    if (!accessibleCard) {
+  if (isWorkspace) {
+    if (
+      selectedCardId !== 'all' &&
+      !workspaceCardIds.includes(selectedCardId)
+    ) {
       throw createError({
         statusCode: 403,
         statusMessage: 'You do not have access to this card contacts.',
       });
     }
 
-    conditions.push(eq(contactExchange.cardId, selectedCardId));
+    const scopedIds =
+      selectedCardId === 'all' ? workspaceCardIds : [selectedCardId];
+    conditions.push(
+      scopedIds.length
+        ? inArray(contactExchange.cardId, scopedIds)
+        : eq(contactExchange.id, '')
+    );
+  } else {
+    conditions.push(
+      (canReadAllContacts
+        ? eq(card.organizationId, orgId)
+        : and(eq(card.organizationId, orgId), eq(card.userId, userId)))!
+    );
+
+    if (selectedCardId !== 'all') {
+      const accessibleCard = await db.query.card.findFirst({
+        where: and(
+          eq(card.id, selectedCardId),
+          eq(card.organizationId, orgId),
+          ...(canReadAllContacts ? [] : [eq(card.userId, userId)])
+        ),
+        columns: { id: true },
+      });
+
+      if (!accessibleCard) {
+        throw createError({
+          statusCode: 403,
+          statusMessage: 'You do not have access to this card contacts.',
+        });
+      }
+
+      conditions.push(eq(contactExchange.cardId, selectedCardId));
+    }
   }
 
   if (searchQuery) {
@@ -87,13 +117,15 @@ export default defineEventHandler(async (event) => {
         cardSlug: card.slug,
         cardFirstName: card.firstName,
         cardLastName: card.lastName,
+        cardOrganizationSlug: organization.slug,
       })
       .from(contactExchange)
       .leftJoin(card, eq(contactExchange.cardId, card.id))
+      .leftJoin(organization, eq(card.organizationId, organization.id))
       .leftJoin(laPersonaCard, eq(contactExchange.laPersonaCardId, laPersonaCard.id))
       .where(and(...conditions))
       .orderBy(desc(contactExchange.createdAt)),
-    canReadAllContacts
+    !isWorkspace && canReadAllContacts
       ? db
           .select({
             id: card.id,
@@ -107,10 +139,15 @@ export default defineEventHandler(async (event) => {
 
   return {
     isOwner: canReadAllContacts,
-    cards: ownerCardOptions.map((item) => ({
-      id: item.id,
-      label: `${item.firstName} ${item.lastName || ''}`.trim(),
-    })),
+    cards: isWorkspace
+      ? workspaceCards.map((item) => ({
+          id: item.id,
+          label: workspaceCardLabel(item),
+        }))
+      : ownerCardOptions.map((item) => ({
+          id: item.id,
+          label: `${item.firstName} ${item.lastName || ''}`.trim(),
+        })),
     contacts,
   };
 });

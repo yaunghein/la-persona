@@ -87,14 +87,6 @@ function closeInfo() {
   isInfoOpen.value = false;
 }
 
-function onShare(event: CommunityEvent) {
-  emit('share', event);
-}
-
-function onEdit(event: CommunityEvent) {
-  emit('edit', event);
-}
-
 function onView(event: CommunityEvent) {
   emit('view', event);
 }
@@ -188,7 +180,11 @@ function canRegister(event: CommunityEvent) {
       <article
         v-for="event in pagedEvents"
         :key="event.id"
-        class="flex flex-col rounded-lg"
+        class="flex cursor-pointer flex-col rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+        tabindex="0"
+        @click="onView(event)"
+        @keydown.enter.prevent="onView(event)"
+        @keydown.space.prevent="onView(event)"
       >
         <div
           class="relative aspect-[1/0.67] w-full overflow-hidden rounded-t-lg"
@@ -221,37 +217,16 @@ function canRegister(event: CommunityEvent) {
             </p>
           </div>
 
-          <div v-if="canManage" class="flex items-center justify-end gap-3">
-            <UButton
-              icon="i-lucide-scan-eye"
-              color="primary"
-              size="sm"
-              class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
-              @click="onView(event)"
-            />
-            <UButton
-              icon="i-lucide-pencil"
-              color="primary"
-              size="sm"
-              class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
-              @click="onEdit(event)"
-              :ui="{ leadingIcon: 'size-4' }"
-            />
-            <UButton
-              icon="material-symbols:ios-share-rounded"
-              color="primary"
-              size="sm"
-              class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
-              @click="onShare(event)"
-            />
-          </div>
-          <div v-else class="flex items-center justify-end gap-3">
+          <div
+            v-if="!canManage"
+            class="flex shrink-0 items-center justify-end"
+          >
             <UButton
               v-if="canRegister(event)"
               label="Register"
               color="neutral"
               class="h-8 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
-              @click="onRegister(event)"
+              @click.stop="onRegister(event)"
             />
             <span
               v-else-if="event.registrationMode === 'closed'"
@@ -262,20 +237,6 @@ function canRegister(event: CommunityEvent) {
             <span v-else class="text-sm text-[#8b8b8b]">
               {{ registerLabel(event) }}
             </span>
-            <UButton
-              icon="i-lucide-scan-eye"
-              color="primary"
-              size="sm"
-              class="ml-auto bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
-              @click="onView(event)"
-            />
-            <UButton
-              icon="material-symbols:ios-share-rounded"
-              color="primary"
-              size="sm"
-              class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
-              @click="onShare(event)"
-            />
           </div>
         </div>
       </article>

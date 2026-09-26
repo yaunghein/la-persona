@@ -33,6 +33,10 @@ const eventLabel = computed(
 );
 
 const foundedLabel = computed(() => `Founded in ${props.data.foundedYear}`);
+const coverSrc = computed(() => communityCoverSrc(props.data.coverImageUrl));
+const logoSrc = computed(() =>
+  communityLogoSrc(props.data.logoUrl, props.data.name)
+);
 </script>
 
 <template>
@@ -62,8 +66,8 @@ const foundedLabel = computed(() => `Founded in ${props.data.foundedYear}`);
         class="relative aspect-[1/0.25] w-full overflow-hidden rounded-t-lg bg-[#232323]"
       >
         <img
-          v-if="data.coverImageUrl"
-          :src="data.coverImageUrl"
+          v-if="coverSrc"
+          :src="coverSrc"
           alt=""
           class="size-full object-cover"
         />
@@ -75,15 +79,9 @@ const foundedLabel = computed(() => `Founded in ${props.data.foundedYear}`);
             class="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#232323]"
           >
             <img
-              v-if="data.logoUrl"
-              :src="data.logoUrl"
+              :src="logoSrc"
               :alt="data.name"
               class="size-full object-cover"
-            />
-            <UIcon
-              v-else
-              name="i-lucide-building-2"
-              class="size-10 text-[#8b8b8b]"
             />
           </div>
           <div class="flex min-w-0 flex-col gap-4">

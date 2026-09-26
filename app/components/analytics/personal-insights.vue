@@ -48,6 +48,7 @@ interface DashboardStats {
 const props = defineProps<{
   orgSlug: string;
   userName?: string | null;
+  workspace?: boolean;
 }>();
 
 const selectedCardId = ref('all');
@@ -74,19 +75,27 @@ watch(
 );
 
 const { data: stats, isLoading } = useQuery<DashboardStats>({
-  queryKey: ['analytics', () => props.orgSlug, selectedCardId, selectedPeriod],
+  queryKey: [
+    'analytics',
+    () => props.orgSlug,
+    () => props.workspace,
+    selectedCardId,
+    selectedPeriod,
+  ],
   queryFn: async () =>
     $fetch<DashboardStats>('/api/analytics', {
       query: {
         cardId: selectedCardId.value,
         period: selectedPeriod.value,
         organizationSlug: props.orgSlug,
+        ...(props.workspace ? { scope: 'workspace' } : {}),
       },
     }),
   enabled: () => !!props.orgSlug,
 });
 
 const isOwner = computed(() => stats.value?.isOwner === true);
+const showCardFilter = computed(() => props.workspace || isOwner.value);
 
 const { data: orgCards } = useQuery<CardDTO[]>({
   queryKey: ['cards', () => props.orgSlug],
@@ -94,18 +103,22 @@ const { data: orgCards } = useQuery<CardDTO[]>({
     $fetch<CardDTO[]>('/api/cards', {
       query: { organizationSlug: props.orgSlug },
     }),
-  enabled: () => !!props.orgSlug && isOwner.value,
+  enabled: () => !!props.orgSlug && isOwner.value && !props.workspace,
 });
 
-const ownerCardItems = computed(() => [
-  { id: 'all', label: 'All Cards' },
-  ...(orgCards.value || []).map((item) => ({
-    id: item.id,
-    label: `${item.firstName} ${item.lastName || ''}`.trim(),
-  })),
-]);
+const ownerCardItems = computed(() => {
+  const workspaceCards = props.workspace ? stats.value?.cards || [] : [];
+  const cards = props.workspace
+    ? workspaceCards
+    : (orgCards.value || []).map((item) => ({
+        id: item.id,
+        label: `${item.firstName} ${item.lastName || ''}`.trim(),
+      }));
+
+  return [{ id: 'all', label: 'All Cards' }, ...cards];
+});
 const analyticsHeading = computed(() => {
-  if (isOwner.value && selectedCardId.value !== 'all') {
+  if (showCardFilter.value && selectedCardId.value !== 'all') {
     const selectedCard = ownerCardItems.value.find(
       (item) => item.id === selectedCardId.value
     );
@@ -138,7 +151,7 @@ const infoItems = [
     icon: 'i-lucide-filter',
     title: 'Filter by Card',
     description:
-      'Owners can switch between all cards or a single card for focused insights.',
+      'Start with every card, then focus on one personal or community card.',
   },
 ];
 
@@ -352,7 +365,7 @@ function closeInfo() {
           }"
         />
         <USelectMenu
-          v-if="isOwner"
+          v-if="showCardFilter"
           v-model="selectedCardId"
           value-key="id"
           :items="ownerCardItems"

@@ -7,6 +7,7 @@ import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import { useQuery } from '@tanstack/vue-query';
 import { downloadFile } from '~/utils/share-or-download';
 import { vcfPhoneLines } from '~~/shared/utils/phone';
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
 type Contact = {
   id: string;
@@ -64,6 +65,7 @@ type ContactExchangeDTO = {
   cardSlug: string | null;
   cardFirstName: string | null;
   cardLastName: string | null;
+  cardOrganizationSlug: string | null;
 };
 type ContactsResponse = {
   isOwner: boolean;
@@ -80,6 +82,11 @@ const selectedContactToDelete = ref<{ id: string; name: string } | null>(null);
 const route = useRoute();
 const router = useRouter();
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
+const { data: userOrgs, isLoading: isOrgsLoading } = useUserOrganizations();
+const isPersonalWorkspace = computed(() => {
+  const org = (userOrgs.value || []).find((item) => item.slug === orgSlug.value);
+  return org?.type === ORGANIZATION_TYPES.PERSONAL;
+});
 const { data: session } = await authClient.useSession(useFetch);
 const hasSeenInfoPopup = useLocalStorage(
   `lp-info-popup:contacts:${session.value?.user.id || 'anonymous'}`,
@@ -135,14 +142,21 @@ const {
   isLoading: isContactsLoading,
   refetch: refetchContacts,
 } = useQuery<ContactsResponse>({
-  queryKey: ['contact-exchange', orgSlug, () => selectedCardId.value],
+  queryKey: [
+    'contact-exchange',
+    orgSlug,
+    () => selectedCardId.value,
+    isPersonalWorkspace,
+  ],
   queryFn: async () =>
     $fetch<ContactsResponse>('/api/contact-exchange', {
       query: {
         cardId: selectedCardId.value,
         organizationSlug: orgSlug.value,
+        ...(isPersonalWorkspace.value ? { scope: 'workspace' } : {}),
       },
     }),
+  enabled: () => !isOrgsLoading.value,
 });
 const isOwner = computed(() => contactsResponse.value?.isOwner === true);
 const ownerCardItems = computed(() => [
@@ -190,7 +204,7 @@ const contacts = computed<ContactRow[]>(() =>
           : 'Added Manually';
     const originTo =
       !isLaPersonaContact && item.cardId && item.cardSlug
-        ? `/platform/${orgSlug.value}/cards/${item.cardSlug}`
+        ? `/platform/${item.cardOrganizationSlug || orgSlug.value}/cards/${item.cardSlug}`
         : undefined;
     return {
       id: item.id,

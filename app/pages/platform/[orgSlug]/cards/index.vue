@@ -14,16 +14,6 @@ const runtimeConfig = useRuntimeConfig();
 const toast = useToast();
 const isInfoOpen = ref(false);
 const { data: session } = await authClient.useSession(useFetch);
-const { data: userOrgs } = useUserOrganizations();
-const currentOrg = computed(() =>
-  (userOrgs.value || []).find((org) => org.slug === orgSlug.value)
-);
-const isCommunityOrg = computed(
-  () => currentOrg.value?.type === ORGANIZATION_TYPES.COMMUNITY
-);
-const isCommunityOrgManager = computed(() =>
-  isCommunityManager(currentOrg.value)
-);
 const hasSeenInfoPopup = useLocalStorage(
   `lp-info-popup:cards:${session.value?.user.id || 'anonymous'}`,
   false
@@ -41,10 +31,10 @@ const {
   error,
   refetch: refresh,
 } = useQuery<CardDTO[]>({
-  queryKey: ['cards', orgSlug],
+  queryKey: ['cards', 'workspace', orgSlug],
   queryFn: async () =>
     $fetch('/api/cards', {
-      query: { organizationSlug: orgSlug.value },
+      query: { organizationSlug: orgSlug.value, scope: 'workspace' },
     }),
 });
 
@@ -54,63 +44,31 @@ const selectedPendingCardName = ref('');
 const isDeleteConfirmOpen = ref(false);
 const isDeleting = ref(false);
 const selectedCardToDelete = ref<CardDTO | null>(null);
-const infoItems = computed(() =>
-  isCommunityOrg.value
-    ? isCommunityOrgManager.value
-      ? [
-          {
-            icon: 'i-lucide-users',
-            title: 'Community cards',
-            description:
-              'See every member\'s community card. Edit details here; remove people from Members.',
-          },
-          {
-            icon: 'i-lucide-scan-eye',
-            title: 'Preview & Edit',
-            description:
-              'Open a card to preview, update information, and download wallpapers.',
-          },
-        ]
-      : [
-          {
-            icon: 'i-lucide-eye',
-            title: 'Your community card',
-            description:
-              'This card is for this community. Preview it publicly and keep your details current.',
-          },
-          {
-            icon: 'i-lucide-scan-eye',
-            title: 'Preview & Edit',
-            description:
-              'Open your card to preview, update information, and download wallpapers.',
-          },
-        ]
-    : [
-        {
-          icon: 'i-lucide-eye',
-          title: 'View Your Cards',
-          description: 'See all your cards and each plan status in one place.',
-        },
-        {
-          icon: 'i-lucide-chevrons-up',
-          title: 'Upgrade When Ready',
-          description:
-            'Move from trial or standard to premium with the guided payment flow.',
-        },
-        {
-          icon: 'i-lucide-plus',
-          title: 'Request New Card',
-          description:
-            'Submit a new card request using fresh or existing designs.',
-        },
-        {
-          icon: 'i-lucide-scan-eye',
-          title: 'Preview & Edit',
-          description:
-            'Open each card to preview, update information, and download wallpapers.',
-        },
-      ]
-);
+const infoItems = [
+  {
+    icon: 'i-lucide-eye',
+    title: 'View Your Cards',
+    description:
+      'Personal cards and community cards you belong to show up together.',
+  },
+  {
+    icon: 'i-lucide-chevrons-up',
+    title: 'Upgrade When Ready',
+    description:
+      'Move from trial or standard to premium with the guided payment flow.',
+  },
+  {
+    icon: 'i-lucide-plus',
+    title: 'Request New Card',
+    description: 'Submit a new card request using fresh or existing designs.',
+  },
+  {
+    icon: 'i-lucide-scan-eye',
+    title: 'Preview & Edit',
+    description:
+      'Open each card to preview, update information, and download wallpapers.',
+  },
+];
 
 const getS3Url = (path?: string | null) => {
   if (!path) return '';
@@ -166,9 +124,18 @@ async function onConfirmDelete() {
   }
 }
 
+function isCommunityCard(card: CardDTO) {
+  return card.organizationType === ORGANIZATION_TYPES.COMMUNITY;
+}
+
+function cardEditorPath(card: CardDTO) {
+  const slug = card.organizationSlug || orgSlug.value;
+  return `/platform/${slug}/cards/${card.slug}`;
+}
+
 function getCardBadgeLabel(card: CardDTO) {
-  if (isCommunityOrg.value) {
-    return card.organizationName || currentOrg.value?.name || 'Community';
+  if (isCommunityCard(card)) {
+    return card.organizationName || 'Community';
   }
 
   if (card.subscription?.status === 'pending_approval') return 'Pending';
@@ -207,7 +174,7 @@ const cardFooterActionSize = 'sm';
 </script>
 
 <template>
-  <div class="space-y-6" :class="isCommunityOrg ? 'pb-0' : 'pb-20 sm:pb-0'">
+  <div class="space-y-6 pb-20 sm:pb-0">
     <div
       class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
     >
@@ -215,7 +182,7 @@ const cardFooterActionSize = 'sm';
         <h1
           class="text-2xl font-medium uppercase tracking-widest leading-tight"
         >
-          {{ isCommunityOrgManager ? 'Community Cards' : 'Your Cards' }}
+          Your Cards
         </h1>
         <UButton
           size="lg"
@@ -233,7 +200,6 @@ const cardFooterActionSize = 'sm';
       </div>
 
       <UButton
-        v-if="!isCommunityOrg"
         label="Request New Card"
         leading-icon="i-lucide-plus"
         color="neutral"
@@ -371,21 +337,27 @@ const cardFooterActionSize = 'sm';
             />
           </div>
           <UBadge
-            class="absolute -right-6.5 -top-6.5 sm:-top-7.5 sm:-right-7.5 uppercase font-semibold"
-            :class="{
-              'cursor-pointer bg-amber-500/20 text-amber-300':
-                card.subscription?.status === 'pending_approval',
-              'bg-[#171717] text-white':
-                card.subscription?.status !== 'pending_approval',
-            }"
+            class="absolute -right-6.5 -top-6.5 max-w-[70%] font-semibold sm:-top-7.5 sm:-right-7.5"
+            :class="[
+              isCommunityCard(card) ? 'normal-case' : 'uppercase',
+              card.subscription?.status === 'pending_approval' &&
+              !isCommunityCard(card)
+                ? 'cursor-pointer bg-amber-500/20 text-amber-300'
+                : 'bg-[#171717] text-white',
+            ]"
             :color="getCardBadgeColor(card)"
             size="sm"
             @click="
+              !isCommunityCard(card) &&
               card.subscription?.status === 'pending_approval' &&
               openPendingInfo(`${card.firstName} ${card.lastName || ''}`.trim())
             "
           >
-            {{ getCardBadgeLabel(card) }}
+            <OverflowMarquee
+              v-if="isCommunityCard(card)"
+              :text="getCardBadgeLabel(card)"
+            />
+            <template v-else>{{ getCardBadgeLabel(card) }}</template>
           </UBadge>
         </div>
 
@@ -424,10 +396,10 @@ const cardFooterActionSize = 'sm';
               color="primary"
               :size="cardFooterActionSize"
               class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
-              :href="`/platform/${route.params.orgSlug}/cards/${card.slug}`"
+              :href="cardEditorPath(card)"
             />
             <UButton
-              v-if="!isCommunityOrg"
+              v-if="!isCommunityCard(card)"
               icon="i-lucide-trash"
               color="primary"
               :size="cardFooterActionSize"

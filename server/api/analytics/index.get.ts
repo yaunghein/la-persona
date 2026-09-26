@@ -1,10 +1,14 @@
-import { and, eq, sql, gte } from 'drizzle-orm';
+import { and, eq, sql, gte, inArray } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { analytics, card, member, organization } from '~~/server/db/schema';
 import { requireOrganizationSession } from '~~/server/utils/organization-permissions';
 import { isOrganizationManagerRole } from '~~/shared/permissions/organization';
 import { parseAnalyticsPeriod, analyticsPeriodStart } from '~~/shared/utils/analytics-period';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
+import {
+  loadWorkspaceCards,
+  workspaceCardLabel,
+} from '~~/server/services/workspace-cards';
 import {
   OTHER_LINK_LABELS,
   SOCIAL_MEDIA_LINK_LABELS,
@@ -28,6 +32,7 @@ export default defineEventHandler(async (event) => {
   const since = analyticsPeriodStart(period);
   const orgId = session.session.activeOrganizationId;
   const userId = session.user.id;
+  const isWorkspace = query.scope === 'workspace';
 
   const userMemberInfo = await db.query.member.findFirst({
     where: and(eq(member.organizationId, orgId), eq(member.userId, userId)),
@@ -37,50 +42,91 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Forbidden' });
   }
 
-  const org = await db.query.organization.findFirst({
-    where: eq(organization.id, orgId),
-    columns: { type: true },
-  });
+  const org = isWorkspace
+    ? null
+    : await db.query.organization.findFirst({
+        where: eq(organization.id, orgId),
+        columns: { type: true },
+      });
+
+  const workspaceCards = isWorkspace ? await loadWorkspaceCards(userId) : [];
+  const filterCards = workspaceCards.map((item) => ({
+    id: item.id,
+    label: workspaceCardLabel(item),
+  }));
 
   // Community managers see community insights, not every member's card analytics.
-  const isOwner =
-    isOrganizationManagerRole(userMemberInfo.role) &&
-    org?.type !== ORGANIZATION_TYPES.COMMUNITY;
+  const isOwner = isWorkspace
+    ? true
+    : isOrganizationManagerRole(userMemberInfo.role) &&
+      org?.type !== ORGANIZATION_TYPES.COMMUNITY;
 
   let conditions = [
     eq(analytics.organizationId, orgId),
     gte(analytics.createdAt, since),
   ];
-  if (!isOwner) {
-    conditions.push(eq(analytics.userId, userId as string));
-  }
+  let cardScopeConditions = [eq(card.organizationId, orgId)];
 
-  if (selectedCardId !== 'all') {
-    const accessibleCard = await db.query.card.findFirst({
-      where: and(
-        eq(card.id, selectedCardId),
-        eq(card.organizationId, orgId),
-        ...(isOwner ? [] : [eq(card.userId, userId)])
-      ),
-      columns: { id: true },
-    });
-
-    if (!accessibleCard) {
+  if (isWorkspace) {
+    const allowedIds = workspaceCards.map((item) => item.id);
+    if (
+      selectedCardId !== 'all' &&
+      !allowedIds.includes(selectedCardId)
+    ) {
       throw createError({
         statusCode: 403,
         statusMessage: 'You do not have access to this card analytics.',
       });
     }
 
-    conditions.push(eq(analytics.cardId, selectedCardId));
-  }
+    const scopedIds =
+      selectedCardId === 'all' ? allowedIds : [selectedCardId];
+    if (!scopedIds.length) {
+      return {
+        isOwner: true,
+        totalStats: [],
+        dailyViews: [],
+        socialClicks: [],
+        linkClicks: [],
+        saveActions: [],
+        socialConfiguredLabels: [],
+        otherConfiguredLabels: [],
+        period,
+        cards: filterCards,
+      };
+    }
 
-  const cardScopeConditions = [eq(card.organizationId, orgId)];
-  if (!isOwner) {
-    cardScopeConditions.push(eq(card.userId, userId as string));
-  }
-  if (selectedCardId !== 'all') {
-    cardScopeConditions.push(eq(card.id, selectedCardId));
+    conditions = [
+      inArray(analytics.cardId, scopedIds),
+      gte(analytics.createdAt, since),
+    ];
+    cardScopeConditions = [inArray(card.id, scopedIds)];
+  } else {
+    if (!isOwner) {
+      conditions.push(eq(analytics.userId, userId as string));
+      cardScopeConditions.push(eq(card.userId, userId as string));
+    }
+
+    if (selectedCardId !== 'all') {
+      const accessibleCard = await db.query.card.findFirst({
+        where: and(
+          eq(card.id, selectedCardId),
+          eq(card.organizationId, orgId),
+          ...(isOwner ? [] : [eq(card.userId, userId)])
+        ),
+        columns: { id: true },
+      });
+
+      if (!accessibleCard) {
+        throw createError({
+          statusCode: 403,
+          statusMessage: 'You do not have access to this card analytics.',
+        });
+      }
+
+      conditions.push(eq(analytics.cardId, selectedCardId));
+      cardScopeConditions.push(eq(card.id, selectedCardId));
+    }
   }
 
   const [
@@ -200,6 +246,6 @@ export default defineEventHandler(async (event) => {
       ...customConfiguredLabels,
     ],
     period,
-    cards: [],
+    cards: filterCards,
   };
 });

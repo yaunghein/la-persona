@@ -57,7 +57,10 @@ export default defineEventHandler(async (event) => {
 
     const [updatedOrg] = await db
       .update(organization)
-      .set({ name: body.data.name })
+      .set({
+        name: body.data.name,
+        logo: body.data.logoUrl.trim() || null,
+      })
       .where(eq(organization.id, org.id))
       .returning({
         name: organization.name,
@@ -75,6 +78,7 @@ export default defineEventHandler(async (event) => {
       description: body.data.description,
       guidelines: body.data.guidelines,
       whyJoin: body.data.whyJoin,
+      coverUrl: body.data.coverImageUrl.trim() || null,
     });
 
     if (!setting) {

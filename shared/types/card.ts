@@ -16,6 +16,7 @@ export type CardDTO = Omit<SelectCard, 'createdAt' | 'updatedAt'> & {
   updatedAt: string;
   organizationType?: 'personal' | 'community';
   organizationName?: string | null;
+  organizationSlug?: string | null;
   subscription?: {
     status: string;
     planCode: string | null;

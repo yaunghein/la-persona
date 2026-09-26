@@ -4,7 +4,6 @@ import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
 const route = useRoute();
 const toast = useToast();
-const router = useRouter();
 
 const open = ref(false);
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
@@ -21,40 +20,8 @@ const communityOrgs = computed(() =>
   )
 );
 
-const selectedCommunitySlug = useState<string | undefined>(
-  'platform-selected-community-slug',
-  () => undefined
-);
-
 const routeOrg = computed(() =>
   (userOrgs.value || []).find((org) => org.slug === orgSlug.value)
-);
-
-watch(
-  [communityOrgs, routeOrg],
-  () => {
-    const routeCommunity =
-      routeOrg.value?.type === ORGANIZATION_TYPES.COMMUNITY
-        ? routeOrg.value
-        : null;
-
-    if (routeCommunity) {
-      selectedCommunitySlug.value = routeCommunity.slug;
-      return;
-    }
-
-    if (
-      selectedCommunitySlug.value &&
-      communityOrgs.value.some(
-        (org) => org.slug === selectedCommunitySlug.value
-      )
-    ) {
-      return;
-    }
-
-    selectedCommunitySlug.value = communityOrgs.value[0]?.slug ?? undefined;
-  },
-  { immediate: true }
 );
 
 const personalBasePath = computed(() =>
@@ -65,49 +32,35 @@ const personalBasePath = computed(() =>
       : ROUTES.PLATFORM.ROOT
 );
 
-const communitiesBasePath = computed(() =>
-  selectedCommunitySlug.value
-    ? `${ROUTES.PLATFORM.ROOT}/${selectedCommunitySlug.value}`
-    : null
-);
-
-const communityItems = computed(() =>
-  communityOrgs.value.map((org) => ({
-    label: org.name,
-    value: org.slug,
-  }))
-);
-
-const selectedCommunity = computed(() =>
-  communityOrgs.value.find((org) => org.slug === selectedCommunitySlug.value)
-);
-
-const isSelectedCommunityMember = computed(() =>
-  isCommunityMemberOnlyOrg(selectedCommunity.value)
-);
-
-function communityHomePath(slug: string) {
-  return `${ROUTES.PLATFORM.ROOT}/${slug}`;
-}
-
-async function onSelectCommunity(slug: unknown) {
-  if (typeof slug !== 'string' || !slug) return;
-  selectedCommunitySlug.value = slug;
-  open.value = false;
-  await router.push(communityHomePath(slug));
-}
-
 function closeSidebar() {
   open.value = false;
+}
+
+function communityLinksFor(org: (typeof communityOrgs.value)[number]) {
+  const base = `${ROUTES.PLATFORM.ROOT}/${org.slug}`;
+  if (isCommunityMemberOnlyOrg(org)) {
+    return [
+      { label: 'Events', to: `${base}/events` },
+      { label: 'About', to: `${base}/about` },
+    ];
+  }
+
+  return [
+    { label: 'Insights', to: base },
+    { label: 'Members', to: `${base}/members` },
+    { label: 'Events', to: `${base}/events` },
+    { label: 'Settings', to: `${base}/settings` },
+  ];
 }
 
 const personalLinks = computed(
   () =>
     [
       {
-        label: 'Insights',
+        label: 'Dashboard',
         icon: 'i-gg:insights',
         to: personalBasePath.value,
+        exact: true,
         onSelect: closeSidebar,
       },
       {
@@ -123,7 +76,7 @@ const personalLinks = computed(
         onSelect: closeSidebar,
       },
       {
-        label: 'Teams (Coming Soon)',
+        label: 'Team (Coming Soon)',
         icon: 'i-ri:team-line',
         to: `${personalBasePath.value}/teams`,
         onSelect: closeSidebar,
@@ -131,79 +84,20 @@ const personalLinks = computed(
     ] satisfies NavigationMenuItem[]
 );
 
-const communitiesLinks = computed(() => {
-  if (!communitiesBasePath.value) {
-    return [] as NavigationMenuItem[];
-  }
-
-  if (isSelectedCommunityMember.value) {
-    return [
-      {
-        label: 'Insights',
-        icon: 'i-gg:insights',
-        to: communitiesBasePath.value,
-        onSelect: closeSidebar,
-      },
-      {
-        label: 'Cards',
-        icon: 'i-material-symbols:cards-stack-outline-sharp',
-        to: `${communitiesBasePath.value}/cards`,
-        onSelect: closeSidebar,
-      },
-      {
-        label: 'Events',
-        icon: 'i-lucide-calendar',
-        to: `${communitiesBasePath.value}/events`,
-        onSelect: closeSidebar,
-      },
-      {
-        label: 'About',
-        icon: 'i-material-symbols:info-outline',
-        to: `${communitiesBasePath.value}/about`,
-        onSelect: closeSidebar,
-      },
-    ] satisfies NavigationMenuItem[];
-  }
-
-  return [
-    {
-      label: 'Insights',
-      icon: 'i-gg:insights',
-      to: communitiesBasePath.value,
-      onSelect: closeSidebar,
-    },
-    {
-      label: 'Members',
-      icon: 'i-ri:team-line',
-      to: `${communitiesBasePath.value}/members`,
-      onSelect: closeSidebar,
-    },
-    {
-      label: 'Cards',
-      icon: 'i-material-symbols:cards-stack-outline-sharp',
-      to: `${communitiesBasePath.value}/cards`,
-      onSelect: closeSidebar,
-    },
-    {
-      label: 'Events',
-      icon: 'i-lucide-calendar',
-      to: `${communitiesBasePath.value}/events`,
-      onSelect: closeSidebar,
-    },
-    {
-      label: 'Settings',
-      icon: 'i-lucide-settings',
-      to: `${communitiesBasePath.value}/settings`,
-      onSelect: closeSidebar,
-    },
-  ] satisfies NavigationMenuItem[];
-});
-
 const groups = computed(() => [
   {
     id: 'links',
     label: 'Go to',
-    items: [...personalLinks.value, ...communitiesLinks.value],
+    items: [
+      ...personalLinks.value,
+      ...communityOrgs.value.flatMap((org) =>
+        communityLinksFor(org).map((item) => ({
+          label: `${org.name} · ${item.label}`,
+          to: item.to,
+          onSelect: closeSidebar,
+        }))
+      ),
+    ],
   },
   {
     id: 'code',
@@ -271,7 +165,11 @@ const currentPageLabel = computed(() => {
   if (!slug) return path === ROUTES.PLATFORM.ROOT ? 'Insights' : '';
 
   const basePath = `${ROUTES.PLATFORM.ROOT}/${slug}`;
-  if (path === basePath) return 'Insights';
+  if (path === basePath) {
+    return routeOrg.value?.type === ORGANIZATION_TYPES.COMMUNITY
+      ? 'Insights'
+      : 'Dashboard';
+  }
   if (path.startsWith(`${basePath}/cards`)) return 'Cards';
   if (path.startsWith(`${basePath}/contacts`)) return 'Contacts';
   if (path.startsWith(`${basePath}/billing`)) return 'Billing';
@@ -283,17 +181,6 @@ const currentPageLabel = computed(() => {
 
   return '';
 });
-
-const sectionHeadingClass =
-  'px-2 text-sm font-medium uppercase tracking-[1.4px] text-white';
-
-const sidebarSelectUi = {
-  base: 'h-9 w-full rounded-[4px] border-[#2a2a2a] bg-[#232323] px-3 text-sm text-white',
-  content: 'border border-[#2a2a2a] bg-[#232323]',
-  item: 'text-white data-[highlighted]:bg-[#2a2a2a]',
-  value: 'text-white',
-  placeholder: 'text-[#8b8b8b]',
-};
 </script>
 
 <template>
@@ -320,39 +207,21 @@ const sidebarSelectUi = {
       </template>
 
       <template #default="{ collapsed }">
-        <div class="flex flex-col gap-10 py-4">
-          <div class="flex flex-col gap-4">
-            <p v-if="!collapsed" :class="sectionHeadingClass">Personal</p>
-            <UNavigationMenu
-              :collapsed="collapsed"
-              :items="personalLinks"
-              orientation="vertical"
-              tooltip
-              popover
-              class="[&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1 [&_a]:py-2 [&_a]:font-semibold"
-            />
-          </div>
+        <div class="flex flex-col gap-8 py-4">
+          <UNavigationMenu
+            :collapsed="collapsed"
+            :items="personalLinks"
+            orientation="vertical"
+            tooltip
+            popover
+            class="[&_ul]:flex [&_ul]:flex-col [&_ul]:gap-2 [&_a]:px-2.5 [&_a]:py-1.5 [&_a]:font-medium"
+          />
 
-          <div v-if="communityItems.length > 0" class="flex flex-col gap-4">
-            <p v-if="!collapsed" :class="sectionHeadingClass">Communities</p>
-            <USelect
-              v-if="!collapsed"
-              :model-value="selectedCommunitySlug"
-              :items="communityItems"
-              placeholder="Select community"
-              color="neutral"
-              :ui="sidebarSelectUi"
-              @update:model-value="onSelectCommunity"
-            />
-            <UNavigationMenu
-              :collapsed="collapsed"
-              :items="communitiesLinks"
-              orientation="vertical"
-              tooltip
-              popover
-              class="[&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1 [&_a]:py-2 [&_a]:font-semibold"
-            />
-          </div>
+          <PlatformCommunityNav
+            :orgs="communityOrgs"
+            :collapsed="collapsed"
+            @select="closeSidebar"
+          />
         </div>
 
         <div class="mt-auto">
