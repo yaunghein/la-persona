@@ -11,10 +11,11 @@ import {
   type CommunityEvent,
   type CommunityEventsData,
 } from '~~/shared/types/community-events';
-import { publicEventAbsoluteUrl } from '~~/shared/utils/routes';
+import { publicEventAbsoluteUrl, ROUTES } from '~~/shared/utils/routes';
 
 const toast = useToast();
 const route = useRoute();
+const router = useRouter();
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
 const { data: userOrgs } = useUserOrganizations();
 const isCreateOpen = ref(false);
@@ -98,16 +99,73 @@ function onEdit(event: CommunityEvent) {
   isEditOpen.value = true;
 }
 
+const eventQueryId = computed(() => {
+  const value = route.query.event;
+  return typeof value === 'string' ? value : '';
+});
+
+function replaceEventQuery(eventId: string | null) {
+  const current = eventQueryId.value;
+  if ((eventId || '') === current) return;
+
+  const query = { ...route.query };
+  if (eventId) query.event = eventId;
+  else delete query.event;
+
+  return router.replace({ path: route.path, query });
+}
+
 function onView(event: CommunityEvent) {
   if (canManageEvents.value) {
-    navigateTo(`/platform/${orgSlug.value}/events/${event.id}`);
-    return;
+    return navigateTo(ROUTES.EVENTS.PLATFORM(orgSlug.value, event.id));
   }
 
-  viewingEvent.value =
-    data.value?.events.find((item) => item.id === event.id) ?? null;
-  isViewOpen.value = true;
+  return replaceEventQuery(event.id);
 }
+
+watch(
+  [
+    eventQueryId,
+    () => data.value?.events,
+    canManageEvents,
+    () => userOrgs.value,
+  ],
+  () => {
+    if (!userOrgs.value) return;
+
+    if (canManageEvents.value) {
+      viewingEvent.value = null;
+      isViewOpen.value = false;
+      return;
+    }
+
+    const id = eventQueryId.value;
+    if (!id) {
+      viewingEvent.value = null;
+      isViewOpen.value = false;
+      return;
+    }
+
+    if (!data.value) return;
+
+    const match = data.value.events.find((item) => item.id === id) ?? null;
+    if (!match) {
+      viewingEvent.value = null;
+      isViewOpen.value = false;
+      replaceEventQuery(null);
+      return;
+    }
+
+    viewingEvent.value = match;
+    isViewOpen.value = true;
+  },
+  { immediate: true }
+);
+
+watch(isViewOpen, (open) => {
+  if (open || canManageEvents.value) return;
+  replaceEventQuery(null);
+});
 
 async function onShare(event: CommunityEvent) {
   const shareUrl = publicEventAbsoluteUrl(event.id);

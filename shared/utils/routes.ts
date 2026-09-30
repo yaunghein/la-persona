@@ -10,6 +10,8 @@ export const ROUTES = {
     PUBLIC_MINGALARBAR: (eventId: string) =>
       `/events/${eventId}?onboarding=mingalarbar`,
     PLATFORM_LIST: (orgSlug: string) => `${PLATFORM_ROOT}/${orgSlug}/events`,
+    PLATFORM_LIST_EVENT: (orgSlug: string, eventId: string) =>
+      `${PLATFORM_ROOT}/${orgSlug}/events?event=${encodeURIComponent(eventId)}`,
     PLATFORM: (orgSlug: string, eventId: string) =>
       `${PLATFORM_ROOT}/${orgSlug}/events/${eventId}`,
   },

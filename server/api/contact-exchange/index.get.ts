@@ -11,8 +11,55 @@ import {
   requireOrganizationPermission,
 } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+import { normalizePhoneCountryCode } from '~~/shared/utils/phone';
 
 const laPersonaCard = alias(card, 'la_persona_card');
+
+function liveSeamlessContactFields(row: {
+  source: string;
+  name: string;
+  phone: string;
+  phoneCountryCode: string | null;
+  email: string | null;
+  company: string | null;
+  position: string | null;
+  liveCardId: string | null;
+  liveFirstName: string | null;
+  liveLastName: string | null;
+  livePhone: string | null;
+  livePhoneCountryCode: string | null;
+  liveEmail: string | null;
+  liveCompany: string | null;
+  livePosition: string | null;
+}) {
+  const snapshot = {
+    name: row.name,
+    phone: row.phone,
+    phoneCountryCode: row.phoneCountryCode,
+    email: row.email,
+    company: row.company,
+    position: row.position,
+  };
+
+  if (row.source !== 'seamless_exchange' || !row.liveCardId) return snapshot;
+
+  const phone = row.livePhone?.trim() || '';
+  const name = [row.liveFirstName, row.liveLastName]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+
+  return {
+    name: name || snapshot.name,
+    phone,
+    phoneCountryCode: phone
+      ? normalizePhoneCountryCode(row.livePhoneCountryCode)
+      : null,
+    email: row.liveEmail?.trim() || null,
+    company: row.liveCompany?.trim() || null,
+    position: row.livePosition?.trim() || null,
+  };
+}
 
 export default defineEventHandler(async (event) => {
   const session = await requireOrganizationPermission(
@@ -93,7 +140,13 @@ export default defineEventHandler(async (event) => {
         ilike(contactExchange.company, `%${searchQuery}%`),
         ilike(contactExchange.position, `%${searchQuery}%`),
         ilike(card.firstName, `%${searchQuery}%`),
-        ilike(card.lastName, `%${searchQuery}%`)
+        ilike(card.lastName, `%${searchQuery}%`),
+        ilike(laPersonaCard.firstName, `%${searchQuery}%`),
+        ilike(laPersonaCard.lastName, `%${searchQuery}%`),
+        ilike(laPersonaCard.phone, `%${searchQuery}%`),
+        ilike(laPersonaCard.email, `%${searchQuery}%`),
+        ilike(laPersonaCard.company, `%${searchQuery}%`),
+        ilike(laPersonaCard.position, `%${searchQuery}%`)
       )!
     );
   }
@@ -113,6 +166,14 @@ export default defineEventHandler(async (event) => {
         laPersonaUserId: contactExchange.laPersonaUserId,
         laPersonaCardId: contactExchange.laPersonaCardId,
         laPersonaCardSlug: laPersonaCard.slug,
+        liveCardId: laPersonaCard.id,
+        liveFirstName: laPersonaCard.firstName,
+        liveLastName: laPersonaCard.lastName,
+        livePhone: laPersonaCard.phone,
+        livePhoneCountryCode: laPersonaCard.phoneCountryCode,
+        liveEmail: laPersonaCard.email,
+        liveCompany: laPersonaCard.company,
+        livePosition: laPersonaCard.position,
         reciprocalExchangeId: contactExchange.reciprocalExchangeId,
         cardSlug: card.slug,
         cardFirstName: card.firstName,
@@ -122,7 +183,10 @@ export default defineEventHandler(async (event) => {
       .from(contactExchange)
       .leftJoin(card, eq(contactExchange.cardId, card.id))
       .leftJoin(organization, eq(card.organizationId, organization.id))
-      .leftJoin(laPersonaCard, eq(contactExchange.laPersonaCardId, laPersonaCard.id))
+      .leftJoin(
+        laPersonaCard,
+        eq(contactExchange.laPersonaCardId, laPersonaCard.id)
+      )
       .where(and(...conditions))
       .orderBy(desc(contactExchange.createdAt)),
     !isWorkspace && canReadAllContacts
@@ -148,6 +212,28 @@ export default defineEventHandler(async (event) => {
           id: item.id,
           label: `${item.firstName} ${item.lastName || ''}`.trim(),
         })),
-    contacts,
+    contacts: contacts.map((row) => {
+      const live = liveSeamlessContactFields(row);
+
+      return {
+        id: row.id,
+        name: live.name,
+        phone: live.phone,
+        phoneCountryCode: live.phoneCountryCode,
+        email: live.email,
+        company: live.company,
+        position: live.position,
+        cardId: row.cardId,
+        source: row.source,
+        laPersonaUserId: row.laPersonaUserId,
+        laPersonaCardId: row.laPersonaCardId,
+        laPersonaCardSlug: row.laPersonaCardSlug,
+        reciprocalExchangeId: row.reciprocalExchangeId,
+        cardSlug: row.cardSlug,
+        cardFirstName: row.cardFirstName,
+        cardLastName: row.cardLastName,
+        cardOrganizationSlug: row.cardOrganizationSlug,
+      };
+    }),
   };
 });

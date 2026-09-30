@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Application } from '@splinetool/runtime';
 import type { PublicEventDTO } from '~~/shared/types/event';
 import { parseEventOnboardingStep } from '~~/shared/utils/event-onboarding';
 import {
@@ -29,9 +28,6 @@ useSeoMeta({
   ...getSeoTitle(event.value?.title ? `${event.value.title}` : 'Event'),
 });
 
-const splineCanvasEl = ref<HTMLCanvasElement | null>(null);
-let splineApp: Application | null = null;
-let mediaQuery: MediaQueryList | null = null;
 const showHowToUse = ref(false);
 const justRegistered = ref(String(route.query.registered || '') === '1');
 
@@ -69,7 +65,11 @@ const canRegister = computed(
 watch(
   [onboardingStep, session, event],
   () => {
-    if (onboardingStep.value !== 'mingalarbar' || !session.value || !event.value) {
+    if (
+      onboardingStep.value !== 'mingalarbar' ||
+      !session.value ||
+      !event.value
+    ) {
       return;
     }
     const next = resolveEventFlowPath({
@@ -84,44 +84,6 @@ watch(
   },
   { immediate: true }
 );
-
-async function loadSpline() {
-  const canvas = splineCanvasEl.value;
-  if (!import.meta.client || !canvas || splineApp) return;
-
-  splineApp = new Application(canvas);
-  await splineApp.load(
-    'https://prod.spline.design/szr0-6Srx9EJxnil/scene.splinecode' +
-      `?v=${Date.now()}`
-  );
-}
-
-function disposeSpline() {
-  splineApp?.dispose();
-  splineApp = null;
-}
-
-async function syncSplineViewport() {
-  if (!mediaQuery?.matches) {
-    disposeSpline();
-    return;
-  }
-  await nextTick();
-  await loadSpline();
-}
-
-onMounted(() => {
-  if (!import.meta.client) return;
-
-  mediaQuery = window.matchMedia('(min-width: 640px)');
-  syncSplineViewport();
-  mediaQuery.addEventListener('change', syncSplineViewport);
-});
-
-onBeforeUnmount(() => {
-  mediaQuery?.removeEventListener('change', syncSplineViewport);
-  disposeSpline();
-});
 
 function onViewOrganizer() {
   toast.add({
@@ -187,69 +149,63 @@ function onHowToUse() {
 
 function onFlowDone() {
   if (!orgSlug.value) return;
-  return navigateTo(ROUTES.EVENTS.PLATFORM_LIST(orgSlug.value));
+  return navigateTo(
+    ROUTES.EVENTS.PLATFORM_LIST_EVENT(orgSlug.value, eventId.value)
+  );
 }
 </script>
 
 <template>
-  <div class="h-dvh overflow-hidden bg-dark">
-    <div class="flex h-full min-h-0 flex-col sm:flex-row">
+  <div class="flex h-dvh justify-center overflow-hidden bg-dark">
+    <div class="flex h-full min-h-0 w-full max-w-xl flex-col bg-[#171717]">
+      <div v-if="pending" class="flex flex-1 items-center justify-center">
+        <UIcon
+          name="i-lucide-loader-circle"
+          class="size-6 animate-spin text-[#8b8b8b]"
+        />
+      </div>
+
       <div
-        class="relative hidden w-1/2 overflow-hidden bg-dark sm:block sm:h-full"
+        v-else-if="error || !event"
+        class="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center"
       >
-        <canvas ref="splineCanvasEl" class="absolute inset-0 size-full" />
+        <p class="text-sm text-[#8b8b8b]">
+          {{
+            (error as { data?: { statusMessage?: string } })?.data
+              ?.statusMessage || 'This event could not be found.'
+          }}
+        </p>
       </div>
 
-      <div class="flex h-full min-h-0 w-full flex-col bg-[#171717] sm:w-1/2">
-        <div v-if="pending" class="flex flex-1 items-center justify-center">
-          <UIcon
-            name="i-lucide-loader-circle"
-            class="size-6 animate-spin text-[#8b8b8b]"
-          />
-        </div>
+      <CommunityEventOnboardingMingalarbar
+        v-else-if="onboardingStep === 'mingalarbar'"
+        class="min-h-0 flex-1"
+        :organizer-name="event.organizer?.name || 'this community'"
+        @next="onCreateAccount"
+        @cancel="onCancelOnboarding"
+      />
 
-        <div
-          v-else-if="error || !event"
-          class="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center"
-        >
-          <p class="text-sm text-[#8b8b8b]">
-            {{
-              (error as { data?: { statusMessage?: string } })?.data
-                ?.statusMessage || 'This event could not be found.'
-            }}
-          </p>
-        </div>
+      <CommunityEventOnboardingHowToUse
+        v-else-if="showHowToUse"
+        class="min-h-0 flex-1"
+        @done="onFlowDone"
+      />
 
-        <CommunityEventOnboardingMingalarbar
-          v-else-if="onboardingStep === 'mingalarbar'"
-          class="min-h-0 flex-1"
-          :organizer-name="event.organizer?.name || 'this community'"
-          @next="onCreateAccount"
-          @cancel="onCancelOnboarding"
-        />
-
-        <CommunityEventOnboardingHowToUse
-          v-else-if="showHowToUse"
-          class="min-h-0 flex-1"
-          @done="onFlowDone"
-        />
-
-        <CommunityEventRegisterFlow
-          v-else
-          class="min-h-0 flex-1"
-          variant="page"
-          :event="event"
-          :organizer="event.organizer"
-          :organization-slug="orgSlug"
-          :can-register="canRegister"
-          :viewer-registration-status="viewer.viewerRegistrationStatus"
-          :how-to-use="justRegistered"
-          @register="onRegister"
-          @view-organizer="onViewOrganizer"
-          @completed="onFlowDone"
-          @how-to-use="onHowToUse"
-        />
-      </div>
+      <CommunityEventRegisterFlow
+        v-else
+        class="min-h-0 flex-1"
+        variant="page"
+        :event="event"
+        :organizer="event.organizer"
+        :organization-slug="orgSlug"
+        :can-register="canRegister"
+        :viewer-registration-status="viewer.viewerRegistrationStatus"
+        :how-to-use="justRegistered"
+        @register="onRegister"
+        @view-organizer="onViewOrganizer"
+        @completed="onFlowDone"
+        @how-to-use="onHowToUse"
+      />
     </div>
   </div>
 </template>

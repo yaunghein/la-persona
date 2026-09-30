@@ -350,6 +350,7 @@ onBeforeUnmount(() => {
             class="h-13 w-full justify-center rounded-full bg-[#232323] px-2.5 text-sm font-bold text-[#8b8b8b] disabled:opacity-100"
           />
           <button
+            v-if="!isPage"
             type="button"
             class="cursor-pointer text-sm font-bold text-white underline"
             @click="onViewOrganizer"
