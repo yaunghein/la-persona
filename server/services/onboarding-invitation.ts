@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, ne, sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { db } from '~~/server/db';
 import {
@@ -15,6 +15,7 @@ import {
 import { sendEmail } from '~~/server/utils/email';
 import { env } from '~~/server/utils/env';
 import { slugify } from '~~/shared/utils/slugify';
+import { ROUTES } from '~~/shared/utils/routes';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
 export function addMonths(base: Date, months: number) {
@@ -160,7 +161,7 @@ export async function createOnboardingInvitation(params: {
 }
 
 export function buildOnboardingInvitationLink(invitationId: string) {
-  return `${env.BASE_URL}/platform/invitations/${invitationId}`;
+  return `${env.BASE_URL}${ROUTES.INVITE.CARD(invitationId)}`;
 }
 
 export async function sendOnboardingInvitationEmail(params: {
@@ -234,22 +235,43 @@ export async function acceptOnboardingInvitation(params: {
       });
     }
 
-    const existingMembership = await tx.query.member.findFirst({
-      where: and(
-        eq(member.organizationId, invite.organizationId),
-        eq(member.userId, params.userId)
-      ),
-      columns: { id: true },
-    });
+    const thakhinOrganizationId = invite.organizationId;
+    const [existingPersonal] = await tx
+      .select({ id: organization.id })
+      .from(organization)
+      .innerJoin(member, eq(member.organizationId, organization.id))
+      .where(
+        and(
+          eq(member.userId, params.userId),
+          eq(member.role, 'owner'),
+          eq(organization.type, ORGANIZATION_TYPES.PERSONAL),
+          ne(organization.id, thakhinOrganizationId),
+          ne(organization.id, env.PLACEHOLDER_ORGANIZATION_ID)
+        )
+      )
+      .orderBy(asc(organization.createdAt))
+      .limit(1);
 
-    if (!existingMembership) {
-      await tx.insert(member).values({
-        id: nanoid(),
-        organizationId: invite.organizationId,
-        userId: params.userId,
-        role: 'owner',
-        createdAt: now,
+    const targetOrganizationId = existingPersonal?.id ?? thakhinOrganizationId;
+
+    if (!existingPersonal) {
+      const existingMembership = await tx.query.member.findFirst({
+        where: and(
+          eq(member.organizationId, thakhinOrganizationId),
+          eq(member.userId, params.userId)
+        ),
+        columns: { id: true },
       });
+
+      if (!existingMembership) {
+        await tx.insert(member).values({
+          id: nanoid(),
+          organizationId: thakhinOrganizationId,
+          userId: params.userId,
+          role: 'owner',
+          createdAt: now,
+        });
+      }
     }
 
     const invitedCard = await tx.query.card.findFirst({
@@ -259,7 +281,7 @@ export async function acceptOnboardingInvitation(params: {
     if (!invitedCard) {
       throw createError({ statusCode: 404, statusMessage: 'Invited card not found' });
     }
-    if (invitedCard.organizationId !== invite.organizationId) {
+    if (invitedCard.organizationId !== thakhinOrganizationId) {
       throw createError({
         statusCode: 400,
         statusMessage: 'Invited card is not linked to invitation organization',
@@ -269,6 +291,7 @@ export async function acceptOnboardingInvitation(params: {
     await tx
       .update(card)
       .set({
+        organizationId: targetOrganizationId,
         userId: params.userId,
         updatedAt: now,
       })
@@ -280,7 +303,7 @@ export async function acceptOnboardingInvitation(params: {
     const [payment] = await tx
       .insert(subscriptionPayment)
       .values({
-        organizationId: invite.organizationId,
+        organizationId: targetOrganizationId,
         paidByUserId: params.userId,
         receiptUrl: `system:onboarding-invitation:${invite.id}`,
         paymentMethod: 'system',
@@ -345,6 +368,7 @@ export async function acceptOnboardingInvitation(params: {
     await tx
       .update(onboardingInvitation)
       .set({
+        organizationId: targetOrganizationId,
         status: 'accepted',
         acceptedByUserId: params.userId,
         acceptedAt: now,
@@ -355,20 +379,27 @@ export async function acceptOnboardingInvitation(params: {
     if (params.sessionId) {
       await tx
         .update(session)
-        .set({ activeOrganizationId: invite.organizationId })
+        .set({ activeOrganizationId: targetOrganizationId })
         .where(eq(session.id, params.sessionId));
     }
 
-    const accepted = await tx.query.onboardingInvitation.findFirst({
-      where: eq(onboardingInvitation.id, invite.id),
+    if (existingPersonal) {
+      await tx
+        .delete(organization)
+        .where(eq(organization.id, thakhinOrganizationId));
+    }
+
+    const targetOrganization = await tx.query.organization.findFirst({
+      where: eq(organization.id, targetOrganizationId),
+      columns: { slug: true },
     });
-    if (!accepted) {
+    if (!targetOrganization) {
       throw createError({
         statusCode: 500,
         statusMessage: 'Failed to finalize invitation acceptance',
       });
     }
 
-    return accepted;
+    return { organizationSlug: targetOrganization.slug };
   });
 }

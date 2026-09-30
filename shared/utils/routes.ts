@@ -31,6 +31,7 @@ export const ROUTES = {
   },
   INVITE: {
     ROOT: INVITE_ROOT,
+    CARD: (token: string) => `${INVITE_ROOT}/card/${token}`,
     COMMUNITY_ACCEPT: (token: string) =>
       `${INVITE_ROOT}/community/accept/${token}`,
     COMMUNITY_JOIN: (token: string) => `${INVITE_ROOT}/community/join/${token}`,
@@ -53,7 +54,7 @@ export const ROUTES = {
 } as const;
 
 export function isProtectedInvitePath(path: string) {
-  return /^\/invite\/community\/(?:accept|join)\/[^/]+\/?$/.test(path);
+  return /^\/invite\/(?:card|community\/(?:accept|join))\/[^/]+\/?$/.test(path);
 }
 
 export function parsePlatformEventDetailPath(path: string) {

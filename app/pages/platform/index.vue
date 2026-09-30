@@ -42,7 +42,7 @@ watch(
       if (pending?.id) {
         pendingInvitationId.value = pending.id;
         hasRouted.value = true;
-        await navigateTo(`${ROUTES.PLATFORM.ROOT}/invitations/${pending.id}`);
+        await navigateTo(ROUTES.INVITE.CARD(pending.id));
       }
     } catch {
       // Fall through to the unavailable state if lookup fails.

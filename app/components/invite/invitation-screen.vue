@@ -114,7 +114,7 @@ const emit = defineEmits<{
             color="neutral"
             :loading="actionLoading"
             :disabled="actionDisabled || actionLoading"
-            class="h-auto w-full max-w-87.5 justify-center rounded-full bg-white px-2.5 py-5 font-bold text-sm text-dark hover:bg-white"
+            class="h-10 w-auto min-w-56 justify-center rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
             @click="emit('action')"
           />
         </div>
