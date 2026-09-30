@@ -1,9 +1,10 @@
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
   pending?: boolean;
   errorTitle?: string;
   errorMessage?: string;
   coverSrc?: string;
+  coverAspectClass?: string;
   logoSrc?: string;
   organizationName?: string;
   meta?: string[];
@@ -50,7 +51,8 @@ const emit = defineEmits<{
 
       <div v-else class="flex flex-col gap-10 pb-10 rounded-lg bg-[#232323]">
         <div
-          class="aspect-[1/0.25] w-full overflow-hidden rounded-t-lg bg-[#232323]"
+          class="w-full overflow-hidden rounded-t-lg bg-[#232323]"
+          :class="props.coverAspectClass || 'aspect-[1/0.25]'"
         >
           <img
             v-if="coverSrc"
@@ -66,13 +68,13 @@ const emit = defineEmits<{
           </p>
           <div class="flex w-full flex-col items-center gap-4">
             <div
+              v-if="logoSrc"
               class="flex size-18 items-center justify-center overflow-hidden rounded-full bg-white"
             >
               <img
-                v-if="logoSrc"
                 :src="logoSrc"
                 :alt="organizationName || ''"
-                class="size-4/5 object-contain"
+                class="size-full object-cover"
               />
             </div>
             <div class="flex flex-col items-center gap-2 text-center">

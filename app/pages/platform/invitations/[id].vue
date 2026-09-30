@@ -121,7 +121,7 @@ const errorMessage = computed(() => {
     :error-title="error || !invitation ? 'Invitation not found' : undefined"
     :error-message="error || !invitation ? errorMessage : undefined"
     :cover-src="INVITATION_COVER_FALLBACK"
-    :logo-src="INVITATION_LOGO_FALLBACK"
+    cover-aspect-class="aspect-[1/0.583]"
     :organization-name="invitation?.organizationName"
     :meta="meta"
     :notice="notice"
