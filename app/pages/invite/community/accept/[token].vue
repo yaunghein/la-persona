@@ -55,76 +55,59 @@ const canAccept = computed(
     !data.value.expired &&
     data.value.status === 'pending'
 );
+
+const meta = computed(() =>
+  data.value ? communityInviteMeta(data.value) : []
+);
+
+const notice = computed(() => {
+  if (!data.value) return '';
+  if (data.value.alreadyMember) {
+    return 'You are already a member of this community.';
+  }
+  if (data.value.expired) return 'This invitation has expired.';
+  if (data.value.status !== 'pending') {
+    return 'This invitation has already been processed.';
+  }
+  return '';
+});
+
+const noticeColor = computed(() => {
+  if (data.value?.expired) return 'warning' as const;
+  return 'neutral' as const;
+});
+
+const actionLabel = computed(() => {
+  if (!data.value) return '';
+  if (data.value.alreadyMember) return 'Open community';
+  if (canAccept.value) return 'Accept Invitation';
+  return '';
+});
+
+function onAction() {
+  if (data.value?.alreadyMember) {
+    return navigateTo(
+      `${ROUTES.PLATFORM.ROOT}/${data.value.organizationSlug}`
+    );
+  }
+  accept();
+}
 </script>
 
 <template>
-  <UContainer class="flex min-h-dvh items-center justify-center">
-    <div class="w-full max-w-md space-y-6 px-6 py-10 text-center">
-      <div v-if="isPending" class="flex flex-col items-center gap-3">
-        <UIcon
-          name="i-lucide-loader-2"
-          class="h-8 w-8 animate-spin text-primary"
-        />
-        <p class="text-sm text-[#8b8b8b]">Loading invitation...</p>
-      </div>
-
-      <div v-else-if="isError" class="space-y-4">
-        <h1 class="text-xl font-medium uppercase tracking-widest text-white">
-          Invitation unavailable
-        </h1>
-        <p class="text-sm text-[#8b8b8b]">{{ errorMessage }}</p>
-        <UButton
-          label="Try again"
-          color="neutral"
-          class="rounded-full bg-white px-5 font-medium text-dark"
-          @click="() => void refetch()"
-        />
-      </div>
-
-      <div v-else-if="data" class="space-y-6">
-        <UAvatar
-          :src="data.logoUrl || undefined"
-          :alt="data.organizationName"
-          icon="i-lucide-mail"
-          :ui="{
-            root: 'mx-auto size-20 bg-[#232323]',
-            icon: 'size-8 text-[#8b8b8b]',
-          }"
-        />
-        <div class="space-y-2">
-          <h1 class="text-xl font-medium uppercase tracking-widest text-white">
-            {{ data.organizationName }}
-          </h1>
-          <p class="text-sm text-[#8b8b8b]">
-            <template v-if="data.alreadyMember">
-              You are already a member of this community.
-            </template>
-            <template v-else-if="data.expired">
-              This invitation has expired.
-            </template>
-            <template v-else>
-              This invitation was sent to {{ data.email }}. Accept to join and
-              create your community card.
-            </template>
-          </p>
-        </div>
-        <UButton
-          v-if="data.alreadyMember"
-          label="Open community"
-          color="neutral"
-          :loading="isAccepting"
-          class="h-10 rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
-          @click="() => accept()"
-        />
-        <UButton
-          v-else-if="canAccept"
-          label="Accept invitation"
-          color="neutral"
-          :loading="isAccepting"
-          class="h-10 rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
-          @click="() => accept()"
-        />
-      </div>
-    </div>
-  </UContainer>
+  <InviteInvitationScreen
+    :pending="isPending"
+    :error-title="isError ? 'Invitation unavailable' : undefined"
+    :error-message="isError ? errorMessage : undefined"
+    :cover-src="data ? invitationCoverSrc(data.coverUrl) : undefined"
+    :logo-src="data ? invitationLogoSrc(data.logoUrl) : undefined"
+    :organization-name="data?.organizationName"
+    :meta="meta"
+    :notice="notice"
+    :notice-color="noticeColor"
+    :action-label="actionLabel"
+    :action-loading="isAccepting"
+    @action="onAction"
+    @retry="() => void refetch()"
+  />
 </template>

@@ -1,6 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { invitation, member, organization } from '~~/server/db/schema';
+import { getCommunityInviteStats } from '~~/server/services/community';
 import { handleApiError } from '~~/server/utils/errors';
 import { requireSession } from '~~/server/utils/organization-permissions';
 
@@ -31,7 +32,7 @@ export default defineEventHandler(async (event) => {
 
     const org = await db.query.organization.findFirst({
       where: eq(organization.id, invite.organizationId),
-      columns: { name: true, slug: true, logo: true },
+      columns: { id: true, name: true, slug: true, logo: true },
     });
 
     if (!org) {
@@ -52,6 +53,8 @@ export default defineEventHandler(async (event) => {
       )
       .limit(1);
 
+    const stats = await getCommunityInviteStats(org.id);
+
     return {
       id: invite.id,
       email: invite.email,
@@ -61,6 +64,7 @@ export default defineEventHandler(async (event) => {
       alreadyMember: Boolean(membership),
       expired: invite.expiresAt.getTime() < Date.now(),
       status: invite.status,
+      ...stats,
     };
   } catch (error) {
     handleApiError(error, {

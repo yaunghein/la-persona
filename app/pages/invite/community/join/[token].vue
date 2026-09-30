@@ -37,62 +37,40 @@ const errorMessage = computed(
     (error.value as { message?: string })?.message ||
     'This invite link is invalid.'
 );
+
+const meta = computed(() =>
+  data.value ? communityInviteMeta(data.value) : []
+);
+
+function onAction() {
+  if (data.value?.alreadyMember) {
+    return navigateTo(
+      `${ROUTES.PLATFORM.ROOT}/${data.value.organizationSlug}`
+    );
+  }
+  join();
+}
 </script>
 
 <template>
-  <UContainer class="flex min-h-dvh items-center justify-center">
-    <div class="w-full max-w-md space-y-6 px-6 py-10 text-center">
-      <div v-if="isPending" class="flex flex-col items-center gap-3">
-        <UIcon
-          name="i-lucide-loader-2"
-          class="h-8 w-8 animate-spin text-primary"
-        />
-        <p class="text-sm text-[#8b8b8b]">Loading invitation...</p>
-      </div>
-
-      <div v-else-if="isError" class="space-y-4">
-        <h1 class="text-xl font-medium uppercase tracking-widest text-white">
-          Invite unavailable
-        </h1>
-        <p class="text-sm text-[#8b8b8b]">{{ errorMessage }}</p>
-        <UButton
-          label="Try again"
-          color="neutral"
-          class="rounded-full bg-white px-5 font-medium text-dark"
-          @click="() => refetch()"
-        />
-      </div>
-
-      <div v-else-if="data" class="space-y-6">
-        <UAvatar
-          :src="data.logoUrl || undefined"
-          :alt="data.organizationName"
-          icon="i-lucide-users"
-          :ui="{
-            root: 'mx-auto size-20 bg-[#232323]',
-            icon: 'size-8 text-[#8b8b8b]',
-          }"
-        />
-        <div class="space-y-2">
-          <h1 class="text-xl font-medium uppercase tracking-widest text-white">
-            {{ data.organizationName }}
-          </h1>
-          <p class="text-sm text-[#8b8b8b]">
-            {{
-              data.alreadyMember
-                ? 'You are already a member of this community.'
-                : 'Join this community to get your community persona card.'
-            }}
-          </p>
-        </div>
-        <UButton
-          :label="data.alreadyMember ? 'Open community' : 'Join community'"
-          color="neutral"
-          :loading="isJoining"
-          class="h-10 rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
-          @click="() => join()"
-        />
-      </div>
-    </div>
-  </UContainer>
+  <InviteInvitationScreen
+    :pending="isPending"
+    :error-title="isError ? 'Invite unavailable' : undefined"
+    :error-message="isError ? errorMessage : undefined"
+    :cover-src="data ? invitationCoverSrc(data.coverUrl) : undefined"
+    :logo-src="data ? invitationLogoSrc(data.logoUrl) : undefined"
+    :organization-name="data?.organizationName"
+    :meta="meta"
+    :notice="
+      data?.alreadyMember
+        ? 'You are already a member of this community.'
+        : undefined
+    "
+    :action-label="
+      data ? (data.alreadyMember ? 'Open community' : 'Join community') : ''
+    "
+    :action-loading="isJoining"
+    @action="onAction"
+    @retry="() => void refetch()"
+  />
 </template>

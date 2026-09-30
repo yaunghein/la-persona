@@ -1,13 +1,23 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, count, eq, inArray } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { db } from '~~/server/db';
-import { card, invitation, member, organization, user } from '~~/server/db/schema';
+import {
+  card,
+  event as eventTable,
+  invitation,
+  member,
+  organization,
+  user,
+} from '~~/server/db/schema';
 import { env } from '~~/server/utils/env';
 import { slugify } from '~~/shared/utils/slugify';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 import { splitName } from '~~/server/services/card';
 import { insertMember } from '~~/server/services/auth';
-import { ensureCommunitySetting } from '~~/server/db/queries/community-setting';
+import {
+  ensureCommunitySetting,
+  findCommunitySettingByOrganizationId,
+} from '~~/server/db/queries/community-setting';
 import {
   findCardByUserIdAndOrganization,
   findCardsByUserIdAndOrganization,
@@ -54,6 +64,33 @@ export function communityInviteLink(token: string) {
 
 export function communityInvitationLink(invitationId: string) {
   return `${env.BASE_URL}${ROUTES.INVITE.COMMUNITY_ACCEPT(invitationId)}`;
+}
+
+export async function getCommunityInviteStats(organizationId: string) {
+  const org = await db.query.organization.findFirst({
+    where: eq(organization.id, organizationId),
+    columns: { createdAt: true },
+  });
+  const setting = await findCommunitySettingByOrganizationId(organizationId);
+
+  const [memberRow] = await db
+    .select({ value: count() })
+    .from(member)
+    .where(eq(member.organizationId, organizationId));
+
+  const [eventRow] = await db
+    .select({ value: count() })
+    .from(eventTable)
+    .where(eq(eventTable.organizationId, organizationId));
+
+  return {
+    coverUrl: setting?.coverUrl ?? null,
+    memberCount: Number(memberRow?.value ?? 0),
+    eventCount: Number(eventRow?.value ?? 0),
+    foundedYear: org?.createdAt
+      ? new Date(org.createdAt).getFullYear()
+      : new Date().getFullYear(),
+  };
 }
 
 export async function ensureCommunityCard(userId: string, organizationId: string) {

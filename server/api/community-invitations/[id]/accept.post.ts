@@ -53,15 +53,6 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    if (invite.status === 'pending' && invite.expiresAt.getTime() >= Date.now()) {
-      await auth.api.acceptInvitation({
-        body: { invitationId },
-        headers: event.headers,
-      });
-    }
-
-    await ensureCommunityCard(session.user.id, org.id);
-
     const [membership] = await db
       .select({ role: member.role })
       .from(member)
@@ -69,6 +60,19 @@ export default defineEventHandler(async (event) => {
         and(eq(member.userId, session.user.id), eq(member.organizationId, org.id))
       )
       .limit(1);
+
+    if (
+      !membership &&
+      invite.status === 'pending' &&
+      invite.expiresAt.getTime() >= Date.now()
+    ) {
+      await auth.api.acceptInvitation({
+        body: { invitationId },
+        headers: event.headers,
+      });
+    }
+
+    await ensureCommunityCard(session.user.id, org.id);
 
     return {
       organizationSlug: org.slug,

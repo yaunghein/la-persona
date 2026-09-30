@@ -19,7 +19,14 @@ export type CommunityMember = {
   linkedin?: string | null;
 };
 
-export type CommunityJoinPreview = {
+export type CommunityInviteStats = {
+  coverUrl: string | null;
+  memberCount: number;
+  eventCount: number;
+  foundedYear: number;
+};
+
+export type CommunityJoinPreview = CommunityInviteStats & {
   token: string;
   organizationName: string;
   organizationSlug: string;
@@ -27,7 +34,7 @@ export type CommunityJoinPreview = {
   alreadyMember: boolean;
 };
 
-export type CommunityInvitationPreview = {
+export type CommunityInvitationPreview = CommunityInviteStats & {
   id: string;
   email: string;
   organizationName: string;

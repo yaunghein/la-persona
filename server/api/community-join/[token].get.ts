@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { member, organization } from '~~/server/db/schema';
 import { findCommunitySettingByInviteToken } from '~~/server/db/queries/community-setting';
+import { getCommunityInviteStats } from '~~/server/services/community';
 import { handleApiError } from '~~/server/utils/errors';
 import { requireSession } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
@@ -46,12 +47,15 @@ export default defineEventHandler(async (event) => {
       )
       .limit(1);
 
+    const stats = await getCommunityInviteStats(org.id);
+
     return {
       token,
       organizationName: org.name,
       organizationSlug: org.slug,
       logoUrl: org.logo,
       alreadyMember: Boolean(membership),
+      ...stats,
     };
   } catch (error) {
     handleApiError(error, {

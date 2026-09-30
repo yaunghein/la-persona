@@ -57,7 +57,7 @@ const personalLinks = computed(
   () =>
     [
       {
-        label: 'Dashboard',
+        label: 'Activities',
         icon: 'i-gg:insights',
         to: personalBasePath.value,
         exact: true,
@@ -75,12 +75,12 @@ const personalLinks = computed(
         to: `${personalBasePath.value}/contacts`,
         onSelect: closeSidebar,
       },
-      {
-        label: 'Team (Coming Soon)',
-        icon: 'i-ri:team-line',
-        to: `${personalBasePath.value}/teams`,
-        onSelect: closeSidebar,
-      },
+      // {
+      //   label: 'Team (Coming Soon)',
+      //   icon: 'i-ri:team-line',
+      //   to: `${personalBasePath.value}/teams`,
+      //   onSelect: closeSidebar,
+      // },
     ] satisfies NavigationMenuItem[]
 );
 

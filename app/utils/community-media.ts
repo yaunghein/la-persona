@@ -32,3 +32,31 @@ export function communityCoverSrc(url: string | null | undefined) {
   if (!value || value === COMMUNITY_COVER_PLACEHOLDER) return null;
   return value;
 }
+
+export const INVITATION_COVER_FALLBACK = '/images/reveal-image.webp';
+export const INVITATION_LOGO_FALLBACK = '/images/favicon.png';
+
+export function invitationCoverSrc(url: string | null | undefined) {
+  return communityCoverSrc(url) || INVITATION_COVER_FALLBACK;
+}
+
+export function invitationLogoSrc(url: string | null | undefined) {
+  const value = String(url || '').trim();
+  if (!value || value === COMMUNITY_LOGO_PLACEHOLDER) {
+    return INVITATION_LOGO_FALLBACK;
+  }
+  return value;
+}
+
+export function communityInviteMeta(params: {
+  memberCount: number;
+  eventCount: number;
+  foundedYear: number;
+}) {
+  const memberLabel = params.memberCount === 1 ? 'Member' : 'Members';
+  return [
+    `${params.memberCount.toLocaleString()} ${memberLabel}`,
+    `${params.eventCount.toLocaleString()} Event Hosted`,
+    `Founded in ${params.foundedYear}`,
+  ];
+}

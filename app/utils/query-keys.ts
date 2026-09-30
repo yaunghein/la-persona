@@ -4,7 +4,6 @@ export const QUERY_KEYS = {
   adminUsers: ['users', 'admin'] as const,
   adminCards: ['cards', 'admin'] as const,
   adminCardOptions: ['cards', 'admin', 'options'] as const,
-  unownedCards: ['cards', 'unowned'] as const,
   payments: ['subscriptions', 'payments'] as const,
   cardRequests: ['card-requests'] as const,
   invitations: ['onboarding-invitation'] as const,
