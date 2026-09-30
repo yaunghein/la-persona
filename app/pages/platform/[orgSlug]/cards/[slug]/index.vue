@@ -10,6 +10,7 @@ import type {
   SelectSubscriptionPayment,
   SelectSubscriptionPaymentItem,
 } from '~~/shared/types/subscription';
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
 useSeoMeta({ ...getSeoTitle('Edit Card - LA PERSONA') });
 
@@ -45,6 +46,9 @@ type CardSubscriptionSummary = {
 } | null;
 
 const cardId = computed(() => card.value?.id || '');
+const isCommunityCard = computed(
+  () => card.value?.organizationType === ORGANIZATION_TYPES.COMMUNITY
+);
 const { data: cardSubscriptionSummary } = useQuery<CardSubscriptionSummary>({
   queryKey: ['card-subscription', orgSlug, cardId],
   queryFn: async () => {
@@ -59,7 +63,7 @@ const { data: cardSubscriptionSummary } = useQuery<CardSubscriptionSummary>({
       return null;
     }
   },
-  enabled: () => !!cardId.value,
+  enabled: () => !!cardId.value && !isCommunityCard.value,
 });
 
 const bannerDaysLeft = computed(
@@ -107,9 +111,10 @@ const isPaidSubscriptionExpired = computed(
 );
 const showEndingBanner = computed(
   () =>
-    isTrialEndingSoon.value ||
-    isSubscriptionEndingSoon.value ||
-    isSubscriptionExpired.value
+    !isCommunityCard.value &&
+    (isTrialEndingSoon.value ||
+      isSubscriptionEndingSoon.value ||
+      isSubscriptionExpired.value)
 );
 const bannerActionText = computed(() =>
   isTrialEndingSoon.value || isTrialExpired.value ? 'extend' : 'renew'
@@ -123,6 +128,7 @@ const showUpgradeButton = computed(() => {
   const isTrial = card.value?.subscription?.isTrial;
   const status = card.value?.subscription?.status;
 
+  if (isCommunityCard.value) return false;
   if (planCode === 'premium' || planCode === 'founder-club') return false;
   if (isTrial || status === 'trial') return true;
   return planCode === 'standard';
@@ -138,6 +144,10 @@ function getCardBadgeLabel(cardData?: CardDTO | null) {
   const planCode = cardData?.subscription?.planCode;
   const isTrial = cardData?.subscription?.isTrial;
   const status = cardData?.subscription?.status;
+
+  if (cardData?.organizationType === ORGANIZATION_TYPES.COMMUNITY) {
+    return cardData.organizationName || 'Community';
+  }
 
   if (status === 'pending_approval' || status === 'submitted') {
     return 'Pending';
@@ -566,8 +576,12 @@ const active = computed({
             {{ card?.firstName }} {{ card?.lastName }}
           </h1>
           <UBadge
-            class="uppercase font-semibold ml-3"
-            :class="[cardBadgeColor, isPendingBadge ? 'cursor-pointer' : '']"
+            class="font-semibold ml-3"
+            :class="[
+              cardBadgeColor,
+              isCommunityCard ? 'normal-case' : 'uppercase',
+              isPendingBadge ? 'cursor-pointer' : '',
+            ]"
             size="sm"
             @click="isPendingBadge && openPendingInfo()"
           >

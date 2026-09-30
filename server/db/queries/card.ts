@@ -1,7 +1,7 @@
 import { and, eq, desc } from 'drizzle-orm';
 import { getEffectiveSubscriptionStatus } from '~~/server/services/subscription';
 import { db } from '../../db';
-import { card, cardSubscription, subscriptionPlan } from '../schema';
+import { card, cardSubscription, organization, subscriptionPlan } from '../schema';
 
 export const findFreeCardByUserId = (userId: string) => {
   return db
@@ -180,12 +180,15 @@ const findOrganizationCardBySlug = async (
   const rows = await db
     .select({
       card,
+      organizationType: organization.type,
+      organizationName: organization.name,
       subscriptionStatus: cardSubscription.status,
       subscriptionPlanCode: cardSubscription.planCode,
       subscriptionPlanName: subscriptionPlan.name,
       subscriptionIsTrial: cardSubscription.isTrial,
     })
     .from(card)
+    .innerJoin(organization, eq(organization.id, card.organizationId))
     .leftJoin(cardSubscription, eq(cardSubscription.cardId, card.id))
     .leftJoin(subscriptionPlan, eq(subscriptionPlan.code, cardSubscription.planCode))
     .where(
@@ -202,6 +205,8 @@ const findOrganizationCardBySlug = async (
 
   return {
     ...row.card,
+    organizationType: row.organizationType,
+    organizationName: row.organizationName,
     subscription: row.subscriptionStatus
       ? {
           status: row.subscriptionStatus,

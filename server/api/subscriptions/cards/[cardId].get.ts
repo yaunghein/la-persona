@@ -4,8 +4,9 @@ import {
   findCardByIdAndOrganization,
   findCardSubscriptionByCardId,
 } from '~~/server/db/queries/subscription';
-import { member } from '~~/server/db/schema';
+import { member, organization } from '~~/server/db/schema';
 import { requireOrganizationSession } from '~~/server/utils/organization-permissions';
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 import {
   ensureCardTrialSubscription,
   getDaysLeft,
@@ -43,6 +44,22 @@ export default defineEventHandler(async (event) => {
       statusCode: 404,
       statusMessage: 'Card not found in active organization.',
     });
+  }
+
+  const [org] = await db
+    .select({ type: organization.type })
+    .from(organization)
+    .where(eq(organization.id, cardRecord.organizationId))
+    .limit(1);
+
+  if (org?.type === ORGANIZATION_TYPES.COMMUNITY) {
+    return {
+      cardId,
+      organizationId,
+      subscription: null,
+      isExpired: false,
+      daysLeft: null,
+    };
   }
 
   const rawSubscription =
