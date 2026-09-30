@@ -308,7 +308,7 @@ const cardFooterActionSize = 'sm';
 
     <div
       v-else-if="cards?.length"
-      class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 sm:gap-6"
+      class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 sm:gap-6"
     >
       <UCard
         v-for="card in cards"
@@ -337,7 +337,7 @@ const cardFooterActionSize = 'sm';
             />
           </div>
           <UBadge
-            class="absolute -right-6.5 -top-6.5 max-w-[70%] font-semibold sm:-top-7.5 sm:-right-7.5"
+            class="absolute -right-6.5 -top-6.5 max-w-[70%] font-semibold xs:-top-9.5 xs:-right-9.5 sm:-top-7.5 sm:-right-7.5"
             :class="[
               isCommunityCard(card) ? 'normal-case' : 'uppercase',
               card.subscription?.status === 'pending_approval' &&
@@ -409,6 +409,8 @@ const cardFooterActionSize = 'sm';
           </div>
         </template>
       </UCard>
+
+      <PlatformPremiumCardCta />
     </div>
 
     <UContainer v-else class="h-[calc(100vh-10rem)] min-h-96">

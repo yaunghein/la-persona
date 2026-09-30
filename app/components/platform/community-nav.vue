@@ -112,7 +112,8 @@ watch(
         <UButton
           color="neutral"
           variant="ghost"
-          class="size-9 rounded-full p-0"
+          square
+          class="size-9 justify-center rounded-full p-0"
           :aria-label="org.name"
         >
           <img

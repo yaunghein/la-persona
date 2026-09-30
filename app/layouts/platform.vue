@@ -214,7 +214,11 @@ const currentPageLabel = computed(() => {
             orientation="vertical"
             tooltip
             popover
-            class="[&_ul]:flex [&_ul]:flex-col [&_ul]:gap-2 [&_a]:px-2.5 [&_a]:py-1.5 [&_a]:font-medium"
+            :class="
+              collapsed
+                ? '[&_ul]:flex [&_ul]:flex-col [&_ul]:items-center [&_ul]:gap-2 [&_a]:size-9 [&_a]:justify-center [&_a]:px-0 [&_a]:py-0 [&_a]:font-medium [&_a]:before:inset-0'
+                : '[&_ul]:flex [&_ul]:flex-col [&_ul]:gap-2 [&_a]:px-2.5 [&_a]:py-1.5 [&_a]:font-medium'
+            "
           />
 
           <PlatformCommunityNav

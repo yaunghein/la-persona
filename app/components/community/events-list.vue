@@ -241,6 +241,8 @@ function canRegister(event: CommunityEvent) {
         </div>
       </article>
 
+      <PlatformPremiumCardCta v-if="pagedEvents.length" />
+
       <div
         v-if="!pagedEvents.length"
         class="col-span-full flex items-center justify-center py-20 text-sm text-[#8b8b8b]"
