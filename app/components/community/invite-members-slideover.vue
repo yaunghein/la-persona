@@ -165,7 +165,7 @@ function downloadQr() {
             <UInput
               v-model="emailInput"
               type="email"
-              placeholder="may@company.com"
+              placeholder="example@company.com"
               class="w-full"
               size="xl"
               :ui="inputUi"
