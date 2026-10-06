@@ -83,7 +83,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex h-dvh items-center justify-center bg-dark">
+  <div class="flex h-dvh items-center justify-center bg-[#171717]">
     <div class="flex flex-col items-center gap-3">
       <UIcon
         name="i-lucide-loader-circle"

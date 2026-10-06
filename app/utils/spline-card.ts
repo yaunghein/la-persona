@@ -1,3 +1,4 @@
+import { format } from 'date-fns';
 import { internationalPhone } from '~~/shared/utils/phone';
 
 export type SplineCardFields = {
@@ -9,6 +10,7 @@ export type SplineCardFields = {
   email?: string | null;
   website?: string | null;
   planCode?: string | null;
+  joinedAt?: string | Date | null;
 };
 
 export function websiteLabelForSpline(website: string | null | undefined): string {
@@ -65,9 +67,37 @@ export function splineVariablesForCard(card: SplineCardFields) {
   };
 }
 
+export function formatJoinedMonth(value: string | Date | null | undefined) {
+  if (!value) return '';
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return format(date, 'MMM yyyy');
+}
+
+export function splineVariablesForCommunityCard(card: SplineCardFields) {
+  const name = [card.firstName, card.lastName]
+    .filter(Boolean)
+    .join(' ')
+    .trim()
+    .toUpperCase();
+
+  return {
+    name,
+    position: card.position?.toUpperCase() || '',
+    joined_month: formatJoinedMonth(card.joinedAt),
+  };
+}
+
 export function applyCardToSpline(
   spline: { setVariables: (values: Record<string, string>) => void },
   card: SplineCardFields
 ) {
   spline.setVariables(splineVariablesForCard(card));
+}
+
+export function applyCommunityCardToSpline(
+  spline: { setVariables: (values: Record<string, string>) => void },
+  card: SplineCardFields
+) {
+  spline.setVariables(splineVariablesForCommunityCard(card));
 }

@@ -58,6 +58,25 @@ export async function downloadUrl(input: { url: string; fileName: string }) {
   downloadFile({ blob, fileName: input.fileName });
 }
 
+export async function shareFiles(
+  files: { blob: Blob; fileName: string }[]
+): Promise<'shared' | 'cancelled' | 'unavailable'> {
+  const shareable = files.map((file) => {
+    const type = file.blob.type || guessMimeType(file.fileName);
+    return new File([file.blob], file.fileName, { type });
+  });
+
+  if (!canShareFiles(shareable)) return 'unavailable';
+
+  try {
+    await navigator.share({ files: shareable });
+    return 'shared';
+  } catch (error) {
+    if (isShareAbortError(error)) return 'cancelled';
+    return 'unavailable';
+  }
+}
+
 export async function shareOrDownloadFile(input: {
   blob: Blob;
   fileName: string;

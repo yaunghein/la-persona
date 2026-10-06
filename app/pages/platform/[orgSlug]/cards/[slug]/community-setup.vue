@@ -3,7 +3,6 @@ definePageMeta({
   layout: false,
 });
 
-import { Application } from '@splinetool/runtime';
 import type { CardDTO } from '~~/shared/types/card';
 import {
   isCommunityCardComplete,
@@ -36,9 +35,6 @@ const {
 
 const submitting = ref(false);
 const isSettingUp = ref(false);
-const splineCanvasEl = ref<HTMLCanvasElement | null>(null);
-let splineApp: Application | null = null;
-let mediaQuery: MediaQueryList | null = null;
 
 const viewer = computed<EventFlowViewer>(() => ({
   isAuthenticated: Boolean(session.value),
@@ -91,43 +87,6 @@ function eventHome() {
     ? ROUTES.EVENTS.PUBLIC(eventId.value)
     : `${ROUTES.PLATFORM.ROOT}/${orgSlug.value}`;
 }
-
-async function loadSpline() {
-  const canvas = splineCanvasEl.value;
-  if (!import.meta.client || !canvas || splineApp) return;
-
-  splineApp = new Application(canvas);
-  await splineApp.load(
-    'https://prod.spline.design/szr0-6Srx9EJxnil/scene.splinecode' +
-      `?v=${Date.now()}`
-  );
-}
-
-function disposeSpline() {
-  splineApp?.dispose();
-  splineApp = null;
-}
-
-async function syncSplineViewport() {
-  if (!mediaQuery?.matches) {
-    disposeSpline();
-    return;
-  }
-  await nextTick();
-  await loadSpline();
-}
-
-onMounted(() => {
-  if (!import.meta.client) return;
-  mediaQuery = window.matchMedia('(min-width: 640px)');
-  syncSplineViewport();
-  mediaQuery.addEventListener('change', syncSplineViewport);
-});
-
-onBeforeUnmount(() => {
-  mediaQuery?.removeEventListener('change', syncSplineViewport);
-  disposeSpline();
-});
 
 async function onCreateCard(payload: {
   firstName: string;
@@ -222,15 +181,8 @@ async function finishSetup() {
 </script>
 
 <template>
-  <div class="h-dvh overflow-hidden bg-dark">
-    <div class="flex h-full min-h-0 flex-col sm:flex-row">
-      <div
-        class="relative hidden w-1/2 overflow-hidden bg-dark sm:block sm:h-full"
-      >
-        <canvas ref="splineCanvasEl" class="absolute inset-0 size-full" />
-      </div>
-
-      <div class="flex h-full min-h-0 w-full flex-col bg-[#171717] sm:w-1/2">
+  <div class="flex h-dvh overflow-hidden bg-[#171717]">
+    <div class="flex h-full min-h-0 w-full flex-col bg-[#171717]">
         <div
           v-if="pending"
           class="flex flex-1 items-center justify-center"
@@ -288,10 +240,11 @@ async function finishSetup() {
           :plan-code="card.subscription?.planCode"
           :spline-url="card.splineUrl"
           :wallpaper-url="card.wallpaperUrl"
+          :joined-at="card.createdAt"
+          :card-slug="card.slug"
           @next="finishSetup"
           @skip="finishSetup"
         />
-      </div>
     </div>
   </div>
 </template>

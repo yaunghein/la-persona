@@ -156,8 +156,8 @@ function onFlowDone() {
 </script>
 
 <template>
-  <div class="flex h-dvh justify-center overflow-hidden bg-dark">
-    <div class="flex h-full min-h-0 w-full max-w-xl flex-col bg-[#171717]">
+  <div class="flex h-dvh overflow-hidden bg-[#171717]">
+    <div class="flex h-full min-h-0 w-full flex-col bg-[#171717]">
       <div v-if="pending" class="flex flex-1 items-center justify-center">
         <UIcon
           name="i-lucide-loader-circle"

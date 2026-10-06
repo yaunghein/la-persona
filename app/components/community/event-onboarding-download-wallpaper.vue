@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { Application } from '@splinetool/runtime';
-import { applyCardToSpline } from '~/utils/spline-card';
+import { closestPhoneWallpaperModel } from '~~/shared/constants/phone-wallpaper-models';
+import { applyCommunityCardToSpline } from '~/utils/spline-card';
+import {
+  canvasToPngBlob,
+  renderWallpaperCanvas,
+  wallpaperFileSegment,
+} from '~/utils/wallpaper-image';
+import { downloadFile, shareFiles } from '~/utils/share-or-download';
 
 const props = defineProps<{
   firstName?: string | null;
@@ -13,6 +20,8 @@ const props = defineProps<{
   planCode?: string | null;
   splineUrl?: string | null;
   wallpaperUrl?: string | null;
+  joinedAt?: string | null;
+  cardSlug?: string | null;
 }>();
 
 const emit = defineEmits<{
@@ -21,6 +30,8 @@ const emit = defineEmits<{
 }>();
 
 const toast = useToast();
+const runtimeConfig = useRuntimeConfig();
+const downloading = ref(false);
 const canvasEl = ref<HTMLCanvasElement | null>(null);
 const splineLoading = ref(false);
 const splineFailed = ref(false);
@@ -35,11 +46,13 @@ const cardFields = computed(() => ({
   email: props.email,
   website: props.website,
   planCode: props.planCode,
+  joinedAt: props.joinedAt,
 }));
 
 function applyVariables() {
   if (!splineApp) return;
-  applyCardToSpline(splineApp, cardFields.value);
+  splineApp.setBackgroundColor('#171717');
+  applyCommunityCardToSpline(splineApp, cardFields.value);
 }
 
 function disposeSpline() {
@@ -76,13 +89,42 @@ async function loadSpline() {
 }
 
 watch(cardFields, () => applyVariables());
-watch(() => props.splineUrl, () => loadSpline());
+watch(
+  () => props.splineUrl,
+  () => loadSpline()
+);
 
 onMounted(loadSpline);
 onBeforeUnmount(disposeSpline);
 
+function wallpaperAssetUrl(path?: string | null) {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+
+  const bucket = runtimeConfig.public.awsBucketName;
+  const region = runtimeConfig.public.awsRegion;
+  return `https://${bucket}.s3.${region}.amazonaws.com/${path}`;
+}
+
+function publicCardUrl() {
+  const cardSlug = props.cardSlug?.trim();
+  if (!cardSlug) return '';
+  const origin =
+    runtimeConfig.public.baseUrl ||
+    (import.meta.client ? window.location.origin : '');
+  return `${origin}/c/${cardSlug}`;
+}
+
+function isMobileHandoff() {
+  return window.matchMedia('(max-width: 639px)').matches;
+}
+
 async function onDownload() {
-  if (!props.wallpaperUrl) {
+  if (downloading.value) return;
+
+  const assetUrl = wallpaperAssetUrl(props.wallpaperUrl);
+  const cardUrl = publicCardUrl();
+  if (!assetUrl || !cardUrl) {
     toast.add({
       title: 'Wallpaper not ready',
       description: 'You can download it later from your community card page.',
@@ -92,8 +134,59 @@ async function onDownload() {
     return;
   }
 
-  window.open(props.wallpaperUrl, '_blank', 'noopener,noreferrer');
-  emit('next');
+  downloading.value = true;
+  try {
+    const mobile = isMobileHandoff();
+    const matchedModel = mobile
+      ? closestPhoneWallpaperModel(
+          Math.round(window.screen.width * window.devicePixelRatio),
+          Math.round(window.screen.height * window.devicePixelRatio)
+        )
+      : null;
+    const wallpaperProxyUrl = `/api/s3/image-proxy?url=${encodeURIComponent(assetUrl)}`;
+    const wallpaperCanvas = await renderWallpaperCanvas({
+      wallpaperProxyUrl,
+      cardUrl,
+      width: matchedModel?.width,
+      height: matchedModel?.height,
+    });
+    const file = {
+      blob: await canvasToPngBlob(wallpaperCanvas),
+      fileName: `${wallpaperFileSegment(props.cardSlug || '')}-wallpaper${
+        matchedModel ? `-${matchedModel.value}` : ''
+      }.png`,
+    };
+
+    if (mobile) {
+      const shared = await shareFiles([file]);
+      if (shared === 'cancelled') return;
+      if (shared === 'unavailable') downloadFile(file);
+      toast.add({
+        title: shared === 'shared' ? 'Wallpaper saved' : 'Wallpaper downloaded',
+        description:
+          shared === 'shared'
+            ? `Saved for ${matchedModel?.label}. It’s in your photos if you chose Save Image.`
+            : undefined,
+        color: 'success',
+      });
+    } else {
+      downloadFile(file);
+      toast.add({
+        title: 'Wallpaper downloaded',
+        color: 'success',
+      });
+    }
+
+    emit('next');
+  } catch (error: any) {
+    toast.add({
+      title: 'Download failed',
+      description: error?.message || 'Unable to prepare the wallpaper.',
+      color: 'error',
+    });
+  } finally {
+    downloading.value = false;
+  }
 }
 </script>
 
@@ -122,13 +215,17 @@ async function onDownload() {
         </div>
 
         <div
-          class="relative min-h-96 w-full flex-1 overflow-hidden rounded-lg bg-[#0b0b0b]"
+          class="relative min-h-0 w-full flex-1 overflow-hidden sm:min-h-120"
         >
-          <canvas
-            v-show="splineUrl && !splineFailed"
-            ref="canvasEl"
-            class="absolute inset-0 size-full"
-          />
+          <div
+            class="absolute top-1/2 left-1/2 size-[200%] -translate-x-1/2 -translate-y-1/2"
+          >
+            <canvas
+              v-show="splineUrl && !splineFailed"
+              ref="canvasEl"
+              class="absolute inset-0 size-full"
+            />
+          </div>
           <div
             v-if="splineLoading"
             class="absolute inset-0 flex items-center justify-center"
@@ -149,7 +246,8 @@ async function onDownload() {
     </div>
 
     <CommunityEventOnboardingFooter
-      primary-label="Download Wallpaper"
+      :primary-label="downloading ? 'Preparing...' : 'Download Wallpaper'"
+      :primary-disabled="downloading"
       secondary-label="Skip"
       :show-powered-by="false"
       @primary="onDownload"

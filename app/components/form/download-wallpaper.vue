@@ -2,13 +2,11 @@
 import { useQuery } from '@tanstack/vue-query';
 import { useQRCode } from '@vueuse/integrations/useQRCode';
 import { refDebounced, useStorage } from '@vueuse/core';
-
-type PhoneModel = {
-  label: string;
-  value: string;
-  width: number;
-  height: number;
-};
+import { phoneWallpaperModels } from '~~/shared/constants/phone-wallpaper-models';
+import {
+  renderQrCanvas,
+  renderWallpaperCanvas as renderWallpaperImage,
+} from '~/utils/wallpaper-image';
 
 const route = useRoute();
 const runtimeConfig = useRuntimeConfig();
@@ -16,206 +14,7 @@ const toast = useToast();
 const slug = computed(() => route.params.slug as string);
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
 
-const phoneModels: PhoneModel[] = [
-  {
-    label: 'iPhone 17',
-    value: 'iphone-17',
-    width: 1206,
-    height: 2622,
-  },
-  {
-    label: 'iPhone 17 Pro',
-    value: 'iphone-17-pro',
-    width: 1206,
-    height: 2622,
-  },
-  {
-    label: 'iPhone 17 Pro Max',
-    value: 'iphone-17-pro-max',
-    width: 1320,
-    height: 2868,
-  },
-  {
-    label: 'iPhone Air',
-    value: 'iphone-air',
-    width: 1260,
-    height: 2736,
-  },
-  {
-    label: 'iPhone 16',
-    value: 'iphone-16',
-    width: 1179,
-    height: 2556,
-  },
-  {
-    label: 'iPhone 16 Pro',
-    value: 'iphone-16-pro',
-    width: 1206,
-    height: 2622,
-  },
-  {
-    label: 'iPhone 16 Pro Max',
-    value: 'iphone-16-pro-max',
-    width: 1320,
-    height: 2868,
-  },
-  {
-    label: 'iPhone 16 Plus',
-    value: 'iphone-16-plus',
-    width: 1290,
-    height: 2796,
-  },
-  {
-    label: 'iPhone 15 Pro',
-    value: 'iphone-15-pro',
-    width: 1179,
-    height: 2556,
-  },
-  {
-    label: 'iPhone 15',
-    value: 'iphone-15',
-    width: 1179,
-    height: 2556,
-  },
-  {
-    label: 'iPhone 15 Pro Max',
-    value: 'iphone-15-pro-max',
-    width: 1290,
-    height: 2796,
-  },
-  {
-    label: 'iPhone 15 Plus',
-    value: 'iphone-15-plus',
-    width: 1290,
-    height: 2796,
-  },
-  {
-    label: 'iPhone 14 Plus',
-    value: 'iphone-14-plus',
-    width: 1284,
-    height: 2778,
-  },
-  {
-    label: 'iPhone 14 Pro Max',
-    value: 'iphone-14-pro-max',
-    width: 1290,
-    height: 2796,
-  },
-  {
-    label: 'iPhone 14 Pro',
-    value: 'iphone-14-pro',
-    width: 1179,
-    height: 2556,
-  },
-  {
-    label: 'iPhone 14',
-    value: 'iphone-14',
-    width: 1170,
-    height: 2532,
-  },
-  {
-    label: 'Android Compact',
-    value: 'android-compact',
-    width: 1236,
-    height: 2751,
-  },
-  {
-    label: 'Android Medium',
-    value: 'android-medium',
-    width: 2100,
-    height: 2520,
-  },
-  {
-    label: 'iPhone 13 Pro Max',
-    value: 'iphone-13-pro-max',
-    width: 1284,
-    height: 2778,
-  },
-  {
-    label: 'iPhone 13 Pro',
-    value: 'iphone-13-pro',
-    width: 1170,
-    height: 2532,
-  },
-  {
-    label: 'iPhone 13',
-    value: 'iphone-13',
-    width: 1170,
-    height: 2532,
-  },
-  {
-    label: 'iPhone X',
-    value: 'iphone-x',
-    width: 1125,
-    height: 2436,
-  },
-  {
-    label: 'iPhone 13 mini',
-    value: 'iphone-13-mini',
-    width: 1125,
-    height: 2436,
-  },
-  {
-    label: 'iPhone 11 Pro Max',
-    value: 'iphone-11-pro-max',
-    width: 1242,
-    height: 2688,
-  },
-  {
-    label: 'iPhone 11 Pro',
-    value: 'iphone-11-pro',
-    width: 1125,
-    height: 2436,
-  },
-  {
-    label: 'iPhone 11',
-    value: 'iphone-11',
-    width: 1242,
-    height: 2688,
-  },
-  {
-    label: 'iPhone SE',
-    value: 'iphone-se',
-    width: 960,
-    height: 1704,
-  },
-  {
-    label: 'iPhone 8 Plus',
-    value: 'iphone-8-plus',
-    width: 1242,
-    height: 2208,
-  },
-  {
-    label: 'iPhone 8',
-    value: 'iphone-8',
-    width: 1125,
-    height: 2001,
-  },
-  {
-    label: 'Android Small',
-    value: 'android-small',
-    width: 1080,
-    height: 1920,
-  },
-  {
-    label: 'Android Large',
-    value: 'android-large',
-    width: 1080,
-    height: 2400,
-  },
-  {
-    label: 'Google Pixel 2',
-    value: 'google-pixel-2',
-    width: 1233,
-    height: 2193,
-  },
-  {
-    label: 'Google Pixel 2 XL',
-    value: 'google-pixel-2-xl',
-    width: 1233,
-    height: 2469,
-  },
-];
+const phoneModels = phoneWallpaperModels;
 
 const selectedModel = ref(phoneModels[0]!.value);
 const isGeneratingWallpaper = ref(false);
@@ -292,277 +91,35 @@ const previewWallpaperFrameStyle = computed(() => ({
   aspectRatio: `${selectedModelConfig.value.width} / ${selectedModelConfig.value.height}`,
 }));
 
-const QR_SIZE_RATIO = 0.3;
-const QR_PADDING_RATIO = 0.05;
-const QR_IMAGE_CORNER_RADIUS_PX = 16;
-
-/** Fills the frame, draws the QR, and strokes the border — all with the same corner radius (bg was square before). */
-function fillStrokeAndDrawQrInRoundedFrame(
-  context: CanvasRenderingContext2D,
-  styledQr: HTMLCanvasElement,
-  qrFrameX: number,
-  qrFrameY: number,
-  qrFrameSize: number,
-  qrX: number,
-  qrY: number,
-  qrSize: number,
-  fillCss: string,
-  borderWidth: number,
-  strokeCss: string
-) {
-  const r = Math.min(QR_IMAGE_CORNER_RADIUS_PX, qrFrameSize / 2);
-
-  context.fillStyle = fillCss;
-  context.beginPath();
-  context.roundRect(qrFrameX, qrFrameY, qrFrameSize, qrFrameSize, r);
-  context.fill();
-
-  context.save();
-  context.beginPath();
-  context.roundRect(qrFrameX, qrFrameY, qrFrameSize, qrFrameSize, r);
-  context.clip();
-  context.drawImage(styledQr, qrX, qrY, qrSize, qrSize);
-  context.restore();
-
-  const half = borderWidth / 2;
-  const sx = qrFrameX + half;
-  const sy = qrFrameY + half;
-  const sw = qrFrameSize - borderWidth;
-  const sh = qrFrameSize - borderWidth;
-  const strokeR = Math.min(Math.max(0, r - half), sw / 2, sh / 2);
-
-  context.imageSmoothingEnabled = true;
-  context.strokeStyle = strokeCss;
-  context.lineWidth = borderWidth;
-  context.beginPath();
-  context.roundRect(sx, sy, sw, sh, strokeR);
-  context.stroke();
-}
-
 function getSafeFileSegment(input?: string) {
   return (input || 'card').replace(/[^a-z0-9-_]+/gi, '-').toLowerCase();
 }
 
-async function loadImage(url: string) {
-  return await new Promise<HTMLImageElement>((resolve, reject) => {
-    const image = new Image();
-    if (!url.startsWith('data:')) {
-      image.crossOrigin = 'anonymous';
-    }
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error('Failed to load image'));
-    image.src = url;
-  });
-}
-
-function getCenterCropRect(
-  sourceWidth: number,
-  sourceHeight: number,
-  targetWidth: number,
-  targetHeight: number
-) {
-  const sourceAspect = sourceWidth / sourceHeight;
-  const targetAspect = targetWidth / targetHeight;
-
-  if (sourceAspect > targetAspect) {
-    const cropWidth = sourceHeight * targetAspect;
-    return {
-      sx: (sourceWidth - cropWidth) / 2,
-      sy: 0,
-      sw: cropWidth,
-      sh: sourceHeight,
-    };
-  }
-
-  const cropHeight = sourceWidth / targetAspect;
+function wallpaperRenderOptions() {
   return {
-    sx: 0,
-    sy: (sourceHeight - cropHeight) / 2,
-    sw: sourceWidth,
-    sh: cropHeight,
+    wallpaperProxyUrl: wallpaperProxyUrl.value,
+    cardUrl: publicCardUrl.value,
+    width: selectedModelConfig.value.width,
+    height: selectedModelConfig.value.height,
+    qrColor: qrColor.value,
+    qrBorderOpacity: qrBorderOpacity.value,
+    qrLayerBgColor: qrLayerBgColor.value,
+    qrLayerBgOpacity: qrLayerBgOpacity.value,
   };
 }
 
-function hexToRgba(hex: string, alpha: number) {
-  const normalized = hex.replace('#', '');
-  const r = Number.parseInt(normalized.slice(0, 2), 16);
-  const g = Number.parseInt(normalized.slice(2, 4), 16);
-  const b = Number.parseInt(normalized.slice(4, 6), 16);
-  const a = Math.max(0, Math.min(1, alpha));
-  return `rgba(${r}, ${g}, ${b}, ${a})`;
+function renderWallpaperCanvas() {
+  return renderWallpaperImage(wallpaperRenderOptions());
 }
 
-function hexToRgb(hex: string) {
-  const normalized = hex.replace('#', '');
-  return {
-    r: Number.parseInt(normalized.slice(0, 2), 16),
-    g: Number.parseInt(normalized.slice(2, 4), 16),
-    b: Number.parseInt(normalized.slice(4, 6), 16),
-  };
-}
-
-function isFinderCell(x: number, y: number, matrixSize: number) {
-  const inTopLeft = x <= 6 && y <= 6;
-  const inTopRight = x >= matrixSize - 7 && y <= 6;
-  const inBottomLeft = x <= 6 && y >= matrixSize - 7;
-  return inTopLeft || inTopRight || inBottomLeft;
-}
-
-async function createStyledQrCanvas(targetSize: number, colorHex: string) {
-  if (!publicCardUrl.value) throw new Error('QR URL unavailable');
-
-  const qrModule = await import('qrcode');
-  const qrFactory = (qrModule as any).default || qrModule;
-  const qr = qrFactory.create(publicCardUrl.value, {
-    errorCorrectionLevel: 'H',
-    margin: 0,
+function renderQrOnlyCanvas() {
+  return renderQrCanvas({
+    cardUrl: publicCardUrl.value,
+    qrColor: qrColor.value,
+    qrBorderOpacity: qrBorderOpacity.value,
+    qrLayerBgColor: qrLayerBgColor.value,
+    qrLayerBgOpacity: qrLayerBgOpacity.value,
   });
-
-  const matrixSize = qr.modules.size as number;
-  const matrixData = qr.modules.data as ArrayLike<number | boolean>;
-  const moduleSize = targetSize / matrixSize;
-  const dotRadius = moduleSize * 0.42;
-  const { r, g, b } = hexToRgb(colorHex);
-
-  const qrCanvas = document.createElement('canvas');
-  qrCanvas.width = targetSize;
-  qrCanvas.height = targetSize;
-  const qrContext = qrCanvas.getContext('2d');
-  if (!qrContext) throw new Error('QR canvas context unavailable');
-
-  qrContext.fillStyle = `rgba(${r}, ${g}, ${b}, 1)`;
-  qrContext.imageSmoothingEnabled = true;
-  qrContext.imageSmoothingQuality = 'high';
-
-  for (let y = 0; y < matrixSize; y += 1) {
-    for (let x = 0; x < matrixSize; x += 1) {
-      const index = y * matrixSize + x;
-      const cell = matrixData[index];
-      const isDark = cell === true || cell === 1;
-      if (!isDark) continue;
-
-      const drawX = x * moduleSize;
-      const drawY = y * moduleSize;
-
-      if (isFinderCell(x, y, matrixSize)) {
-        qrContext.fillRect(drawX, drawY, moduleSize, moduleSize);
-        continue;
-      }
-
-      qrContext.beginPath();
-      qrContext.arc(
-        drawX + moduleSize / 2,
-        drawY + moduleSize / 2,
-        dotRadius,
-        0,
-        Math.PI * 2
-      );
-      qrContext.fill();
-    }
-  }
-
-  return qrCanvas;
-}
-
-async function renderWallpaperCanvas() {
-  if (!wallpaperProxyUrl.value || !publicCardUrl.value) {
-    throw new Error('Wallpaper preview is incomplete');
-  }
-
-  const [image, styledQr] = await Promise.all([
-    loadImage(wallpaperProxyUrl.value),
-    createStyledQrCanvas(1024, qrColor.value),
-  ]);
-  const { width, height } = selectedModelConfig.value;
-  const crop = getCenterCropRect(
-    image.naturalWidth,
-    image.naturalHeight,
-    width,
-    height
-  );
-
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-
-  const context = canvas.getContext('2d');
-  if (!context) throw new Error('Canvas context unavailable');
-
-  context.imageSmoothingEnabled = true;
-  context.imageSmoothingQuality = 'high';
-  context.drawImage(
-    image,
-    crop.sx,
-    crop.sy,
-    crop.sw,
-    crop.sh,
-    0,
-    0,
-    width,
-    height
-  );
-
-  const qrSize = Math.round(Math.min(width, height) * QR_SIZE_RATIO);
-  const qrPadding = Math.max(12, Math.round(qrSize * QR_PADDING_RATIO));
-  const qrFrameSize = qrSize + qrPadding * 2;
-  const qrFrameX = (width - qrFrameSize) / 2;
-  const qrFrameY = (height - qrFrameSize) / 2;
-  const qrX = (width - qrSize) / 2;
-  const qrY = (height - qrSize) / 2;
-  const borderWidth = Math.max(2, Math.round(qrFrameSize * 0.015));
-
-  fillStrokeAndDrawQrInRoundedFrame(
-    context,
-    styledQr,
-    qrFrameX,
-    qrFrameY,
-    qrFrameSize,
-    qrX,
-    qrY,
-    qrSize,
-    hexToRgba(qrLayerBgColor.value, qrLayerBgOpacity.value),
-    borderWidth,
-    hexToRgba(qrColor.value, qrBorderOpacity.value)
-  );
-
-  return canvas;
-}
-
-async function renderQrOnlyCanvas() {
-  if (!publicCardUrl.value) throw new Error('QR is not ready');
-  const canvasSize = 1024;
-  const frameInset = Math.round(canvasSize * 0.04);
-  const qrFrameX = frameInset;
-  const qrFrameY = frameInset;
-  const qrFrameSize = canvasSize - frameInset * 2;
-  const qrPadding = Math.max(12, Math.round(qrFrameSize * QR_PADDING_RATIO));
-  const qrSize = qrFrameSize - qrPadding * 2;
-  const qrX = (canvasSize - qrSize) / 2;
-  const qrY = (canvasSize - qrSize) / 2;
-  const borderWidth = Math.max(2, Math.round(qrFrameSize * 0.015));
-  const styledQr = await createStyledQrCanvas(qrSize, qrColor.value);
-
-  const canvas = document.createElement('canvas');
-  canvas.width = canvasSize;
-  canvas.height = canvasSize;
-  const context = canvas.getContext('2d');
-  if (!context) throw new Error('QR canvas context unavailable');
-
-  fillStrokeAndDrawQrInRoundedFrame(
-    context,
-    styledQr,
-    qrFrameX,
-    qrFrameY,
-    qrFrameSize,
-    qrX,
-    qrY,
-    qrSize,
-    hexToRgba(qrLayerBgColor.value, qrLayerBgOpacity.value),
-    borderWidth,
-    hexToRgba(qrColor.value, qrBorderOpacity.value)
-  );
-
-  return canvas;
 }
 
 let wallpaperPreviewRenderToken = 0;
