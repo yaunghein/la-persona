@@ -41,20 +41,20 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="flex h-full min-h-88 self-stretch overflow-hidden">
+  <div class="aspect-[1/0.9] w-full overflow-hidden">
     <div
-      class="flex w-full flex-1 flex-col items-center justify-between rounded-lg border-2 border-[#232323] bg-[#171717] py-5"
+      class="flex h-full min-h-0 w-full flex-col items-center justify-between rounded-lg border-2 border-[#232323] bg-[#171717] py-5"
     >
       <p
-        class="max-w-72 text-center text-xl font-normal leading-normal tracking-[0.125rem] text-white uppercase"
+        class="max-w-72 shrink-0 text-center text-xl font-normal leading-tight tracking-[0.125rem] text-white uppercase"
       >
         Want your own persona card with
         <span class="font-bold">custom design</span>?
       </p>
 
-      <div class="relative min-h-36 w-full flex-1 overflow-hidden">
+      <div class="relative min-h-0 w-full flex-1 overflow-hidden">
         <div
-          class="absolute top-1/2 left-1/2 size-[220%] -translate-x-1/2 -translate-y-1/2"
+          class="absolute top-1/2 left-1/2 size-[160%] -translate-x-1/2 -translate-y-1/2"
         >
           <canvas
             ref="canvasEl"
@@ -69,7 +69,7 @@ onUnmounted(() => {
         :to="PREMIUM_CARD_URL"
         target="_blank"
         color="neutral"
-        class="h-12 shrink-0 justify-center rounded-full bg-white px-8 text-sm font-medium text-dark hover:bg-white/90"
+        class="h-10 shrink-0 justify-center rounded-full bg-white px-8 text-sm font-medium text-dark hover:bg-white/90"
       />
     </div>
   </div>

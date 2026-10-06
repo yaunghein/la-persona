@@ -180,14 +180,14 @@ function canRegister(event: CommunityEvent) {
       <article
         v-for="event in pagedEvents"
         :key="event.id"
-        class="flex cursor-pointer flex-col rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+        class="flex aspect-[1/0.9] w-full cursor-pointer flex-col overflow-hidden rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-white/30"
         tabindex="0"
         @click="onView(event)"
         @keydown.enter.prevent="onView(event)"
         @keydown.space.prevent="onView(event)"
       >
         <div
-          class="relative aspect-[1/0.67] w-full overflow-hidden rounded-t-lg"
+          class="relative min-h-0 flex-1 overflow-hidden"
         >
           <img
             :src="event.imageUrl"
@@ -202,7 +202,7 @@ function canRegister(event: CommunityEvent) {
         </div>
 
         <div
-          class="flex gap-4 rounded-b-lg bg-[#171717] px-5 pt-5 pb-6 justify-between"
+          class="flex shrink-0 justify-between gap-4 bg-[#171717] px-5 pt-5 pb-6"
         >
           <div class="flex min-w-0 flex-col gap-1">
             <h2 class="line-clamp-1 text-base leading-5 text-white">

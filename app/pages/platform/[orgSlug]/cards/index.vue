@@ -302,25 +302,26 @@ const cardFooterActionSize = 'sm';
       <USkeleton
         v-for="index in 3"
         :key="index"
-        class="aspect-5/3 w-full rounded-lg"
+        class="aspect-[1/0.9] w-full rounded-lg"
       />
     </div>
 
     <div
       v-else-if="cards?.length"
-      class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 sm:gap-6"
+      class="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3"
     >
       <UCard
         v-for="card in cards"
         :key="card.id"
         variant="outline"
-        class="bg-[#232323]"
+        class="aspect-[1/0.9] w-full bg-[#232323]"
         :ui="{
-          body: 'p-8 lg:p-10',
-          footer: 'bg-[#171717]',
+          root: 'flex h-full flex-col',
+          body: 'flex min-h-0 flex-1 flex-col p-8 lg:p-10',
+          footer: 'shrink-0 bg-[#171717]',
         }"
       >
-        <div class="aspect-5/3 relative">
+        <div class="relative min-h-0 flex-1">
           <img
             v-if="card.cardBackUrl"
             :src="getS3Url(card.cardBackUrl)"
