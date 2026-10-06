@@ -86,6 +86,7 @@ const eventsListData = computed<CommunityEventsData>(() => ({
   searchPlaceholder: 'Search Events',
   statusOptions: [
     { label: 'Upcoming Events', value: 'upcoming' },
+    { label: 'Registered Events', value: 'registered' },
     { label: 'Past Events', value: 'past' },
   ],
   infoItems: canManageEvents.value ? ownerInfoItems : memberInfoItems,

@@ -18,7 +18,7 @@ const emit = defineEmits<{
   register: [event: CommunityEvent];
 }>();
 
-type EventsTab = 'upcoming' | 'past';
+type EventsTab = 'upcoming' | 'past' | 'registered';
 
 const searchQuery = ref('');
 const activeTab = ref<EventsTab>('upcoming');
@@ -26,17 +26,26 @@ const page = ref(1);
 const itemsPerPage = 6;
 const isInfoOpen = ref(false);
 
+function isRegisteredEvent(event: CommunityEvent) {
+  return event.viewerRegistrationStatus !== 'none';
+}
+
 const tabCounts = computed(() => {
   const events = props.data.events;
   return {
     upcoming: events.filter((event) => event.status === 'upcoming').length,
     past: events.filter((event) => event.status === 'past').length,
+    registered: events.filter((event) => isRegisteredEvent(event)).length,
   };
 });
 
 const tabItems = computed<TabsItem[]>(() => [
   { label: `Upcoming Events (${tabCounts.value.upcoming})`, value: 'upcoming' },
   { label: `Past Events (${tabCounts.value.past})`, value: 'past' },
+  {
+    label: `Registered Events (${tabCounts.value.registered})`,
+    value: 'registered',
+  },
 ]);
 
 const selectedTab = computed({
@@ -50,7 +59,12 @@ const filteredEvents = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
 
   return props.data.events.filter((event) => {
-    if (event.status !== activeTab.value) {
+    const matchesTab =
+      activeTab.value === 'registered'
+        ? isRegisteredEvent(event)
+        : event.status === activeTab.value;
+
+    if (!matchesTab) {
       return false;
     }
 
@@ -186,9 +200,7 @@ function canRegister(event: CommunityEvent) {
         @keydown.enter.prevent="onView(event)"
         @keydown.space.prevent="onView(event)"
       >
-        <div
-          class="relative min-h-0 flex-1 overflow-hidden"
-        >
+        <div class="relative min-h-0 flex-1 overflow-hidden">
           <img
             :src="event.imageUrl"
             :alt="event.title"
@@ -217,10 +229,7 @@ function canRegister(event: CommunityEvent) {
             </p>
           </div>
 
-          <div
-            v-if="!canManage"
-            class="flex shrink-0 items-center justify-end"
-          >
+          <div v-if="!canManage" class="flex shrink-0 items-center justify-end">
             <UButton
               v-if="canRegister(event)"
               label="Register"
@@ -248,7 +257,11 @@ function canRegister(event: CommunityEvent) {
         class="col-span-full flex items-center justify-center py-20 text-sm text-[#8b8b8b]"
       >
         {{
-          searchQuery.trim() ? 'No events match your search.' : 'No events yet.'
+          searchQuery.trim()
+            ? 'No events match your search.'
+            : activeTab === 'registered'
+              ? "You haven't registered for any events yet."
+              : 'No events yet.'
         }}
       </div>
     </div>
