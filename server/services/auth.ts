@@ -2,7 +2,7 @@ import { nanoid } from 'nanoid';
 import { eq, and, inArray } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { organization, member } from '~~/server/db/schema';
-import { insertDefaultCard } from '~~/server/services/card';
+// import { insertDefaultCard } from '~~/server/services/card';
 import { getPendingOnboardingInvitationByEmail } from '~~/server/services/onboarding-invitation';
 import { env } from '~~/server/utils/env';
 import type { User } from 'better-auth';
@@ -75,7 +75,8 @@ export async function setupDefaultOrganization(user: User) {
     ORGANIZATION_TYPES.PERSONAL
   );
   await insertMember(user.id, newOrg.id, 'owner');
-  await insertDefaultCard(user, newOrg.id);
+  // Free default card on signup is disabled for now.
+  // await insertDefaultCard(user, newOrg.id);
 }
 
 export async function getPersonalOrganizationByUserId(userId: string) {
