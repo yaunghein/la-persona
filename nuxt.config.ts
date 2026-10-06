@@ -85,8 +85,23 @@ export default defineNuxtConfig({
     id: process.env.GTAG_ID,
     enabled: process.env.NODE_ENV === 'production',
   },
+  icon: {
+    serverBundle: {
+      collections: ['lucide'],
+    },
+    clientBundle: {
+      scan: {
+        // default scan skips .ts/.js; some icon names live there
+        globInclude: ['**/*.{vue,ts,js}'],
+      },
+    },
+  },
+  nitro: {
+    compressPublicAssets: true,
+  },
   routeRules: {
     '/': { prerender: true },
+    '/privacy-policy': { prerender: true },
     '/platform': { ssr: false },
     '/platform/**': { ssr: false },
     '/invite/**': { ssr: false },
