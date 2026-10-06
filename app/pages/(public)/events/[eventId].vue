@@ -149,9 +149,7 @@ function onHowToUse() {
 
 function onFlowDone() {
   if (!orgSlug.value) return;
-  return navigateTo(
-    ROUTES.EVENTS.PLATFORM_LIST_EVENT(orgSlug.value, eventId.value)
-  );
+  return navigateTo(`${ROUTES.PLATFORM.ROOT}/${orgSlug.value}/cards`);
 }
 </script>
 
