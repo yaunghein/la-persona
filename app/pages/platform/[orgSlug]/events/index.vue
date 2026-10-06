@@ -70,7 +70,10 @@ const ownerInfoItems = [
   },
 ];
 
-const { data, isLoading, refetch } = useQuery<{ events: EventListItemDTO[] }>({
+const { data, isLoading, refetch } = useQuery<{
+  events: EventListItemDTO[];
+  organizerCardSlug: string | null;
+}>({
   queryKey: computed(() => [...QUERY_KEYS.events, orgSlug.value]),
   queryFn: () =>
     $fetch('/api/events', {
@@ -190,6 +193,7 @@ const organizer = computed(() =>
     ? {
         name: currentOrg.value.name,
         logoUrl: currentOrg.value.logo,
+        cardSlug: data.value?.organizerCardSlug,
       }
     : null
 );
@@ -206,8 +210,8 @@ function onRegister(event: { id: string }) {
 
 function onViewOrganizer() {
   toast.add({
-    title: 'View organizer',
-    description: 'Organizer profiles are not wired yet.',
+    title: 'Organizer card',
+    description: 'This organizer does not have a community card yet.',
     color: 'neutral',
   });
 }
@@ -254,6 +258,7 @@ function onViewOrganizer() {
   <CommunityEventViewSlideover
     v-model:open="isViewOpen"
     :event="viewingEvent"
+    :organizer-card-slug="data?.organizerCardSlug"
     @register="onRegister"
     @view-organizer="onViewOrganizer"
   />

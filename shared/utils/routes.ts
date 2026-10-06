@@ -69,3 +69,7 @@ export function publicEventAbsoluteUrl(eventId: string) {
   if (!import.meta.client) return ROUTES.EVENTS.PUBLIC(eventId);
   return `${window.location.origin}${ROUTES.EVENTS.PUBLIC(eventId)}`;
 }
+
+export function communityCardPath(cardSlug: string) {
+  return `/c/${cardSlug}`;
+}

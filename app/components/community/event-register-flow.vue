@@ -11,6 +11,7 @@ import {
   formatEventWeekdayDateLabel,
 } from '~~/shared/utils/event-datetime';
 import { eventGalleryImages } from '~~/shared/utils/event-media';
+import { communityCardPath } from '~~/shared/utils/routes';
 
 const props = withDefaults(
   defineProps<{
@@ -40,6 +41,10 @@ const registrationStatus = ref<'registered' | 'pending'>(
 
 const resolvedOrgSlug = computed(
   () => props.organizationSlug || organizationSlug.value
+);
+
+const organizerCardUrl = computed(() =>
+  props.organizer?.cardSlug ? communityCardPath(props.organizer.cardSlug) : ''
 );
 
 const emit = defineEmits<{
@@ -349,8 +354,17 @@ onBeforeUnmount(() => {
             disabled
             class="h-13 w-full justify-center rounded-full bg-[#232323] px-2.5 text-sm font-bold text-[#8b8b8b] disabled:opacity-100"
           />
+          <a
+            v-if="!isPage && organizerCardUrl"
+            :href="organizerCardUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="cursor-pointer text-sm font-bold text-white underline"
+          >
+            See Organizer
+          </a>
           <button
-            v-if="!isPage"
+            v-else-if="!isPage"
             type="button"
             class="cursor-pointer text-sm font-bold text-white underline"
             @click="onViewOrganizer"
@@ -361,7 +375,7 @@ onBeforeUnmount(() => {
         <UButton
           v-else
           :label="
-            howToUse ? 'Learn How to Use Community Card' : 'Got it'
+            howToUse ? 'Learn How to Use Community Card' : 'Explore Platform'
           "
           color="neutral"
           class="h-13 w-full cursor-pointer justify-center rounded-full bg-[#232323] px-2.5 text-sm font-bold text-white hover:bg-[#2a2a2a]"

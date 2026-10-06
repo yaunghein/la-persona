@@ -5,9 +5,11 @@ import {
   formatEventWeekdayDateLabel,
 } from '~~/shared/utils/event-datetime';
 import { eventGalleryImages } from '~~/shared/utils/event-media';
+import { communityCardPath } from '~~/shared/utils/routes';
 
 const props = defineProps<{
   event?: EventListItemDTO | null;
+  organizerCardSlug?: string | null;
 }>();
 
 const open = defineModel<boolean>('open', { default: false });
@@ -45,6 +47,10 @@ function onRegister() {
   if (!props.event) return;
   emit('register', props.event);
 }
+
+const organizerCardUrl = computed(() =>
+  props.organizerCardSlug ? communityCardPath(props.organizerCardSlug) : ''
+);
 
 function onViewOrganizer() {
   if (!props.event) return;
@@ -137,6 +143,15 @@ function onViewOrganizer() {
     <template v-if="event" #footer>
       <div class="flex items-center justify-end gap-2">
         <UButton
+          v-if="organizerCardUrl"
+          label="See Organizer"
+          color="neutral"
+          :href="organizerCardUrl"
+          target="_blank"
+          class="h-9 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+        />
+        <UButton
+          v-else
           label="See Organizer"
           color="neutral"
           class="h-9 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"

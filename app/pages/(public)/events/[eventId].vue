@@ -87,8 +87,8 @@ watch(
 
 function onViewOrganizer() {
   toast.add({
-    title: 'View organizer',
-    description: 'Organizer profiles are not wired yet.',
+    title: 'Organizer card',
+    description: 'This organizer does not have a community card yet.',
     color: 'neutral',
   });
 }

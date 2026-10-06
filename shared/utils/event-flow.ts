@@ -22,18 +22,12 @@ export function isCommunityCardComplete(card: {
   position?: string | null;
   phone?: string | null;
   email?: string | null;
-  socials?: { label?: string | null; value?: string | null }[] | null;
 }) {
-  const hasSocial = (card.socials || []).some(
-    (link) => String(link.label || '').trim() && String(link.value || '').trim()
-  );
-
   return Boolean(
     String(card.firstName || '').trim() &&
       String(card.position || '').trim() &&
       String(card.phone || '').trim() &&
-      String(card.email || '').trim() &&
-      hasSocial
+      String(card.email || '').trim()
   );
 }
 

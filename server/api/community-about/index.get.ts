@@ -1,6 +1,7 @@
 import { count, eq } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { event as eventTable, member, organization } from '~~/server/db/schema';
+import { findOrganizationOwnerCardSlug } from '~~/server/db/queries/card';
 import { ensureCommunitySetting } from '~~/server/db/queries/community-setting';
 import { handleApiError } from '~~/server/utils/errors';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
@@ -64,6 +65,8 @@ export default defineEventHandler(async (event) => {
       ? new Date(org.createdAt).getFullYear()
       : new Date().getFullYear();
 
+    const organizerCardSlug = await findOrganizationOwnerCardSlug(org.id);
+
     const payload: CommunityAboutDTO = {
       ...toCommunitySettingsDTO({
         name: org.name,
@@ -76,6 +79,7 @@ export default defineEventHandler(async (event) => {
       memberCount: memberRow?.value ?? 0,
       eventCount: eventRow?.value ?? 0,
       foundedYear,
+      organizerCardSlug,
     };
 
     return payload;

@@ -108,28 +108,21 @@ function validate(formData: Partial<typeof state>): FormError[] {
     });
   }
 
-  if (!state.socials.length) {
-    errors.push({
-      name: 'socials',
-      message: 'Add at least one social link.',
-    });
-  } else {
-    state.socials.forEach((link, index) => {
-      const label = resolveSocialLabel(link) || 'Social link';
-      if (link.label === 'Custom' && !String(link.customLabel || '').trim()) {
-        errors.push({
-          name: `socials.${index}.customLabel`,
-          message: `${label} needs a custom label.`,
-        });
-      }
-      if (!isValidCardLinkValue(link.value, link.label)) {
-        errors.push({
-          name: `socials.${index}.value`,
-          message: `${label} needs a valid link.`,
-        });
-      }
-    });
-  }
+  state.socials.forEach((link, index) => {
+    const label = resolveSocialLabel(link) || 'Social link';
+    if (link.label === 'Custom' && !String(link.customLabel || '').trim()) {
+      errors.push({
+        name: `socials.${index}.customLabel`,
+        message: `${label} needs a custom label.`,
+      });
+    }
+    if (!isValidCardLinkValue(link.value, link.label)) {
+      errors.push({
+        name: `socials.${index}.value`,
+        message: `${label} needs a valid link.`,
+      });
+    }
+  });
 
   return errors;
 }
@@ -370,10 +363,10 @@ watch(
             <div class="flex items-center justify-between gap-3">
               <div class="flex flex-col gap-3">
                 <p class="text-sm font-medium text-white">
-                  Social / Professional Links (Required)
+                  Social / Professional Links
                 </p>
                 <p class="text-sm leading-normal text-[#8b8b8b]">
-                  Add one profile so other members can connect with you.
+                  Add a profile so other members can connect with you.
                 </p>
               </div>
               <UButton

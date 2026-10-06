@@ -1,7 +1,13 @@
-import { and, eq, desc } from 'drizzle-orm';
+import { and, asc, desc, eq } from 'drizzle-orm';
 import { getEffectiveSubscriptionStatus } from '~~/server/services/subscription';
 import { db } from '../../db';
-import { card, cardSubscription, organization, subscriptionPlan } from '../schema';
+import {
+  card,
+  cardSubscription,
+  member,
+  organization,
+  subscriptionPlan,
+} from '../schema';
 
 export const findFreeCardByUserId = (userId: string) => {
   return db
@@ -228,3 +234,23 @@ export const findCardBySlugForUserAndOrganization = async (
   userId: string,
   organizationId: string
 ) => findOrganizationCardBySlug(slug, organizationId, userId);
+
+export const findOrganizationOwnerCardSlug = async (organizationId: string) => {
+  const [row] = await db
+    .select({ slug: card.slug })
+    .from(member)
+    .innerJoin(
+      card,
+      and(
+        eq(card.userId, member.userId),
+        eq(card.organizationId, member.organizationId)
+      )
+    )
+    .where(
+      and(eq(member.organizationId, organizationId), eq(member.role, 'owner'))
+    )
+    .orderBy(asc(member.createdAt), desc(card.createdAt))
+    .limit(1);
+
+  return row?.slug ?? null;
+};

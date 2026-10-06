@@ -24,6 +24,7 @@ export type EventOrganizer = {
   name: string;
   logoUrl?: string | null;
   slug?: string;
+  cardSlug?: string | null;
 };
 
 export const EVENT_REGISTRATION_MODES = [

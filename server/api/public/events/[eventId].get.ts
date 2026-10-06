@@ -2,7 +2,10 @@ import { and, eq } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { member } from '~~/server/db/schema';
 import { findPublicEventById, toEventDTO } from '~~/server/db/queries/event';
-import { findCardByUserIdAndOrganization } from '~~/server/db/queries/card';
+import {
+  findCardByUserIdAndOrganization,
+  findOrganizationOwnerCardSlug,
+} from '~~/server/db/queries/card';
 import {
   findRegistrationByEventAndUser,
   toViewerStatus,
@@ -75,12 +78,17 @@ export default defineEventHandler(async (event) => {
       ? await buildViewer(session.user.id, row.event.organizationId, eventId)
       : null;
 
+    const organizerCardSlug = await findOrganizationOwnerCardSlug(
+      row.event.organizationId
+    );
+
     const payload: PublicEventDTO = {
       ...toEventDTO(row.event),
       organizer: {
         name: row.organizationName,
         logoUrl: row.organizationLogo,
         slug: row.organizationSlug,
+        cardSlug: organizerCardSlug,
       },
       viewer,
     };

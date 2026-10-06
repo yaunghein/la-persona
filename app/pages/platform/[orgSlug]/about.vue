@@ -5,6 +5,7 @@ definePageMeta({
 
 import { useQuery } from '@tanstack/vue-query';
 import type { CommunityAboutDTO } from '~~/shared/types/community-about';
+import { communityCardPath } from '~~/shared/utils/routes';
 
 const toast = useToast();
 const { organizationSlug, withOrganizationQuery } = useOrganizationSlug();
@@ -26,9 +27,15 @@ function onQuit() {
 }
 
 function onViewOrganizer() {
+  const cardSlug = data.value?.organizerCardSlug;
+  if (cardSlug) {
+    window.open(communityCardPath(cardSlug), '_blank', 'noopener,noreferrer');
+    return;
+  }
+
   toast.add({
-    title: 'View organizer',
-    description: 'Organizer profiles are not wired yet.',
+    title: 'Organizer card',
+    description: 'This organizer does not have a community card yet.',
     color: 'neutral',
   });
 }

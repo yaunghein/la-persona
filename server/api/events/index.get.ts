@@ -1,3 +1,4 @@
+import { findOrganizationOwnerCardSlug } from '~~/server/db/queries/card';
 import {
   findEventsByOrganizationId,
   toEventDTO,
@@ -23,9 +24,10 @@ export default defineEventHandler(async (event) => {
       session.session.activeOrganizationId
     );
     const eventIds = rows.map((row) => row.id);
-    const [counts, viewerMap] = await Promise.all([
+    const [counts, viewerMap, organizerCardSlug] = await Promise.all([
       countRegistrationsByEventIds(eventIds),
       findViewerRegistrations(eventIds, session.user.id),
+      findOrganizationOwnerCardSlug(session.session.activeOrganizationId),
     ]);
 
     const events: EventListItemDTO[] = rows.map((row) => ({
@@ -34,7 +36,7 @@ export default defineEventHandler(async (event) => {
       viewerRegistrationStatus: toViewerStatus(viewerMap.get(row.id)),
     }));
 
-    return { events };
+    return { events, organizerCardSlug };
   } catch (error) {
     handleApiError(error, {
       statusCode: 500,

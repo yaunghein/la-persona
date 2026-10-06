@@ -4,4 +4,5 @@ export type CommunityAboutDTO = ReturnType<typeof toCommunitySettingsDTO> & {
   memberCount: number;
   eventCount: number;
   foundedYear: number;
+  organizerCardSlug: string | null;
 };

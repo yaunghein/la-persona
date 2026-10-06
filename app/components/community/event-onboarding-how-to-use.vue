@@ -46,7 +46,9 @@ const steps = [
             </span>
             <div class="flex min-w-0 flex-col gap-2">
               <p class="text-sm leading-normal text-white">{{ item.title }}</p>
-              <p class="text-sm leading-normal text-[#8b8b8b]">{{ item.body }}</p>
+              <p class="text-sm leading-normal text-[#8b8b8b]">
+                {{ item.body }}
+              </p>
             </div>
           </div>
         </div>
@@ -54,7 +56,7 @@ const steps = [
     </div>
 
     <CommunityEventOnboardingFooter
-      primary-label="Got it"
+      primary-label="Explore Platform"
       primary-muted
       @primary="emit('done')"
     />
