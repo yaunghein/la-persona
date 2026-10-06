@@ -35,7 +35,6 @@ const state = ref<ScannerState>('scanning');
 const cameraPhase = ref<CameraPhase>('idle');
 const scannedAttendee = ref<EventAttendee | null>(null);
 const scannedCode = ref('');
-const manualCode = ref('');
 const cameraError = ref('');
 const isSplineLoading = ref(false);
 const isLookingUp = ref(false);
@@ -82,7 +81,6 @@ function resetScanner() {
   cameraPhase.value = 'idle';
   scannedAttendee.value = null;
   scannedCode.value = '';
-  manualCode.value = '';
   cameraError.value = '';
   cameraReady.value = false;
   isLookingUp.value = false;
@@ -453,12 +451,6 @@ async function lookupCode(code: string) {
   }
 }
 
-async function submitManualCode() {
-  const code = manualCode.value.trim();
-  if (!code || isLookingUp.value) return;
-  await lookupCode(code);
-}
-
 async function resumeScanning() {
   scannedAttendee.value = null;
   scannedCode.value = '';
@@ -630,30 +622,6 @@ onBeforeUnmount(() => {
               @click="startCamera"
             />
           </div>
-
-          <form
-            class="flex w-full items-center gap-3"
-            @submit.prevent="submitManualCode"
-          >
-            <UInput
-              v-model="manualCode"
-              placeholder="Card URL or slug"
-              color="neutral"
-              variant="soft"
-              class="min-w-0 flex-1"
-              :ui="{
-                base: 'h-10 rounded-full border-0 bg-[#232323] px-5 text-sm font-medium text-white ring-0 placeholder:text-[#8b8b8b] focus-visible:ring-0',
-              }"
-            />
-            <UButton
-              type="submit"
-              label="Enter code"
-              color="neutral"
-              class="h-10 shrink-0 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
-              :disabled="!manualCode.trim() || isLookingUp"
-              :loading="isLookingUp"
-            />
-          </form>
         </div>
       </div>
 

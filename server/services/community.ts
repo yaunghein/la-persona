@@ -22,6 +22,7 @@ import {
   findCardByUserIdAndOrganization,
   findCardsByUserIdAndOrganization,
 } from '~~/server/db/queries/card';
+import { countContactsByCardIds } from '~~/server/db/queries/contact-exchange';
 import {
   countCheckedInByUsersInOrganization,
   deleteRegistrationsForUserInOrganization,
@@ -317,10 +318,10 @@ export async function listCommunityRoster(organizationId: string) {
     }
   }
 
-  const checkInCounts = await countCheckedInByUsersInOrganization(
-    userIds,
-    organizationId
-  );
+  const [checkInCounts, contactCounts] = await Promise.all([
+    countCheckedInByUsersInOrganization(userIds, organizationId),
+    countContactsByCardIds([...cardByUserId.values()].map((item) => item.id)),
+  ]);
 
   const members: CommunityMember[] = memberRows.map((row) => {
     const communityCard = cardByUserId.get(row.user.id);
@@ -338,7 +339,9 @@ export async function listCommunityRoster(organizationId: string) {
           ? row.member.role
           : 'Member'),
       company: communityCard?.company || '',
-      connections: 0,
+      connections: communityCard
+        ? (contactCounts.get(communityCard.id) ?? 0)
+        : 0,
       eventsAttended: checkInCounts.get(row.user.id) ?? 0,
       status: 'active' as const,
       email: communityCard?.email || row.user.email,

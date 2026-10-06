@@ -70,28 +70,32 @@ function checkIn(attendee: EventAttendee) {
 
 <template>
   <div class="flex flex-col gap-8">
-    <div class="flex items-center gap-6">
+    <div
+      class="flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:gap-6"
+    >
       <UInput
         v-model="searchQuery"
         placeholder="Search Attendees"
         trailing-icon="i-lucide-search"
         color="neutral"
         variant="soft"
-        class="min-w-0 flex-1"
+        class="w-full min-w-0 sm:flex-1"
         :ui="{
-          base: 'h-10 rounded-full border-0 bg-[#232323] px-5 text-sm font-medium text-white ring-0 placeholder:text-[#8b8b8b] focus-visible:ring-0',
+          base: 'h-10 rounded-full border-0 bg-[#232323] ps-5 pe-11 text-sm font-medium text-white ring-0 placeholder:text-[#8b8b8b] focus-visible:ring-0',
           trailing: 'pe-5',
           trailingIcon: 'size-4.5 text-[#8b8b8b]',
         }"
       />
-      <span class="shrink-0 text-sm font-medium text-[#8b8b8b]">or</span>
+      <span class="shrink-0 text-center text-sm font-medium text-[#8b8b8b]"
+        >or</span
+      >
       <UButton
         label="Check in with scanner"
         trailing-icon="i-lucide-qr-code"
         color="neutral"
         block
         :ui="{ trailingIcon: 'size-5' }"
-        class="h-10 min-w-0 flex-1 cursor-pointer justify-between rounded-full bg-white py-2 pr-5 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+        class="h-10 w-full min-w-0 cursor-pointer justify-between rounded-full bg-white py-2 pr-5 pl-5 text-sm font-medium text-dark hover:bg-white/90 sm:flex-1"
         @click="emit('open-scanner')"
       />
     </div>
@@ -106,8 +110,8 @@ function checkIn(attendee: EventAttendee) {
           Attendee not found
         </p>
         <p class="text-sm text-[#8b8b8b]">
-          No registered attendee matches this search. Register them as a
-          walk-in instead.
+          No registered attendee matches this search. Register them as a walk-in
+          instead.
         </p>
       </div>
       <UButton
@@ -164,18 +168,15 @@ function checkIn(attendee: EventAttendee) {
       </div>
     </div>
 
-    <div
-      v-else
-      class="flex flex-col items-center justify-center gap-8 pt-30"
-    >
+    <div v-else class="flex flex-col items-center justify-center gap-8 pt-30">
       <UIcon name="i-lucide-user-plus" class="size-12 text-[#8b8b8b]" />
       <div class="flex max-w-108 flex-col items-center gap-3 text-center">
         <p class="text-xl font-medium tracking-[2px] uppercase text-white">
           Search to check in
         </p>
         <p class="text-sm text-[#8b8b8b]">
-          Find a registered attendee by name, company, or email. If they are
-          not on the list, register them as a walk-in.
+          Find a registered attendee by name, company, or email. If they are not
+          on the list, register them as a walk-in.
         </p>
       </div>
       <UButton
