@@ -3,9 +3,19 @@ import { Application } from '@splinetool/runtime';
 import type { EventAttendee } from '~~/shared/types/community-event-detail';
 import { applyCardToSpline } from '~/utils/spline-card';
 
-// defineOptions({ name: 'CommunityEventCheckInScanner' });
-
 type ScannerState = 'scanning' | 'success' | 'already' | 'not-found';
+type CameraPhase =
+  | 'idle'
+  | 'requesting'
+  | 'live'
+  | 'denied'
+  | 'missing'
+  | 'insecure'
+  | 'unsupported';
+
+type QrDetector = {
+  detect: (source: CanvasImageSource) => Promise<Array<{ rawValue?: string }>>;
+};
 
 const props = defineProps<{
   attendees: EventAttendee[];
@@ -22,17 +32,22 @@ const toast = useToast();
 const { withOrganizationQuery } = useOrganizationSlug();
 
 const state = ref<ScannerState>('scanning');
+const cameraPhase = ref<CameraPhase>('idle');
 const scannedAttendee = ref<EventAttendee | null>(null);
 const scannedCode = ref('');
+const manualCode = ref('');
 const cameraError = ref('');
 const isSplineLoading = ref(false);
 const isLookingUp = ref(false);
+const cameraReady = ref(false);
 
 const videoEl = ref<HTMLVideoElement | null>(null);
 const splineCanvasEl = ref<HTMLCanvasElement | null>(null);
 
 let mediaStream: MediaStream | null = null;
 let splineApp: Application | null = null;
+let qrDetector: QrDetector | null = null;
+let usingBundledDetector = false;
 let cameraStartId = 0;
 let splineLoadId = 0;
 let scanTimer: ReturnType<typeof setInterval> | null = null;
@@ -48,8 +63,15 @@ const slideoverDescription = computed(() => {
   return scannedAttendee.value?.checkedInAt || undefined;
 });
 
+const showCameraRetry = computed(
+  () => cameraPhase.value === 'denied' || cameraPhase.value === 'missing'
+);
+
 const closeActionButtonClass =
   'h-13 w-full cursor-pointer justify-center rounded-full bg-[#232323] px-6 text-sm font-bold text-white hover:bg-[#2a2a2a]';
+
+const primaryActionButtonClass =
+  'h-10 w-full cursor-pointer justify-center rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90';
 
 function closeSlideover() {
   open.value = false;
@@ -57,9 +79,12 @@ function closeSlideover() {
 
 function resetScanner() {
   state.value = 'scanning';
+  cameraPhase.value = 'idle';
   scannedAttendee.value = null;
   scannedCode.value = '';
+  manualCode.value = '';
   cameraError.value = '';
+  cameraReady.value = false;
   isLookingUp.value = false;
 }
 
@@ -79,17 +104,139 @@ function disposeSpline() {
   isSplineLoading.value = false;
 }
 
+function describeCameraError(error: unknown): {
+  phase: CameraPhase;
+  message: string;
+} {
+  const name = error instanceof DOMException ? error.name : '';
+
+  if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+    return {
+      phase: 'denied',
+      message:
+        'Camera access is blocked. Allow the camera for this site in your browser settings, then try again.',
+    };
+  }
+
+  if (name === 'SecurityError' && !window.isSecureContext) {
+    return {
+      phase: 'insecure',
+      message:
+        'The scanner needs a secure HTTPS connection before the camera can start.',
+    };
+  }
+
+  if (name === 'SecurityError') {
+    return {
+      phase: 'denied',
+      message:
+        'Camera access is blocked. Allow the camera for this site in your browser settings, then try again.',
+    };
+  }
+
+  if (name === 'NotFoundError') {
+    return {
+      phase: 'missing',
+      message: 'No camera was found on this device.',
+    };
+  }
+
+  if (
+    name === 'NotReadableError' ||
+    name === 'OverconstrainedError' ||
+    name === 'AbortError'
+  ) {
+    return {
+      phase: 'missing',
+      message:
+        'The camera is unavailable or in use by another app. Close it and try again.',
+    };
+  }
+
+  return {
+    phase: 'denied',
+    message: 'Camera access is needed to scan attendee QR codes.',
+  };
+}
+
+function markUnsupported() {
+  stopCamera();
+  qrDetector = null;
+  usingBundledDetector = false;
+  cameraReady.value = false;
+  cameraPhase.value = 'unsupported';
+  cameraError.value =
+    'QR scanning is not supported in this browser. Enter the card URL or slug instead.';
+}
+
+async function ensureQrDetector(): Promise<QrDetector> {
+  if (qrDetector) return qrDetector;
+
+  const NativeDetector = (
+    window as Window & {
+      BarcodeDetector?: new (options: { formats: string[] }) => QrDetector;
+    }
+  ).BarcodeDetector;
+
+  if (NativeDetector) {
+    try {
+      usingBundledDetector = false;
+      qrDetector = new NativeDetector({ formats: ['qr_code'] });
+      return qrDetector;
+    } catch {
+      qrDetector = null;
+    }
+  }
+
+  const [{ BarcodeDetector, prepareZXingModule }, wasmModule] =
+    await Promise.all([
+      import('barcode-detector/ponyfill'),
+      import('zxing-wasm/reader/zxing_reader.wasm?url'),
+    ]);
+
+  // The package default loads wasm from jsDelivr, which this app's CSP blocks.
+  await prepareZXingModule({
+    overrides: {
+      locateFile: (path: string, prefix: string) =>
+        path.endsWith('.wasm') ? wasmModule.default : `${prefix}${path}`,
+    },
+    fireImmediately: true,
+  });
+
+  usingBundledDetector = true;
+  qrDetector = new BarcodeDetector({ formats: ['qr_code'] });
+  return qrDetector;
+}
+
 async function startCamera() {
   if (!import.meta.client) return;
 
   const startId = ++cameraStartId;
   stopCamera();
   cameraError.value = '';
+  cameraPhase.value = 'requesting';
+
+  if (!navigator.mediaDevices?.getUserMedia) {
+    cameraPhase.value = 'insecure';
+    cameraError.value =
+      'The scanner needs a secure HTTPS connection before the camera can start.';
+    cameraReady.value = false;
+    return;
+  }
 
   await nextTick();
 
-  const video = videoEl.value;
-  if (!video || startId !== cameraStartId) return;
+  let video = videoEl.value;
+  if (!video) {
+    await nextTick();
+    video = videoEl.value;
+  }
+  if (!video || startId !== cameraStartId) {
+    if (startId === cameraStartId && cameraPhase.value === 'requesting') {
+      cameraPhase.value = 'idle';
+    }
+    return;
+  }
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -112,12 +259,29 @@ async function startCamera() {
     // webcams look “backwards” compared to a selfie mirror — do not
     // scaleX(-1) here or later QR detection will see a flipped image.
     video.style.transform = 'none';
+    video.playsInline = true;
     await video.play();
-    startScanLoop();
+  } catch (error) {
+    if (startId !== cameraStartId) return;
+    const failure = describeCameraError(error);
+    cameraPhase.value = failure.phase;
+    cameraError.value = failure.message;
+    cameraReady.value = false;
+    return;
+  }
+
+  try {
+    await ensureQrDetector();
   } catch {
     if (startId !== cameraStartId) return;
-    cameraError.value = 'Camera access is needed to scan attendee QR codes.';
+    markUnsupported();
+    return;
   }
+
+  if (startId !== cameraStartId) return;
+  cameraReady.value = true;
+  cameraPhase.value = 'live';
+  startScanLoop();
 }
 
 async function loadPlaceholderSpline() {
@@ -186,31 +350,28 @@ async function detectQrFromCamera() {
   if (
     !import.meta.client ||
     state.value !== 'scanning' ||
+    cameraPhase.value !== 'live' ||
     isLookingUp.value ||
-    !videoEl.value
+    !videoEl.value ||
+    !qrDetector
   ) {
     return;
   }
 
-  const Detector = (
-    window as Window & {
-      BarcodeDetector?: new (options: { formats: string[] }) => {
-        detect: (
-          source: CanvasImageSource
-        ) => Promise<Array<{ rawValue?: string }>>;
-      };
-    }
-  ).BarcodeDetector;
-
-  if (!Detector) return;
+  if (videoEl.value.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
 
   try {
-    const detector = new Detector({ formats: ['qr_code'] });
-    const codes = await detector.detect(videoEl.value);
+    const codes = await qrDetector.detect(videoEl.value);
     const value = codes.find((item) => item.rawValue)?.rawValue;
     if (value) await lookupCode(value);
-  } catch {
-    // Keep scanning.
+  } catch (error) {
+    if (
+      usingBundledDetector &&
+      error instanceof DOMException &&
+      error.name === 'NotSupportedError'
+    ) {
+      markUnsupported();
+    }
   }
 }
 
@@ -258,7 +419,8 @@ async function lookupCode(code: string) {
       role: result.attendee.role,
       company: result.attendee.company,
       status: result.status === 'already' ? 'checked_in' : 'registered',
-      statusLabel: result.status === 'already' ? 'Already checked in' : 'Registered',
+      statusLabel:
+        result.status === 'already' ? 'Already checked in' : 'Registered',
       membershipStatus: 'Active',
       joinedAt: '',
       registeredAt: '',
@@ -289,6 +451,12 @@ async function lookupCode(code: string) {
   } finally {
     isLookingUp.value = false;
   }
+}
+
+async function submitManualCode() {
+  const code = manualCode.value.trim();
+  if (!code || isLookingUp.value) return;
+  await lookupCode(code);
 }
 
 async function resumeScanning() {
@@ -339,12 +507,6 @@ watch(open, (isOpen) => {
   resetScanner();
 });
 
-watch(videoEl, async (el) => {
-  if (el && open.value && state.value === 'scanning' && !mediaStream) {
-    await startCamera();
-  }
-});
-
 watch(splineCanvasEl, async (el) => {
   if (
     el &&
@@ -363,7 +525,7 @@ watch(
 
     if (currentState === 'scanning') {
       disposeSpline();
-      await startCamera();
+      if (cameraReady.value) await startCamera();
       return;
     }
 
@@ -377,18 +539,6 @@ watch(
     disposeSpline();
   }
 );
-
-async function onManualCode() {
-  if (!import.meta.client) return;
-  if (
-    (window as Window & { BarcodeDetector?: unknown }).BarcodeDetector &&
-    !cameraError.value
-  ) {
-    return;
-  }
-  const code = window.prompt('Paste the community card URL or slug');
-  if (code) await lookupCode(code);
-}
 
 onBeforeUnmount(() => {
   stopCamera();
@@ -417,41 +567,94 @@ onBeforeUnmount(() => {
     <template #body>
       <div
         v-if="state === 'scanning'"
-        class="flex h-full flex-col items-center justify-center gap-6 py-8"
+        class="flex h-full flex-col overflow-y-auto px-6 py-8"
       >
-        <div
-          class="relative size-50 shrink-0 overflow-hidden rounded-xl border border-[#232323] bg-dark"
-        >
+        <div class="m-auto flex w-full max-w-md flex-col items-center gap-6">
           <div
-            class="absolute inset-2 overflow-hidden rounded-[4px] border border-[#8b8b8b] bg-dark"
+            class="relative size-50 shrink-0 overflow-hidden rounded-xl border border-[#232323] bg-dark"
           >
-            <video
-              ref="videoEl"
-              class="absolute inset-0 size-full object-cover"
-              autoplay
-              muted
-              playsinline
-            />
             <div
-              v-if="cameraError"
-              class="absolute inset-0 flex items-center justify-center bg-dark px-4 text-center"
+              class="absolute inset-2 overflow-hidden rounded-[4px] border border-[#8b8b8b] bg-dark"
             >
-              <p class="text-xs leading-normal text-[#8b8b8b]">
-                {{ cameraError }}
-              </p>
+              <video
+                ref="videoEl"
+                class="absolute inset-0 size-full object-cover"
+                :class="
+                  cameraPhase === 'live' || cameraPhase === 'requesting'
+                    ? ''
+                    : 'invisible'
+                "
+                autoplay
+                muted
+                playsinline
+              />
             </div>
           </div>
-          <!-- Fallback when BarcodeDetector is unavailable: click to enter a card URL. -->
-          <button
-            type="button"
-            class="absolute inset-0 z-10"
-            aria-label="Enter card URL if camera scan is unavailable"
-            @click="onManualCode"
-          />
+
+          <div
+            v-if="cameraPhase === 'idle' || cameraPhase === 'requesting'"
+            class="flex w-full flex-col items-center gap-4 text-center"
+          >
+            <p class="text-sm text-[#8b8b8b]">
+              Camera access is used to read attendee QR codes.
+            </p>
+            <UButton
+              label="Allow camera"
+              color="neutral"
+              :class="primaryActionButtonClass"
+              :loading="cameraPhase === 'requesting'"
+              :disabled="cameraPhase === 'requesting'"
+              @click="startCamera"
+            />
+          </div>
+
+          <p
+            v-else-if="cameraPhase === 'live'"
+            class="text-sm font-medium text-[#8b8b8b]"
+          >
+            Place QR code inside frame
+          </p>
+
+          <div
+            v-else
+            class="flex w-full flex-col items-center gap-4 text-center"
+          >
+            <p class="text-sm text-[#8b8b8b]">
+              {{ cameraError }}
+            </p>
+            <UButton
+              v-if="showCameraRetry"
+              label="Try again"
+              color="neutral"
+              :class="primaryActionButtonClass"
+              @click="startCamera"
+            />
+          </div>
+
+          <form
+            class="flex w-full items-center gap-3"
+            @submit.prevent="submitManualCode"
+          >
+            <UInput
+              v-model="manualCode"
+              placeholder="Card URL or slug"
+              color="neutral"
+              variant="soft"
+              class="min-w-0 flex-1"
+              :ui="{
+                base: 'h-10 rounded-full border-0 bg-[#232323] px-5 text-sm font-medium text-white ring-0 placeholder:text-[#8b8b8b] focus-visible:ring-0',
+              }"
+            />
+            <UButton
+              type="submit"
+              label="Enter code"
+              color="neutral"
+              class="h-10 shrink-0 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+              :disabled="!manualCode.trim() || isLookingUp"
+              :loading="isLookingUp"
+            />
+          </form>
         </div>
-        <p class="text-sm font-medium text-[#8b8b8b]">
-          Place QR code inside frame
-        </p>
       </div>
 
       <div
@@ -502,7 +705,7 @@ onBeforeUnmount(() => {
 
       <div
         v-else-if="state === 'success'"
-        class="flex flex-col w-full items-center justify-end gap-4"
+        class="flex w-full flex-col items-center justify-end gap-4"
       >
         <UButton
           label="Check-in"

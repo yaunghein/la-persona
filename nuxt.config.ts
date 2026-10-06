@@ -38,6 +38,7 @@ export default defineNuxtConfig({
           "'self'",
           "'unsafe-inline'", // Needed for Nuxt hydration
           "'unsafe-eval'", // <-- REQUIRED for Spline runtime (WebGL/Shaders)
+          "'wasm-unsafe-eval'", // QR check-in decoder (zxing wasm)
           'https://fonts.gstatic.com',
           'https://prod.spline.design',
           'https://www.googletagmanager.com',
