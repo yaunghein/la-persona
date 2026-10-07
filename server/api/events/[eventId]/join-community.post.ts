@@ -7,6 +7,7 @@ import { addCommunityMember } from '~~/server/services/community';
 import { handleApiError } from '~~/server/utils/errors';
 import { requireSession } from '~~/server/utils/organization-permissions';
 import { isCommunityCardComplete } from '~~/shared/utils/event-flow';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   const session = await requireSession(event);
@@ -18,6 +19,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Event id is required',
     });
   }
+  enrichLog(event, { event: { id: eventId } });
 
   try {
     const row = await findPublicEventById(eventId);
@@ -59,6 +61,14 @@ export default defineEventHandler(async (event) => {
       session.user.id,
       row.event.organizationId
     );
+
+    enrichLog(event, {
+      event: {
+        organization_id: row.event.organizationId,
+        already_member: Boolean(existing),
+        ...(card?.slug ? { card_slug: card.slug } : {}),
+      },
+    });
 
     return {
       organizationSlug: row.organizationSlug,

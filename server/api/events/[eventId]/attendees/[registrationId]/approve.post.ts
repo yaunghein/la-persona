@@ -8,6 +8,7 @@ import { handleApiError } from '~~/server/utils/errors';
 import { requireCommunityOrganization } from '~~/server/utils/organization-permissions';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   const { org } = await requireCommunityOrganization(event);
@@ -24,6 +25,9 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Event id and registration id are required',
     });
   }
+  enrichLog(event, {
+    registration: { event_id: eventId, registration_id: registrationId },
+  });
 
   try {
     const row = await findEventByIdAndOrganizationId(eventId, org.id);
@@ -46,6 +50,7 @@ export default defineEventHandler(async (event) => {
     }
 
     if (registration.status !== 'pending') {
+      enrichLog(event, { registration: { result: registration.status } });
       return registration;
     }
 
@@ -61,6 +66,7 @@ export default defineEventHandler(async (event) => {
       registration.id,
       'registered'
     );
+    enrichLog(event, { registration: { result: 'registered' } });
     return updated;
   } catch (error) {
     handleApiError(error, {

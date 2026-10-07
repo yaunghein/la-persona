@@ -6,6 +6,7 @@ import { card, contactExchange } from '~~/server/db/schema';
 import { getPersonalOrganizationByUserId } from '~~/server/services/auth';
 import { handleApiError } from '~~/server/utils/errors';
 import { normalizePhoneCountryCode } from '~~/shared/utils/phone';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 const seamlessExchangeSchema = z
   .object({
@@ -48,7 +49,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
   }
 
-  const result = await readValidatedBody(event, seamlessExchangeSchema.safeParse);
+  const result = await readValidatedBody(
+    event,
+    seamlessExchangeSchema.safeParse
+  );
   if (!result.success) {
     throw createError({
       statusCode: 400,
@@ -92,7 +96,8 @@ export default defineEventHandler(async (event) => {
     if (!personalOrganization) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Create your La Persona card before using Seamless Exchange.',
+        statusMessage:
+          'Create your La Persona card before using Seamless Exchange.',
       });
     }
 
@@ -111,7 +116,8 @@ export default defineEventHandler(async (event) => {
     if (!scannerCard) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Create your La Persona card before using Seamless Exchange.',
+        statusMessage:
+          'Create your La Persona card before using Seamless Exchange.',
       });
     }
 
@@ -185,6 +191,14 @@ export default defineEventHandler(async (event) => {
           name: getCardDisplayName(scannerCard),
         },
       };
+    });
+
+    enrichLog(event, {
+      contact_exchange: {
+        card_id: payload.ownerCard.id,
+        result: 'exchanged',
+        ...(ownerCard.email ? { owner_email: ownerCard.email } : {}),
+      },
     });
 
     return { success: true, data: payload };

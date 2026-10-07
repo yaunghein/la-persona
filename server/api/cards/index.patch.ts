@@ -4,6 +4,7 @@ import {
   requireOrganizationPermission,
 } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+import { changedFieldNames, enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   const session = await requireOrganizationPermission(
@@ -28,9 +29,20 @@ export default defineEventHandler(async (event) => {
       ORGANIZATION_PERMISSIONS.CARD_READ_ALL,
       organizationId
     );
-    return await updateCard(session.user.id, organizationId, result.data, {
-      scopeToUser: !canUpdateAny,
+    enrichLog(event, {
+      card: {
+        id: result.data.id,
+        fields: changedFieldNames(result.data),
+      },
     });
+    const updated = await updateCard(
+      session.user.id,
+      organizationId,
+      result.data,
+      { scopeToUser: !canUpdateAny }
+    );
+    enrichLog(event, { card: { slug: updated.slug } });
+    return updated;
   } catch (e) {
     handleApiError(e, {
       statusMessage: 'Failed to update card',

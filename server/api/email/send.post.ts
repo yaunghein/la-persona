@@ -1,4 +1,5 @@
 // import { requireAdminSession } from '~~/server/utils/admin-permissions';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   // await requireAdminSession(event);
@@ -13,6 +14,9 @@ export default defineEventHandler(async (event) => {
 
   try {
     const { template, ...payload } = result.data;
+    enrichLog(event, {
+      email: { template, to: result.data.to, attempted: true },
+    });
     const html = await renderEmailComponent(template, payload);
     const response = await sendEmail({ ...result.data, html });
     return { success: true, data: response };

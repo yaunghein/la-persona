@@ -220,9 +220,6 @@ const onSubmit = async (e: SubmitEvent) => {
 
   isSubmitting.value = true;
 
-  // await new Promise((r) => setTimeout(r, 3000));
-  // console.log({ data });
-
   try {
     await $fetch('/api/email/send', {
       method: 'POST',

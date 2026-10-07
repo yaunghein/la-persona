@@ -43,7 +43,6 @@ const pending = ref(false);
 const toast = useToast();
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-  console.log('lol');
   pending.value = true;
 
   try {

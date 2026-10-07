@@ -8,10 +8,14 @@ import { handleApiError } from '~~/server/utils/errors';
 import { requireCommunityOrganization } from '~~/server/utils/organization-permissions';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   const { session, org } = await requireCommunityOrganization(event);
-  await requireOrganizationPermission(event, ORGANIZATION_PERMISSIONS.EVENT_READ);
+  await requireOrganizationPermission(
+    event,
+    ORGANIZATION_PERMISSIONS.EVENT_READ
+  );
   const eventId = getRouterParam(event, 'eventId');
 
   if (!eventId) {
@@ -42,6 +46,13 @@ export default defineEventHandler(async (event) => {
       session.user.id
     );
     if (existing) {
+      enrichLog(event, {
+        registration: {
+          event_id: eventId,
+          registration_id: existing.id,
+          result: 'already_registered',
+        },
+      });
       return existing;
     }
 
@@ -58,6 +69,14 @@ export default defineEventHandler(async (event) => {
       eventId,
       userId: session.user.id,
       status,
+    });
+
+    enrichLog(event, {
+      registration: {
+        event_id: eventId,
+        registration_id: inserted?.id,
+        result: status === 'pending' ? 'pending' : 'registered',
+      },
     });
 
     return inserted;

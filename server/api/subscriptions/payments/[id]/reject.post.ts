@@ -5,6 +5,7 @@ import { assertOrganizationOwner } from '~~/server/services/subscription';
 import { rejectSubscriptionPaymentBodySchema } from '~~/shared/types/subscription';
 import { requireAdminSession } from '~~/server/utils/admin-permissions';
 import { notifySubscriptionPaymentRejectedEmail } from '~~/server/utils/subscription-email-notifications';
+import { enrichLog, trackEmailSends } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   const session = await requireAdminSession(event);
@@ -59,9 +60,8 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const isLegacyLinkedByNote = /^((New|Existing) design request \([^)]+\))$/.test(
-      payment.note || ''
-    );
+    const isLegacyLinkedByNote =
+      /^((New|Existing) design request \([^)]+\))$/.test(payment.note || '');
     const isLinkedDesignRequest =
       Boolean(payment.requestId) || isLegacyLinkedByNote;
     if (isLinkedDesignRequest) {
@@ -72,9 +72,13 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const rejectionParts = [parsed.data.reason, parsed.data.note].filter(Boolean);
+    const rejectionParts = [parsed.data.reason, parsed.data.note].filter(
+      Boolean
+    );
     const noteSuffix =
-      rejectionParts.length > 0 ? `\nRejected: ${rejectionParts.join(' — ')}` : '';
+      rejectionParts.length > 0
+        ? `\nRejected: ${rejectionParts.join(' — ')}`
+        : '';
     const nextNote = [payment.note, noteSuffix].filter(Boolean).join('');
 
     const [updatedPayment] = await tx
@@ -97,16 +101,33 @@ export default defineEventHandler(async (event) => {
     .limit(1);
 
   const payerEmail = payer?.email?.trim() || '';
+  enrichLog(event, {
+    payment: {
+      id: payload.payment.id,
+      decision: 'rejected',
+      ...(payerEmail ? { payer_email: payerEmail } : {}),
+    },
+  });
   if (payerEmail) {
     const reasonBlock =
       parsed.data.reason || parsed.data.note
         ? `\n\nDetails:\n${[parsed.data.reason, parsed.data.note].filter(Boolean).join('\n')}`
         : '';
-    void notifySubscriptionPaymentRejectedEmail({
-      payerEmail,
-      payerName: payer?.name?.trim() || payerEmail,
-      bodyText: `We were not able to approve your subscription payment (reference: ${payload.payment.id}).${reasonBlock}\n\nIf you believe this is a mistake, please reply to this email or contact us through your usual LA PERSONA channel.`,
-    }).catch((err) => console.error('[reject-payment] user email', err));
+    enrichLog(event, {
+      email: {
+        attempted: true,
+        template: 'payment_rejected',
+        to: [payerEmail],
+      },
+    });
+    trackEmailSends(
+      event,
+      notifySubscriptionPaymentRejectedEmail({
+        payerEmail,
+        payerName: payer?.name?.trim() || payerEmail,
+        bodyText: `We were not able to approve your subscription payment (reference: ${payload.payment.id}).${reasonBlock}\n\nIf you believe this is a mistake, please reply to this email or contact us through your usual LA PERSONA channel.`,
+      })
+    );
   }
 
   return payload;

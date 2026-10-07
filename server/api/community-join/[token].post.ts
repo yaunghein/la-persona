@@ -9,6 +9,7 @@ import {
 import { handleApiError } from '~~/server/utils/errors';
 import { requireSession } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   const session = await requireSession(event);
@@ -29,6 +30,9 @@ export default defineEventHandler(async (event) => {
         statusMessage: 'Invite link is invalid',
       });
     }
+    enrichLog(event, {
+      invitation: { organization_id: setting.organizationId },
+    });
 
     const org = await db.query.organization.findFirst({
       where: eq(organization.id, setting.organizationId),
@@ -41,6 +45,7 @@ export default defineEventHandler(async (event) => {
         statusMessage: 'Community not found',
       });
     }
+    enrichLog(event, { invitation: { organization_slug: org.slug } });
 
     await addCommunityMember(session.user.id, org.id);
 

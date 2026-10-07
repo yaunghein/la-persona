@@ -13,12 +13,19 @@ import { splitName } from '~~/server/services/card';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
 import { derivePlanCodeFromSource } from '~~/shared/utils/subscription';
 import { notifySubscriptionSubmissionEmails } from '~~/server/utils/subscription-email-notifications';
-import { env } from '~~/server/utils/env';
+import { env, getAdminNotificationEmails } from '~~/server/utils/env';
 import { requireOrganizationSession } from '~~/server/utils/organization-permissions';
+import type { H3Event } from 'h3';
+import {
+  enrichLog,
+  toLogError,
+  trackEmailSends,
+} from '~~/server/utils/wide-event';
 
 const NEW_DESIGN_PLAN_CODE = 'premium';
 
 function fireCardRequestSubmittedEmails(
+  event: H3Event,
   session: { user: { email?: string | null; name?: string | null } },
   payload: {
     request: { id: string };
@@ -29,9 +36,18 @@ function fireCardRequestSubmittedEmails(
   kind: 'new_design' | 'existing_design'
 ) {
   const email = session.user.email?.trim();
+  enrichLog(event, {
+    card_request: {
+      id: payload.request.id,
+      plan_code: payload.planCode,
+      payment_id: payload.paymentId,
+      ...(email ? { requester_email: email } : {}),
+    },
+  });
   if (!email) return;
 
-  const planLabel = payload.planCode.charAt(0).toUpperCase() + payload.planCode.slice(1);
+  const planLabel =
+    payload.planCode.charAt(0).toUpperCase() + payload.planCode.slice(1);
   const submissionTitle =
     kind === 'new_design'
       ? 'New Card Design Request'
@@ -43,17 +59,26 @@ function fireCardRequestSubmittedEmails(
 
   const thakhinRequestsUrl = new URL('/thakhin/requests', env.BASE_URL).href;
 
-  void notifySubscriptionSubmissionEmails({
-    payerEmail: email,
-    payerName: session.user.name?.trim() || email,
-    submissionTitle,
-    userBodyText: `${userBodyText}\n\nRequest ID: ${payload.request.id}\nPayment ID: ${payload.paymentId}`,
-    teamDetailLines: [
-      `Request type: ${kind === 'new_design' ? 'New card design' : `Existing design → ${payload.planCode}`}`,
-      `Plan: ${payload.planCode}`,
-    ],
-    teamRequestsDashboardUrl: thakhinRequestsUrl,
-  }).catch((err) => console.error('[new-request] notify emails', err));
+  enrichLog(event, {
+    email: {
+      attempted: true,
+      to: [email, ...getAdminNotificationEmails()],
+    },
+  });
+  trackEmailSends(
+    event,
+    notifySubscriptionSubmissionEmails({
+      payerEmail: email,
+      payerName: session.user.name?.trim() || email,
+      submissionTitle,
+      userBodyText: `${userBodyText}\n\nRequest ID: ${payload.request.id}\nPayment ID: ${payload.paymentId}`,
+      teamDetailLines: [
+        `Request type: ${kind === 'new_design' ? 'New card design' : `Existing design → ${payload.planCode}`}`,
+        `Plan: ${payload.planCode}`,
+      ],
+      teamRequestsDashboardUrl: thakhinRequestsUrl,
+    })
+  );
 }
 
 function addYears(base: Date, years: number) {
@@ -218,7 +243,7 @@ export default defineEventHandler(async (event) => {
         };
       });
 
-      fireCardRequestSubmittedEmails(session, payload, 'new_design');
+      fireCardRequestSubmittedEmails(event, session, payload, 'new_design');
       return payload;
     }
 
@@ -391,10 +416,12 @@ export default defineEventHandler(async (event) => {
       };
     });
 
-    fireCardRequestSubmittedEmails(session, payload, 'existing_design');
+    fireCardRequestSubmittedEmails(event, session, payload, 'existing_design');
     return payload;
   } catch (e) {
-    console.error(e);
+    if (!(e && typeof e === 'object' && 'statusCode' in e)) {
+      enrichLog(event, { error: toLogError(e, 500) });
+    }
     if (isError(e)) throw e;
     throw createError({
       statusCode: 500,

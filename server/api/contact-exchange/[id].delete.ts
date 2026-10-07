@@ -6,6 +6,7 @@ import {
   requireOrganizationPermission,
 } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   const session = await requireOrganizationPermission(
@@ -20,6 +21,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Contact id is required.',
     });
   }
+  enrichLog(event, { contact_exchange: { id } });
 
   const orgId = session.session.activeOrganizationId;
   const userId = session.user.id;
@@ -49,6 +51,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Contact not found.',
     });
   }
+  enrichLog(event, { contact_exchange: { card_id: row.cardId } });
 
   if (!row.cardId || !row.cardOrgId || row.cardOrgId !== orgId) {
     throw createError({

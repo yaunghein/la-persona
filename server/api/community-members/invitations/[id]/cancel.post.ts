@@ -3,6 +3,7 @@ import { handleApiError } from '~~/server/utils/errors';
 import { requireCommunityOrganization } from '~~/server/utils/organization-permissions';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   await requireCommunityOrganization(event);
@@ -18,6 +19,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Invitation id is required',
     });
   }
+  enrichLog(event, { invitation: { id: invitationId } });
 
   try {
     await auth.api.cancelInvitation({

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { env } from '~~/server/utils/env';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 const CONSENT_TEXT =
   '	I would like to receive marketing communications on products, services and events offered by La Persona. I understand these communications may be personalized to me based on my interests, preferences and use of products and services, including invitations to provide customer experience feedback.';
@@ -23,6 +24,7 @@ export default defineEventHandler(async (event) => {
     });
   }
   const url = `https://api.hsforms.com/submissions/v3/integration/submit/${env.HUBSPOT_PORTAL_ID}/${env.HUBSPOT_FORM_GUID_LEAD}`;
+  enrichLog(event, { lead: { email: result.data.email } });
   const body = {
     submittedAt: new Date().getTime(),
     fields: [

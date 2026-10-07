@@ -10,6 +10,7 @@ import { requireCommunityOrganization } from '~~/server/utils/organization-permi
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
 import { parseCardSlugFromQr } from '~~/shared/utils/card-qr';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 const bodySchema = z.object({
   code: z.string().trim().min(1, 'QR code is required'),
@@ -77,11 +78,30 @@ export default defineEventHandler(async (event) => {
     }
 
     if (registration.status === 'checked_in') {
+      enrichLog(event, {
+        registration: {
+          event_id: eventId,
+          registration_id: registration.id,
+          result: 'checked_in',
+        },
+      });
       return registration;
     }
 
-    const updated = await updateEventRegistrationStatus(registration.id, 'checked_in', {
-      checkedInAt: new Date(),
+    const updated = await updateEventRegistrationStatus(
+      registration.id,
+      'checked_in',
+      {
+        checkedInAt: new Date(),
+      }
+    );
+
+    enrichLog(event, {
+      registration: {
+        event_id: eventId,
+        registration_id: updated?.id ?? registration.id,
+        result: 'checked_in',
+      },
     });
 
     return updated;

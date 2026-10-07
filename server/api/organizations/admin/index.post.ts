@@ -9,6 +9,7 @@ import {
   ORGANIZATION_TYPES,
   type OrganizationType,
 } from '~~/shared/utils/constants';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 const adminCreateOrganizationSchema = z.object({
   name: z.string().trim().min(1, 'Name is required'),
@@ -110,6 +111,9 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Failed to create organization',
     });
   }
+  enrichLog(event, {
+    organization: { id: created.id, slug: created.slug, type: created.type },
+  });
 
   if (ownerUserId) {
     await db.insert(member).values({

@@ -49,9 +49,6 @@ const onSubmit = async (e: SubmitEvent) => {
 
   isSubmitting.value = true;
 
-  // await new Promise((r) => setTimeout(r, 3000));
-  // console.log({ data });
-
   try {
     await $fetch('/api/email/send', {
       method: 'POST',
@@ -112,17 +109,12 @@ async function onActionClick(link: { action?: string; label: string }) {
         });
         return;
       case 'saveContact':
-        if (!card?.vcf) {
-          console.log('[card-action] missing vcf', link);
-          return;
-        }
+        if (!card?.vcf) return;
         await downloadUrl({
           url: card.vcf,
           fileName: `${card.id}.vcf`,
         });
         return;
-      default:
-        console.log('[card-action]', link.action || link.label, link);
     }
   } catch (error) {
     console.error('Failed to save file', error);

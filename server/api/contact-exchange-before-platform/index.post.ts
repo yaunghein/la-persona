@@ -1,4 +1,5 @@
 import { insertContactExchangeBeforePlatform } from '~~/server/services/contact-exchange';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   const result = await readValidatedBody(
@@ -12,7 +13,15 @@ export default defineEventHandler(async (event) => {
     });
   }
   try {
-    return await insertContactExchangeBeforePlatform(result.data);
+    const inserted = await insertContactExchangeBeforePlatform(result.data);
+    enrichLog(event, {
+      contact_exchange: {
+        result: 'saved',
+        owner_email: inserted?.ownerEmail,
+        ...(inserted?.email ? { email: inserted.email } : {}),
+      },
+    });
+    return inserted;
   } catch (e) {
     handleApiError(e, {
       statusCode: 500,

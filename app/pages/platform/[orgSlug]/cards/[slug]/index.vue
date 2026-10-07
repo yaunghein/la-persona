@@ -282,7 +282,6 @@ const paymentDescription = computed(() => {
 const paymentFeeRows = computed(() => {
   const currentScenario = paymentScenario.value;
   const pricing = paymentPricing.value;
-  console.log({ currentScenario, pricing });
   if (!currentScenario || !pricing) return [];
 
   const rows: { label: string; amountMinor: number; isFree?: boolean }[] = [];

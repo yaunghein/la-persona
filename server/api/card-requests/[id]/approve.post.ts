@@ -13,6 +13,7 @@ import { splitName } from '~~/server/services/card';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
 import { getPersonalOrganizationByUserId } from '~~/server/services/auth';
 import { requireAdminSession } from '~~/server/utils/admin-permissions';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 const NEW_DESIGN_DEFAULT_PLAN_CODE = 'premium';
 
@@ -32,6 +33,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Request id is required.',
     });
   }
+  enrichLog(event, { card_request: { id: requestId } });
 
   const existing = await db.query.cardRequest.findFirst({
     where: eq(cardRequest.id, requestId),

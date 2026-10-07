@@ -1,8 +1,20 @@
 import { sendEmail } from '~~/server/utils/email';
 import { getAdminNotificationEmails } from '~~/server/utils/env';
+import {
+  emailErrorLabel,
+  type EmailSendResult,
+} from '~~/server/utils/wide-event';
 
-function logEmailFailure(context: string, error: unknown) {
-  console.error(`[subscription-email] ${context}`, error);
+function success(template: string, to: string[]): EmailSendResult {
+  return { ok: true, template, to };
+}
+
+function failure(
+  template: string,
+  to: string[],
+  error: unknown
+): EmailSendResult {
+  return { ok: false, template, to, error: emailErrorLabel(error) };
 }
 
 export async function notifySubscriptionSubmissionEmails(params: {
@@ -13,7 +25,7 @@ export async function notifySubscriptionSubmissionEmails(params: {
   teamDetailLines: string[];
   /** When set, team email shows a CTA (e.g. Thakhin requests list). */
   teamRequestsDashboardUrl?: string;
-}) {
+}): Promise<EmailSendResult[]> {
   const {
     payerEmail,
     payerName,
@@ -23,36 +35,39 @@ export async function notifySubscriptionSubmissionEmails(params: {
     teamRequestsDashboardUrl,
   } = params;
 
-  if (!payerEmail?.trim()) {
-    return;
-  }
+  if (!payerEmail?.trim()) return [];
 
-  const teamRecipients = getAdminNotificationEmails();
+  const results: EmailSendResult[] = [];
+  const payer = payerEmail.trim();
+  const userTemplate = 'submission_received_user';
 
   try {
     const userHtml = await renderEmailComponent(
       'SubscriptionSubmissionReceivedUser',
       {
-        recipientName: payerName || payerEmail,
+        recipientName: payerName || payer,
         bodyText: userBodyText,
       }
     );
     await sendEmail({
-      to: [payerEmail.trim()],
+      to: [payer],
       subject: `LA PERSONA — We received your ${submissionTitle}`,
       html: userHtml,
     });
-  } catch (e) {
-    logEmailFailure('user submission acknowledgment', e);
+    results.push(success(userTemplate, [payer]));
+  } catch (error) {
+    results.push(failure(userTemplate, [payer], error));
   }
 
+  const teamRecipients = getAdminNotificationEmails();
   if (teamRecipients.length > 0) {
+    const teamTemplate = 'submission_received_team';
     try {
       const teamHtml = await renderEmailComponent(
         'SubscriptionSubmissionReceivedTeam',
         {
           payerName: payerName || 'Unknown',
-          payerEmail: payerEmail.trim(),
+          payerEmail: payer,
           submissionTitle,
           detailLines: teamDetailLines,
           requestsDashboardUrl: teamRequestsDashboardUrl,
@@ -60,35 +75,41 @@ export async function notifySubscriptionSubmissionEmails(params: {
       );
       await sendEmail({
         to: teamRecipients,
-        subject: `[LA PERSONA] ${submissionTitle} — ${payerName || payerEmail}`,
+        subject: `[LA PERSONA] ${submissionTitle} — ${payerName || payer}`,
         html: teamHtml,
       });
-    } catch (e) {
-      logEmailFailure('team submission notification', e);
+      results.push(success(teamTemplate, teamRecipients));
+    } catch (error) {
+      results.push(failure(teamTemplate, teamRecipients, error));
     }
   }
+
+  return results;
 }
 
 export async function notifySubscriptionPaymentApprovedEmail(params: {
   payerEmail: string;
   payerName: string;
   bodyText: string;
-}) {
+}): Promise<EmailSendResult[]> {
   const { payerEmail, payerName, bodyText } = params;
-  if (!payerEmail?.trim()) return;
+  if (!payerEmail?.trim()) return [];
 
+  const to = [payerEmail.trim()];
+  const template = 'payment_approved';
   try {
     const html = await renderEmailComponent('SubscriptionPaymentApprovedUser', {
-      recipientName: payerName || payerEmail,
+      recipientName: payerName || to[0],
       bodyText,
     });
     await sendEmail({
-      to: [payerEmail.trim()],
+      to,
       subject: 'LA PERSONA — Your payment was approved',
       html,
     });
-  } catch (e) {
-    logEmailFailure('payment approved user email', e);
+    return [success(template, to)];
+  } catch (error) {
+    return [failure(template, to, error)];
   }
 }
 
@@ -96,21 +117,24 @@ export async function notifySubscriptionPaymentRejectedEmail(params: {
   payerEmail: string;
   payerName: string;
   bodyText: string;
-}) {
+}): Promise<EmailSendResult[]> {
   const { payerEmail, payerName, bodyText } = params;
-  if (!payerEmail?.trim()) return;
+  if (!payerEmail?.trim()) return [];
 
+  const to = [payerEmail.trim()];
+  const template = 'payment_rejected';
   try {
     const html = await renderEmailComponent('SubscriptionPaymentRejectedUser', {
-      recipientName: payerName || payerEmail,
+      recipientName: payerName || to[0],
       bodyText,
     });
     await sendEmail({
-      to: [payerEmail.trim()],
+      to,
       subject: 'LA PERSONA — Update on your payment',
       html,
     });
-  } catch (e) {
-    logEmailFailure('payment rejected user email', e);
+    return [success(template, to)];
+  } catch (error) {
+    return [failure(template, to, error)];
   }
 }

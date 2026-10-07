@@ -4,6 +4,7 @@ import { db } from '~~/server/db';
 import { organization } from '~~/server/db/schema';
 import { requireAdminSession } from '~~/server/utils/admin-permissions';
 import { slugify } from '~~/shared/utils/slugify';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 const adminUpdateOrganizationSchema = z.object({
   name: z.string().trim().min(1, 'Name is required'),
@@ -19,6 +20,7 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({ statusCode: 400, statusMessage: 'Organization id is required' });
   }
+  enrichLog(event, { organization: { id } });
 
   const result = await readValidatedBody(event, adminUpdateOrganizationSchema.safeParse);
   if (!result.success) {
@@ -70,6 +72,7 @@ export default defineEventHandler(async (event) => {
   if (!updated) {
     throw createError({ statusCode: 404, statusMessage: 'Organization not found' });
   }
+  enrichLog(event, { organization: { slug: updated.slug } });
 
   return updated;
 });

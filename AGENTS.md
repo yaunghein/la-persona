@@ -25,6 +25,29 @@ Prefer project MCPs over guessing: **Nuxt**, **Nuxt UI**, **Figma**, **Tailwind*
 - Route groups already used: `(public)`, `platform`, `thakhin`. Match existing SSR rules in `nuxt.config.ts` (`/platform/**` and `/thakhin/**` are CSR).
 - Prefer `<script setup lang="ts">` and typed props/emits. Keep everything type-safe and DRY.
 
+## Logging
+
+Follow [Logging Sucks](https://loggingsucks.com/): one wide event per API request, not a diary of log lines. Log what happened to the request (high-cardinality ids you would search), not each step the code took. Structured JSON is not enough if the line has no user, email, or business id.
+
+Pino writes a single canonical line at the end of the request. Do not call `logger` or `console.log` / `console.error` from handlers.
+
+- Logger: `server/utils/logger.ts` (JSON in production, pretty in dev).
+- Request event: `server/middleware/00.wide-event.ts` starts it for `/api/**`. `server/plugins/wide-event.ts` emits it once.
+- Handlers add fields with `enrichLog(event, { ... })` from `server/utils/wide-event.ts`. Nested objects merge.
+
+The canonical line already has `request_id`, `method`, `route` (param names, so join tokens stay out of the path), `status_code`, `duration_ms`, `outcome`, `user_id`, `user_email`, and `organization_id`. A line is written for mutations (`POST`, `PUT`, `PATCH`, `DELETE`), any 4xx/5xx, and anything slower than 1000ms. Successful fast `GET`s are skipped. Successful `/api/auth/get-session`, `/api/analytics`, and `/api/s3/image-proxy` are skipped too; failures and slow calls on those routes are kept.
+
+On a new or changed API route, call `enrichLog` with the ids and addresses you would search when a user reports the action failed. Put them on a nested object so you do not overwrite `request_id`:
+
+- Card create/update/delete: `card.id`, slug, owner email.
+- Payments, requests, invitations, contact exchange, registration, check-in: the same kind of ids already used on those handlers (payment id, plan, decision, invitation id, invited email, event id, registration id, result).
+
+Do not log passwords, cookies, auth headers, invitation or join tokens, email HTML, or request bodies. Do log email addresses (`user_email`, `email.to`, payer, requester, invited address). Validation failures should name the fields, not the submitted values.
+
+Email that outlives the response: notification helpers return `{ ok, template, to, error? }`. Set `email.attempted` and `email.to` before returning, then `trackEmailSends(event, promise)`. A failure after the response emits one extra error line with the same `request_id`. Do not `console.error` inside `.catch`.
+
+No client logger. No per-query SQL logs. CLI scripts are not requests.
+
 ## Data-driven UI
 
 - Build UI from **data objects + props**, not hardcoded copy scattered in templates.

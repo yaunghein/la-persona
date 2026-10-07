@@ -14,8 +14,9 @@ import {
   hasOrganizationPermission,
   requireOrganizationSession,
 } from '~~/server/utils/organization-permissions';
-import { env } from '~~/server/utils/env';
+import { env, getAdminNotificationEmails } from '~~/server/utils/env';
 import { notifySubscriptionSubmissionEmails } from '~~/server/utils/subscription-email-notifications';
+import { enrichLog, trackEmailSends } from '~~/server/utils/wide-event';
 
 function addYears(base: Date, years: number) {
   const result = new Date(base);
@@ -44,7 +45,9 @@ export default defineEventHandler(async (event) => {
   const cardsInOrg = await db
     .select({ id: card.id, userId: card.userId })
     .from(card)
-    .where(and(eq(card.organizationId, organizationId), inArray(card.id, cardIds)));
+    .where(
+      and(eq(card.organizationId, organizationId), inArray(card.id, cardIds))
+    );
 
   const validCardIds = new Set(cardsInOrg.map((row) => row.id));
   const missingCardIds = cardIds.filter((id) => !validCardIds.has(id));
@@ -130,7 +133,9 @@ export default defineEventHandler(async (event) => {
       socials: card.socials,
     })
     .from(card)
-    .where(and(eq(card.organizationId, organizationId), inArray(card.id, cardIds)));
+    .where(
+      and(eq(card.organizationId, organizationId), inArray(card.id, cardIds))
+    );
   const cardById = new Map(cardDetails.map((item) => [item.id, item]));
 
   const result = await db.transaction(async (tx) => {
@@ -159,7 +164,10 @@ export default defineEventHandler(async (event) => {
       const termYears = item.termYears ?? 1;
       const isPremiumUpgradePayment =
         body.data.createPremiumRequest === true && item.planCode === 'premium';
-      if (body.data.createPremiumRequest === true && item.planCode !== 'premium') {
+      if (
+        body.data.createPremiumRequest === true &&
+        item.planCode !== 'premium'
+      ) {
         throw createError({
           statusCode: 400,
           statusMessage: 'Premium upgrade requests must use premium plan.',
@@ -170,8 +178,12 @@ export default defineEventHandler(async (event) => {
         });
       }
 
-      const additionalFeeMinor = isPremiumUpgradePayment ? env.CUSTOM_DESIGN_FEE : 0;
-      const baseAmountMinor = isPremiumUpgradePayment ? 0 : plan.priceMinor * termYears;
+      const additionalFeeMinor = isPremiumUpgradePayment
+        ? env.CUSTOM_DESIGN_FEE
+        : 0;
+      const baseAmountMinor = isPremiumUpgradePayment
+        ? 0
+        : plan.priceMinor * termYears;
       const expectedAmountMinor = baseAmountMinor + additionalFeeMinor;
       const lineAmountMinor = expectedAmountMinor;
       const planCurrency = plan.currency.toUpperCase();
@@ -383,14 +395,33 @@ export default defineEventHandler(async (event) => {
   ].filter(Boolean) as string[];
 
   const payerEmail = session.user.email?.trim() || '';
+  enrichLog(event, {
+    payment: {
+      id: result.payment.id,
+      decision: 'submitted',
+      plan_codes: planCodes,
+      item_count: body.data.items.length,
+      ...(result.requestId ? { request_id: result.requestId } : {}),
+      ...(payerEmail ? { payer_email: payerEmail } : {}),
+    },
+  });
   if (payerEmail) {
-    void notifySubscriptionSubmissionEmails({
-      payerEmail,
-      payerName: session.user.name?.trim() || payerEmail,
-      submissionTitle,
-      userBodyText: `${userBodyText}\n\nReference: ${result.payment.id}`,
-      teamDetailLines: teamLines,
-    }).catch((err) => console.error('[subscription-payment] notify emails', err));
+    enrichLog(event, {
+      email: {
+        attempted: true,
+        to: [payerEmail, ...getAdminNotificationEmails()],
+      },
+    });
+    trackEmailSends(
+      event,
+      notifySubscriptionSubmissionEmails({
+        payerEmail,
+        payerName: session.user.name?.trim() || payerEmail,
+        submissionTitle,
+        userBodyText: `${userBodyText}\n\nReference: ${result.payment.id}`,
+        teamDetailLines: teamLines,
+      })
+    );
   }
 
   return result;

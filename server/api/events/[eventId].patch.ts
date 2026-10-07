@@ -8,6 +8,7 @@ import { requireOrganizationPermission } from '~~/server/utils/organization-perm
 import { updateEventBodySchema } from '~~/shared/types/event';
 import { wallClockDate } from '~~/shared/utils/event-datetime';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+import { changedFieldNames, enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   const session = await requireOrganizationPermission(
@@ -23,6 +24,9 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Event id is required',
     });
   }
+  enrichLog(event, {
+    event: { id: eventId, fields: changedFieldNames(body.success ? body.data : {}) },
+  });
 
   if (!body.success) {
     throw createError({

@@ -3,6 +3,12 @@ import { db } from '~~/server/db';
 import { feedbackSubmission, organization } from '~~/server/db/schema';
 import { notifyFeedbackSubmissionEmail } from '~~/server/utils/feedback-email-notifications';
 import { handleApiError } from '~~/server/utils/errors';
+import { getAdminNotificationEmails } from '~~/server/utils/env';
+import {
+  emailErrorLabel,
+  enrichLog,
+  trackEmailSends,
+} from '~~/server/utils/wide-event';
 import { requireOrganizationSession } from '~~/server/utils/organization-permissions';
 import { feedbackSubmissionInsertSchema } from '~~/shared/types/feedback';
 
@@ -35,22 +41,47 @@ export default defineEventHandler(async (event) => {
       .returning();
 
     const submitterEmail = session.user.email?.trim() || '';
+    enrichLog(event, {
+      feedback: {
+        kind: body.data.kind,
+        ...(submitterEmail ? { submitter_email: submitterEmail } : {}),
+      },
+    });
     if (submitterEmail) {
       try {
         const org = await db.query.organization.findFirst({
           where: eq(organization.id, organizationId),
           columns: { name: true },
         });
-
-        void notifyFeedbackSubmissionEmail({
-          kind: body.data.kind,
-          message: body.data.message,
-          submitterName: session.user.name?.trim() || submitterEmail,
-          submitterEmail,
-          organizationName: org?.name || 'Unknown organization',
-        });
+        const recipients = getAdminNotificationEmails();
+        if (recipients.length > 0) {
+          enrichLog(event, {
+            email: {
+              attempted: true,
+              template: 'feedback_team',
+              to: recipients,
+            },
+          });
+        }
+        trackEmailSends(
+          event,
+          notifyFeedbackSubmissionEmail({
+            kind: body.data.kind,
+            message: body.data.message,
+            submitterName: session.user.name?.trim() || submitterEmail,
+            submitterEmail,
+            organizationName: org?.name || 'Unknown organization',
+          })
+        );
       } catch (error) {
-        console.error('[feedback-email] team notification', error);
+        enrichLog(event, {
+          email: {
+            attempted: true,
+            template: 'feedback_team',
+            ok: false,
+            error: emailErrorLabel(error),
+          },
+        });
       }
     }
 

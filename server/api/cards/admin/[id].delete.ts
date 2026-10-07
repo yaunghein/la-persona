@@ -8,6 +8,7 @@ import {
   subscriptionPaymentItem,
 } from '~~/server/db/schema';
 import { requireAdminSession } from '~~/server/utils/admin-permissions';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   await requireAdminSession(event);
@@ -16,6 +17,7 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({ statusCode: 400, statusMessage: 'Card id is required' });
   }
+  enrichLog(event, { card: { id } });
 
   const targetRows = await db
     .select({
@@ -34,6 +36,7 @@ export default defineEventHandler(async (event) => {
   if (!targetCard) {
     throw createError({ statusCode: 404, statusMessage: 'Card not found' });
   }
+  enrichLog(event, { card: { slug: targetCard.slug } });
 
   const deletedCard = await db.transaction(async (tx) => {
     if (targetCard.subscriptionStatus === 'pending_approval') {

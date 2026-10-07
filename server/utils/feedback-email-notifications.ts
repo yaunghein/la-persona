@@ -4,6 +4,10 @@ import {
 } from '~~/shared/types/feedback';
 import { sendEmail } from '~~/server/utils/email';
 import { getAdminNotificationEmails } from '~~/server/utils/env';
+import {
+  emailErrorLabel,
+  type EmailSendResult,
+} from '~~/server/utils/wide-event';
 
 export async function notifyFeedbackSubmissionEmail(params: {
   kind: FeedbackKind;
@@ -11,12 +15,13 @@ export async function notifyFeedbackSubmissionEmail(params: {
   submitterName: string;
   submitterEmail: string;
   organizationName: string;
-}) {
+}): Promise<EmailSendResult[]> {
   const recipients = getAdminNotificationEmails();
-  if (!recipients.length) return;
+  if (!recipients.length) return [];
 
   const kindLabel = FEEDBACK_KIND_LABELS[params.kind];
   const submitterName = params.submitterName.trim() || params.submitterEmail;
+  const template = 'feedback_team';
 
   try {
     const html = await renderEmailComponent('FeedbackSubmissionReceivedTeam', {
@@ -32,7 +37,15 @@ export async function notifyFeedbackSubmissionEmail(params: {
       subject: `[LA PERSONA] ${kindLabel} — ${submitterName}`,
       html,
     });
+    return [{ ok: true, template, to: recipients }];
   } catch (error) {
-    console.error('[feedback-email] team notification', error);
+    return [
+      {
+        ok: false,
+        template,
+        to: recipients,
+        error: emailErrorLabel(error),
+      },
+    ];
   }
 }

@@ -8,6 +8,7 @@ import {
   optionalS3ObjectKey,
 } from '~~/server/utils/zod-admin-card';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
+import { changedFieldNames, enrichLog } from '~~/server/utils/wide-event';
 
 const adminUpdateCardSchema = z.object({
   organizationId: z.string().min(1).optional(),
@@ -42,6 +43,7 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({ statusCode: 400, statusMessage: 'Card id is required' });
   }
+  enrichLog(event, { card: { id } });
 
   const result = await readValidatedBody(event, adminUpdateCardSchema.safeParse);
   if (!result.success) {
@@ -100,6 +102,14 @@ export default defineEventHandler(async (event) => {
   if (!updated) {
     throw createError({ statusCode: 404, statusMessage: 'Card not found' });
   }
+
+  enrichLog(event, {
+    card: {
+      slug: updated.slug,
+      fields: changedFieldNames(payload),
+      ...(updated.email ? { email: updated.email } : {}),
+    },
+  });
 
   return updated;
 });

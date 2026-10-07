@@ -7,6 +7,7 @@ import { handleApiError } from '~~/server/utils/errors';
 import { requireCommunityOrganization } from '~~/server/utils/organization-permissions';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   const { org } = await requireCommunityOrganization(event);
@@ -22,6 +23,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Invitation id is required',
     });
   }
+  enrichLog(event, { invitation: { id: invitationId, organization_id: org.id } });
 
   try {
     const [invite] = await db
@@ -41,6 +43,7 @@ export default defineEventHandler(async (event) => {
         statusMessage: 'Invitation not found',
       });
     }
+    enrichLog(event, { invitation: { email: invite.email } });
 
     const account = await db.query.user.findFirst({
       where: eq(user.email, invite.email),
@@ -53,6 +56,7 @@ export default defineEventHandler(async (event) => {
         body: { invitationId },
         headers: event.headers,
       });
+      enrichLog(event, { invitation: { result: 'added' } });
       return { success: true, added: true };
     }
 
@@ -66,6 +70,7 @@ export default defineEventHandler(async (event) => {
       headers: event.headers,
     });
 
+    enrichLog(event, { invitation: { result: 'resent' } });
     return { success: true, added: false, resent: true };
   } catch (error) {
     handleApiError(error, {

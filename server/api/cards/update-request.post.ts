@@ -7,6 +7,7 @@ import {
   requireOrganizationPermission,
 } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   const session = await requireOrganizationPermission(
@@ -60,9 +61,16 @@ export default defineEventHandler(async (event) => {
       })
       .returning();
 
+    enrichLog(event, {
+      card_request: {
+        id: inserted?.id,
+        card_id: result.data.cardId,
+        ...(session.user.email ? { requester_email: session.user.email } : {}),
+      },
+    });
+
     return inserted;
   } catch (e) {
-    console.log(e);
     return handleApiError(e, {
       statusMessage: 'Failed to submit update request',
     });

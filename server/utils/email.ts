@@ -8,10 +8,18 @@ export const sendEmail = async (params: {
   subject: string;
   html: string;
 }) => {
-  return await resend.emails.send({
+  const response = await resend.emails.send({
     from: 'La Persona <welcome@contact.la-persona.com>',
     to: params.to,
     subject: params.subject,
     html: params.html,
   });
+
+  if (response.error) {
+    const failure = new Error(response.error.message || 'Failed to send email');
+    failure.name = response.error.name || 'ResendError';
+    throw failure;
+  }
+
+  return response;
 };

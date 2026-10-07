@@ -10,6 +10,7 @@ import { assertOrganizationOwner } from '~~/server/services/subscription';
 import { approveSubscriptionPaymentBodySchema } from '~~/shared/types/subscription';
 import { requireAdminSession } from '~~/server/utils/admin-permissions';
 import { notifySubscriptionPaymentApprovedEmail } from '~~/server/utils/subscription-email-notifications';
+import { enrichLog, trackEmailSends } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   const session = await requireAdminSession(event);
@@ -57,9 +58,8 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const isLegacyLinkedByNote = /^((New|Existing) design request \([^)]+\))$/.test(
-      payment.note || ''
-    );
+    const isLegacyLinkedByNote =
+      /^((New|Existing) design request \([^)]+\))$/.test(payment.note || '');
     const isLinkedDesignRequest =
       Boolean(payment.requestId) || isLegacyLinkedByNote;
     if (isLinkedDesignRequest) {
@@ -134,12 +134,30 @@ export default defineEventHandler(async (event) => {
     .limit(1);
 
   const payerEmail = payer?.email?.trim() || '';
+  enrichLog(event, {
+    payment: {
+      id: payload.payment.id,
+      decision: 'approved',
+      item_count: payload.updatedCardsCount,
+      ...(payerEmail ? { payer_email: payerEmail } : {}),
+    },
+  });
   if (payerEmail) {
-    void notifySubscriptionPaymentApprovedEmail({
-      payerEmail,
-      payerName: payer?.name?.trim() || payerEmail,
-      bodyText: `Your subscription payment has been approved (reference: ${payload.payment.id}). Your updated subscription term is now active in the platform.\n\nThank you for choosing LA PERSONA.`,
-    }).catch((err) => console.error('[approve-payment] user email', err));
+    enrichLog(event, {
+      email: {
+        attempted: true,
+        template: 'payment_approved',
+        to: [payerEmail],
+      },
+    });
+    trackEmailSends(
+      event,
+      notifySubscriptionPaymentApprovedEmail({
+        payerEmail,
+        payerName: payer?.name?.trim() || payerEmail,
+        bodyText: `Your subscription payment has been approved (reference: ${payload.payment.id}). Your updated subscription term is now active in the platform.\n\nThank you for choosing LA PERSONA.`,
+      })
+    );
   }
 
   return payload;

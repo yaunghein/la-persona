@@ -10,6 +10,7 @@ import { requireCommunityOrganization } from '~~/server/utils/organization-permi
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
 import { parseCardSlugFromQr } from '~~/shared/utils/card-qr';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 const bodySchema = z.object({
   code: z.string().trim().min(1, 'QR code is required'),
@@ -30,6 +31,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Event id is required',
     });
   }
+  enrichLog(event, { registration: { event_id: eventId } });
 
   if (!body.success) {
     throw createError({
@@ -50,11 +52,13 @@ export default defineEventHandler(async (event) => {
 
     const slug = parseCardSlugFromQr(body.data.code);
     if (!slug) {
+      enrichLog(event, { registration: { result: 'not_found' } });
       return { status: 'not_found' as const };
     }
 
     const communityCard = await findCardBySlugAndOrganization(slug, org.id);
     if (!communityCard?.userId) {
+      enrichLog(event, { registration: { result: 'not_found' } });
       return { status: 'not_found' as const };
     }
 
@@ -64,6 +68,9 @@ export default defineEventHandler(async (event) => {
     );
 
     if (!registration || registration.status === 'pending') {
+      enrichLog(event, {
+        registration: { result: 'not_found', card_slug: communityCard.slug },
+      });
       return {
         status: 'not_found' as const,
         slug: communityCard.slug,
@@ -97,9 +104,23 @@ export default defineEventHandler(async (event) => {
     };
 
     if (registration.status === 'checked_in') {
+      enrichLog(event, {
+        registration: {
+          registration_id: registration.id,
+          result: 'already',
+          card_slug: communityCard.slug,
+        },
+      });
       return { status: 'already' as const, attendee };
     }
 
+    enrichLog(event, {
+      registration: {
+        registration_id: registration.id,
+        result: 'ready',
+        card_slug: communityCard.slug,
+      },
+    });
     return { status: 'ready' as const, attendee };
   } catch (error) {
     handleApiError(error, {

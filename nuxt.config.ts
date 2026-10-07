@@ -98,6 +98,9 @@ export default defineNuxtConfig({
   },
   nitro: {
     compressPublicAssets: true,
+    externals: {
+      external: ['pino', 'pino-pretty'],
+    },
   },
   routeRules: {
     '/': { prerender: true },

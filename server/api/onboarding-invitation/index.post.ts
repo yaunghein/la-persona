@@ -5,6 +5,7 @@ import {
   sendOnboardingInvitationEmail,
   buildOnboardingInvitationLink,
 } from '~~/server/services/onboarding-invitation';
+import { emailErrorLabel, enrichLog } from '~~/server/utils/wide-event';
 
 const createOnboardingInvitationSchema = z.object({
   email: z.string().trim().email(),
@@ -36,11 +37,37 @@ export default defineEventHandler(async (event) => {
     createdByUserId: session.user.id,
   });
 
-  if (result.data.sendNow) {
-    await sendOnboardingInvitationEmail({
-      invitationId: created.id,
+  enrichLog(event, {
+    invitation: {
+      id: created.id,
       email: created.email,
-    });
+      card_id: result.data.cardId,
+      plan_code: result.data.subscriptionPlanCode,
+    },
+    ...(result.data.sendNow
+      ? {
+          email: {
+            attempted: true,
+            template: 'onboarding_invitation',
+            to: [created.email],
+          },
+        }
+      : {}),
+  });
+
+  if (result.data.sendNow) {
+    try {
+      await sendOnboardingInvitationEmail({
+        invitationId: created.id,
+        email: created.email,
+      });
+      enrichLog(event, { email: { ok: true } });
+    } catch (error) {
+      enrichLog(event, {
+        email: { ok: false, error: emailErrorLabel(error) },
+      });
+      throw error;
+    }
   }
 
   return {

@@ -5,6 +5,7 @@ import { user } from '~~/server/db/schema';
 import { deletePersonalOrganizationsForUser } from '~~/server/services/auth';
 import { requireAdminSession } from '~~/server/utils/admin-permissions';
 import { handleApiError } from '~~/server/utils/errors';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   const adminSession = await requireAdminSession(event);
@@ -16,6 +17,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'User id is required',
     });
   }
+  enrichLog(event, { target_user: { id: userId } });
 
   if (userId === adminSession.user.id) {
     throw createError({
@@ -32,6 +34,7 @@ export default defineEventHandler(async (event) => {
     if (!existing) {
       throw createError({ statusCode: 404, statusMessage: 'User not found' });
     }
+    enrichLog(event, { target_user: { email: existing.email } });
 
     const deletedOrganizationIds =
       await deletePersonalOrganizationsForUser(userId);

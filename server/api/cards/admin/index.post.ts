@@ -12,6 +12,7 @@ import {
   optionalS3ObjectKey,
 } from '~~/server/utils/zod-admin-card';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 const adminCreateCardSchema = z.object({
   /** Omit to use `PLACEHOLDER_ORGANIZATION_ID` (Thakhin “create card” flow). */
@@ -103,6 +104,14 @@ export default defineEventHandler(async (event) => {
     }
 
     await ensureCardTrialSubscription(newCard.id, newCard.createdAt);
+    enrichLog(event, {
+      card: {
+        id: newCard.id,
+        slug: newCard.slug,
+        organization_id: newCard.organizationId,
+        ...(newCard.email ? { email: newCard.email } : {}),
+      },
+    });
     return newCard;
   } catch (e) {
     handleApiError(e, { statusMessage: 'Failed to create card' });

@@ -4,6 +4,7 @@ import { requireOrganizationPermission } from '~~/server/utils/organization-perm
 import { createEventBodySchema } from '~~/shared/types/event';
 import { wallClockDate } from '~~/shared/utils/event-datetime';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   const session = await requireOrganizationPermission(
@@ -43,6 +44,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    enrichLog(event, { event: { id: inserted.id } });
     return toEventDTO(inserted);
   } catch (error) {
     handleApiError(error, {

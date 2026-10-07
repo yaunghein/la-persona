@@ -8,6 +8,7 @@ import {
 } from '~~/server/services/community';
 import { handleApiError } from '~~/server/utils/errors';
 import { requireSession } from '~~/server/utils/organization-permissions';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   const session = await requireSession(event);
@@ -34,6 +35,14 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    enrichLog(event, {
+      invitation: {
+        id: invite.id,
+        organization_id: invite.organizationId,
+        email: invite.email,
+      },
+    });
+
     if (invite.email.toLowerCase() !== session.user.email.toLowerCase()) {
       throw createError({
         statusCode: 403,
@@ -57,7 +66,10 @@ export default defineEventHandler(async (event) => {
       .select({ role: member.role })
       .from(member)
       .where(
-        and(eq(member.userId, session.user.id), eq(member.organizationId, org.id))
+        and(
+          eq(member.userId, session.user.id),
+          eq(member.organizationId, org.id)
+        )
       )
       .limit(1);
 

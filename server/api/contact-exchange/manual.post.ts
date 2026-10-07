@@ -9,6 +9,7 @@ import {
 } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 const createManualContactSchema = z.object({
   firstName: z.string().trim().min(1, 'First name is required'),
@@ -42,7 +43,7 @@ export default defineEventHandler(async (event) => {
   try {
     const organizationId = session.session.activeOrganizationId;
     const userId = session.user.id;
-  const canReadAllCards = await hasOrganizationPermission(
+    const canReadAllCards = await hasOrganizationPermission(
       event,
       ORGANIZATION_PERMISSIONS.CARD_READ_ALL,
       organizationId
@@ -85,6 +86,14 @@ export default defineEventHandler(async (event) => {
         source: 'manual',
       })
       .returning();
+
+    enrichLog(event, {
+      contact_exchange: {
+        card_id: inserted?.cardId,
+        result: 'saved',
+        ...(inserted?.email ? { email: inserted.email } : {}),
+      },
+    });
 
     return inserted;
   } catch (error) {

@@ -2,6 +2,7 @@ import { deleteEventByIdAndOrganizationId } from '~~/server/db/queries/event';
 import { handleApiError } from '~~/server/utils/errors';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   const session = await requireOrganizationPermission(
@@ -16,6 +17,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Event id is required',
     });
   }
+  enrichLog(event, { event: { id: eventId } });
 
   try {
     const deleted = await deleteEventByIdAndOrganizationId(

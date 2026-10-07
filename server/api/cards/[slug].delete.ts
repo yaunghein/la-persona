@@ -11,6 +11,7 @@ import {
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   const session = await requireOrganizationPermission(
@@ -37,6 +38,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Card slug is required.',
     });
   }
+  enrichLog(event, { card: { slug } });
 
   const targetRows = await db
     .select({
@@ -64,6 +66,7 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Card not found.',
     });
   }
+  enrichLog(event, { card: { id: targetCard.id } });
 
   const deletedCard = await db.transaction(async (tx) => {
     if (targetCard.subscriptionStatus === 'pending_approval') {

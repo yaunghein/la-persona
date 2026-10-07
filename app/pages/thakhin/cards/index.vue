@@ -67,7 +67,6 @@ const form = reactive({
 });
 
 function applyPlanAssetPrefills(planCode: string) {
-  console.log('applyPlanAssetPrefills', planCode);
   const d = getThakhinCardPlanAssetDefaults(planCode);
   if (!d) return;
   form.splineUrl = d.splineUrl;

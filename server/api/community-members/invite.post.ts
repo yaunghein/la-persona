@@ -4,6 +4,7 @@ import { handleApiError } from '~~/server/utils/errors';
 import { requireCommunityOrganization } from '~~/server/utils/organization-permissions';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 const bodySchema = z.object({
   email: z.string().trim().email('A valid email is required'),
@@ -25,6 +26,13 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  enrichLog(event, {
+    invitation: {
+      organization_id: org.id,
+      email: body.data.email.toLowerCase(),
+    },
+  });
+
   try {
     const invitation = await auth.api.createInvitation({
       body: {
@@ -34,6 +42,10 @@ export default defineEventHandler(async (event) => {
         resend: true,
       },
       headers: event.headers,
+    });
+
+    enrichLog(event, {
+      invitation: { id: invitation.id },
     });
 
     return invitation;
