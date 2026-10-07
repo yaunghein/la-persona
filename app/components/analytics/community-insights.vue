@@ -102,7 +102,7 @@ const columns: TableColumn<CommunityEventPerformance>[] = [
 </script>
 
 <template>
-  <div class="space-y-4 pb-17 sm:pb-0">
+  <div class="space-y-4">
     <div
       class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
     >

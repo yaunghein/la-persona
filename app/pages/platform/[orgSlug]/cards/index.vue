@@ -174,7 +174,7 @@ const cardFooterActionSize = 'sm';
 </script>
 
 <template>
-  <div class="space-y-6 pb-20 sm:pb-0">
+  <div class="space-y-6">
     <div
       class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
     >
@@ -203,7 +203,7 @@ const cardFooterActionSize = 'sm';
         label="Request New Card"
         leading-icon="i-lucide-plus"
         color="neutral"
-        class="fixed z-20 bottom-5 left-1/2 -translate-x-1/2 sm:static sm:translate-x-0 h-10 cursor-pointer flex items-center justify-center rounded-full border-2 border-[#232323] bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
+        class="self-start sm:self-auto h-10 cursor-pointer flex items-center justify-center rounded-full border-2 border-[#232323] bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
         @click="
           () => {
             isSlideoverOpen = true;

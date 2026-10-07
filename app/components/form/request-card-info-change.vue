@@ -71,7 +71,7 @@ function onSubmit(event: FormSubmitEvent<Partial<UpdateCard>>) {
 </script>
 
 <template>
-  <div class="rounded-[8px] bg-[#171717] p-8 mb-16 sm:mb-0">
+  <div class="rounded-[8px] bg-[#171717] p-8">
     <div v-if="isLoading" class="grid grid-cols-2 gap-5">
       <USkeleton v-for="i in 6" :key="i" class="h-12 w-full" />
       <USkeleton class="h-20 col-span-2 w-full" />

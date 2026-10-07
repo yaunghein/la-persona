@@ -138,12 +138,11 @@ function onViewOrganizer() {
           >
             {{ event.title }}
           </h2>
-          <p
+          <CommunityRichText
             v-if="event.description"
+            :content="event.description"
             class="text-sm font-normal leading-normal text-[#8b8b8b]"
-          >
-            {{ event.description }}
-          </p>
+          />
         </div>
 
         <div class="flex flex-col divide-y divide-[#2a2a2a]">

@@ -593,7 +593,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="rounded-[8px] bg-[#171717] p-4 sm:p-8 mb-17 sm:mb-0">
+  <div class="rounded-[8px] bg-[#171717] p-4 sm:p-8">
     <div v-if="isLoading" class="space-y-8">
       <div class="flex items-center gap-4">
         <USkeleton class="h-24 w-24 rounded-full" />

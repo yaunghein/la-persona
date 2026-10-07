@@ -597,7 +597,7 @@ const active = computed({
         :label="upgradeButtonLabel"
         icon="i-lucide-chevrons-up"
         color="neutral"
-        class="h-10 fixed z-20 sm:static bottom-5 left-1/2 -translate-x-1/2 sm:translate-x-0 rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+        class="self-start h-10 rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
         @click="openUpgradeSlideover"
       />
     </div>

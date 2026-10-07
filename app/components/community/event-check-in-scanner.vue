@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Application } from '@splinetool/runtime';
 import type { EventAttendee } from '~~/shared/types/community-event-detail';
-import { applyCardToSpline } from '~/utils/spline-card';
+import { applyCombinedCardToSpline } from '~/utils/spline-card';
 import { timezoneOffsetQuery } from '~~/shared/utils/event-datetime';
 
 type ScannerState = 'scanning' | 'success' | 'already' | 'not-found';
@@ -306,7 +306,7 @@ async function loadPlaceholderSpline() {
       return;
     }
     if (scannedAttendee.value) {
-      applyCardToSpline(spline, {
+      applyCombinedCardToSpline(spline, {
         firstName: scannedAttendee.value.firstName,
         lastName: scannedAttendee.value.lastName,
         position: scannedAttendee.value.position || scannedAttendee.value.role,
@@ -315,6 +315,7 @@ async function loadPlaceholderSpline() {
         email: scannedAttendee.value.email,
         website: scannedAttendee.value.website,
         planCode: scannedAttendee.value.planCode,
+        joinedAt: scannedAttendee.value.joinedAt,
       });
     }
   } catch {
@@ -397,6 +398,7 @@ async function lookupCode(code: string) {
         email?: string | null;
         website?: string | null;
         planCode?: string | null;
+        joinedAt?: string | null;
         slug?: string;
         checkedInAt?: string | null;
       };
@@ -421,7 +423,7 @@ async function lookupCode(code: string) {
       statusLabel:
         result.status === 'already' ? 'Already checked in' : 'Registered',
       membershipStatus: 'Active',
-      joinedAt: '',
+      joinedAt: result.attendee.joinedAt || '',
       registeredAt: '',
       checkedInAt: result.attendee.checkedInAt
         ? new Date(result.attendee.checkedInAt).toLocaleTimeString('en-US', {

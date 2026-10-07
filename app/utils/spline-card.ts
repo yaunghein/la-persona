@@ -101,3 +101,14 @@ export function applyCommunityCardToSpline(
 ) {
   spline.setVariables(splineVariablesForCommunityCard(card));
 }
+
+// Spline ignores variables a scene does not define, so one payload serves both card types.
+export function applyCombinedCardToSpline(
+  spline: { setVariables: (values: Record<string, string>) => void },
+  card: SplineCardFields
+) {
+  spline.setVariables({
+    ...splineVariablesForCard(card),
+    ...splineVariablesForCommunityCard(card),
+  });
+}

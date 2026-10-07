@@ -738,14 +738,9 @@ async function copyEventLink() {
           name="description"
           :class="formFieldClass"
         >
-          <UTextarea
+          <CommunityRichTextEditor
             v-model="state.description"
             placeholder="Describe your event"
-            :rows="3"
-            class="w-full"
-            :ui="{
-              base: 'min-h-[66px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
-            }"
           />
         </UFormField>
 

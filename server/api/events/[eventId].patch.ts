@@ -9,6 +9,7 @@ import { updateEventBodySchema } from '~~/shared/types/event';
 import { wallClockDate } from '~~/shared/utils/event-datetime';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
 import { enrichLog } from '~~/server/utils/wide-event';
+import { sanitizeRichText } from '~~/server/utils/rich-text';
 
 export default defineEventHandler(async (event) => {
   const session = await requireOrganizationPermission(
@@ -52,7 +53,7 @@ export default defineEventHandler(async (event) => {
       session.session.activeOrganizationId,
       {
         title: body.data.title,
-        description: body.data.description?.trim() || null,
+        description: sanitizeRichText(body.data.description),
         location: body.data.location,
         startsAt: wallClockDate(body.data.date, body.data.startTime),
         endsAt: wallClockDate(body.data.date, body.data.endTime),

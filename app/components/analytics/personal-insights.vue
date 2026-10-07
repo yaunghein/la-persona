@@ -322,14 +322,14 @@ function closeInfo() {
 </script>
 
 <template>
-  <div v-if="isLoading" class="flex flex-col gap-4 pb-17 sm:pb-0">
+  <div v-if="isLoading" class="flex flex-col gap-4">
     <USkeleton class="h-8 w-64 rounded-md" />
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
       <USkeleton v-for="i in 4" :key="i" class="h-32 rounded-lg" />
     </div>
     <USkeleton class="h-80 w-full rounded-lg" />
   </div>
-  <div v-else class="space-y-4 pb-17 sm:pb-0">
+  <div v-else class="space-y-4">
     <div
       class="flex flex-col sm:flex-row gap-3 sm:gap-0 items-center justify-between"
     >
@@ -350,13 +350,13 @@ function closeInfo() {
         />
       </div>
 
-      <div class="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+      <div class="flex w-full items-center gap-2 sm:w-auto">
         <USelectMenu
           v-model="selectedPeriod"
           value-key="value"
           :items="periodOptions"
           :search-input="false"
-          class="w-auto min-w-36 sm:w-40"
+          class="min-w-0 flex-1 sm:w-40 sm:flex-none"
           :ui="{
             base: 'h-10 rounded-lg border-none bg-[#171717] px-4 text-white',
             content: 'bg-[#171717] border border-[#2a2a2a]',
@@ -374,7 +374,7 @@ function closeInfo() {
             icon: 'i-lucide-search',
           }"
           :filter-fields="['label']"
-          class="w-auto min-w-48 sm:w-56 fixed z-20 bottom-5 left-1/2 -translate-x-1/2 sm:translate-x-0 sm:static"
+          class="min-w-0 flex-1 sm:w-56 sm:flex-none"
           :ui="{
             base: 'h-10 rounded-lg border-none bg-[#171717] px-4 text-white',
             content: 'bg-[#171717] border border-[#2a2a2a]',

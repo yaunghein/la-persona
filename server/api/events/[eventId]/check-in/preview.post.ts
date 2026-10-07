@@ -118,6 +118,7 @@ export default defineEventHandler(async (event) => {
       email: communityCard.email,
       website: communityCard.website,
       planCode: subscription?.planCode || null,
+      joinedAt: communityCard.createdAt.toISOString(),
       checkedInAt: registration.checkedInAt?.toISOString() ?? null,
     };
 

@@ -73,8 +73,10 @@ const logoSrc = computed(() =>
         />
       </div>
 
-      <div class="flex flex-col gap-8 rounded-b-lg bg-[#171717] p-8">
-        <div class="flex items-center gap-6">
+      <div
+        class="flex flex-col gap-8 rounded-b-lg bg-[#171717] px-5 py-8 sm:px-8"
+      >
+        <div class="flex items-center gap-5 sm:gap-6">
           <div
             class="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#232323]"
           >
@@ -84,21 +86,19 @@ const logoSrc = computed(() =>
               class="size-full object-cover"
             />
           </div>
-          <div class="flex min-w-0 flex-col gap-4">
+          <div class="flex min-w-0 flex-col gap-3">
             <h2
-              class="text-[1.75rem] font-normal leading-5 tracking-[0.175rem] uppercase text-white"
+              class="text-[1.75rem] font-normal leading-tight tracking-[0.175rem] uppercase text-white"
             >
               {{ data.name }}
             </h2>
-            <p
-              class="flex flex-wrap items-center gap-2 text-sm font-medium leading-5 text-[#8b8b8b]"
+            <ul
+              class="flex flex-col gap-0.5 text-sm font-medium leading-5 text-[#8b8b8b]"
             >
-              <span>{{ memberLabel }}</span>
-              <span class="size-0.75 rounded-full bg-[#8b8b8b]" />
-              <span>{{ eventLabel }}</span>
-              <span class="size-0.75 rounded-full bg-[#8b8b8b]" />
-              <span>{{ foundedLabel }}</span>
-            </p>
+              <li>{{ memberLabel }}</li>
+              <li>{{ eventLabel }}</li>
+              <li>{{ foundedLabel }}</li>
+            </ul>
           </div>
         </div>
 

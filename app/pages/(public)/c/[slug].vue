@@ -3,7 +3,7 @@ import { Application } from '@splinetool/runtime';
 import type { ConcreteComponent } from 'vue';
 import { SOCIAL_MEDIA_LINK_LABELS } from '~~/shared/constants/card-link-options';
 import { downloadFile } from '~/utils/share-or-download';
-import { applyCardToSpline } from '~/utils/spline-card';
+import { applyCombinedCardToSpline } from '~/utils/spline-card';
 import { vcfPhoneLines } from '~~/shared/utils/phone';
 
 const { trackEvent } = useAnalytics();
@@ -115,7 +115,7 @@ onMounted(async () => {
   spline.load(card.value?.splineUrl + `?v=${new Date().getTime()}`).then(() => {
     loading.value = false;
     if (!card.value) return;
-    applyCardToSpline(spline, {
+    applyCombinedCardToSpline(spline, {
       firstName: card.value.firstName,
       lastName: card.value.lastName,
       position: card.value.position,
@@ -124,6 +124,7 @@ onMounted(async () => {
       email: card.value.email,
       website: card.value.website,
       planCode: card.value.subscription?.planCode,
+      joinedAt: card.value.createdAt,
     });
   });
 });

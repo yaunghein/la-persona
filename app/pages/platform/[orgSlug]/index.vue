@@ -76,10 +76,7 @@ const {
   </div>
 
   <div v-else-if="showCommunityInsights">
-    <div
-      v-if="isCommunityInsightsPending"
-      class="flex flex-col gap-4 pb-17 sm:pb-0"
-    >
+    <div v-if="isCommunityInsightsPending" class="flex flex-col gap-4">
       <USkeleton class="h-8 w-64 rounded-md" />
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <USkeleton v-for="i in 6" :key="i" class="h-32 rounded-lg" />

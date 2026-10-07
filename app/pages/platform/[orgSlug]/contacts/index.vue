@@ -592,7 +592,7 @@ const visibleColumns = computed(() =>
 
 <template>
   <div
-    class="flex flex-col gap-5 sm:gap-8 pb-20 sm:pb-0"
+    class="flex flex-col gap-5 sm:gap-8"
     :class="!hasContacts && 'min-h-[calc(100dvh-7rem)]'"
   >
     <div
@@ -669,7 +669,7 @@ const visibleColumns = computed(() =>
           label="Create New Contact"
           leading-icon="i-material-symbols-add"
           color="neutral"
-          class="fixed z-20 bottom-5 left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:static h-10 cursor-pointer flex items-center justify-center rounded-full border-2 border-[#232323] bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
+          class="h-10 cursor-pointer flex items-center justify-center rounded-full border-2 border-[#232323] bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
           @click="onCreateContact"
         />
 
