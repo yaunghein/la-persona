@@ -13,6 +13,7 @@ export default defineEventHandler(async (event) => {
       email: user.email,
       image: user.image,
       role: user.role,
+      banned: user.banned,
       createdAt: user.createdAt,
     })
     .from(user)
@@ -23,6 +24,7 @@ export default defineEventHandler(async (event) => {
     name: row.name,
     email: row.email,
     role: row.role,
+    banned: Boolean(row.banned),
     createdAt: row.createdAt,
     label: row.name ? `${row.name} (${row.email})` : row.email,
     avatar: row.image ? { src: row.image } : undefined,

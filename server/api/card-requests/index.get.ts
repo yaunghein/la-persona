@@ -71,7 +71,10 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  return rows.map((row) => ({
+  const status = String(getQuery(event).status || '');
+  return rows
+    .filter((row) => !status || row.status === status)
+    .map((row) => ({
     ...row,
     cardData: row.cardData || {},
     paymentId: paymentByRequestId.get(row.id)?.id || null,

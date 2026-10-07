@@ -324,6 +324,11 @@ function getActionItems(row: CardRow): DropdownMenuItem[][] {
   return [
     [
       {
+        label: 'View',
+        icon: 'i-lucide-eye',
+        onSelect: () => openCard(row),
+      },
+      {
         label: 'Edit',
         icon: 'i-lucide-pencil',
         onSelect: () => openEdit(row),
@@ -336,6 +341,23 @@ function getActionItems(row: CardRow): DropdownMenuItem[][] {
       },
     ],
   ];
+}
+
+const cardDetail = ref<{
+  slug: string;
+  firstName: string;
+  lastName: string | null;
+  organizationName: string;
+  linkedUserEmail: string | null;
+  subscriptionStatus: string | null;
+  subscriptionPlanCode: string | null;
+  pendingInvitation: { email: string; expiresAt: string } | null;
+} | null>(null);
+const cardOpen = ref(false);
+
+async function openCard(row: CardRow) {
+  cardOpen.value = true;
+  cardDetail.value = await $fetch(`/api/cards/admin/${row.id}`);
 }
 
 const columns: TableColumn<CardRow>[] = [
@@ -379,44 +401,48 @@ const selectUi = {
 
 <template>
   <div class="flex flex-col gap-6">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <h1
-        class="text-[1.75rem] font-normal leading-tight tracking-widest uppercase"
-      >
-        Cards
-      </h1>
-      <div class="flex flex-wrap items-center gap-2">
+    <ThakhinPageHeader
+      title="Cards"
+      description="Issue and correct cards. Deleting a card also removes its subscription, contact exchanges, and analytics."
+    >
+      <UButton
+        size="sm"
+        label="Create"
+        icon="i-lucide-plus"
+        color="neutral"
+        variant="outline"
+        @click="openCreate"
+      />
+    </ThakhinPageHeader>
+
+    <ThakhinTableFrame
+      :page="pagination.pageIndex + 1"
+      :total="paginationTotal"
+      :items-per-page="pagination.pageSize"
+      @update:page="onPageChange"
+    >
+      <template #toolbar>
         <UInput
           v-model="globalFilter"
           icon="i-lucide-search"
           placeholder="Search name, email, or slug"
           class="w-64"
-          size="xl"
+          size="sm"
         />
         <USelect
           v-model="claimFilter"
           :items="claimFilterItems"
-          class="w-40"
-          size="xl"
+          class="w-36"
+          size="sm"
         />
         <USelect
           v-model="orgFilter"
           :items="orgFilterItems"
-          class="w-52"
-          size="xl"
+          class="w-48"
+          size="sm"
         />
-        <UButton
-          size="xl"
-          label="Create Card"
-          icon="i-lucide-plus"
-          color="neutral"
-          class="rounded-full"
-          @click="openCreate"
-        />
-      </div>
-    </div>
+      </template>
 
-    <div class="hide-scrollbar flex-1 overflow-x-auto overflow-y-hidden">
       <UTable
         ref="table"
         v-model:global-filter="globalFilter"
@@ -428,7 +454,8 @@ const selectUi = {
         :pagination-options="paginationOptions"
         :get-row-id="(row) => row.id"
         :ui="THAKHIN_TABLE_UI"
-        class="w-full min-w-275"
+        class="w-full min-w-[48rem]"
+        @select="(_event, row) => openCard(row.original)"
       >
         <template #displayName-cell="{ row }">
           <span class="font-medium text-white">
@@ -437,52 +464,26 @@ const selectUi = {
         </template>
         <template #claimStatus-cell="{ row }">
           <UBadge
-            v-if="row.original.userId"
-            color="success"
-            variant="soft"
-            class="uppercase"
+            :color="row.original.userId ? 'success' : 'warning'"
+            variant="subtle"
           >
-            Linked
-          </UBadge>
-          <UBadge v-else color="warning" variant="soft" class="uppercase">
-            Unclaimed
+            {{ row.original.userId ? 'Linked' : 'Unclaimed' }}
           </UBadge>
           <p
             v-if="row.original.linkedUserEmail"
-            class="mt-1 max-w-48 truncate text-xs text-muted"
+            class="mt-1 max-w-48 truncate text-xs text-white/45"
           >
             {{ row.original.linkedUserEmail }}
           </p>
         </template>
         <template #createdAt-cell="{ row }">
-          {{ formatDate(row.original.createdAt) }}
+          <span class="text-white/55">{{ formatDate(row.original.createdAt) }}</span>
         </template>
         <template #actions-cell="{ row }">
-          <UDropdownMenu :items="getActionItems(row.original)">
-            <UButton
-              size="xl"
-              icon="i-mdi-dots-vertical"
-              color="neutral"
-              variant="ghost"
-              class="text-muted"
-            />
-          </UDropdownMenu>
+          <ThakhinRowMenu :items="getActionItems(row.original)" />
         </template>
       </UTable>
-    </div>
-
-    <div class="mt-auto flex items-center justify-end pt-4">
-      <UPagination
-        :page="pagination.pageIndex + 1"
-        :total="paginationTotal"
-        :items-per-page="pagination.pageSize"
-        @update:page="onPageChange"
-        show-controls
-        show-edges
-        color="neutral"
-        variant="outline"
-      />
-    </div>
+    </ThakhinTableFrame>
 
     <USlideover
       v-model:open="isFormOpen"
@@ -685,7 +686,7 @@ const selectUi = {
           <span class="font-medium text-white">
             "{{ cardToDelete ? displayName(cardToDelete) : '' }}"
           </span>
-          and related subscription rows will be removed.
+          and related subscription, contact exchanges, and analytics on this card will be removed.
         </p>
       </template>
       <template #footer>
@@ -708,5 +709,28 @@ const selectUi = {
         />
       </template>
     </UModal>
+
+    <USlideover v-model:open="cardOpen" title="Card" :ui="{ content: 'bg-[#171717]' }">
+      <template #body>
+        <div v-if="cardDetail" class="space-y-2 text-sm text-white/80">
+          <p class="text-white">{{ cardDetail.firstName }} {{ cardDetail.lastName }}</p>
+          <p>{{ cardDetail.organizationName }}</p>
+          <p>{{ cardDetail.linkedUserEmail || 'Unclaimed' }}</p>
+          <p>
+            Subscription {{ cardDetail.subscriptionStatus || 'none' }}
+            {{ cardDetail.subscriptionPlanCode || '' }}
+          </p>
+          <p v-if="cardDetail.pendingInvitation">
+            Pending invitation to {{ cardDetail.pendingInvitation.email }}
+          </p>
+          <UButton
+            label="Public card"
+            variant="link"
+            :to="`/c/${cardDetail.slug}`"
+            target="_blank"
+          />
+        </div>
+      </template>
+    </USlideover>
   </div>
 </template>

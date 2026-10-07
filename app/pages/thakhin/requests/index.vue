@@ -28,11 +28,14 @@ type CardRequestRow = {
   };
   requesterName: string | null;
   requesterEmail: string | null;
+  paymentId: string | null;
+  paymentStatus: string | null;
   createdAt: string;
   updatedAt: string;
 };
 
 const toast = useToast();
+const route = useRoute();
 const runtimeConfig = useRuntimeConfig();
 const queryClient = useQueryClient();
 
@@ -46,7 +49,12 @@ const rows = computed(() => data.value || []);
 const filterName = ref('');
 const filterEmail = ref('');
 const filterType = ref<'all' | 'new_design' | 'existing_design'>('all');
-const filterStatus = ref<'all' | 'pending' | 'approved' | 'declined'>('all');
+const filterStatus = ref<'all' | 'pending' | 'approved' | 'declined'>('pending');
+const tab = ref<'design' | 'updates'>(
+  route.query.tab === 'updates' ? 'updates' : 'design'
+);
+const selectedRequest = ref<CardRequestRow | null>(null);
+const requestOpen = ref(false);
 
 function getS3Url(path?: string | null) {
   if (!path) return '';
@@ -97,6 +105,104 @@ function typeLabel(type: CardRequestRow['type']) {
   return type === 'existing_design' ? 'Existing Design' : 'New Design';
 }
 
+type UpdateRow = {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  position: string | null;
+  phone: string | null;
+  email: string | null;
+  website: string | null;
+  note: string | null;
+  status: string;
+  cardId: string;
+  cardSlug: string;
+  cardFirstName: string;
+  cardLastName: string | null;
+  cardPosition: string;
+  cardPhone: string | null;
+  cardEmail: string | null;
+  cardWebsite: string | null;
+  requesterName: string | null;
+  requesterEmail: string | null;
+  createdAt: string;
+};
+
+const { data: updateData, isLoading: updatesLoading } = useQuery({
+  queryKey: QUERY_KEYS.cardUpdateRequests,
+  queryFn: () => $fetch<UpdateRow[]>('/api/card-update-requests'),
+});
+const updateRows = computed(() =>
+  (updateData.value || []).filter((row) =>
+    updateStatus.value === 'all' ? true : row.status === updateStatus.value
+  )
+);
+const updateStatus = ref<'all' | 'pending' | 'approved' | 'declined'>('pending');
+const selectedUpdate = ref<UpdateRow | null>(null);
+const updateOpen = ref(false);
+
+const {
+  globalFilter: updateFilter,
+  sorting: updateSorting,
+  pagination: updatePagination,
+  paginationOptions: updatePaginationOptions,
+  paginationTotal: updatePaginationTotal,
+  onPageChange: onUpdatePageChange,
+} = useThakhinTable(() => updateRows.value.length);
+
+async function decideUpdate(row: UpdateRow, decision: 'approve' | 'decline') {
+  try {
+    await $fetch(`/api/card-update-requests/${row.id}/${decision}`, {
+      method: 'POST',
+    });
+    await queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.cardUpdateRequests,
+    });
+    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminCards });
+    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminOverview });
+    toast.add({
+      title: decision === 'approve' ? 'Update applied' : 'Update declined',
+      color: 'success',
+    });
+  } catch (error: any) {
+    toast.add({
+      title: 'Update failed',
+      description: error?.data?.statusMessage || 'Please try again.',
+      color: 'error',
+    });
+  }
+}
+
+const updateColumns: TableColumn<UpdateRow>[] = [
+  { accessorKey: 'requesterEmail', header: thakhinSortableHeader('EMAIL') },
+  { accessorKey: 'cardSlug', header: thakhinSortableHeader('CARD') },
+  { accessorKey: 'status', header: thakhinSortableHeader('STATUS') },
+  { accessorKey: 'note', header: thakhinSortableHeader('NOTE') },
+  { accessorKey: 'createdAt', header: thakhinSortableHeader('CREATED') },
+  THAKHIN_ACTIONS_COLUMN,
+];
+
+function updateActions(row: UpdateRow): DropdownMenuItem[][] {
+  if (row.status !== 'pending') {
+    return [[{ label: 'No actions available', disabled: true }]];
+  }
+  return [
+    [
+      {
+        label: 'Approve',
+        icon: 'i-lucide-check',
+        onSelect: () => decideUpdate(row, 'approve'),
+      },
+      {
+        label: 'Decline',
+        icon: 'i-lucide-x',
+        color: 'error',
+        onSelect: () => decideUpdate(row, 'decline'),
+      },
+    ],
+  ];
+}
+
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
 }
@@ -126,12 +232,24 @@ async function approveRequest(row: CardRequestRow) {
   }
 }
 
-function declineComingSoon() {
-  toast.add({
-    title: 'Decline coming soon',
-    description: 'Decline flow will be implemented next.',
-    color: 'warning',
-  });
+async function declineRequest(row: CardRequestRow) {
+  try {
+    await $fetch(`/api/card-requests/${row.id}/decline`, { method: 'POST' });
+    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.cardRequests });
+    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.payments });
+    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminOverview });
+    toast.add({
+      title: 'Request declined',
+      description: 'Linked submitted payments were rejected.',
+      color: 'success',
+    });
+  } catch (error: any) {
+    toast.add({
+      title: 'Decline failed',
+      description: error?.data?.statusMessage || 'Please try again.',
+      color: 'error',
+    });
+  }
 }
 
 function getActionItems(row: CardRequestRow): DropdownMenuItem[][] {
@@ -158,7 +276,7 @@ function getActionItems(row: CardRequestRow): DropdownMenuItem[][] {
         label: 'Decline',
         icon: 'i-lucide-x',
         color: 'error',
-        onSelect: declineComingSoon,
+        onSelect: () => declineRequest(row),
       },
     ],
   ];
@@ -180,7 +298,7 @@ const columns: TableColumn<CardRequestRow>[] = [
   },
   {
     accessorKey: 'paymentReceiptUrl',
-    header: 'RECEIPT',
+    header: 'Receipt',
     enableSorting: false,
     enableGlobalFilter: false,
   },
@@ -192,128 +310,207 @@ const columns: TableColumn<CardRequestRow>[] = [
 
 <template>
   <div class="flex flex-col gap-6">
-    <h1
-      class="text-[1.75rem] font-normal leading-tight tracking-widest uppercase"
-    >
-      Card Requests
-    </h1>
+    <ThakhinPageHeader
+      title="Requests"
+      description="Approve or decline design requests and card updates. Declining a design request also rejects its submitted payment."
+    />
 
-    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
-      <UInput
-        v-model="globalFilter"
-        placeholder="Search requests..."
-        icon="i-lucide-search"
-        size="xl"
+    <div class="flex gap-2">
+      <UButton
+        label="Design"
+        size="sm"
+        :color="tab === 'design' ? 'primary' : 'neutral'"
+        :variant="tab === 'design' ? 'solid' : 'ghost'"
+        @click="tab = 'design'"
       />
-      <UInput
-        v-model="filterName"
-        placeholder="Filter requester..."
-        size="xl"
-      />
-      <UInput v-model="filterEmail" placeholder="Filter email..." size="xl" />
-      <USelect
-        v-model="filterType"
-        size="xl"
-        :items="[
-          { label: 'All Types', value: 'all' },
-          { label: 'New Design', value: 'new_design' },
-          { label: 'Existing Design', value: 'existing_design' },
-        ]"
-      />
-      <USelect
-        v-model="filterStatus"
-        size="xl"
-        :items="[
-          { label: 'All Status', value: 'all' },
-          { label: 'Pending', value: 'pending' },
-          { label: 'Approved', value: 'approved' },
-          { label: 'Declined', value: 'declined' },
-        ]"
+      <UButton
+        label="Updates"
+        size="sm"
+        :color="tab === 'updates' ? 'primary' : 'neutral'"
+        :variant="tab === 'updates' ? 'solid' : 'ghost'"
+        @click="tab = 'updates'"
       />
     </div>
 
-    <div class="hide-scrollbar flex-1 overflow-x-auto overflow-y-hidden">
-      <UTable
-        ref="table"
-        v-model:global-filter="globalFilter"
-        v-model:sorting="sorting"
-        v-model:pagination="pagination"
-        :data="filteredRows"
-        :columns="columns"
-        :loading="pending"
-        :pagination-options="paginationOptions"
-        :get-row-id="(row) => row.id"
-        :ui="THAKHIN_TABLE_UI"
-        class="w-full min-w-275"
-      >
-        <template #requesterName-cell="{ row }">
-          <span class="text-white font-medium">
-            {{ row.original.requesterName || '-' }}
-          </span>
-        </template>
-
-        <template #type-cell="{ row }">
-          {{ typeLabel(row.original.type) }}
-        </template>
-
-        <template #cardName-cell="{ row }">
-          {{ row.original.cardData?.name || '-' }}
-        </template>
-
-        <template #paymentReceiptUrl-cell="{ row }">
-          <UButton
-            size="xl"
-            v-if="row.original.paymentReceiptUrl"
-            label="View Receipt"
-            icon="i-lucide-external-link"
-            color="neutral"
-            variant="link"
-            class="px-0"
-            :to="getS3Url(row.original.paymentReceiptUrl)"
-            target="_blank"
-          />
-          <span v-else>-</span>
-        </template>
-
-        <template #status-cell="{ row }">
-          <UBadge
-            :color="statusColor(row.original.status)"
-            variant="soft"
-            class="uppercase"
-          >
-            {{ row.original.status }}
-          </UBadge>
-        </template>
-
-        <template #createdAt-cell="{ row }">
-          {{ formatDate(row.original.createdAt) }}
-        </template>
-
-        <template #actions-cell="{ row }">
-          <UDropdownMenu :items="getActionItems(row.original)">
-            <UButton
-              size="xl"
-              icon="i-mdi-dots-vertical"
-              color="neutral"
-              variant="ghost"
-              class="text-muted"
-            />
-          </UDropdownMenu>
-        </template>
-      </UTable>
-    </div>
-
-    <div class="mt-auto flex items-center justify-end pt-4">
-      <UPagination
+    <template v-if="tab === 'design'">
+      <ThakhinTableFrame
         :page="pagination.pageIndex + 1"
         :total="paginationTotal"
         :items-per-page="pagination.pageSize"
         @update:page="onPageChange"
-        show-controls
-        show-edges
-        color="neutral"
-        variant="outline"
-      />
-    </div>
+      >
+        <template #toolbar>
+          <UInput
+            v-model="globalFilter"
+            placeholder="Search requests"
+            icon="i-lucide-search"
+            size="sm"
+            class="w-52"
+          />
+          <UInput
+            v-model="filterName"
+            placeholder="Requester"
+            size="sm"
+            class="w-40"
+          />
+          <UInput
+            v-model="filterEmail"
+            placeholder="Email"
+            size="sm"
+            class="w-44"
+          />
+          <USelect
+            v-model="filterType"
+            size="sm"
+            class="w-40"
+            :items="[
+              { label: 'All types', value: 'all' },
+              { label: 'New design', value: 'new_design' },
+              { label: 'Existing design', value: 'existing_design' },
+            ]"
+          />
+          <USelect
+            v-model="filterStatus"
+            size="sm"
+            class="w-36"
+            :items="[
+              { label: 'Pending', value: 'pending' },
+              { label: 'Approved', value: 'approved' },
+              { label: 'Declined', value: 'declined' },
+              { label: 'All statuses', value: 'all' },
+            ]"
+          />
+        </template>
+
+        <UTable
+          ref="table"
+          v-model:global-filter="globalFilter"
+          v-model:sorting="sorting"
+          v-model:pagination="pagination"
+          :data="filteredRows"
+          :columns="columns"
+          :loading="pending"
+          :pagination-options="paginationOptions"
+          :get-row-id="(row) => row.id"
+          :ui="THAKHIN_TABLE_UI"
+          class="w-full min-w-[48rem]"
+          @select="(_event, row) => { selectedRequest = row.original; requestOpen = true }"
+        >
+          <template #requesterName-cell="{ row }">
+            <span class="font-medium text-white">
+              {{ row.original.requesterName || '—' }}
+            </span>
+          </template>
+          <template #type-cell="{ row }">
+            {{ typeLabel(row.original.type) }}
+          </template>
+          <template #cardName-cell="{ row }">
+            {{ row.original.cardData?.name || '—' }}
+          </template>
+          <template #paymentReceiptUrl-cell="{ row }">
+            <UButton
+              v-if="row.original.paymentReceiptUrl"
+              size="sm"
+              label="Receipt"
+              icon="i-lucide-external-link"
+              color="neutral"
+              variant="link"
+              class="px-0"
+              :to="getS3Url(row.original.paymentReceiptUrl)"
+              target="_blank"
+            />
+            <span v-else class="text-white/35">—</span>
+          </template>
+          <template #status-cell="{ row }">
+            <UBadge :color="statusColor(row.original.status)" variant="subtle">
+              {{ row.original.status }}
+            </UBadge>
+          </template>
+          <template #createdAt-cell="{ row }">
+            <span class="text-white/55">{{ formatDate(row.original.createdAt) }}</span>
+          </template>
+          <template #actions-cell="{ row }">
+            <ThakhinRowMenu :items="getActionItems(row.original)" />
+          </template>
+        </UTable>
+      </ThakhinTableFrame>
+    </template>
+
+    <ThakhinTableFrame
+      v-else
+      :page="updatePagination.pageIndex + 1"
+      :total="updatePaginationTotal"
+      :items-per-page="updatePagination.pageSize"
+      @update:page="onUpdatePageChange"
+    >
+      <template #toolbar>
+        <USelect
+          v-model="updateStatus"
+          class="w-40"
+          size="sm"
+          :items="[
+            { label: 'Pending', value: 'pending' },
+            { label: 'Approved', value: 'approved' },
+            { label: 'Declined', value: 'declined' },
+            { label: 'All statuses', value: 'all' },
+          ]"
+        />
+      </template>
+      <UTable
+        ref="updateTable"
+        v-model:global-filter="updateFilter"
+        v-model:sorting="updateSorting"
+        v-model:pagination="updatePagination"
+        :data="updateRows"
+        :columns="updateColumns"
+        :loading="updatesLoading"
+        :pagination-options="updatePaginationOptions"
+        :ui="THAKHIN_TABLE_UI"
+        class="w-full"
+        @select="(_event, row) => { selectedUpdate = row.original; updateOpen = true }"
+      >
+        <template #createdAt-cell="{ row }">
+          <span class="text-white/55">{{ formatDate(row.original.createdAt) }}</span>
+        </template>
+        <template #actions-cell="{ row }">
+          <ThakhinRowMenu :items="updateActions(row.original)" />
+        </template>
+      </UTable>
+    </ThakhinTableFrame>
+
+    <USlideover v-model:open="requestOpen" title="Design request" :ui="{ content: 'bg-[#171717]' }">
+      <template #body>
+        <div v-if="selectedRequest" class="space-y-2 text-sm text-white/80">
+          <p class="text-white">{{ selectedRequest.cardData?.name || 'Untitled' }}</p>
+          <p>{{ selectedRequest.requesterName }} · {{ selectedRequest.requesterEmail }}</p>
+          <p>{{ selectedRequest.cardData?.position }} · {{ selectedRequest.cardData?.company }}</p>
+          <p>{{ selectedRequest.cardData?.phone }} · {{ selectedRequest.cardData?.email }}</p>
+          <p>{{ selectedRequest.cardData?.website }}</p>
+          <p>Payment {{ selectedRequest.paymentId || 'none' }} · {{ selectedRequest.paymentStatus || 'n/a' }}</p>
+          <UButton
+            v-if="selectedRequest.paymentReceiptUrl"
+            label="View receipt"
+            variant="link"
+            :to="getS3Url(selectedRequest.paymentReceiptUrl)"
+            target="_blank"
+          />
+        </div>
+      </template>
+    </USlideover>
+
+    <USlideover v-model:open="updateOpen" title="Card update" :ui="{ content: 'bg-[#171717]' }">
+      <template #body>
+        <div v-if="selectedUpdate" class="space-y-2 text-sm text-white/80">
+          <p class="text-white">{{ selectedUpdate.cardFirstName }} {{ selectedUpdate.cardLastName }}</p>
+          <p>Requested by {{ selectedUpdate.requesterEmail }}</p>
+          <p>Name: {{ selectedUpdate.cardFirstName }} {{ selectedUpdate.cardLastName }} → {{ selectedUpdate.firstName }} {{ selectedUpdate.lastName }}</p>
+          <p>Position: {{ selectedUpdate.cardPosition }} → {{ selectedUpdate.position }}</p>
+          <p>Phone: {{ selectedUpdate.cardPhone }} → {{ selectedUpdate.phone }}</p>
+          <p>Email: {{ selectedUpdate.cardEmail }} → {{ selectedUpdate.email }}</p>
+          <p>Website: {{ selectedUpdate.cardWebsite }} → {{ selectedUpdate.website }}</p>
+          <p v-if="selectedUpdate.note">Note: {{ selectedUpdate.note }}</p>
+        </div>
+      </template>
+    </USlideover>
   </div>
 </template>

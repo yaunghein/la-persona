@@ -61,7 +61,7 @@ const { data: optionsData } = useQuery({
 });
 
 const rows = computed(() => invitationsData.value || []);
-const statusFilter = ref<'all' | 'pending' | 'accepted' | 'cancelled'>('all');
+const statusFilter = ref<'all' | 'pending' | 'accepted' | 'cancelled'>('pending');
 
 const statusFilterItems = [
   { label: 'All statuses', value: 'all' },
@@ -173,6 +173,28 @@ async function onSendInvitation(row: InvitationRow) {
   }
 }
 
+async function onCancelInvitation(row: InvitationRow) {
+  try {
+    await $fetch(`/api/onboarding-invitation/${row.id}/cancel`, {
+      method: 'POST',
+    });
+    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations });
+    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminCards });
+    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminOverview });
+    toast.add({
+      title: 'Invitation cancelled',
+      description: 'The card was returned and the temporary organization was removed.',
+      color: 'success',
+    });
+  } catch (error: any) {
+    toast.add({
+      title: 'Cancel failed',
+      description: error?.data?.statusMessage || 'Please try again.',
+      color: 'error',
+    });
+  }
+}
+
 async function onCopyLink(link: string) {
   try {
     await navigator.clipboard.writeText(link);
@@ -200,6 +222,13 @@ function getActionItems(row: InvitationRow): DropdownMenuItem[][] {
         label: 'Copy Link',
         icon: 'i-lucide-copy',
         onSelect: () => onCopyLink(row.link),
+      },
+      {
+        label: 'Cancel',
+        icon: 'i-lucide-x',
+        color: 'error',
+        disabled: row.status !== 'pending',
+        onSelect: () => onCancelInvitation(row),
       },
     ],
   ];
@@ -243,42 +272,42 @@ const selectUi = {
 
 <template>
   <div class="flex flex-col gap-6">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <h1
-        class="text-[1.75rem] font-normal leading-tight tracking-widest uppercase"
-      >
-        Onboarding Invitations
-      </h1>
-      <div class="flex flex-wrap items-center gap-2">
+    <ThakhinPageHeader
+      title="Invitations"
+      description="Create, send, and cancel card onboarding invitations. Cancelling a pending invite returns the card and removes the empty organization."
+    >
+      <UButton
+        size="sm"
+        label="Create"
+        icon="i-lucide-plus"
+        color="neutral"
+        variant="outline"
+        @click="isCreateOpen = true"
+      />
+    </ThakhinPageHeader>
+
+    <ThakhinTableFrame
+      :page="pagination.pageIndex + 1"
+      :total="paginationTotal"
+      :items-per-page="pagination.pageSize"
+      @update:page="onPageChange"
+    >
+      <template #toolbar>
         <UInput
           v-model="globalFilter"
           icon="i-lucide-search"
           placeholder="Search email, org, or card"
           class="w-64"
-          size="xl"
+          size="sm"
         />
         <USelect
           v-model="statusFilter"
           :items="statusFilterItems"
-          class="w-44"
-          size="xl"
+          class="w-40"
+          size="sm"
         />
-        <UButton
-          size="xl"
-          label="Create Invitation"
-          icon="i-lucide-plus"
-          color="neutral"
-          class="rounded-full"
-          @click="
-            () => {
-              isCreateOpen = true;
-            }
-          "
-        />
-      </div>
-    </div>
+      </template>
 
-    <div class="hide-scrollbar flex-1 overflow-x-auto overflow-y-hidden">
       <UTable
         ref="table"
         v-model:global-filter="globalFilter"
@@ -290,7 +319,7 @@ const selectUi = {
         :pagination-options="paginationOptions"
         :get-row-id="(row) => row.id"
         :ui="THAKHIN_TABLE_UI"
-        class="w-full min-w-287.5"
+        class="w-full min-w-[56rem]"
       >
         <template #email-cell="{ row }">
           <span class="font-medium text-white">{{ row.original.email }}</span>
@@ -301,47 +330,21 @@ const selectUi = {
           }}
         </template>
         <template #expiresAt-cell="{ row }">
-          {{ formatDate(row.original.expiresAt) }}
+          <span class="text-white/55">{{ formatDate(row.original.expiresAt) }}</span>
         </template>
         <template #lastSentAt-cell="{ row }">
-          {{ formatDate(row.original.lastSentAt) }}
+          <span class="text-white/55">{{ formatDate(row.original.lastSentAt) }}</span>
         </template>
         <template #status-cell="{ row }">
-          <UBadge
-            :color="getStatusColor(row.original.status)"
-            variant="soft"
-            class="uppercase"
-          >
+          <UBadge :color="getStatusColor(row.original.status)" variant="subtle">
             {{ row.original.status }}
           </UBadge>
         </template>
         <template #actions-cell="{ row }">
-          <UDropdownMenu :items="getActionItems(row.original)">
-            <UButton
-              size="xl"
-              icon="i-mdi-dots-vertical"
-              color="neutral"
-              variant="ghost"
-              class="text-muted"
-              :loading="isSendingById[row.original.id]"
-            />
-          </UDropdownMenu>
+          <ThakhinRowMenu :items="getActionItems(row.original)" />
         </template>
       </UTable>
-    </div>
-
-    <div class="mt-auto flex items-center justify-end pt-4">
-      <UPagination
-        :page="pagination.pageIndex + 1"
-        :total="paginationTotal"
-        :items-per-page="pagination.pageSize"
-        @update:page="onPageChange"
-        show-controls
-        show-edges
-        color="neutral"
-        variant="outline"
-      />
-    </div>
+    </ThakhinTableFrame>
 
     <USlideover
       v-model:open="isCreateOpen"

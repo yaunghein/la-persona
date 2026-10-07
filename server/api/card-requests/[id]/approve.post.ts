@@ -8,6 +8,7 @@ import {
   subscriptionPayment,
   subscriptionPlan,
   subscriptionPaymentItem,
+  user,
 } from '~~/server/db/schema';
 import { splitName } from '~~/server/services/card';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
@@ -337,6 +338,37 @@ export default defineEventHandler(async (event) => {
     }
 
     return approved;
+  });
+
+  const requester = await db.query.user.findFirst({
+    where: eq(user.id, existing.userId),
+    columns: { email: true },
+  });
+  const linkedPayments = await db
+    .select({ id: subscriptionPayment.id })
+    .from(subscriptionPayment)
+    .where(
+      or(
+        eq(subscriptionPayment.requestId, requestId),
+        eq(subscriptionPayment.note, `New design request (${requestId})`),
+        eq(subscriptionPayment.note, `Existing design request (${requestId})`)
+      )
+    );
+  const linkedCard = existing.cardData?.sourceCardId
+    ? await db.query.card.findFirst({
+        where: eq(card.id, existing.cardData.sourceCardId),
+        columns: { slug: true },
+      })
+    : null;
+
+  enrichLog(event, {
+    card_request: {
+      id: requestId,
+      decision: 'approved',
+      ...(requester?.email ? { requester_email: requester.email } : {}),
+      payment_ids: linkedPayments.map((payment) => payment.id),
+      ...(linkedCard?.slug ? { card_slug: linkedCard.slug } : {}),
+    },
   });
 
   return payload;

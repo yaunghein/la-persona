@@ -72,7 +72,10 @@ export default defineEventHandler(async (event) => {
     linkedRequests.map((request) => [request.id, request.status])
   );
 
-  return payments.map((payment) => {
+  const status = String(getQuery(event).status || '');
+  return payments
+    .filter((payment) => !status || payment.status === status)
+    .map((payment) => {
     const paymentItems = itemsByPaymentId.get(payment.id) || [];
     const linkedRequestId = payment.requestId || extractLinkedRequestId(payment.note);
 

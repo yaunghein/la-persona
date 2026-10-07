@@ -10,6 +10,7 @@ import {
   ORGANIZATION_TYPE_LABELS,
   type OrganizationType,
 } from '~~/shared/utils/constants';
+import { communityCardPath } from '~~/shared/utils/routes';
 import { useThakhinTable } from '~/composables/thakhin-table';
 import {
   THAKHIN_ACTIONS_COLUMN,
@@ -29,18 +30,59 @@ type OrgRow = {
   cardCount: number;
 };
 
+type OrgCommunity = {
+  description: string;
+  guidelines: string;
+  whyJoin: string;
+  logoUrl: string;
+  coverImageUrl: string;
+  splineUrl: string;
+  wallpaperUrl: string;
+  cardBackUrl: string;
+};
+
+type OrgDetail = {
+  id: string;
+  name: string;
+  slug: string;
+  type: OrganizationType;
+  createdAt: string;
+  members: { id: string; role: string; userName: string; userEmail: string }[];
+  cards: {
+    id: string;
+    slug: string;
+    firstName: string;
+    lastName: string | null;
+    userId: string | null;
+  }[];
+  community: OrgCommunity | null;
+};
+
 const toast = useToast();
 const queryClient = useQueryClient();
+const route = useRoute();
 
 const isEditOpen = ref(false);
 const isCreateOpen = ref(false);
 const editingRow = ref<OrgRow | null>(null);
 const isSaving = ref(false);
 const isCreating = ref(false);
+const isDeleteOpen = ref(false);
+const isDeleting = ref(false);
+const orgToDelete = ref<OrgRow | null>(null);
 
 const editForm = reactive({
   name: '',
   slug: '',
+  description: '',
+  guidelines: '',
+  whyJoin: '',
+  logoUrl: '',
+  coverImageUrl: '',
+  splineUrl: '',
+  wallpaperUrl: '',
+  cardBackUrl: '',
+  applyToMemberCards: false,
 });
 
 const createForm = reactive({
@@ -107,11 +149,35 @@ function formatDate(value: string) {
   return new Date(value).toLocaleString();
 }
 
-function openEdit(row: OrgRow) {
+async function openEdit(row: OrgRow) {
   editingRow.value = row;
   editForm.name = row.name;
   editForm.slug = row.slug;
+  editForm.description = '';
+  editForm.guidelines = '';
+  editForm.whyJoin = '';
+  editForm.logoUrl = row.logo || '';
+  editForm.coverImageUrl = '';
+  editForm.splineUrl = '';
+  editForm.wallpaperUrl = '';
+  editForm.cardBackUrl = '';
+  editForm.applyToMemberCards = false;
   isEditOpen.value = true;
+
+  if (row.type !== ORGANIZATION_TYPES.COMMUNITY) return;
+
+  const detail = await $fetch<{
+    community: OrgCommunity | null;
+  }>(`/api/organizations/admin/${row.id}`);
+  if (editingRow.value?.id !== row.id || !detail.community) return;
+  editForm.description = detail.community.description;
+  editForm.guidelines = detail.community.guidelines;
+  editForm.whyJoin = detail.community.whyJoin;
+  editForm.logoUrl = detail.community.logoUrl;
+  editForm.coverImageUrl = detail.community.coverImageUrl;
+  editForm.splineUrl = detail.community.splineUrl;
+  editForm.wallpaperUrl = detail.community.wallpaperUrl;
+  editForm.cardBackUrl = detail.community.cardBackUrl;
 }
 
 function closeEdit() {
@@ -146,18 +212,52 @@ async function onSaveEdit() {
 
   isSaving.value = true;
   try {
-    await $fetch(`/api/organizations/admin/${editingRow.value.id}`, {
-      method: 'PATCH',
-      body: { name, slug },
-    });
+    const saved = await $fetch<{ cardsUpdated?: number }>(
+      `/api/organizations/admin/${editingRow.value.id}`,
+      {
+        method: 'PATCH',
+        body: {
+          name,
+          slug,
+          ...(editingRow.value.type === ORGANIZATION_TYPES.COMMUNITY
+            ? {
+                description: editForm.description,
+                guidelines: editForm.guidelines,
+                whyJoin: editForm.whyJoin,
+                logoUrl: editForm.logoUrl,
+                coverImageUrl: editForm.coverImageUrl,
+                splineUrl: editForm.splineUrl,
+                wallpaperUrl: editForm.wallpaperUrl,
+                cardBackUrl: editForm.cardBackUrl,
+                applyToMemberCards: editForm.applyToMemberCards,
+              }
+            : {}),
+        },
+      }
+    );
     await queryClient.invalidateQueries({
       queryKey: QUERY_KEYS.adminOrganizations,
     });
+    if ((saved.cardsUpdated || 0) > 0) {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminCards });
+    }
+    const cardsUpdated = saved.cardsUpdated || 0;
     toast.add({
       title: 'Organization updated',
+      description: editForm.applyToMemberCards
+        ? cardsUpdated > 0
+          ? `Copied spline, wallpaper, and card back onto ${cardsUpdated} member ${cardsUpdated === 1 ? 'card' : 'cards'}.`
+          : 'No member cards to update.'
+        : undefined,
       color: 'success',
     });
+    const editedId = editingRow.value.id;
     closeEdit();
+    if (orgOpen.value && orgDetail.value?.id === editedId) {
+      orgDetail.value = await $fetch<OrgDetail>(
+        `/api/organizations/admin/${editedId}`
+      );
+    }
   } catch (error: any) {
     toast.add({
       title: 'Update failed',
@@ -220,12 +320,158 @@ function getActionItems(row: OrgRow): DropdownMenuItem[][] {
   return [
     [
       {
+        label: 'View',
+        icon: 'i-lucide-eye',
+        onSelect: () => openOrg(row),
+      },
+      {
         label: 'Edit',
         icon: 'i-lucide-pencil',
         onSelect: () => openEdit(row),
       },
+      {
+        label: 'Delete',
+        icon: 'i-lucide-trash-2',
+        color: 'error',
+        onSelect: () => openDelete(row),
+      },
     ],
   ];
+}
+
+const orgDetail = ref<OrgDetail | null>(null);
+const orgOpen = ref(false);
+const orgLoading = ref(false);
+
+async function openOrg(row: OrgRow) {
+  orgOpen.value = true;
+  orgLoading.value = true;
+  orgDetail.value = null;
+  try {
+    orgDetail.value = await $fetch<OrgDetail>(
+      `/api/organizations/admin/${row.id}`
+    );
+  } catch (error: any) {
+    orgOpen.value = false;
+    toast.add({
+      title: 'Could not open organization',
+      description: error?.data?.statusMessage || 'Please try again.',
+      color: 'error',
+    });
+  } finally {
+    orgLoading.value = false;
+  }
+}
+
+function detailAsRow(): OrgRow | null {
+  const detail = orgDetail.value;
+  if (!detail) return null;
+  return (
+    rows.value.find((item) => item.id === detail.id) ?? {
+      id: detail.id,
+      name: detail.name,
+      slug: detail.slug,
+      logo: detail.community?.logoUrl || null,
+      metadata: null,
+      type: detail.type,
+      createdAt: detail.createdAt,
+      memberCount: detail.members.length,
+      cardCount: detail.cards.length,
+    }
+  );
+}
+
+function openEditFromDetail() {
+  const row = detailAsRow();
+  if (!row) return;
+  orgOpen.value = false;
+  openEdit(row);
+}
+
+function openDeleteFromDetail() {
+  const row = detailAsRow();
+  if (row) openDelete(row);
+}
+
+function plainText(value: string) {
+  return value
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+const brandRows = computed(() => {
+  const community = orgDetail.value?.community;
+  if (!community) return [];
+  return [
+    { label: 'Spline', value: community.splineUrl },
+    { label: 'Wallpaper', value: community.wallpaperUrl },
+    { label: 'Card back', value: community.cardBackUrl },
+    { label: 'Logo', value: community.logoUrl },
+    { label: 'Cover', value: community.coverImageUrl },
+  ];
+});
+
+const copyRows = computed(() => {
+  const community = orgDetail.value?.community;
+  if (!community) return [];
+  return [
+    { label: 'Description', value: plainText(community.description) },
+    { label: 'Guidelines', value: plainText(community.guidelines) },
+    { label: 'Why join', value: plainText(community.whyJoin) },
+  ].filter((row) => row.value);
+});
+
+watch(
+  () => [route.query.focus, (orgsData.value || []).length] as const,
+  () => {
+    const id = String(route.query.focus || '');
+    if (!id) return;
+    const row = (orgsData.value || []).find((item) => item.id === id);
+    if (row) openOrg(row);
+  }
+);
+
+function openDelete(row: OrgRow) {
+  orgToDelete.value = row;
+  isDeleteOpen.value = true;
+}
+
+function closeDelete() {
+  if (isDeleting.value) return;
+  isDeleteOpen.value = false;
+  orgToDelete.value = null;
+}
+
+async function onConfirmDelete() {
+  if (!orgToDelete.value || orgToDelete.value.cardCount > 0) return;
+  isDeleting.value = true;
+  try {
+    await $fetch(`/api/organizations/admin/${orgToDelete.value.id}`, {
+      method: 'DELETE',
+    });
+    await queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.adminOrganizations,
+    });
+    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminOverview });
+    toast.add({
+      title: 'Organization deleted',
+      description: `${orgToDelete.value.name} was removed. Member accounts were kept.`,
+      color: 'success',
+    });
+    isDeleteOpen.value = false;
+    orgOpen.value = false;
+    orgToDelete.value = null;
+  } catch (error: any) {
+    toast.add({
+      title: 'Delete failed',
+      description: error?.data?.statusMessage || 'Please try again.',
+      color: 'error',
+    });
+  } finally {
+    isDeleting.value = false;
+  }
 }
 
 function typeBadgeColor(type: OrganizationType) {
@@ -268,38 +514,42 @@ const selectMenuUi = {
 
 <template>
   <div class="flex flex-col gap-6">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <h1
-        class="text-[1.75rem] font-normal leading-tight tracking-widest uppercase"
-      >
-        Organizations
-      </h1>
-      <div class="flex flex-wrap items-center gap-2">
+    <ThakhinPageHeader
+      title="Organizations"
+      description="Create a personal or community organization, correct its name, slug, and community settings, or delete one that has no cards and no payments."
+    >
+      <UButton
+        size="sm"
+        label="Create"
+        icon="i-lucide-plus"
+        color="neutral"
+        variant="outline"
+        @click="openCreate"
+      />
+    </ThakhinPageHeader>
+
+    <ThakhinTableFrame
+      :page="pagination.pageIndex + 1"
+      :total="paginationTotal"
+      :items-per-page="pagination.pageSize"
+      @update:page="onPageChange"
+    >
+      <template #toolbar>
         <UInput
           v-model="globalFilter"
           icon="i-lucide-search"
           placeholder="Search name or slug"
           class="w-64"
-          size="xl"
+          size="sm"
         />
         <USelect
           v-model="typeFilter"
           :items="typeFilterItems"
-          class="w-44"
-          size="xl"
+          class="w-40"
+          size="sm"
         />
-        <UButton
-          size="xl"
-          label="Create Organization"
-          icon="i-lucide-plus"
-          color="neutral"
-          class="rounded-full"
-          @click="openCreate"
-        />
-      </div>
-    </div>
+      </template>
 
-    <div class="hide-scrollbar flex-1 overflow-x-auto overflow-y-hidden">
       <UTable
         ref="table"
         v-model:global-filter="globalFilter"
@@ -311,13 +561,14 @@ const selectMenuUi = {
         :pagination-options="paginationOptions"
         :get-row-id="(row) => row.id"
         :ui="THAKHIN_TABLE_UI"
-        class="w-full min-w-225"
+        class="w-full"
+        @select="(_event, row) => openOrg(row.original)"
       >
         <template #name-cell="{ row }">
           <span class="font-medium text-white">{{ row.original.name }}</span>
         </template>
         <template #slug-cell="{ row }">
-          <span class="font-mono text-white/90">{{ row.original.slug }}</span>
+          <span class="font-mono text-xs text-white/55">{{ row.original.slug }}</span>
         </template>
         <template #memberCount-cell="{ row }">
           {{ row.original.memberCount }}
@@ -326,43 +577,18 @@ const selectMenuUi = {
           {{ row.original.cardCount }}
         </template>
         <template #type-cell="{ row }">
-          <UBadge
-            :color="typeBadgeColor(row.original.type)"
-            variant="soft"
-            class="uppercase"
-          >
+          <UBadge :color="typeBadgeColor(row.original.type)" variant="subtle">
             {{ ORGANIZATION_TYPE_LABELS[row.original.type] }}
           </UBadge>
         </template>
         <template #createdAt-cell="{ row }">
-          {{ formatDate(row.original.createdAt) }}
+          <span class="text-white/55">{{ formatDate(row.original.createdAt) }}</span>
         </template>
         <template #actions-cell="{ row }">
-          <UDropdownMenu :items="getActionItems(row.original)">
-            <UButton
-              size="xl"
-              icon="i-mdi-dots-vertical"
-              color="neutral"
-              variant="ghost"
-              class="text-muted"
-            />
-          </UDropdownMenu>
+          <ThakhinRowMenu :items="getActionItems(row.original)" />
         </template>
       </UTable>
-    </div>
-
-    <div class="mt-auto flex items-center justify-end pt-4">
-      <UPagination
-        :page="pagination.pageIndex + 1"
-        :total="paginationTotal"
-        :items-per-page="pagination.pageSize"
-        @update:page="onPageChange"
-        show-controls
-        show-edges
-        color="neutral"
-        variant="outline"
-      />
-    </div>
+    </ThakhinTableFrame>
 
     <USlideover
       v-model:open="isCreateOpen"
@@ -488,6 +714,83 @@ const selectMenuUi = {
                 :ui="inputUi"
               />
             </UFormField>
+            <template v-if="editingRow?.type === ORGANIZATION_TYPES.COMMUNITY">
+              <UFormField label="Logo URL" :class="formFieldClass">
+                <UInput
+                  v-model="editForm.logoUrl"
+                  placeholder="https://"
+                  class="w-full"
+                  size="xl"
+                  :ui="inputUi"
+                />
+              </UFormField>
+              <UFormField label="Cover image URL" :class="formFieldClass">
+                <UInput
+                  v-model="editForm.coverImageUrl"
+                  placeholder="https://"
+                  class="w-full"
+                  size="xl"
+                  :ui="inputUi"
+                />
+              </UFormField>
+              <UFormField label="Spline URL" :class="formFieldClass">
+                <UInput
+                  v-model="editForm.splineUrl"
+                  placeholder="https://prod.spline.design/…"
+                  class="w-full"
+                  size="xl"
+                  :ui="inputUi"
+                />
+              </UFormField>
+              <UFormField label="Wallpaper" :class="formFieldClass">
+                <UInput
+                  v-model="editForm.wallpaperUrl"
+                  placeholder="URL or storage key"
+                  class="w-full"
+                  size="xl"
+                  :ui="inputUi"
+                />
+              </UFormField>
+              <UFormField label="Card back" :class="formFieldClass">
+                <UInput
+                  v-model="editForm.cardBackUrl"
+                  placeholder="URL or storage key"
+                  class="w-full"
+                  size="xl"
+                  :ui="inputUi"
+                />
+              </UFormField>
+              <div class="rounded-lg border border-white/10 bg-white/[0.03] p-4">
+                <UCheckbox
+                  v-model="editForm.applyToMemberCards"
+                  label="Update existing member cards"
+                  :ui="{ label: 'text-sm font-medium text-white' }"
+                />
+                <p class="mt-2 text-xs leading-relaxed text-white/50">
+                  Member cards keep the spline, wallpaper, and card back they
+                  received when they joined. Turn this on to copy the three
+                  values above onto every card in this community.
+                </p>
+              </div>
+              <UFormField label="Description" :class="formFieldClass">
+                <CommunityRichTextEditor
+                  v-model="editForm.description"
+                  placeholder="Describe the community"
+                />
+              </UFormField>
+              <UFormField label="Guidelines" :class="formFieldClass">
+                <CommunityRichTextEditor
+                  v-model="editForm.guidelines"
+                  placeholder="Community guidelines"
+                />
+              </UFormField>
+              <UFormField label="Why join" :class="formFieldClass">
+                <CommunityRichTextEditor
+                  v-model="editForm.whyJoin"
+                  placeholder="Why people should join"
+                />
+              </UFormField>
+            </template>
           </div>
 
           <div
@@ -513,5 +816,207 @@ const selectMenuUi = {
         </div>
       </template>
     </USlideover>
+
+    <USlideover
+      v-model:open="orgOpen"
+      side="right"
+      inset
+      :title="orgDetail?.name || 'Organization'"
+      :ui="{
+        content: 'bg-[#121212]',
+        header: 'border-b-2 border-[#232323] px-6 py-6',
+        title: 'truncate text-lg font-medium text-white',
+        body: 'px-6',
+        footer: 'border-t border-[#232323] px-6 py-4',
+      }"
+    >
+      <template #body>
+        <div v-if="orgLoading" class="py-10 text-sm text-white/45">
+          Loading organization…
+        </div>
+        <div v-else-if="orgDetail" class="space-y-8 py-2">
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0">
+              <p class="truncate font-mono text-xs text-white/45">
+                /{{ orgDetail.slug }}
+              </p>
+              <p class="mt-1 text-xs text-white/40">
+                Created {{ formatDate(orgDetail.createdAt) }}
+              </p>
+            </div>
+            <UBadge
+              :color="typeBadgeColor(orgDetail.type)"
+              variant="subtle"
+              class="shrink-0"
+            >
+              {{ ORGANIZATION_TYPE_LABELS[orgDetail.type] }}
+            </UBadge>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-lg border border-white/10 px-4 py-3">
+              <p class="text-xs text-white/45">Members</p>
+              <p class="mt-1 text-2xl font-semibold tabular-nums text-white">
+                {{ orgDetail.members.length }}
+              </p>
+            </div>
+            <div class="rounded-lg border border-white/10 px-4 py-3">
+              <p class="text-xs text-white/45">Cards</p>
+              <p class="mt-1 text-2xl font-semibold tabular-nums text-white">
+                {{ orgDetail.cards.length }}
+              </p>
+            </div>
+          </div>
+
+          <section v-if="orgDetail.community" class="space-y-3">
+            <h3 class="text-xs font-medium tracking-wide text-white/45 uppercase">
+              Brand
+            </h3>
+            <dl class="divide-y divide-white/10 overflow-hidden rounded-lg border border-white/10">
+              <div v-for="row in brandRows" :key="row.label" class="px-4 py-3">
+                <dt class="text-xs text-white/45">{{ row.label }}</dt>
+                <dd class="mt-1 break-all font-mono text-xs leading-relaxed text-white/85">
+                  {{ row.value || '—' }}
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          <section v-if="copyRows.length" class="space-y-4">
+            <div v-for="row in copyRows" :key="row.label">
+              <h3 class="text-xs font-medium tracking-wide text-white/45 uppercase">
+                {{ row.label }}
+              </h3>
+              <p class="mt-2 line-clamp-4 text-sm leading-relaxed text-white/75">
+                {{ row.value }}
+              </p>
+            </div>
+          </section>
+
+          <section class="space-y-3">
+            <h3 class="text-xs font-medium tracking-wide text-white/45 uppercase">
+              Members
+            </h3>
+            <p v-if="orgDetail.members.length === 0" class="text-sm text-white/45">
+              No members.
+            </p>
+            <ul v-else class="divide-y divide-white/10 overflow-hidden rounded-lg border border-white/10">
+              <li
+                v-for="member in orgDetail.members"
+                :key="member.id"
+                class="flex items-center justify-between gap-3 px-4 py-3"
+              >
+                <div class="min-w-0">
+                  <p class="truncate text-sm text-white">{{ member.userName }}</p>
+                  <p class="truncate text-xs text-white/45">{{ member.userEmail }}</p>
+                </div>
+                <UBadge color="neutral" variant="subtle" class="shrink-0 capitalize">
+                  {{ member.role }}
+                </UBadge>
+              </li>
+            </ul>
+          </section>
+
+          <section class="space-y-3">
+            <h3 class="text-xs font-medium tracking-wide text-white/45 uppercase">
+              Cards
+            </h3>
+            <p v-if="orgDetail.cards.length === 0" class="text-sm text-white/45">
+              No cards.
+            </p>
+            <ul v-else class="divide-y divide-white/10 overflow-hidden rounded-lg border border-white/10">
+              <li
+                v-for="item in orgDetail.cards"
+                :key="item.id"
+                class="flex items-center justify-between gap-3 px-4 py-3"
+              >
+                <div class="min-w-0">
+                  <p class="truncate text-sm text-white">
+                    {{ [item.firstName, item.lastName].filter(Boolean).join(' ') || item.slug }}
+                  </p>
+                  <p class="truncate font-mono text-xs text-white/45">/c/{{ item.slug }}</p>
+                </div>
+                <div class="flex shrink-0 items-center gap-2">
+                  <UBadge v-if="!item.userId" color="warning" variant="subtle">
+                    Unclaimed
+                  </UBadge>
+                  <UButton
+                    :to="communityCardPath(item.slug)"
+                    target="_blank"
+                    size="xs"
+                    color="neutral"
+                    variant="ghost"
+                    icon="i-lucide-external-link"
+                    aria-label="Open card"
+                  />
+                </div>
+              </li>
+            </ul>
+          </section>
+        </div>
+      </template>
+      <template v-if="orgDetail" #footer>
+        <div class="flex justify-end gap-2">
+          <UButton
+            label="Delete"
+            color="error"
+            variant="ghost"
+            @click="openDeleteFromDetail"
+          />
+          <UButton
+            label="Edit"
+            color="neutral"
+            class="rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+            @click="openEditFromDetail"
+          />
+        </div>
+      </template>
+    </USlideover>
+
+    <UModal
+      v-model:open="isDeleteOpen"
+      :close="false"
+      :dismissible="!isDeleting"
+      :ui="{ content: 'bg-[#171717] max-w-md' }"
+      title="Delete organization?"
+    >
+      <template #body>
+        <div class="space-y-3 text-sm leading-relaxed text-white/70">
+          <p v-if="(orgToDelete?.cardCount || 0) > 0">
+            <span class="font-medium text-white">{{ orgToDelete?.name }}</span>
+            still has {{ orgToDelete?.cardCount }}
+            {{ orgToDelete?.cardCount === 1 ? 'card' : 'cards' }}.
+            Delete or move those cards first. Deleting the organization would
+            remove them.
+          </p>
+          <template v-else-if="orgToDelete">
+            <p>
+              <span class="font-medium text-white">{{ orgToDelete?.name }}</span>
+              will be removed.
+              {{ orgToDelete?.memberCount || 0 }}
+              {{ orgToDelete?.memberCount === 1 ? 'member stays' : 'members stay' }}
+              as accounts and leave this organization.
+            </p>
+            <p>Payment history blocks deletion. The placeholder organization cannot be deleted.</p>
+          </template>
+        </div>
+      </template>
+      <template #footer>
+        <UButton
+          label="Cancel"
+          color="neutral"
+          variant="ghost"
+          :disabled="isDeleting"
+          @click="closeDelete"
+        />
+        <UButton
+          v-if="orgToDelete && orgToDelete.cardCount === 0"
+          label="Delete"
+          color="error"
+          :loading="isDeleting"
+          @click="onConfirmDelete"
+        />
+      </template>
+    </UModal>
   </div>
 </template>

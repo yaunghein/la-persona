@@ -51,10 +51,22 @@ export const upsertCommunitySettingByOrganizationId = async (
   values: Pick<
     InsertCommunitySetting,
     'description' | 'guidelines' | 'whyJoin' | 'coverUrl'
-  >
+  > &
+    Partial<
+      Pick<InsertCommunitySetting, 'splineUrl' | 'wallpaperUrl' | 'cardBackUrl'>
+    >
 ) => {
   const existing = await findCommunitySettingByOrganizationId(organizationId);
   const defaults = communityBrandDefaults();
+  const brand = {
+    ...(values.splineUrl !== undefined ? { splineUrl: values.splineUrl } : {}),
+    ...(values.wallpaperUrl !== undefined
+      ? { wallpaperUrl: values.wallpaperUrl }
+      : {}),
+    ...(values.cardBackUrl !== undefined
+      ? { cardBackUrl: values.cardBackUrl }
+      : {}),
+  };
 
   if (existing) {
     const [updated] = await db
@@ -64,6 +76,7 @@ export const upsertCommunitySettingByOrganizationId = async (
         guidelines: values.guidelines,
         whyJoin: values.whyJoin,
         coverUrl: values.coverUrl,
+        ...brand,
       })
       .where(eq(communitySetting.organizationId, organizationId))
       .returning();
@@ -79,6 +92,7 @@ export const upsertCommunitySettingByOrganizationId = async (
     whyJoin: values.whyJoin,
     coverUrl: values.coverUrl,
     ...defaults,
+    ...brand,
   });
 };
 

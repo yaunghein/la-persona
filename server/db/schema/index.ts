@@ -1,4 +1,5 @@
 export * from './auth';
+export * from './user-daily-activity';
 export * from './card';
 export * from './contact-exchange';
 export * from './contact-exchange-before-platform';

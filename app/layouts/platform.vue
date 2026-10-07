@@ -53,6 +53,13 @@ function communityLinksFor(org: (typeof communityOrgs.value)[number]) {
   ];
 }
 
+const { data: session } = await authClient.useSession(useFetch);
+const isPlatformAdmin = computed(
+  () =>
+    (session.value?.user as { role?: string | null } | undefined)?.role ===
+    'admin'
+);
+
 const personalLinks = computed(
   () =>
     [
@@ -75,12 +82,16 @@ const personalLinks = computed(
         to: `${personalBasePath.value}/contacts`,
         onSelect: closeSidebar,
       },
-      // {
-      //   label: 'Team (Coming Soon)',
-      //   icon: 'i-ri:team-line',
-      //   to: `${personalBasePath.value}/teams`,
-      //   onSelect: closeSidebar,
-      // },
+      ...(isPlatformAdmin.value
+        ? [
+            {
+              label: 'Admin',
+              icon: 'i-lucide-shield',
+              to: ROUTES.THAKHIN.ROOT,
+              onSelect: closeSidebar,
+            },
+          ]
+        : []),
     ] satisfies NavigationMenuItem[]
 );
 

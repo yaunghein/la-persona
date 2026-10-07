@@ -1,76 +1,107 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui';
+import { useQuery } from '@tanstack/vue-query';
+import { refDebounced } from '@vueuse/core';
+import type { AdminOverview, AdminSearchResult } from '~~/shared/types/admin-overview';
 
 const route = useRoute();
 const open = ref(false);
+const searchTerm = ref('');
+const debouncedSearch = refDebounced(searchTerm, 200);
 
-const links = [
-  {
-    label: 'Overview',
-    icon: 'i-lucide-layout-dashboard',
-    to: ROUTES.THAKHIN.ROOT,
-    onSelect: () => {
-      open.value = false;
+const { data: overview } = useQuery({
+  queryKey: QUERY_KEYS.adminOverview,
+  queryFn: () => $fetch<AdminOverview>('/api/admin/overview'),
+});
+
+const { data: searchResults, isFetching: searchLoading } = useQuery({
+  queryKey: computed(() => ['admin-search', debouncedSearch.value]),
+  queryFn: () =>
+    $fetch<AdminSearchResult>(
+      `/api/admin/search?q=${encodeURIComponent(debouncedSearch.value)}`
+    ),
+  enabled: computed(() => debouncedSearch.value.trim().length >= 2),
+});
+
+function close() {
+  open.value = false;
+}
+
+function badge(count?: number) {
+  if (!count) return undefined;
+  return String(count);
+}
+
+const links = computed(() => {
+  const queues = overview.value?.queues;
+  const requestCount =
+    (queues?.designRequests.count || 0) + (queues?.updateRequests.count || 0);
+
+  return [
+    {
+      label: 'Dashboard',
+      icon: 'i-lucide-layout-dashboard',
+      to: ROUTES.THAKHIN.ROOT,
+      exact: true,
+      onSelect: close,
     },
-  },
-  {
-    label: 'Requests',
-    icon: 'i-lucide-file-clock',
-    to: ROUTES.THAKHIN.REQUESTS,
-    onSelect: () => {
-      open.value = false;
+    {
+      label: 'Requests',
+      icon: 'i-lucide-file-clock',
+      to: ROUTES.THAKHIN.REQUESTS,
+      badge: badge(requestCount),
+      onSelect: close,
     },
-  },
-  {
-    label: 'Payments',
-    icon: 'i-lucide-wallet-cards',
-    to: ROUTES.THAKHIN.PAYMENTS,
-    onSelect: () => {
-      open.value = false;
+    {
+      label: 'Payments',
+      icon: 'i-lucide-wallet-cards',
+      to: ROUTES.THAKHIN.PAYMENTS,
+      badge: badge(queues?.standalonePayments.count),
+      onSelect: close,
     },
-  },
-  {
-    label: 'Organizations',
-    icon: 'i-lucide-building',
-    to: ROUTES.THAKHIN.ORGANIZATIONS,
-    onSelect: () => {
-      open.value = false;
+    {
+      label: 'People',
+      icon: 'i-lucide-users',
+      to: ROUTES.THAKHIN.USERS,
+      onSelect: close,
     },
-  },
-  {
-    label: 'Users',
-    icon: 'i-lucide-users',
-    to: ROUTES.THAKHIN.USERS,
-    onSelect: () => {
-      open.value = false;
+    {
+      label: 'Organizations',
+      icon: 'i-lucide-building',
+      to: ROUTES.THAKHIN.ORGANIZATIONS,
+      onSelect: close,
     },
-  },
-  {
-    label: 'Cards',
-    icon: 'i-lucide-credit-card',
-    to: ROUTES.THAKHIN.CARDS,
-    onSelect: () => {
-      open.value = false;
+    {
+      label: 'Cards',
+      icon: 'i-lucide-credit-card',
+      to: ROUTES.THAKHIN.CARDS,
+      onSelect: close,
     },
-  },
-  {
-    label: 'Invitations',
-    icon: 'i-lucide-user-plus',
-    to: ROUTES.THAKHIN.INVITATIONS,
-    onSelect: () => {
-      open.value = false;
+    {
+      label: 'Invitations',
+      icon: 'i-lucide-user-plus',
+      to: ROUTES.THAKHIN.INVITATIONS,
+      badge: badge(queues?.expiringInvitations.count),
+      onSelect: close,
     },
-  },
-] satisfies NavigationMenuItem[];
+    {
+      label: 'Inbox',
+      icon: 'i-lucide-inbox',
+      to: ROUTES.THAKHIN.INBOX,
+      onSelect: close,
+    },
+  ] satisfies NavigationMenuItem[];
+});
 
 const pageLabel: Record<string, string> = {
-  [ROUTES.THAKHIN.ROOT]: 'Overview',
+  [ROUTES.THAKHIN.ROOT]: 'Dashboard',
   [ROUTES.THAKHIN.REQUESTS]: 'Requests',
   [ROUTES.THAKHIN.PAYMENTS]: 'Payments',
   [ROUTES.THAKHIN.ORGANIZATIONS]: 'Organizations',
-  [ROUTES.THAKHIN.USERS]: 'Users',
+  [ROUTES.THAKHIN.USERS]: 'People',
   [ROUTES.THAKHIN.CARDS]: 'Cards',
   [ROUTES.THAKHIN.INVITATIONS]: 'Invitations',
+  [ROUTES.THAKHIN.INBOX]: 'Inbox',
 };
 
 const currentPageLabel = computed(() => {
@@ -80,6 +111,56 @@ const currentPageLabel = computed(() => {
   );
   if (specificMatch) return specificMatch[1];
   return path === ROUTES.THAKHIN.ROOT ? pageLabel[ROUTES.THAKHIN.ROOT] : '';
+});
+
+const searchGroups = computed(() => {
+  const pages = links.value
+    .filter((item) => item.to)
+    .map((item) => ({
+      label: item.label,
+      icon: item.icon,
+      to: item.to,
+      onSelect: close,
+    }));
+
+  const results = searchResults.value;
+  return [
+    {
+      id: 'pages',
+      label: 'Pages',
+      items: pages,
+    },
+    {
+      id: 'users',
+      label: 'People',
+      items: (results?.users || []).map((item) => ({
+        label: item.label,
+        icon: 'i-lucide-user',
+        to: item.href,
+        onSelect: close,
+      })),
+    },
+    {
+      id: 'organizations',
+      label: 'Organizations',
+      items: (results?.organizations || []).map((item) => ({
+        label: item.label,
+        icon: 'i-lucide-building',
+        to: item.href,
+        onSelect: close,
+      })),
+    },
+    {
+      id: 'cards',
+      label: 'Cards',
+      items: (results?.cards || []).map((item) => ({
+        label: item.label,
+        icon: 'i-lucide-credit-card',
+        to: item.href,
+        onSelect: close,
+      })),
+    },
+  ];
 });
 </script>
 
@@ -124,6 +205,14 @@ const currentPageLabel = computed(() => {
       </template>
     </UDashboardSidebar>
 
+    <UDashboardSearch
+      v-model:search-term="searchTerm"
+      :groups="searchGroups"
+      :loading="searchLoading"
+      placeholder="Search people, organizations, cards"
+      :color-mode="false"
+    />
+
     <UDashboardPanel id="thakhin-panel">
       <template #header>
         <UDashboardNavbar
@@ -132,6 +221,9 @@ const currentPageLabel = computed(() => {
         >
           <template #leading>
             <UDashboardSidebarCollapse />
+          </template>
+          <template #right>
+            <UDashboardSearchButton />
           </template>
         </UDashboardNavbar>
       </template>

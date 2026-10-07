@@ -1,20 +1,13 @@
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { subscriptionPayment, user } from '~~/server/db/schema';
-import { assertOrganizationOwner } from '~~/server/services/subscription';
 import { rejectSubscriptionPaymentBodySchema } from '~~/shared/types/subscription';
 import { requireAdminSession } from '~~/server/utils/admin-permissions';
 import { notifySubscriptionPaymentRejectedEmail } from '~~/server/utils/subscription-email-notifications';
 import { enrichLog, trackEmailSends } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
-  const session = await requireAdminSession(event);
-  if (!session || !session.session.activeOrganizationId) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
-  }
-
-  const organizationId = session.session.activeOrganizationId;
-  await assertOrganizationOwner(session.user.id, organizationId);
+  await requireAdminSession(event);
 
   const parsed = await readValidatedBody(
     event,
@@ -40,10 +33,7 @@ export default defineEventHandler(async (event) => {
 
   const payload = await db.transaction(async (tx) => {
     const payment = await tx.query.subscriptionPayment.findFirst({
-      where: and(
-        eq(subscriptionPayment.id, paymentId),
-        eq(subscriptionPayment.organizationId, organizationId)
-      ),
+      where: eq(subscriptionPayment.id, paymentId),
     });
 
     if (!payment) {
@@ -104,6 +94,7 @@ export default defineEventHandler(async (event) => {
   enrichLog(event, {
     payment: {
       id: payload.payment.id,
+      organization_id: payload.payment.organizationId,
       decision: 'rejected',
       ...(payerEmail ? { payer_email: payerEmail } : {}),
     },

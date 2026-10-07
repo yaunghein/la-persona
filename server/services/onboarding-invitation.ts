@@ -403,3 +403,73 @@ export async function acceptOnboardingInvitation(params: {
     return { organizationSlug: targetOrganization.slug };
   });
 }
+
+export async function cancelOnboardingInvitation(invitationId: string) {
+  const now = new Date();
+
+  return await db.transaction(async (tx) => {
+    const invite = await tx.query.onboardingInvitation.findFirst({
+      where: eq(onboardingInvitation.id, invitationId),
+    });
+    if (!invite) {
+      throw createError({ statusCode: 404, statusMessage: 'Invitation not found' });
+    }
+    if (invite.status !== 'pending') {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Only pending invitations can be cancelled.',
+      });
+    }
+
+    const members = await tx
+      .select({ id: member.id })
+      .from(member)
+      .where(eq(member.organizationId, invite.organizationId));
+    const selectedCard = await tx.query.card.findFirst({
+      where: eq(card.id, invite.cardId),
+      columns: { id: true, userId: true, organizationId: true },
+    });
+    if (!selectedCard) {
+      throw createError({ statusCode: 404, statusMessage: 'Card not found' });
+    }
+    if (members.length > 0 || selectedCard.userId) {
+      throw createError({
+        statusCode: 400,
+        statusMessage:
+          'Invitation cannot be cancelled because the organization or card is already in use.',
+      });
+    }
+
+    if (selectedCard.organizationId === invite.organizationId) {
+      await tx
+        .update(card)
+        .set({
+          organizationId: env.PLACEHOLDER_ORGANIZATION_ID,
+          updatedAt: now,
+        })
+        .where(eq(card.id, selectedCard.id));
+    }
+
+    await tx
+      .update(onboardingInvitation)
+      .set({
+        status: 'cancelled',
+        organizationId: env.PLACEHOLDER_ORGANIZATION_ID,
+        updatedAt: now,
+      })
+      .where(eq(onboardingInvitation.id, invite.id));
+
+    if (invite.organizationId !== env.PLACEHOLDER_ORGANIZATION_ID) {
+      await tx
+        .delete(organization)
+        .where(eq(organization.id, invite.organizationId));
+    }
+
+    return {
+      id: invite.id,
+      email: invite.email,
+      cardId: invite.cardId,
+      deletedOrganizationId: invite.organizationId,
+    };
+  });
+}

@@ -51,6 +51,7 @@ export const ROUTES = {
     USERS: `${THAKHIN_ROOT}/users`,
     CARDS: `${THAKHIN_ROOT}/cards`,
     INVITATIONS: `${THAKHIN_ROOT}/invitations`,
+    INBOX: `${THAKHIN_ROOT}/inbox`,
   },
   API: '/api',
 } as const;
