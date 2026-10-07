@@ -1,6 +1,9 @@
 import { insertEvent, toEventDTO } from '~~/server/db/queries/event';
 import { handleApiError } from '~~/server/utils/errors';
-import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
+import {
+  enrichOrganizationName,
+  requireOrganizationPermission,
+} from '~~/server/utils/organization-permissions';
 import { createEventBodySchema } from '~~/shared/types/event';
 import { wallClockDate } from '~~/shared/utils/event-datetime';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
@@ -44,7 +47,8 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    enrichLog(event, { event: { id: inserted.id } });
+    enrichLog(event, { event: { id: inserted.id, title: inserted.title } });
+    await enrichOrganizationName(event, inserted.organizationId);
     return toEventDTO(inserted);
   } catch (error) {
     handleApiError(error, {

@@ -49,6 +49,7 @@ export default defineEventHandler(async (event) => {
         statusMessage: 'Event not found',
       });
     }
+    enrichLog(event, { event: { id: eventId, title: row.title } });
 
     const slug = parseCardSlugFromQr(body.data.code);
     if (!slug) {

@@ -29,6 +29,10 @@ export default defineEventHandler(async (event) => {
         statusMessage: 'Event not found',
       });
     }
+    enrichLog(event, {
+      organization_name: row.organizationName,
+      event: { title: row.event.title },
+    });
 
     if (row.event.registrationMode === 'closed') {
       throw createError({

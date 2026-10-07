@@ -8,7 +8,7 @@ import {
   optionalS3ObjectKey,
 } from '~~/server/utils/zod-admin-card';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
-import { changedFieldNames, enrichLog } from '~~/server/utils/wide-event';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 const adminUpdateCardSchema = z.object({
   organizationId: z.string().min(1).optional(),
@@ -106,7 +106,6 @@ export default defineEventHandler(async (event) => {
   enrichLog(event, {
     card: {
       slug: updated.slug,
-      fields: changedFieldNames(payload),
       ...(updated.email ? { email: updated.email } : {}),
     },
   });

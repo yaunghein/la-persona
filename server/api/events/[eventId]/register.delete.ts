@@ -30,6 +30,7 @@ export default defineEventHandler(async (event) => {
         statusMessage: 'Event not found',
       });
     }
+    enrichLog(event, { event: { id: eventId, title: row.title } });
 
     const existing = await findRegistrationByEventAndUser(
       eventId,

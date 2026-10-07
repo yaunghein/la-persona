@@ -76,7 +76,7 @@ export const deleteEventByIdAndOrganizationId = async (
   const [deleted] = await db
     .delete(event)
     .where(and(eq(event.id, id), eq(event.organizationId, organizationId)))
-    .returning({ id: event.id });
+    .returning({ id: event.id, title: event.title });
 
   return deleted;
 };

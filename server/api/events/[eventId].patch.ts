@@ -4,11 +4,14 @@ import {
   updateEventByIdAndOrganizationId,
 } from '~~/server/db/queries/event';
 import { handleApiError } from '~~/server/utils/errors';
-import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
+import {
+  enrichOrganizationName,
+  requireOrganizationPermission,
+} from '~~/server/utils/organization-permissions';
 import { updateEventBodySchema } from '~~/shared/types/event';
 import { wallClockDate } from '~~/shared/utils/event-datetime';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
-import { changedFieldNames, enrichLog } from '~~/server/utils/wide-event';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   const session = await requireOrganizationPermission(
@@ -24,9 +27,8 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Event id is required',
     });
   }
-  enrichLog(event, {
-    event: { id: eventId, fields: changedFieldNames(body.success ? body.data : {}) },
-  });
+  enrichLog(event, { event: { id: eventId } });
+  await enrichOrganizationName(event, session.session.activeOrganizationId);
 
   if (!body.success) {
     throw createError({
@@ -48,6 +50,7 @@ export default defineEventHandler(async (event) => {
         statusMessage: 'Event not found',
       });
     }
+    enrichLog(event, { event: { title: existing.title } });
 
     const updated = await updateEventByIdAndOrganizationId(
       eventId,
@@ -72,6 +75,7 @@ export default defineEventHandler(async (event) => {
         statusMessage: 'Failed to update event',
       });
     }
+    enrichLog(event, { event: { title: updated.title } });
 
     return toEventDTO(updated);
   } catch (error) {

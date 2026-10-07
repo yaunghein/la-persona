@@ -40,7 +40,7 @@ The canonical line already has `request_id`, `method`, `route` (param names, so 
 On a new or changed API route, call `enrichLog` with the ids and addresses you would search when a user reports the action failed. Put them on a nested object so you do not overwrite `request_id`:
 
 - Card create/update/delete: `card.id`, slug, owner email.
-- Payments, requests, invitations, contact exchange, registration, check-in: the same kind of ids already used on those handlers (payment id, plan, decision, invitation id, invited email, event id, registration id, result).
+- Payments, requests, invitations, contact exchange, registration, check-in: the same kind of ids already used on those handlers (payment id, plan, decision, invitation id, invited email, event id, event title, organization name, registration id, result).
 
 Do not log passwords, cookies, auth headers, invitation or join tokens, email HTML, or request bodies. Do log email addresses (`user_email`, `email.to`, payer, requester, invited address). Validation failures should name the fields, not the submitted values.
 

@@ -1,6 +1,9 @@
 import { deleteEventByIdAndOrganizationId } from '~~/server/db/queries/event';
 import { handleApiError } from '~~/server/utils/errors';
-import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
+import {
+  enrichOrganizationName,
+  requireOrganizationPermission,
+} from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
 import { enrichLog } from '~~/server/utils/wide-event';
 
@@ -18,6 +21,7 @@ export default defineEventHandler(async (event) => {
     });
   }
   enrichLog(event, { event: { id: eventId } });
+  await enrichOrganizationName(event, session.session.activeOrganizationId);
 
   try {
     const deleted = await deleteEventByIdAndOrganizationId(
@@ -31,6 +35,7 @@ export default defineEventHandler(async (event) => {
         statusMessage: 'Event not found',
       });
     }
+    enrichLog(event, { event: { title: deleted.title } });
 
     return { id: deleted.id };
   } catch (error) {

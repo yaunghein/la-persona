@@ -33,6 +33,7 @@ export default defineEventHandler(async (event) => {
         statusMessage: 'Event not found',
       });
     }
+    enrichLog(event, { event: { id: eventId, title: row.title } });
 
     if (row.registrationMode === 'closed') {
       throw createError({

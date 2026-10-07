@@ -27,6 +27,7 @@ export type WideEvent = {
   user_id?: string;
   user_email?: string;
   organization_id?: string;
+  organization_name?: string;
   error?: WideEventError;
   email?: {
     template?: string;
@@ -89,13 +90,6 @@ export function shouldEmit(input: {
   if (failed || slow) return true;
   const method = input.method.toUpperCase();
   return method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS';
-}
-
-export function changedFieldNames(data: object, omit: string[] = ['id']) {
-  const skip = new Set(omit);
-  return Object.entries(data as Record<string, unknown>)
-    .filter(([key, value]) => !skip.has(key) && value !== undefined)
-    .map(([key]) => key);
 }
 
 export function enrichLog(event: H3Event, fields: Record<string, unknown>) {

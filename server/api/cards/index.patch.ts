@@ -4,7 +4,7 @@ import {
   requireOrganizationPermission,
 } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
-import { changedFieldNames, enrichLog } from '~~/server/utils/wide-event';
+import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   const session = await requireOrganizationPermission(
@@ -29,12 +29,7 @@ export default defineEventHandler(async (event) => {
       ORGANIZATION_PERMISSIONS.CARD_READ_ALL,
       organizationId
     );
-    enrichLog(event, {
-      card: {
-        id: result.data.id,
-        fields: changedFieldNames(result.data),
-      },
-    });
+    enrichLog(event, { card: { id: result.data.id } });
     const updated = await updateCard(
       session.user.id,
       organizationId,

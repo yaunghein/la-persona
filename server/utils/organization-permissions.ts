@@ -4,6 +4,7 @@ import { and, eq } from 'drizzle-orm';
 import { auth } from '~~/server/auth';
 import { db } from '~~/server/db';
 import { member, organization } from '~~/server/db/schema';
+import { enrichLog } from '~~/server/utils/wide-event';
 import {
   type OrganizationPermission,
   organizationPermissionStatements,
@@ -146,7 +147,19 @@ export async function requireCommunityOrganization(event: H3Event) {
     });
   }
 
+  enrichLog(event, { organization_name: org.name });
   return { session, org };
+}
+
+export async function enrichOrganizationName(
+  event: H3Event,
+  organizationId: string
+) {
+  const org = await db.query.organization.findFirst({
+    where: eq(organization.id, organizationId),
+    columns: { name: true },
+  });
+  if (org?.name) enrichLog(event, { organization_name: org.name });
 }
 
 export async function requireCommunityManager(

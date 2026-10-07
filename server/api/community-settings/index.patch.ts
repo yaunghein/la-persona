@@ -10,7 +10,6 @@ import {
   updateCommunitySettingsBodySchema,
 } from '~~/shared/types/community-settings';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
-import { changedFieldNames, enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
   const session = await requireOrganizationPermission(
@@ -29,10 +28,6 @@ export default defineEventHandler(async (event) => {
       data: body.error.issues,
     });
   }
-  enrichLog(event, {
-    community_settings: { fields: changedFieldNames(body.data) },
-  });
-
   try {
     const org = await db.query.organization.findFirst({
       where: eq(organization.id, session.session.activeOrganizationId),
