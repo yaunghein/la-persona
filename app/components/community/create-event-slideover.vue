@@ -10,6 +10,7 @@ import { z } from 'zod';
 import type { EventDTO } from '~~/shared/types/event';
 import { publicEventAbsoluteUrl } from '~~/shared/utils/routes';
 import {
+  eventScheduleError,
   eventTimeOptions,
   formatEventDateValue,
   formatEventTimeValue,
@@ -44,23 +45,44 @@ const queryClient = useQueryClient();
 const toast = useToast();
 const runtimeConfig = useRuntimeConfig();
 
-const schema = z.object({
-  title: z.string().trim().min(1, 'Event name is required'),
-  description: z.string().trim().optional().or(z.literal('')),
-  location: z.string().trim().min(1, 'Location is required'),
-  date: z.string().refine(isEventDateValue, { message: 'Date is required' }),
-  startTime: z
-    .string()
-    .refine(isEventTimeValue, { message: 'Start time is required' }),
-  endTime: z
-    .string()
-    .refine(isEventTimeValue, { message: 'End time is required' }),
-  capacity: z.number().int().positive().nullable(),
-  registrationMode: z.enum(['open', 'closed', 'invite_only']),
-  approvalMode: z.enum(['everyone', 'manual']),
-});
+function buildEventFormSchema(allowPast: boolean) {
+  return z
+    .object({
+      title: z.string().trim().min(1, 'Event name is required'),
+      description: z.string().trim().optional().or(z.literal('')),
+      location: z.string().trim().min(1, 'Location is required'),
+      date: z
+        .string()
+        .refine(isEventDateValue, { message: 'Date is required' }),
+      startTime: z
+        .string()
+        .refine(isEventTimeValue, { message: 'Start time is required' }),
+      endTime: z
+        .string()
+        .refine(isEventTimeValue, { message: 'End time is required' }),
+      capacity: z.number().int().positive().nullable(),
+      registrationMode: z.enum(['open', 'closed', 'invite_only']),
+      approvalMode: z.enum(['everyone', 'manual']),
+    })
+    .superRefine((value, ctx) => {
+      const issue = eventScheduleError(
+        value.date,
+        value.startTime,
+        value.endTime,
+        { allowPast }
+      );
+      if (!issue) return;
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [issue.path],
+        message: issue.message,
+      });
+    });
+}
 
-type FormState = z.output<typeof schema>;
+type FormState = z.output<ReturnType<typeof buildEventFormSchema>>;
+
+const schema = computed(() => buildEventFormSchema(Boolean(props.event?.id)));
 
 const success = ref(false);
 const createdEvent = ref<EventDTO | null>(null);
@@ -482,7 +504,7 @@ function onSubmit(event: FormSubmitEvent<FormState>) {
 }
 
 function submitFromFooter() {
-  const parsed = schema.safeParse(state);
+  const parsed = schema.value.safeParse(state);
   if (!parsed.success) {
     toast.add({
       title: 'Please check your form',

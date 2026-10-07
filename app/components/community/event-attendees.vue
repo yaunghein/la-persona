@@ -4,6 +4,7 @@ import type { EventAttendee } from '~~/shared/types/community-event-detail';
 
 const props = defineProps<{
   attendees: EventAttendee[];
+  allowApprove?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -93,7 +94,7 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
     },
   ];
 
-  if (attendee.status === 'pending') {
+  if (attendee.status === 'pending' && props.allowApprove !== false) {
     items.push({
       label: 'Approve',
       icon: 'i-lucide-check',

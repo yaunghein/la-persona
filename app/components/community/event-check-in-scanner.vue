@@ -443,7 +443,20 @@ async function lookupCode(code: string) {
     };
 
     state.value = result.status === 'already' ? 'already' : 'success';
-  } catch {
+  } catch (error: any) {
+    const status = error?.statusCode || error?.status;
+    if (status === 403) {
+      toast.add({
+        title: 'Check-in unavailable',
+        description:
+          error?.data?.statusMessage ||
+          error?.statusMessage ||
+          'Check-in is not open.',
+        color: 'error',
+      });
+      state.value = 'scanning';
+      return;
+    }
     scannedAttendee.value = null;
     state.value = 'not-found';
   } finally {

@@ -4,6 +4,7 @@ import type {
   CommunityEvent,
   CommunityEventsData,
 } from '~~/shared/types/community-events';
+import { registrationBlockReason } from '~~/shared/utils/event-datetime';
 
 const props = defineProps<{
   data: CommunityEventsData;
@@ -109,19 +110,35 @@ function onRegister(event: CommunityEvent) {
   emit('register', event);
 }
 
-function registerLabel(event: CommunityEvent) {
-  if (event.viewerRegistrationStatus === 'pending') return 'Pending';
-  if (event.viewerRegistrationStatus === 'registered') return 'Registered';
-  if (event.viewerRegistrationStatus === 'checked_in') return 'Checked in';
-  return 'Register';
+function registrationBlock(event: CommunityEvent) {
+  if (event.status === 'past') return 'past' as const;
+  return registrationBlockReason({
+    startsAt: `${event.date}T${event.startTime}:00.000Z`,
+    endsAt: `${event.date}T${event.endTime}:00.000Z`,
+    registrationMode: event.registrationMode,
+    capacity: event.capacity,
+    registeredCount: event.registeredCount,
+  });
 }
 
 function canRegister(event: CommunityEvent) {
   return (
-    event.status !== 'past' &&
-    event.registrationMode !== 'closed' &&
-    event.viewerRegistrationStatus === 'none'
+    event.viewerRegistrationStatus === 'none' &&
+    registrationBlock(event) === null
   );
+}
+
+function unavailableLabel(event: CommunityEvent) {
+  if (event.viewerRegistrationStatus === 'pending') return 'Pending';
+  if (event.viewerRegistrationStatus === 'registered') return 'Registered';
+  if (event.viewerRegistrationStatus === 'checked_in') return 'Checked in';
+
+  const block = registrationBlock(event);
+  if (block === 'past') return 'Ended';
+  if (block === 'invite_only') return 'Invite only';
+  if (block === 'closed') return 'Closed';
+  if (block === 'full') return 'Full';
+  return 'Register';
 }
 </script>
 
@@ -238,23 +255,8 @@ function canRegister(event: CommunityEvent) {
               class="h-8 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
               @click.stop="onRegister(event)"
             />
-            <span
-              v-else-if="
-                event.status === 'past' &&
-                event.viewerRegistrationStatus === 'none'
-              "
-              class="text-sm text-[#8b8b8b]"
-            >
-              Ended
-            </span>
-            <span
-              v-else-if="event.registrationMode === 'closed'"
-              class="text-sm text-[#8b8b8b]"
-            >
-              Closed
-            </span>
             <span v-else class="text-sm text-[#8b8b8b]">
-              {{ registerLabel(event) }}
+              {{ unavailableLabel(event) }}
             </span>
           </div>
         </div>

@@ -13,9 +13,10 @@ import type {
 import type { EventDetailDTO } from '~~/shared/types/event';
 import { publicEventAbsoluteUrl } from '~~/shared/utils/routes';
 import {
-  eventStatus,
+  eventPhase,
   formatEventDateTimeRange,
   formatEventDateValue,
+  registrationBlockReason,
 } from '~~/shared/utils/event-datetime';
 
 const toast = useToast();
@@ -90,15 +91,17 @@ const eventDetail = computed<CommunityEventDetailData | null>(() => {
   return {
     id: event.value.id,
     title: event.value.title,
-    status: eventStatus(event.value.endsAt),
+    status:
+      eventPhase(event.value.startsAt, event.value.endsAt) === 'past'
+        ? 'past'
+        : 'upcoming',
     overview: {
       dateTime: formatEventDateTimeRange(
         event.value.startsAt,
         event.value.endsAt
       ),
       place: event.value.location,
-      registrationStatus:
-        event.value.registrationMode === 'closed' ? 'closed' : 'open',
+      registrationStatus: event.value.registrationMode,
       registrations: event.value.overview.registrations,
       checkedIn: event.value.overview.checkedIn,
       attendanceRate: event.value.overview.attendanceRate,
@@ -116,10 +119,24 @@ const eventDetail = computed<CommunityEventDetailData | null>(() => {
   };
 });
 
-const walkInUrl = computed(() => {
-  if (!import.meta.client) return '';
-  return `${window.location.origin}/platform/${organizationSlug.value}/events/${eventId.value}/walkin`;
+const phase = computed(() =>
+  event.value ? eventPhase(event.value.startsAt, event.value.endsAt) : 'before'
+);
+
+const canWalkIn = computed(() => {
+  if (!event.value) return false;
+  return (
+    registrationBlockReason({
+      startsAt: event.value.startsAt,
+      endsAt: event.value.endsAt,
+      registrationMode: event.value.registrationMode,
+      capacity: event.value.capacity,
+      registeredCount: event.value.registeredCount,
+    }) === null
+  );
 });
+
+const walkInUrl = computed(() => publicEventAbsoluteUrl(eventId.value));
 
 function goBack() {
   navigateTo(`/platform/${organizationSlug.value}/events`);
@@ -131,10 +148,12 @@ function onSelectAttendee(attendee: EventAttendee) {
 }
 
 function onOpenScanner() {
+  if (phase.value !== 'live') return;
   isScannerOpen.value = true;
 }
 
 function onOpenWalkIn() {
+  if (!canWalkIn.value) return;
   isWalkInOpen.value = true;
 }
 
@@ -213,6 +232,7 @@ async function onCheckedIn() {
     <CommunityEventAttendees
       v-else-if="activeTab === 'attendees'"
       :attendees="eventDetail.attendees"
+      :allow-approve="phase !== 'past'"
       @select="onSelectAttendee"
       @approve="approveAttendee"
     />
@@ -220,6 +240,8 @@ async function onCheckedIn() {
     <CommunityEventCheckIn
       v-else-if="activeTab === 'check-in'"
       :attendees="eventDetail.attendees"
+      :check-in-phase="phase"
+      :can-walk-in="canWalkIn"
       @open-scanner="onOpenScanner"
       @open-walk-in="onOpenWalkIn"
       @select="onSelectAttendee"

@@ -9,6 +9,7 @@ import { handleApiError } from '~~/server/utils/errors';
 import { requireCommunityOrganization } from '~~/server/utils/organization-permissions';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+import { eventPhase } from '~~/shared/utils/event-datetime';
 import { parseCardSlugFromQr } from '~~/shared/utils/card-qr';
 import { enrichLog } from '~~/server/utils/wide-event';
 
@@ -49,6 +50,18 @@ export default defineEventHandler(async (event) => {
       });
     }
     enrichLog(event, { event: { id: eventId, title: row.title } });
+
+    const phase = eventPhase(row.startsAt, row.endsAt);
+    if (phase !== 'live') {
+      enrichLog(event, { registration: { result: phase } });
+      throw createError({
+        statusCode: 403,
+        statusMessage:
+          phase === 'before'
+            ? 'Check-in opens when the event starts'
+            : 'This event has ended',
+      });
+    }
 
     const slug = parseCardSlugFromQr(body.data.code);
     if (!slug) {

@@ -8,7 +8,10 @@ import { handleApiError } from '~~/server/utils/errors';
 import { requireCommunityOrganization } from '~~/server/utils/organization-permissions';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
-import { eventStatus } from '~~/shared/utils/event-datetime';
+import {
+  registrationBlockMessage,
+  registrationBlockReason,
+} from '~~/shared/utils/event-datetime';
 import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
@@ -36,20 +39,21 @@ export default defineEventHandler(async (event) => {
     }
     enrichLog(event, { event: { id: eventId, title: row.title } });
 
-    if (row.registrationMode === 'closed') {
-      throw createError({
-        statusCode: 403,
-        statusMessage: 'Registration is closed for this event',
-      });
-    }
-
-    if (eventStatus(row.endsAt) === 'past') {
+    const counted = await countCountedRegistrations(eventId);
+    const block = registrationBlockReason({
+      startsAt: row.startsAt,
+      endsAt: row.endsAt,
+      registrationMode: row.registrationMode,
+      capacity: row.capacity,
+      registeredCount: counted,
+    });
+    if (block) {
       enrichLog(event, {
-        registration: { event_id: eventId, result: 'event_ended' },
+        registration: { event_id: eventId, result: block },
       });
       throw createError({
-        statusCode: 403,
-        statusMessage: 'This event has ended',
+        statusCode: block === 'full' ? 400 : 403,
+        statusMessage: registrationBlockMessage(block),
       });
     }
 
@@ -66,14 +70,6 @@ export default defineEventHandler(async (event) => {
         },
       });
       return existing;
-    }
-
-    const counted = await countCountedRegistrations(eventId);
-    if (row.capacity != null && counted >= row.capacity) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'This event is at capacity',
-      });
     }
 
     const status = row.approvalMode === 'manual' ? 'pending' : 'registered';

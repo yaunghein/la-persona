@@ -1,4 +1,6 @@
 import { format } from 'date-fns';
+import { getCookie } from 'h3';
+import { useRequestEvent, useState } from '#imports';
 
 const TIME_VALUE_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 const DATE_VALUE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -64,11 +66,141 @@ export function formatEventDateValue(startsAt: Date | string) {
   return `${year}-${month}-${day}`;
 }
 
-export function eventStatus(
+export const EVENT_TIMEZONE_OFFSET_COOKIE = 'tz_offset';
+
+export type EventPhase = 'before' | 'live' | 'past';
+
+export type RegistrationBlock = 'past' | 'closed' | 'invite_only' | 'full';
+
+function asDate(value: Date | string) {
+  return typeof value === 'string' ? new Date(value) : value;
+}
+
+/** Stored event times are the wall clock the organizer typed, saved as UTC. */
+export function eventInstant(value: Date | string) {
+  return asDate(value).getTime();
+}
+
+function isTimezoneOffset(value: number) {
+  return Number.isFinite(value) && Math.abs(value) <= 14 * 60;
+}
+
+function readRequestTimezoneOffset() {
+  try {
+    const request = useRequestEvent();
+    if (!request) return null;
+    const parsed = Number(getCookie(request, EVENT_TIMEZONE_OFFSET_COOKIE));
+    return isTimezoneOffset(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Minutes to add to local time to get UTC, matching Date#getTimezoneOffset.
+ * In the browser this is the viewer's zone. On the server it is the tz_offset
+ * cookie from that browser, so the page and the API use the same clock.
+ */
+export function currentTimezoneOffset() {
+  const fallback = new Date().getTimezoneOffset();
+  try {
+    const pinned = useState<number | null>('event-tz-offset', () => null);
+    if (pinned.value == null) {
+      pinned.value = readRequestTimezoneOffset() ?? fallback;
+    }
+    return pinned.value;
+  } catch {
+    return readRequestTimezoneOffset() ?? fallback;
+  }
+}
+
+function localNowMs() {
+  return Date.now() - currentTimezoneOffset() * 60_000;
+}
+
+export function eventPhase(
+  startsAt: Date | string,
   endsAt: Date | string
-): 'upcoming' | 'past' {
-  const value = typeof endsAt === 'string' ? new Date(endsAt) : endsAt;
-  return value.getTime() >= Date.now() ? 'upcoming' : 'past';
+): EventPhase {
+  const now = localNowMs();
+  if (eventInstant(endsAt) < now) return 'past';
+  if (eventInstant(startsAt) > now) return 'before';
+  return 'live';
+}
+
+export function eventStatus(endsAt: Date | string): 'upcoming' | 'past' {
+  return eventInstant(endsAt) >= localNowMs() ? 'upcoming' : 'past';
+}
+
+export function eventScheduleError(
+  date: string,
+  startTime: string,
+  endTime: string,
+  options: { allowPast: boolean }
+) {
+  if (
+    !isEventDateValue(date) ||
+    !isEventTimeValue(startTime) ||
+    !isEventTimeValue(endTime)
+  ) {
+    return null;
+  }
+
+  if (endTime <= startTime) {
+    return {
+      path: 'endTime' as const,
+      message: 'End time must be after start time',
+    };
+  }
+
+  if (
+    !options.allowPast &&
+    eventStatus(wallClockDate(date, endTime)) === 'past'
+  ) {
+    return {
+      path: 'endTime' as const,
+      message: 'This event has already ended',
+    };
+  }
+
+  return null;
+}
+
+export function registrationBlockReason(input: {
+  startsAt: Date | string;
+  endsAt: Date | string;
+  registrationMode: 'open' | 'closed' | 'invite_only';
+  capacity: number | null;
+  registeredCount: number;
+}): RegistrationBlock | null {
+  if (eventStatus(input.endsAt) === 'past') return 'past';
+  if (input.registrationMode === 'closed') return 'closed';
+  if (input.registrationMode === 'invite_only') return 'invite_only';
+  if (input.capacity != null && input.registeredCount >= input.capacity) {
+    return 'full';
+  }
+  return null;
+}
+
+export function registrationBlockMessage(reason: RegistrationBlock) {
+  switch (reason) {
+    case 'past':
+      return 'This event has ended';
+    case 'closed':
+      return 'Registration is closed for this event';
+    case 'invite_only':
+      return 'This event is invite only';
+    case 'full':
+      return 'This event is at capacity';
+  }
+}
+
+export function spotsRemaining(
+  capacity: number | null,
+  registeredCount: number
+) {
+  if (capacity == null) return null;
+  return Math.max(capacity - registeredCount, 0);
 }
 
 export function eventTimeOptions() {

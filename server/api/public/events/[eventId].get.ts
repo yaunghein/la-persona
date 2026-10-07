@@ -7,6 +7,7 @@ import {
   findOrganizationOwnerCardSlug,
 } from '~~/server/db/queries/card';
 import {
+  countCountedRegistrations,
   findRegistrationByEventAndUser,
   toViewerStatus,
 } from '~~/server/db/queries/event-registration';
@@ -78,9 +79,10 @@ export default defineEventHandler(async (event) => {
       ? await buildViewer(session.user.id, row.event.organizationId, eventId)
       : null;
 
-    const organizerCardSlug = await findOrganizationOwnerCardSlug(
-      row.event.organizationId
-    );
+    const [organizerCardSlug, registeredCount] = await Promise.all([
+      findOrganizationOwnerCardSlug(row.event.organizationId),
+      countCountedRegistrations(eventId),
+    ]);
 
     const payload: PublicEventDTO = {
       ...toEventDTO(row.event),
@@ -90,6 +92,7 @@ export default defineEventHandler(async (event) => {
         slug: row.organizationSlug,
         cardSlug: organizerCardSlug,
       },
+      registeredCount,
       viewer,
     };
 

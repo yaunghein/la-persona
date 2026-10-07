@@ -7,9 +7,10 @@ import type {
 import { useQueryClient } from '@tanstack/vue-query';
 import { QUERY_KEYS } from '~/utils/query-keys';
 import {
-  eventStatus,
   formatEventTimeLabel,
   formatEventWeekdayDateLabel,
+  registrationBlockReason,
+  spotsRemaining,
 } from '~~/shared/utils/event-datetime';
 import { eventGalleryImages } from '~~/shared/utils/event-media';
 import { communityCardPath } from '~~/shared/utils/routes';
@@ -67,7 +68,20 @@ const galleryImages = computed(() =>
   eventGalleryImages(props.event.coverUrl, props.event.photoUrls)
 );
 
-const isPast = computed(() => eventStatus(props.event.endsAt) === 'past');
+const registeredCount = computed(() => {
+  const value = (props.event as { registeredCount?: number }).registeredCount;
+  return typeof value === 'number' ? value : 0;
+});
+
+const registrationBlock = computed(() =>
+  registrationBlockReason({
+    startsAt: props.event.startsAt,
+    endsAt: props.event.endsAt,
+    registrationMode: props.event.registrationMode,
+    capacity: props.event.capacity,
+    registeredCount: registeredCount.value,
+  })
+);
 
 const details = computed(() => {
   const rows: { label: string; value: string }[] = [
@@ -107,10 +121,9 @@ const details = computed(() => {
 });
 
 const spotsLabel = computed(() => {
-  const capacity = props.event.capacity;
-  if (capacity == null) return '';
-  const spots = Math.max(capacity, 0);
-  return `${spots} spot${spots === 1 ? '' : 's'} available`;
+  const remaining = spotsRemaining(props.event.capacity, registeredCount.value);
+  if (remaining == null) return '';
+  return `${remaining} spot${remaining === 1 ? '' : 's'} available`;
 });
 
 function clearRegisteringTimer() {
@@ -125,7 +138,7 @@ function resetStep() {
 }
 
 async function startRegister() {
-  if (step.value !== 'confirm' || isPast.value) return;
+  if (step.value !== 'confirm' || registrationBlock.value) return;
 
   if (isPage.value && !props.canRegister) {
     emit('register', props.event);
@@ -329,8 +342,16 @@ onBeforeUnmount(() => {
       >
         <template v-if="step !== 'success'">
           <UButton
-            v-if="isPast"
-            label="Event ended"
+            v-if="registrationBlock"
+            :label="
+              registrationBlock === 'past'
+                ? 'Event ended'
+                : registrationBlock === 'full'
+                  ? 'Event full'
+                  : registrationBlock === 'invite_only'
+                    ? 'Invite only'
+                    : 'Registration closed'
+            "
             color="neutral"
             disabled
             class="h-13 w-full justify-center rounded-full bg-[#232323] px-2.5 text-sm font-bold text-[#8b8b8b] disabled:opacity-100"

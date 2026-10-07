@@ -6,6 +6,7 @@ import {
   isAllowedEventImageUrl,
 } from '~~/shared/utils/event-media';
 import {
+  eventScheduleError,
   isEventDateValue,
   isEventTimeValue,
 } from '~~/shared/utils/event-datetime';
@@ -59,6 +60,7 @@ export type PublicEventViewer = {
 
 export type PublicEventDTO = EventDTO & {
   organizer: EventOrganizer;
+  registeredCount: number;
   viewer: PublicEventViewer | null;
 };
 
@@ -95,7 +97,7 @@ const eventImageUrlSchema = z
     { message: 'Invalid image URL' }
   );
 
-export const createEventBodySchema = z.object({
+const eventBodyFields = {
   title: z.string().trim().min(1, 'Event name is required'),
   description: z.string().trim().optional().or(z.literal('')),
   location: z.string().trim().min(1, 'Location is required'),
@@ -111,10 +113,29 @@ export const createEventBodySchema = z.object({
   photoUrls: z.array(eventImageUrlSchema).max(EVENT_MAX_EXTRA_PHOTOS),
   registrationMode: z.enum(EVENT_REGISTRATION_MODES).default('open'),
   approvalMode: z.enum(EVENT_APPROVAL_MODES).default('everyone'),
-});
+};
+
+function eventBodySchema(allowPast: boolean) {
+  return z.object(eventBodyFields).superRefine((value, ctx) => {
+    const issue = eventScheduleError(
+      value.date,
+      value.startTime,
+      value.endTime,
+      { allowPast }
+    );
+    if (!issue) return;
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [issue.path],
+      message: issue.message,
+    });
+  });
+}
+
+export const createEventBodySchema = eventBodySchema(false);
 
 export type CreateEventBody = z.output<typeof createEventBodySchema>;
 
-export const updateEventBodySchema = createEventBodySchema;
+export const updateEventBodySchema = eventBodySchema(true);
 
 export type UpdateEventBody = CreateEventBody;

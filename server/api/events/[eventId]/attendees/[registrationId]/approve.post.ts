@@ -8,6 +8,7 @@ import { handleApiError } from '~~/server/utils/errors';
 import { requireCommunityOrganization } from '~~/server/utils/organization-permissions';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+import { eventStatus } from '~~/shared/utils/event-datetime';
 import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
@@ -38,6 +39,14 @@ export default defineEventHandler(async (event) => {
       });
     }
     enrichLog(event, { event: { id: eventId, title: row.title } });
+
+    if (eventStatus(row.endsAt) === 'past') {
+      enrichLog(event, { registration: { result: 'event_ended' } });
+      throw createError({
+        statusCode: 403,
+        statusMessage: 'This event has ended',
+      });
+    }
 
     const registration = await findRegistrationByIdAndEvent(
       registrationId,

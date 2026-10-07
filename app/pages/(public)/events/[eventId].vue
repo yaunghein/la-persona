@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PublicEventDTO } from '~~/shared/types/event';
-import { eventStatus } from '~~/shared/utils/event-datetime';
+import { registrationBlockReason } from '~~/shared/utils/event-datetime';
 import { parseEventOnboardingStep } from '~~/shared/utils/event-onboarding';
 import {
   communitySetupSignInPath,
@@ -55,17 +55,23 @@ const viewer = computed<EventFlowViewer>(() => {
   };
 });
 
-const isPast = computed(() =>
-  event.value ? eventStatus(event.value.endsAt) === 'past' : false
-);
+const registrationBlock = computed(() => {
+  if (!event.value) return null;
+  return registrationBlockReason({
+    startsAt: event.value.startsAt,
+    endsAt: event.value.endsAt,
+    registrationMode: event.value.registrationMode,
+    capacity: event.value.capacity,
+    registeredCount: event.value.registeredCount,
+  });
+});
 
 const canRegister = computed(
   () =>
-    !isPast.value &&
+    registrationBlock.value === null &&
     viewer.value.isMember &&
     viewer.value.cardComplete &&
-    viewer.value.viewerRegistrationStatus === 'none' &&
-    event.value?.registrationMode === 'open'
+    viewer.value.viewerRegistrationStatus === 'none'
 );
 
 watch(
@@ -77,6 +83,9 @@ watch(
       !event.value
     ) {
       return;
+    }
+    if (registrationBlock.value) {
+      return navigateTo(ROUTES.EVENTS.PUBLIC(eventId.value));
     }
     const next = resolveEventFlowPath({
       eventId: eventId.value,
@@ -100,14 +109,7 @@ function onViewOrganizer() {
 }
 
 function onRegister() {
-  if (isPast.value) {
-    toast.add({
-      title: 'Event ended',
-      description: 'Registration is closed because this event has ended.',
-      color: 'neutral',
-    });
-    return;
-  }
+  if (registrationBlock.value) return;
 
   if (canRegister.value) {
     justRegistered.value = true;
@@ -116,24 +118,6 @@ function onRegister() {
   }
 
   if (!event.value || !orgSlug.value) return;
-
-  if (event.value.registrationMode === 'invite_only') {
-    toast.add({
-      title: 'Invite only',
-      description: 'This event is invite only.',
-      color: 'neutral',
-    });
-    return;
-  }
-
-  if (event.value.registrationMode === 'closed') {
-    toast.add({
-      title: 'Registration closed',
-      description: 'Registration is closed for this event.',
-      color: 'neutral',
-    });
-    return;
-  }
 
   const next = resolveEventFlowPath({
     eventId: eventId.value,
@@ -191,7 +175,7 @@ function onFlowDone() {
       </div>
 
       <CommunityEventOnboardingMingalarbar
-        v-else-if="onboardingStep === 'mingalarbar'"
+        v-else-if="onboardingStep === 'mingalarbar' && !registrationBlock"
         class="min-h-0 flex-1"
         :organizer-name="event.organizer?.name || 'this community'"
         @next="onCreateAccount"

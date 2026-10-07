@@ -35,7 +35,7 @@ export type EventAttendee = {
 export type EventDetailOverview = {
   dateTime: string;
   place: string;
-  registrationStatus: 'open' | 'closed';
+  registrationStatus: 'open' | 'closed' | 'invite_only';
   registrations: number;
   checkedIn: number;
   attendanceRate: string;

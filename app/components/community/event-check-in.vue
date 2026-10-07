@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import type { EventAttendee } from '~~/shared/types/community-event-detail';
+import type { EventPhase } from '~~/shared/utils/event-datetime';
 
 const props = defineProps<{
   attendees: EventAttendee[];
+  checkInPhase?: EventPhase;
+  canWalkIn?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -59,6 +62,7 @@ function displayAvatar(attendee: EventAttendee) {
 }
 
 function checkIn(attendee: EventAttendee) {
+  if (props.checkInPhase !== 'live') return;
   toast.add({
     title: 'Checked in',
     description: `${attendee.name} has been checked in.`,
@@ -89,15 +93,28 @@ function checkIn(attendee: EventAttendee) {
       <span class="shrink-0 text-center text-sm font-medium text-[#8b8b8b]"
         >or</span
       >
-      <UButton
-        label="Check in with scanner"
-        trailing-icon="i-lucide-qr-code"
-        color="neutral"
-        block
-        :ui="{ trailingIcon: 'size-5' }"
-        class="h-10 w-full min-w-0 cursor-pointer justify-between rounded-full bg-white py-2 pr-5 pl-5 text-sm font-medium text-dark hover:bg-white/90 sm:flex-1"
-        @click="emit('open-scanner')"
-      />
+      <div class="flex min-w-0 flex-1 flex-col gap-2">
+        <UButton
+          label="Check in with scanner"
+          trailing-icon="i-lucide-qr-code"
+          color="neutral"
+          block
+          :disabled="checkInPhase !== 'live'"
+          :ui="{ trailingIcon: 'size-5' }"
+          class="h-10 w-full min-w-0 cursor-pointer justify-between rounded-full bg-white py-2 pr-5 pl-5 text-sm font-medium text-dark hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-[#232323] disabled:text-[#8b8b8b] disabled:opacity-100 sm:flex-1"
+          @click="emit('open-scanner')"
+        />
+        <p
+          v-if="checkInPhase !== 'live'"
+          class="text-center text-sm text-[#8b8b8b] sm:text-left"
+        >
+          {{
+            checkInPhase === 'before'
+              ? 'Check-in opens when the event starts.'
+              : 'This event has ended.'
+          }}
+        </p>
+      </div>
     </div>
 
     <div
@@ -110,11 +127,15 @@ function checkIn(attendee: EventAttendee) {
           Attendee not found
         </p>
         <p class="text-sm text-[#8b8b8b]">
-          No registered attendee matches this search. Register them as a walk-in
-          instead.
+          {{
+            canWalkIn
+              ? 'No registered attendee matches this search. Register them as a walk-in instead.'
+              : 'No registered attendee matches this search.'
+          }}
         </p>
       </div>
       <UButton
+        v-if="canWalkIn"
         label="Register as walk-in"
         color="neutral"
         class="h-9 cursor-pointer justify-center rounded-full bg-white px-5 py-2 text-sm font-medium text-dark hover:bg-white/90"
@@ -150,7 +171,8 @@ function checkIn(attendee: EventAttendee) {
             v-if="attendee.status !== 'checked_in'"
             label="Check-in"
             color="neutral"
-            class="h-9 cursor-pointer justify-center rounded-full bg-white px-6 py-2 text-sm font-medium text-dark hover:bg-white/90"
+            :disabled="checkInPhase !== 'live'"
+            class="h-9 cursor-pointer justify-center rounded-full bg-white px-6 py-2 text-sm font-medium text-dark hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-[#232323] disabled:text-[#8b8b8b] disabled:opacity-100"
             @click="checkIn(attendee)"
           />
           <span v-else class="text-sm font-medium text-[#8b8b8b]">
@@ -175,11 +197,15 @@ function checkIn(attendee: EventAttendee) {
           Search to check in
         </p>
         <p class="text-sm text-[#8b8b8b]">
-          Find a registered attendee by name, company, or email. If they are not
-          on the list, register them as a walk-in.
+          {{
+            canWalkIn
+              ? 'Find a registered attendee by name, company, or email. If they are not on the list, register them as a walk-in.'
+              : 'Find a registered attendee by name, company, or email.'
+          }}
         </p>
       </div>
       <UButton
+        v-if="canWalkIn"
         label="Register as walk-in"
         color="neutral"
         class="h-9 cursor-pointer justify-center rounded-full bg-white px-5 py-2 text-sm font-medium text-dark hover:bg-white/90"

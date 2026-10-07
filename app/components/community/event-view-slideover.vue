@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { EventListItemDTO } from '~~/shared/types/event';
 import {
-  eventStatus,
   formatEventTimeLabel,
   formatEventWeekdayDateLabel,
+  registrationBlockReason,
 } from '~~/shared/utils/event-datetime';
 import { eventGalleryImages } from '~~/shared/utils/event-media';
 import { communityCardPath } from '~~/shared/utils/routes';
@@ -44,14 +44,36 @@ const details = computed(() => {
   ];
 });
 
-function onRegister() {
-  if (!props.event) return;
-  emit('register', props.event);
+function registrationBlock(event: EventListItemDTO) {
+  return registrationBlockReason({
+    startsAt: event.startsAt,
+    endsAt: event.endsAt,
+    registrationMode: event.registrationMode,
+    capacity: event.capacity,
+    registeredCount: event.registeredCount,
+  });
+}
+
+function closedLabel(event: EventListItemDTO) {
+  if (event.viewerRegistrationStatus === 'pending') return 'Pending';
+  if (event.viewerRegistrationStatus === 'checked_in') return 'Checked in';
+  if (event.viewerRegistrationStatus === 'registered') return 'Registered';
+
+  const block = registrationBlock(event);
+  if (block === 'past') return 'Ended';
+  if (block === 'invite_only') return 'Invite only';
+  if (block === 'full') return 'Full';
+  return 'Closed';
 }
 
 const organizerCardUrl = computed(() =>
   props.organizerCardSlug ? communityCardPath(props.organizerCardSlug) : ''
 );
+
+function onRegister() {
+  if (!props.event) return;
+  emit('register', props.event);
+}
 
 function onViewOrganizer() {
   if (!props.event) return;
@@ -160,9 +182,8 @@ function onViewOrganizer() {
         />
         <UButton
           v-if="
-            eventStatus(event.endsAt) !== 'past' &&
-            event.registrationMode !== 'closed' &&
-            event.viewerRegistrationStatus === 'none'
+            event.viewerRegistrationStatus === 'none' &&
+            registrationBlock(event) === null
           "
           label="Register"
           color="neutral"
@@ -171,18 +192,7 @@ function onViewOrganizer() {
         />
         <UButton
           v-else
-          :label="
-            eventStatus(event.endsAt) === 'past' &&
-            event.viewerRegistrationStatus === 'none'
-              ? 'Ended'
-              : event.registrationMode === 'closed'
-                ? 'Closed'
-                : event.viewerRegistrationStatus === 'pending'
-                  ? 'Pending'
-                  : event.viewerRegistrationStatus === 'checked_in'
-                    ? 'Checked in'
-                    : 'Registered'
-          "
+          :label="closedLabel(event)"
           color="neutral"
           disabled
           class="h-9 cursor-not-allowed rounded-full bg-[#232323] px-5 text-sm font-medium text-[#8b8b8b]"
