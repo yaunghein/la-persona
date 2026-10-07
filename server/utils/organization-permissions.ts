@@ -55,12 +55,12 @@ export function getOrganizationSlugFromRequest(event: H3Event) {
   return '';
 }
 
-async function resolveOrganizationIdForUser(params: {
+async function resolveOrganizationForUser(params: {
   userId: string;
   organizationSlug: string;
 }) {
   const membership = await db
-    .select({ organizationId: member.organizationId })
+    .select({ id: organization.id, name: organization.name })
     .from(member)
     .innerJoin(organization, eq(organization.id, member.organizationId))
     .where(
@@ -72,7 +72,7 @@ async function resolveOrganizationIdForUser(params: {
     .limit(1)
     .then((rows) => rows[0]);
 
-  return membership?.organizationId || null;
+  return membership || null;
 }
 
 export async function requireOrganizationSession(event: H3Event) {
@@ -95,18 +95,19 @@ export async function requireOrganizationSession(event: H3Event) {
     });
   }
 
-  const organizationId = await resolveOrganizationIdForUser({
+  const org = await resolveOrganizationForUser({
     userId: session.user.id,
     organizationSlug: requestedSlug,
   });
-  if (!organizationId) {
+  if (!org) {
     throw createError({
       statusCode: 403,
       statusMessage: 'Forbidden',
     });
   }
 
-  session.session.activeOrganizationId = organizationId;
+  session.session.activeOrganizationId = org.id;
+  enrichLog(event, { organization_id: org.id, organization_name: org.name });
 
   return session as SessionWithOrganization;
 }
@@ -147,19 +148,7 @@ export async function requireCommunityOrganization(event: H3Event) {
     });
   }
 
-  enrichLog(event, { organization_name: org.name });
   return { session, org };
-}
-
-export async function enrichOrganizationName(
-  event: H3Event,
-  organizationId: string
-) {
-  const org = await db.query.organization.findFirst({
-    where: eq(organization.id, organizationId),
-    columns: { name: true },
-  });
-  if (org?.name) enrichLog(event, { organization_name: org.name });
 }
 
 export async function requireCommunityManager(

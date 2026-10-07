@@ -35,7 +35,7 @@ Pino writes a single canonical line at the end of the request. Do not call `logg
 - Request event: `server/middleware/00.wide-event.ts` starts it for `/api/**`. `server/plugins/wide-event.ts` emits it once.
 - Handlers add fields with `enrichLog(event, { ... })` from `server/utils/wide-event.ts`. Nested objects merge.
 
-The canonical line already has `request_id`, `method`, `route` (param names, so join tokens stay out of the path), `status_code`, `duration_ms`, `outcome`, `user_id`, `user_email`, and `organization_id`. A line is written for mutations (`POST`, `PUT`, `PATCH`, `DELETE`), any 4xx/5xx, and anything slower than 1000ms. Successful fast `GET`s are skipped. Successful `/api/auth/get-session`, `/api/analytics`, and `/api/s3/image-proxy` are skipped too; failures and slow calls on those routes are kept.
+The canonical line already has `time` (ISO, UTC), `request_id`, `method`, `route` (param names, so join tokens stay out of the path), `status_code`, `duration_ms`, `outcome`, `user_id`, `user_email`, `organization_id`, and `organization_name`. Any `organization_id` without a name (top level or nested) gets `organization_name` filled in before the line is written, and `organization.id` gets `organization.name`. A line is written for mutations (`POST`, `PUT`, `PATCH`, `DELETE`), any 4xx/5xx, and anything slower than 1000ms. Successful fast `GET`s are skipped. Successful `/api/auth/get-session`, `/api/analytics`, and `/api/s3/image-proxy` are skipped too; failures and slow calls on those routes are kept.
 
 On a new or changed API route, call `enrichLog` with the ids and addresses you would search when a user reports the action failed. Put them on a nested object so you do not overwrite `request_id`:
 

@@ -1,5 +1,8 @@
 import type { H3Event } from 'h3';
 import { getRequestURL } from 'h3';
+import { inArray } from 'drizzle-orm';
+import { db } from '~~/server/db';
+import { organization } from '~~/server/db/schema';
 import { logger } from './logger';
 
 const SLOW_MS = 1000;
@@ -188,6 +191,54 @@ export function toLogError(error: unknown, status: number): WideEventError {
   return result;
 }
 
+type LogFields = Record<string, unknown>;
+
+function isLogFields(value: unknown): value is LogFields {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function unnamedOrganizations(wide: WideEvent) {
+  const targets: Array<{ fields: LogFields; id: string; nameKey: string }> =
+    [];
+  const add = (fields: LogFields, id: unknown, nameKey: string) => {
+    if (typeof id === 'string' && id && !fields[nameKey]) {
+      targets.push({ fields, id, nameKey });
+    }
+  };
+
+  add(wide, wide.organization_id, 'organization_name');
+  for (const [key, value] of Object.entries(wide)) {
+    if (!isLogFields(value)) continue;
+    if (key === 'organization') add(value, value.id, 'name');
+    else add(value, value.organization_id, 'organization_name');
+  }
+  return targets;
+}
+
+async function addOrganizationNames(wide: WideEvent) {
+  const targets = unnamedOrganizations(wide);
+  if (targets.length === 0) return;
+
+  try {
+    const ids = [...new Set(targets.map((target) => target.id))];
+    const rows = await db
+      .select({ id: organization.id, name: organization.name })
+      .from(organization)
+      .where(inArray(organization.id, ids));
+    const names = new Map(rows.map((row) => [row.id, row.name]));
+    for (const target of targets) {
+      const name = names.get(target.id);
+      if (name) target.fields[target.nameKey] = name;
+    }
+  } catch {
+    // The request line still goes out with ids only.
+  }
+}
+
+function writeWideEvent(wide: WideEvent, level: 'error' | 'warn' | 'info') {
+  void addOrganizationNames(wide).then(() => logger[level](wide));
+}
+
 export function emitWideEvent(event: H3Event) {
   if (event.context.wideEventEmitted) return;
   const wide = event.context.wideEvent;
@@ -240,14 +291,14 @@ export function emitWideEvent(event: H3Event) {
   }
 
   if (status >= 500 || emailFailed) {
-    logger.error(wide);
+    writeWideEvent(wide, 'error');
     return;
   }
   if (status >= 400 || wide.duration_ms > SLOW_MS) {
-    logger.warn(wide);
+    writeWideEvent(wide, 'warn');
     return;
   }
-  logger.info(wide);
+  writeWideEvent(wide, 'info');
 }
 
 export function settleEmailResults(

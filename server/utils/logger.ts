@@ -5,6 +5,7 @@ const require = createRequire(import.meta.url);
 
 const options: pino.LoggerOptions = {
   level: process.env.LOG_LEVEL || 'info',
+  timestamp: pino.stdTimeFunctions.isoTime,
   base: {
     service: 'la-persona',
     env: process.env.NODE_ENV || 'development',
@@ -41,6 +42,7 @@ function createLogger() {
       pretty({
         colorize: true,
         singleLine: true,
+        translateTime: 'SYS:yyyy-mm-dd HH:MM:ss',
       })
     );
   } catch {
