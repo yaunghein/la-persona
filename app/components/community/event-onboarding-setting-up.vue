@@ -27,7 +27,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="flex h-full min-h-0 flex-col">
     <div class="flex min-h-0 flex-1 flex-col justify-center p-6 sm:p-8 lg:px-16">
-      <div class="mx-auto flex w-full max-w-120 flex-col gap-8 sm:max-w-140">
+      <div class="mx-auto flex w-full max-w-120 flex-col gap-8 sm:max-w-112">
         <h1
           class="text-[1.75rem] font-medium leading-tight tracking-[0.175rem] uppercase text-white"
         >

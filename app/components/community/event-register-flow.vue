@@ -213,7 +213,7 @@ onBeforeUnmount(() => {
     >
       <div
         class="mx-auto flex w-full flex-col gap-8"
-        :class="isPage ? 'max-w-120 sm:max-w-140' : ''"
+        :class="isPage ? 'max-w-120 sm:max-w-112' : ''"
       >
         <div
           class="relative aspect-[1/0.75] w-full overflow-hidden rounded-lg bg-[#232323]"
@@ -340,7 +340,7 @@ onBeforeUnmount(() => {
         class="mx-auto flex w-full flex-col items-center"
         :class="[
           step === 'success' ? 'gap-8' : 'gap-6',
-          isPage ? 'max-w-120 sm:max-w-140' : '',
+          isPage ? 'max-w-120 sm:max-w-112' : '',
         ]"
       >
         <template v-if="step !== 'success'">

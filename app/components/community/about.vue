@@ -88,7 +88,7 @@ const logoSrc = computed(() =>
           </div>
           <div class="flex min-w-0 flex-col gap-3">
             <h2
-              class="text-[1.75rem] font-normal leading-tight tracking-[0.175rem] uppercase text-white"
+              class="text-2xl font-normal leading-[1.1] tracking-[0.15rem] uppercase text-white sm:text-[1.75rem] sm:tracking-[0.175rem]"
             >
               {{ data.name }}
             </h2>

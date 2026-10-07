@@ -283,7 +283,7 @@ watch(
     <div
       class="hide-scrollbar min-h-0 flex-1 overflow-y-auto p-6 sm:p-8 lg:px-16 lg:py-10"
     >
-      <div class="mx-auto flex w-full max-w-120 flex-col gap-8 sm:max-w-140">
+      <div class="mx-auto flex w-full max-w-120 flex-col gap-8 sm:max-w-112">
         <div class="flex flex-col gap-6">
           <h1
             class="text-[1.75rem] font-medium leading-tight tracking-[0.175rem] uppercase text-white"

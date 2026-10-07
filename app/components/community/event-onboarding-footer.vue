@@ -25,7 +25,7 @@ const emit = defineEmits<{
     class="shrink-0 border-t border-[#2a2a2a] px-6 pt-8 pb-4 sm:px-8 lg:px-16"
   >
     <div
-      class="mx-auto flex w-full max-w-120 flex-col items-center gap-8 sm:max-w-140"
+      class="mx-auto flex w-full max-w-120 flex-col items-center gap-8 sm:max-w-112"
     >
       <div class="flex w-full flex-col items-center gap-6">
         <button
