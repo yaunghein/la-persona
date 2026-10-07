@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { EventListItemDTO } from '~~/shared/types/event';
 import {
+  eventStatus,
   formatEventTimeLabel,
   formatEventWeekdayDateLabel,
 } from '~~/shared/utils/event-datetime';
@@ -89,8 +90,8 @@ function onViewOrganizer() {
             class="size-full"
             :ui="{
               viewport: 'size-full',
-              container: 'ms-0 h-full',
-              item: 'ps-0 basis-full',
+              container: 'ms-0 h-full items-stretch',
+              item: 'relative h-full min-h-0 basis-full overflow-hidden ps-0',
               dots: 'absolute inset-x-0 bottom-3 z-10 flex items-center justify-center gap-2',
               dot: 'size-2 rounded-full bg-white/40 data-[state=active]:bg-white',
             }"
@@ -98,7 +99,7 @@ function onViewOrganizer() {
             <img
               :src="item"
               :alt="event.title"
-              class="size-full object-cover"
+              class="absolute inset-0 size-full object-cover"
             />
           </UCarousel>
           <img
@@ -158,7 +159,11 @@ function onViewOrganizer() {
           @click="onViewOrganizer"
         />
         <UButton
-          v-if="event.registrationMode !== 'closed' && event.viewerRegistrationStatus === 'none'"
+          v-if="
+            eventStatus(event.endsAt) !== 'past' &&
+            event.registrationMode !== 'closed' &&
+            event.viewerRegistrationStatus === 'none'
+          "
           label="Register"
           color="neutral"
           class="h-9 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
@@ -167,13 +172,16 @@ function onViewOrganizer() {
         <UButton
           v-else
           :label="
-            event.registrationMode === 'closed'
-              ? 'Closed'
-              : event.viewerRegistrationStatus === 'pending'
-                ? 'Pending'
-                : event.viewerRegistrationStatus === 'checked_in'
-                  ? 'Checked in'
-                  : 'Registered'
+            eventStatus(event.endsAt) === 'past' &&
+            event.viewerRegistrationStatus === 'none'
+              ? 'Ended'
+              : event.registrationMode === 'closed'
+                ? 'Closed'
+                : event.viewerRegistrationStatus === 'pending'
+                  ? 'Pending'
+                  : event.viewerRegistrationStatus === 'checked_in'
+                    ? 'Checked in'
+                    : 'Registered'
           "
           color="neutral"
           disabled

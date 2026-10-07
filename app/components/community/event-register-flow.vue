@@ -7,6 +7,7 @@ import type {
 import { useQueryClient } from '@tanstack/vue-query';
 import { QUERY_KEYS } from '~/utils/query-keys';
 import {
+  eventStatus,
   formatEventTimeLabel,
   formatEventWeekdayDateLabel,
 } from '~~/shared/utils/event-datetime';
@@ -66,6 +67,8 @@ const galleryImages = computed(() =>
   eventGalleryImages(props.event.coverUrl, props.event.photoUrls)
 );
 
+const isPast = computed(() => eventStatus(props.event.endsAt) === 'past');
+
 const details = computed(() => {
   const rows: { label: string; value: string }[] = [
     {
@@ -122,7 +125,7 @@ function resetStep() {
 }
 
 async function startRegister() {
-  if (step.value !== 'confirm') return;
+  if (step.value !== 'confirm' || isPast.value) return;
 
   if (isPage.value && !props.canRegister) {
     emit('register', props.event);
@@ -208,8 +211,8 @@ onBeforeUnmount(() => {
             class="size-full"
             :ui="{
               viewport: 'size-full',
-              container: 'ms-0 h-full',
-              item: 'ps-0 basis-full',
+              container: 'ms-0 h-full items-stretch',
+              item: 'relative h-full min-h-0 basis-full overflow-hidden ps-0',
               dots: 'absolute inset-x-0 bottom-3 z-10 flex items-center justify-center gap-2',
               dot: 'size-2 rounded-full bg-white/40 data-[state=active]:bg-white',
             }"
@@ -217,7 +220,7 @@ onBeforeUnmount(() => {
             <img
               :src="item"
               :alt="event.title"
-              class="size-full object-cover"
+              class="absolute inset-0 size-full object-cover"
             />
           </UCarousel>
           <img
@@ -326,7 +329,14 @@ onBeforeUnmount(() => {
       >
         <template v-if="step !== 'success'">
           <UButton
-            v-if="step === 'confirm'"
+            v-if="isPast"
+            label="Event ended"
+            color="neutral"
+            disabled
+            class="h-13 w-full justify-center rounded-full bg-[#232323] px-2.5 text-sm font-bold text-[#8b8b8b] disabled:opacity-100"
+          />
+          <UButton
+            v-else-if="step === 'confirm'"
             color="neutral"
             block
             class="h-13 cursor-pointer rounded-full bg-white px-2.5 hover:bg-white/90"

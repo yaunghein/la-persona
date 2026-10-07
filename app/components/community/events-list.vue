@@ -118,6 +118,7 @@ function registerLabel(event: CommunityEvent) {
 
 function canRegister(event: CommunityEvent) {
   return (
+    event.status !== 'past' &&
     event.registrationMode !== 'closed' &&
     event.viewerRegistrationStatus === 'none'
   );
@@ -237,6 +238,15 @@ function canRegister(event: CommunityEvent) {
               class="h-8 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
               @click.stop="onRegister(event)"
             />
+            <span
+              v-else-if="
+                event.status === 'past' &&
+                event.viewerRegistrationStatus === 'none'
+              "
+              class="text-sm text-[#8b8b8b]"
+            >
+              Ended
+            </span>
             <span
               v-else-if="event.registrationMode === 'closed'"
               class="text-sm text-[#8b8b8b]"

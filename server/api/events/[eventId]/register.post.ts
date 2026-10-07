@@ -8,6 +8,7 @@ import { handleApiError } from '~~/server/utils/errors';
 import { requireCommunityOrganization } from '~~/server/utils/organization-permissions';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+import { eventStatus } from '~~/shared/utils/event-datetime';
 import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
@@ -39,6 +40,16 @@ export default defineEventHandler(async (event) => {
       throw createError({
         statusCode: 403,
         statusMessage: 'Registration is closed for this event',
+      });
+    }
+
+    if (eventStatus(row.endsAt) === 'past') {
+      enrichLog(event, {
+        registration: { event_id: eventId, result: 'event_ended' },
+      });
+      throw createError({
+        statusCode: 403,
+        statusMessage: 'This event has ended',
       });
     }
 

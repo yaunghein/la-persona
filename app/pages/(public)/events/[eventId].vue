@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { PublicEventDTO } from '~~/shared/types/event';
+import { eventStatus } from '~~/shared/utils/event-datetime';
 import { parseEventOnboardingStep } from '~~/shared/utils/event-onboarding';
 import {
   communitySetupSignInPath,
@@ -54,8 +55,13 @@ const viewer = computed<EventFlowViewer>(() => {
   };
 });
 
+const isPast = computed(() =>
+  event.value ? eventStatus(event.value.endsAt) === 'past' : false
+);
+
 const canRegister = computed(
   () =>
+    !isPast.value &&
     viewer.value.isMember &&
     viewer.value.cardComplete &&
     viewer.value.viewerRegistrationStatus === 'none' &&
@@ -94,6 +100,15 @@ function onViewOrganizer() {
 }
 
 function onRegister() {
+  if (isPast.value) {
+    toast.add({
+      title: 'Event ended',
+      description: 'Registration is closed because this event has ended.',
+      color: 'neutral',
+    });
+    return;
+  }
+
   if (canRegister.value) {
     justRegistered.value = true;
     refresh();
