@@ -314,23 +314,23 @@ const cardFooterActionSize = 'sm';
         v-for="card in cards"
         :key="card.id"
         variant="outline"
-        class="w-full bg-[#232323]"
+        class="aspect-[1/0.9] w-full min-h-0 overflow-hidden bg-[#232323]"
         :ui="{
-          root: 'flex flex-col',
-          body: 'p-8 lg:p-10',
+          root: 'flex h-full min-h-0 flex-col',
+          body: 'min-h-0 flex-1 p-8 lg:p-10',
           footer: 'shrink-0 bg-[#171717]',
         }"
       >
-        <div class="relative">
+        <div class="relative h-full min-h-0">
           <img
             v-if="card.cardBackUrl"
             :src="getS3Url(card.cardBackUrl)"
             :alt="`${card.firstName} ${card.lastName || ''} card back`"
-            class="block h-auto w-full rounded-md"
+            class="absolute inset-0 m-auto size-full rounded-md object-contain"
           />
           <div
             v-else
-            class="flex aspect-[1/0.57] w-full items-center justify-center rounded-md border border-[#2a2a2a] bg-[#1f1f1f]"
+            class="flex h-full w-full items-center justify-center rounded-md border border-[#2a2a2a] bg-[#1f1f1f]"
           >
             <UIcon
               name="i-material-symbols:cards-star-outline-rounded"
