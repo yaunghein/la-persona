@@ -1,6 +1,4 @@
 import { format } from 'date-fns';
-import { getCookie } from 'h3';
-import { useRequestEvent, useState } from '#imports';
 
 const TIME_VALUE_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 const DATE_VALUE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -14,8 +12,8 @@ export function isEventTimeValue(value: string) {
 }
 
 export function wallClockDate(date: string, time: string) {
-  const [year, month, day] = date.split('-').map(Number);
-  const [hours, minutes] = time.split(':').map(Number);
+  const [year = 0, month = 1, day = 1] = date.split('-').map(Number);
+  const [hours = 0, minutes = 0] = time.split(':').map(Number);
   return new Date(Date.UTC(year, month - 1, day, hours, minutes, 0, 0));
 }
 
@@ -66,8 +64,6 @@ export function formatEventDateValue(startsAt: Date | string) {
   return `${year}-${month}-${day}`;
 }
 
-export const EVENT_TIMEZONE_OFFSET_COOKIE = 'tz_offset';
-
 export type EventPhase = 'before' | 'live' | 'past';
 
 export type RegistrationBlock = 'past' | 'closed' | 'invite_only' | 'full';
@@ -81,41 +77,18 @@ export function eventInstant(value: Date | string) {
   return asDate(value).getTime();
 }
 
-function isTimezoneOffset(value: number) {
-  return Number.isFinite(value) && Math.abs(value) <= 14 * 60;
-}
-
-function readRequestTimezoneOffset() {
-  try {
-    const request = useRequestEvent();
-    if (!request) return null;
-    const parsed = Number(getCookie(request, EVENT_TIMEZONE_OFFSET_COOKIE));
-    return isTimezoneOffset(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Minutes to add to local time to get UTC, matching Date#getTimezoneOffset.
- * In the browser this is the viewer's zone. On the server it is the tz_offset
- * cookie from that browser, so the page and the API use the same clock.
- */
-export function currentTimezoneOffset() {
-  const fallback = new Date().getTimezoneOffset();
-  try {
-    const pinned = useState<number | null>('event-tz-offset', () => null);
-    if (pinned.value == null) {
-      pinned.value = readRequestTimezoneOffset() ?? fallback;
-    }
-    return pinned.value;
-  } catch {
-    return readRequestTimezoneOffset() ?? fallback;
-  }
-}
-
+/** Local clock expressed like the stored wall-clock timestamps. */
 function localNowMs() {
-  return Date.now() - currentTimezoneOffset() * 60_000;
+  const now = new Date();
+  return Date.UTC(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    now.getHours(),
+    now.getMinutes(),
+    now.getSeconds(),
+    now.getMilliseconds()
+  );
 }
 
 export function eventPhase(
