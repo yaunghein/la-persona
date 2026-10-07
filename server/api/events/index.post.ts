@@ -3,7 +3,6 @@ import { handleApiError } from '~~/server/utils/errors';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
 import { createEventBodySchema } from '~~/shared/types/event';
 import { wallClockDate } from '~~/shared/utils/event-datetime';
-import { mimicEventImageUrls } from '~~/shared/utils/event-media';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
 
 export default defineEventHandler(async (event) => {
@@ -22,10 +21,6 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const { coverUrl, photoUrls } = mimicEventImageUrls(
-      body.data.extraPhotoCount
-    );
-
     const inserted = await insertEvent({
       organizationId: session.session.activeOrganizationId,
       userId: session.user.id,
@@ -35,8 +30,8 @@ export default defineEventHandler(async (event) => {
       startsAt: wallClockDate(body.data.date, body.data.startTime),
       endsAt: wallClockDate(body.data.date, body.data.endTime),
       capacity: body.data.capacity,
-      coverUrl,
-      photoUrls,
+      coverUrl: body.data.coverUrl,
+      photoUrls: body.data.photoUrls,
       registrationMode: body.data.registrationMode,
       approvalMode: body.data.approvalMode,
     });

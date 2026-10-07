@@ -1,7 +1,10 @@
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import { z } from 'zod';
 import { event } from '~~/server/db/schema';
-import { EVENT_MAX_EXTRA_PHOTOS } from '~~/shared/utils/event-media';
+import {
+  EVENT_MAX_EXTRA_PHOTOS,
+  isAllowedEventImageUrl,
+} from '~~/shared/utils/event-media';
 import {
   isEventDateValue,
   isEventTimeValue,
@@ -79,6 +82,19 @@ export type EventDetailDTO = EventListItemDTO & {
   overview: EventOverviewStats;
 };
 
+const eventImageUrlSchema = z
+  .string()
+  .trim()
+  .min(1, 'Image is required')
+  .refine(
+    (url) =>
+      isAllowedEventImageUrl(url, {
+        bucket: process.env.AWS_BUCKET_NAME ?? '',
+        region: process.env.AWS_REGION ?? '',
+      }),
+    { message: 'Invalid image URL' }
+  );
+
 export const createEventBodySchema = z.object({
   title: z.string().trim().min(1, 'Event name is required'),
   description: z.string().trim().optional().or(z.literal('')),
@@ -91,30 +107,14 @@ export const createEventBodySchema = z.object({
     .string()
     .refine(isEventTimeValue, { message: 'End time is required' }),
   capacity: z.number().int().positive().nullable(),
-  hasCover: z.boolean().refine((value) => value === true, {
-    message: 'Cover photo is required',
-  }),
-  extraPhotoCount: z.number().int().min(0).max(EVENT_MAX_EXTRA_PHOTOS),
+  coverUrl: eventImageUrlSchema,
+  photoUrls: z.array(eventImageUrlSchema).max(EVENT_MAX_EXTRA_PHOTOS),
   registrationMode: z.enum(EVENT_REGISTRATION_MODES).default('open'),
   approvalMode: z.enum(EVENT_APPROVAL_MODES).default('everyone'),
 });
 
 export type CreateEventBody = z.output<typeof createEventBodySchema>;
 
-export const updateEventBodySchema = createEventBodySchema
-  .omit({ hasCover: true, extraPhotoCount: true })
-  .extend({
-    coverChanged: z.boolean(),
-    keptPhotoUrls: z
-      .array(z.string().trim().min(1))
-      .max(EVENT_MAX_EXTRA_PHOTOS),
-    newPhotoCount: z.number().int().min(0).max(EVENT_MAX_EXTRA_PHOTOS),
-  })
-  .refine(
-    (value) =>
-      value.keptPhotoUrls.length + value.newPhotoCount <=
-      EVENT_MAX_EXTRA_PHOTOS,
-    { message: 'You can add up to 4 extra photos' }
-  );
+export const updateEventBodySchema = createEventBodySchema;
 
-export type UpdateEventBody = z.output<typeof updateEventBodySchema>;
+export type UpdateEventBody = CreateEventBody;

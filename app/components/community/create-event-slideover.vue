@@ -2,6 +2,7 @@
 import { parseDate } from '@internationalized/date';
 import type { DateValue } from '@internationalized/date';
 import { useMutation, useQueryClient } from '@tanstack/vue-query';
+import imageCompression from 'browser-image-compression';
 import { QUERY_KEYS } from '~/utils/query-keys';
 import type { FormErrorEvent, FormSubmitEvent } from '@nuxt/ui';
 import { format, parseISO } from 'date-fns';
@@ -18,10 +19,13 @@ import {
 import {
   EVENT_IMAGE_MAX_BYTES,
   EVENT_MAX_EXTRA_PHOTOS,
-  eventImageUpdatePayload,
   toRemoteEventMediaItem,
   type EventMediaItem,
 } from '~~/shared/utils/event-media';
+
+type DraftEventMedia = EventMediaItem & {
+  file: File | null;
+};
 
 const props = defineProps<{
   event?: EventDTO | null;
@@ -38,6 +42,7 @@ const emit = defineEmits<{
 const { organizationSlug, withOrganizationQuery } = useOrganizationSlug();
 const queryClient = useQueryClient();
 const toast = useToast();
+const runtimeConfig = useRuntimeConfig();
 
 const schema = z.object({
   title: z.string().trim().min(1, 'Event name is required'),
@@ -66,8 +71,8 @@ const isEdit = computed(() => Boolean(props.event?.id));
 const capacityDraft = ref('');
 const coverInputRef = ref<HTMLInputElement | null>(null);
 const photosInputRef = ref<HTMLInputElement | null>(null);
-const cover = ref<EventMediaItem | null>(null);
-const photos = ref<EventMediaItem[]>([]);
+const cover = ref<DraftEventMedia | null>(null);
+const photos = ref<DraftEventMedia[]>([]);
 
 const state = reactive<FormState>({
   title: '',
@@ -121,18 +126,81 @@ const shareUrl = computed(() => {
   return publicEventAbsoluteUrl(createdEvent.value.id);
 });
 
-function createMediaItem(file: File): EventMediaItem {
+function createMediaItem(file: File): DraftEventMedia {
   return {
     id: crypto.randomUUID(),
     previewUrl: URL.createObjectURL(file),
     source: 'local',
+    file,
   };
 }
 
-function revokePreview(item: EventMediaItem | null) {
+function remoteDraft(url: string): DraftEventMedia {
+  return {
+    ...toRemoteEventMediaItem(url),
+    file: null,
+  };
+}
+
+function revokePreview(item: DraftEventMedia | null) {
   if (item?.source === 'local' && item.previewUrl.startsWith('blob:')) {
     URL.revokeObjectURL(item.previewUrl);
   }
+}
+
+function resolveMediaUrl(fileKey: string) {
+  const bucket = runtimeConfig.public.awsBucketName;
+  const region = runtimeConfig.public.awsRegion;
+  const encodedKey = fileKey
+    .split('/')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/');
+  return `https://${bucket}.s3.${region}.amazonaws.com/${encodedKey}`;
+}
+
+async function uploadImage(file: File) {
+  const compressed = await imageCompression(file, {
+    maxSizeMB: 1.5,
+    maxWidthOrHeight: 2400,
+  });
+
+  const { uploadUrl, fileKey } = await $fetch<{
+    uploadUrl: string;
+    fileKey: string;
+  }>('/api/s3/presigned', {
+    method: 'POST',
+    query: withOrganizationQuery(),
+    body: {
+      fileType: compressed.type,
+      fileName: file.name,
+    },
+  });
+
+  const uploadResponse = await fetch(uploadUrl, {
+    method: 'PUT',
+    body: compressed,
+    headers: { 'Content-Type': compressed.type },
+  });
+
+  if (!uploadResponse.ok) {
+    throw new Error('Upload failed');
+  }
+
+  return resolveMediaUrl(fileKey);
+}
+
+async function storedImageUrl(item: DraftEventMedia) {
+  if (item.source === 'remote') return item.previewUrl;
+  if (!item.file) throw new Error('Upload failed');
+  return uploadImage(item.file);
+}
+
+async function uploadedImageUrls() {
+  if (!cover.value) throw new Error('Cover photo is required');
+
+  const coverUrl = await storedImageUrl(cover.value);
+  const photoUrls = await Promise.all(photos.value.map(storedImageUrl));
+  return { coverUrl, photoUrls };
 }
 
 function isAllowedImage(file: File) {
@@ -144,8 +212,8 @@ function isAllowedImage(file: File) {
 function hydrateFromEvent(event: EventDTO) {
   revokePreview(cover.value);
   photos.value.forEach(revokePreview);
-  cover.value = toRemoteEventMediaItem(event.coverUrl);
-  photos.value = (event.photoUrls ?? []).map(toRemoteEventMediaItem);
+  cover.value = remoteDraft(event.coverUrl);
+  photos.value = (event.photoUrls ?? []).map(remoteDraft);
   state.title = event.title;
   state.description = event.description ?? '';
   state.location = event.location;
@@ -250,7 +318,7 @@ function onPhotosChange(event: Event) {
 }
 
 function removePhoto(id: string) {
-  const next: EventMediaItem[] = [];
+  const next: DraftEventMedia[] = [];
   for (const item of photos.value) {
     if (item.id === id) {
       revokePreview(item);
@@ -297,14 +365,14 @@ function closeDeleteConfirm() {
 
 const { mutate: createEvent, isPending: isCreating } = useMutation({
   mutationFn: async (payload: FormState) => {
+    const images = await uploadedImageUrls();
     return await $fetch<EventDTO>('/api/events', {
       method: 'POST',
       query: withOrganizationQuery(),
       body: {
         ...payload,
         description: payload.description || '',
-        hasCover: true,
-        extraPhotoCount: photos.value.length,
+        ...images,
       },
     });
   },
@@ -322,6 +390,7 @@ const { mutate: createEvent, isPending: isCreating } = useMutation({
       description:
         error?.data?.statusMessage ||
         error?.statusMessage ||
+        error?.message ||
         'Please try again.',
       color: 'error',
     });
@@ -334,13 +403,14 @@ const { mutate: updateEvent, isPending: isUpdating } = useMutation({
       throw new Error('Missing event');
     }
 
+    const images = await uploadedImageUrls();
     return await $fetch<EventDTO>(`/api/events/${props.event.id}`, {
       method: 'PATCH',
       query: withOrganizationQuery(),
       body: {
         ...payload,
         description: payload.description || '',
-        ...eventImageUpdatePayload(cover.value, photos.value),
+        ...images,
       },
     });
   },
@@ -361,6 +431,7 @@ const { mutate: updateEvent, isPending: isUpdating } = useMutation({
       description:
         error?.data?.statusMessage ||
         error?.statusMessage ||
+        error?.message ||
         'Please try again.',
       color: 'error',
     });
