@@ -17,6 +17,7 @@ import {
   formatEventDateTimeRange,
   formatEventDateValue,
   registrationBlockReason,
+  timezoneOffsetQuery,
 } from '~~/shared/utils/event-datetime';
 
 const toast = useToast();
@@ -64,7 +65,7 @@ const { mutate: approveAttendee } = useMutation({
   mutationFn: (attendee: EventAttendee) =>
     $fetch(`/api/events/${eventId.value}/attendees/${attendee.id}/approve`, {
       method: 'POST',
-      query: withOrganizationQuery(),
+      query: { ...withOrganizationQuery(), ...timezoneOffsetQuery() },
     }),
   onSuccess: async () => {
     await Promise.all([

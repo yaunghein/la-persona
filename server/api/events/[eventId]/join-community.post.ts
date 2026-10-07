@@ -13,6 +13,7 @@ import {
 } from '~~/shared/utils/event-datetime';
 import { countCountedRegistrations } from '~~/server/db/queries/event-registration';
 import { enrichLog } from '~~/server/utils/wide-event';
+import { requestTimezoneOffset } from '~~/server/utils/request-timezone';
 
 export default defineEventHandler(async (event) => {
   const session = await requireSession(event);
@@ -45,6 +46,7 @@ export default defineEventHandler(async (event) => {
       registrationMode: row.event.registrationMode,
       capacity: row.event.capacity,
       registeredCount: await countCountedRegistrations(eventId),
+      timezoneOffset: requestTimezoneOffset(event),
     });
     if (block) {
       enrichLog(event, { event: { result: block } });

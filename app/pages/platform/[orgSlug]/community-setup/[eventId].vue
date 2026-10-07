@@ -7,6 +7,7 @@ import { useQueryClient } from '@tanstack/vue-query';
 import type { UserOrganization } from '~/composables/user-organizations';
 import { QUERY_KEYS } from '~/utils/query-keys';
 import { ROUTES } from '~~/shared/utils/routes';
+import { timezoneOffsetQuery } from '~~/shared/utils/event-datetime';
 
 const route = useRoute();
 const queryClient = useQueryClient();
@@ -43,6 +44,7 @@ onMounted(async () => {
       cardComplete: boolean;
     }>(`/api/events/${eventId.value}/join-community`, {
       method: 'POST',
+      query: timezoneOffsetQuery(),
     });
 
     try {

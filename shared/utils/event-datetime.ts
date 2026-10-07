@@ -77,39 +77,58 @@ export function eventInstant(value: Date | string) {
   return asDate(value).getTime();
 }
 
-/** Local clock expressed like the stored wall-clock timestamps. */
-function localNowMs() {
-  const now = new Date();
-  return Date.UTC(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-    now.getHours(),
-    now.getMinutes(),
-    now.getSeconds(),
-    now.getMilliseconds()
+/**
+ * Minutes to add to local time to get UTC, as returned by
+ * Date#getTimezoneOffset. Omit it to use this runtime's own zone; the server
+ * needs the viewer's value sent from the browser.
+ */
+export type TimezoneOffset = number | undefined;
+
+export function isTimezoneOffset(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isFinite(value) &&
+    Math.abs(value) <= 14 * 60
   );
+}
+
+export function timezoneOffsetQuery() {
+  return { tzOffset: new Date().getTimezoneOffset() };
+}
+
+/** Viewer's wall clock expressed like the stored wall-clock timestamps. */
+function wallClockNowMs(timezoneOffset?: TimezoneOffset) {
+  const offset = isTimezoneOffset(timezoneOffset)
+    ? timezoneOffset
+    : new Date().getTimezoneOffset();
+  return Date.now() - offset * 60_000;
 }
 
 export function eventPhase(
   startsAt: Date | string,
-  endsAt: Date | string
+  endsAt: Date | string,
+  timezoneOffset?: TimezoneOffset
 ): EventPhase {
-  const now = localNowMs();
+  const now = wallClockNowMs(timezoneOffset);
   if (eventInstant(endsAt) < now) return 'past';
   if (eventInstant(startsAt) > now) return 'before';
   return 'live';
 }
 
-export function eventStatus(endsAt: Date | string): 'upcoming' | 'past' {
-  return eventInstant(endsAt) >= localNowMs() ? 'upcoming' : 'past';
+export function eventStatus(
+  endsAt: Date | string,
+  timezoneOffset?: TimezoneOffset
+): 'upcoming' | 'past' {
+  return eventInstant(endsAt) >= wallClockNowMs(timezoneOffset)
+    ? 'upcoming'
+    : 'past';
 }
 
 export function eventScheduleError(
   date: string,
   startTime: string,
   endTime: string,
-  options: { allowPast: boolean }
+  options: { allowPast: boolean; timezoneOffset?: TimezoneOffset }
 ) {
   if (
     !isEventDateValue(date) ||
@@ -128,7 +147,8 @@ export function eventScheduleError(
 
   if (
     !options.allowPast &&
-    eventStatus(wallClockDate(date, endTime)) === 'past'
+    eventStatus(wallClockDate(date, endTime), options.timezoneOffset) ===
+      'past'
   ) {
     return {
       path: 'endTime' as const,
@@ -145,8 +165,9 @@ export function registrationBlockReason(input: {
   registrationMode: 'open' | 'closed' | 'invite_only';
   capacity: number | null;
   registeredCount: number;
+  timezoneOffset?: TimezoneOffset;
 }): RegistrationBlock | null {
-  if (eventStatus(input.endsAt) === 'past') return 'past';
+  if (eventStatus(input.endsAt, input.timezoneOffset) === 'past') return 'past';
   if (input.registrationMode === 'closed') return 'closed';
   if (input.registrationMode === 'invite_only') return 'invite_only';
   if (input.capacity != null && input.registeredCount >= input.capacity) {

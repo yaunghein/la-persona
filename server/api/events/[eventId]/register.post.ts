@@ -13,6 +13,7 @@ import {
   registrationBlockReason,
 } from '~~/shared/utils/event-datetime';
 import { enrichLog } from '~~/server/utils/wide-event';
+import { requestTimezoneOffset } from '~~/server/utils/request-timezone';
 
 export default defineEventHandler(async (event) => {
   const { session, org } = await requireCommunityOrganization(event);
@@ -46,6 +47,7 @@ export default defineEventHandler(async (event) => {
       registrationMode: row.registrationMode,
       capacity: row.capacity,
       registeredCount: counted,
+      timezoneOffset: requestTimezoneOffset(event),
     });
     if (block) {
       enrichLog(event, {

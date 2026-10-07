@@ -11,6 +11,7 @@ import {
   formatEventWeekdayDateLabel,
   registrationBlockReason,
   spotsRemaining,
+  timezoneOffsetQuery,
 } from '~~/shared/utils/event-datetime';
 import { eventGalleryImages } from '~~/shared/utils/event-media';
 import { communityCardPath } from '~~/shared/utils/routes';
@@ -151,9 +152,12 @@ async function startRegister() {
       `/api/events/${props.event.id}/register`,
       {
         method: 'POST',
-        query: resolvedOrgSlug.value
-          ? { organizationSlug: resolvedOrgSlug.value }
-          : withOrganizationQuery(),
+        query: {
+          ...(resolvedOrgSlug.value
+            ? { organizationSlug: resolvedOrgSlug.value }
+            : withOrganizationQuery()),
+          ...timezoneOffsetQuery(),
+        },
       }
     );
     registrationStatus.value =

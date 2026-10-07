@@ -2,6 +2,7 @@
 import { Application } from '@splinetool/runtime';
 import type { EventAttendee } from '~~/shared/types/community-event-detail';
 import { applyCardToSpline } from '~/utils/spline-card';
+import { timezoneOffsetQuery } from '~~/shared/utils/event-datetime';
 
 type ScannerState = 'scanning' | 'success' | 'already' | 'not-found';
 type CameraPhase =
@@ -401,7 +402,7 @@ async function lookupCode(code: string) {
       };
     }>(`/api/events/${props.eventId}/check-in/preview`, {
       method: 'POST',
-      query: withOrganizationQuery(),
+      query: { ...withOrganizationQuery(), ...timezoneOffsetQuery() },
       body: { code },
     });
 
@@ -477,7 +478,7 @@ async function confirmCheckIn() {
   try {
     await $fetch(`/api/events/${props.eventId}/check-in`, {
       method: 'POST',
-      query: withOrganizationQuery(),
+      query: { ...withOrganizationQuery(), ...timezoneOffsetQuery() },
       body: { code: scannedCode.value },
     });
     toast.add({
