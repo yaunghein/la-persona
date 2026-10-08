@@ -353,9 +353,11 @@ async function onActionClick(link: { action?: string; label: string }) {
               <div
                 class="grid aspect-square w-[4.56rem] overflow-hidden rounded-full bg-white/10"
               >
-                <img
+                <NuxtImg
                   :src="link.icon"
                   :alt="link.label"
+                  width="73"
+                  height="73"
                   class="aspect-square h-full w-full object-cover"
                 />
               </div>
@@ -375,9 +377,11 @@ async function onActionClick(link: { action?: string; label: string }) {
               <div
                 class="grid aspect-square w-[4.56rem] overflow-hidden rounded-full bg-white/10"
               >
-                <img
+                <NuxtImg
                   :src="link.icon"
                   :alt="link.label"
+                  width="73"
+                  height="73"
                   class="aspect-square h-full w-full object-cover"
                 />
               </div>

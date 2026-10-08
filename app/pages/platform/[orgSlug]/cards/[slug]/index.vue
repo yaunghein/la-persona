@@ -677,9 +677,10 @@ const active = computed({
               >
                 <p class="text-sm text-white/50">Scan to Pay</p>
                 <div class="mx-auto my-3 size-40 bg-[#d9d9d9] overflow-hidden">
-                  <img
+                  <NuxtImg
                     src="/images/kpay.jpg"
                     alt="KBZ Pay QR Code"
+                    width="160"
                     class="w-full h-full object-contain"
                   />
                 </div>

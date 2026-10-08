@@ -673,10 +673,11 @@ function onFormError(event: FormErrorEvent) {
         <template #description="{ item }">
           <div class="mt-2 space-y-2">
             <!-- <p class="text-sm text-[#8b8b8b]">Use this card back design</p> -->
-            <img
+            <NuxtImg
               v-if="item.cardBackUrl"
               :src="getS3Url(item.cardBackUrl)"
               :alt="`${item.firstName} card back`"
+              width="448"
               class="w-full aspect-[1/0.57] rounded bg-[#1f1f1f]"
             />
             <div
@@ -914,9 +915,10 @@ function onFormError(event: FormErrorEvent) {
         >
           <p class="text-sm text-white/50">Scan to Pay</p>
           <div class="mx-auto my-3 size-40 overflow-hidden bg-[#d9d9d9]">
-            <img
+            <NuxtImg
               src="/images/kpay.jpg"
               alt="KBZ Pay QR Code"
+              width="160"
               class="h-full w-full object-contain"
             />
           </div>

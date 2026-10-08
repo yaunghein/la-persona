@@ -213,7 +213,7 @@ onBeforeUnmount(() => {
     >
       <div
         class="mx-auto flex w-full flex-col gap-8"
-        :class="isPage ? 'max-w-120 sm:max-w-112' : ''"
+        :class="isPage ? 'max-w-120 sm:max-w-md' : ''"
       >
         <div
           class="relative aspect-[1/0.75] w-full overflow-hidden rounded-lg bg-[#232323]"
@@ -234,16 +234,18 @@ onBeforeUnmount(() => {
               dot: 'size-2 rounded-full bg-white/40 data-[state=active]:bg-white',
             }"
           >
-            <img
+            <NuxtImg
               :src="item"
               :alt="event.title"
+              width="480"
               class="absolute inset-0 size-full object-cover"
             />
           </UCarousel>
-          <img
+          <NuxtImg
             v-else-if="galleryImages[0]"
             :src="galleryImages[0]"
             :alt="event.title"
+            width="480"
             class="size-full object-cover"
           />
         </div>
@@ -340,7 +342,7 @@ onBeforeUnmount(() => {
         class="mx-auto flex w-full flex-col items-center"
         :class="[
           step === 'success' ? 'gap-8' : 'gap-6',
-          isPage ? 'max-w-120 sm:max-w-112' : '',
+          isPage ? 'max-w-120 sm:max-w-md' : '',
         ]"
       >
         <template v-if="step !== 'success'">

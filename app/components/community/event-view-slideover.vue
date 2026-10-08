@@ -118,16 +118,18 @@ function onViewOrganizer() {
               dot: 'size-2 rounded-full bg-white/40 data-[state=active]:bg-white',
             }"
           >
-            <img
+            <NuxtImg
               :src="item"
               :alt="event.title"
+              width="480"
               class="absolute inset-0 size-full object-cover"
             />
           </UCarousel>
-          <img
+          <NuxtImg
             v-else-if="galleryImages[0]"
             :src="galleryImages[0]"
             :alt="event.title"
+            width="480"
             class="size-full object-cover"
           />
         </div>

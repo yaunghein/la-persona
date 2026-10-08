@@ -116,9 +116,11 @@ watch(
           class="size-9 justify-center rounded-full p-0"
           :aria-label="org.name"
         >
-          <img
+          <NuxtImg
             :src="communityLogoSrc(org.logo, org.name)"
             :alt="org.name"
+            width="20"
+            height="20"
             class="size-5 rounded-full object-cover"
           />
         </UButton>
@@ -156,9 +158,11 @@ watch(
           @mouseenter="hoveredSlug = org.slug"
           @mouseleave="hoveredSlug = null"
         >
-          <img
+          <NuxtImg
             :src="communityLogoSrc(org.logo, org.name)"
             :alt="org.name"
+            width="20"
+            height="20"
             class="size-5 shrink-0 rounded-full object-cover"
           />
           <OverflowMarquee

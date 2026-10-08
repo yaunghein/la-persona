@@ -219,9 +219,10 @@ function unavailableLabel(event: CommunityEvent) {
         @keydown.space.prevent="onView(event)"
       >
         <div class="relative min-h-0 flex-1 overflow-hidden">
-          <img
+          <NuxtImg
             :src="event.imageUrl"
             :alt="event.title"
+            width="640"
             class="size-full object-cover"
           />
           <span

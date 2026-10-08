@@ -54,10 +54,11 @@ const emit = defineEmits<{
           class="w-full overflow-hidden rounded-t-lg bg-[#232323]"
           :class="props.coverAspectClass || 'aspect-[1/0.25]'"
         >
-          <img
+          <NuxtImg
             v-if="coverSrc"
             :src="coverSrc"
             alt=""
+            width="480"
             class="size-full object-cover"
           />
         </div>
@@ -71,9 +72,11 @@ const emit = defineEmits<{
               v-if="logoSrc"
               class="flex size-18 items-center justify-center overflow-hidden rounded-full bg-white"
             >
-              <img
+              <NuxtImg
                 :src="logoSrc"
                 :alt="organizationName || ''"
+                width="72"
+                height="72"
                 class="size-full object-cover"
               />
             </div>

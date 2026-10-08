@@ -547,12 +547,12 @@ const premiumPlanFeatures = [
       </div>
 
       <div class="w-full max-w-7xl">
-        <img
+        <NuxtImg
           src="/images/landing-v2/hero-visual-mobile.webp"
           alt="La Persona platform preview"
           class="block h-auto w-full sm:hidden -mt-8"
         />
-        <img
+        <NuxtImg
           src="/images/landing-v2/hero-visual-desktop.webp"
           alt="La Persona platform preview"
           class="hidden h-auto w-full sm:block px-4 sm:pl-10"
@@ -625,12 +625,13 @@ const premiumPlanFeatures = [
       <div
         class="relative mx-auto aspect-square w-full max-h-[min(100dvh,52.5rem)] max-w-360 sm:aspect-[1/0.58] sm:max-h-none"
       >
-        <img
+        <NuxtImg
           src="/images/landing-v2/feature-visual.png"
           alt=""
           class="absolute inset-0 h-full w-full object-cover"
           width="2592"
           height="2592"
+          densities="x1"
         />
       </div>
     </section>
@@ -639,12 +640,13 @@ const premiumPlanFeatures = [
         <div
           class="sticky top-0 sm:top-16 z-0 w-full h-dvh sm:h-[calc(100dvh-4rem)]"
         >
-          <img
+          <NuxtImg
             src="/images/landing-v2/feature-visual.png"
             alt=""
             class="absolute inset-0 h-full w-full object-cover"
             width="2592"
             height="2592"
+            densities="x1"
           />
           <div
             id="landing-v2-reveal-mask"
@@ -690,7 +692,7 @@ const premiumPlanFeatures = [
                 :style="{ transitionDuration: `${FEATURE_FADE_MS}ms` }"
               />
             </div>
-            <img
+            <NuxtImg
               src="/images/landing-v2/iphone-frame.webp"
               alt=""
               class="relative z-10 h-auto w-full"

@@ -8,7 +8,26 @@ export default defineNuxtConfig({
     '@vueuse/nuxt',
     'nuxt-gtag',
     'nuxt-security',
+    '@nuxt/image',
   ],
+  image: {
+    quality: 80,
+    domains: [
+      'la-persona-staging.s3.ap-southeast-2.amazonaws.com',
+      'la-persona-prod.s3.ap-southeast-2.amazonaws.com',
+      'la-persona-staging.s3.amazonaws.com',
+      'la-persona-prod.s3.amazonaws.com',
+    ],
+    ipx: {
+      // 30 days. S3 keys are unique per upload; rename public/ images when replacing them.
+      // TODO: when traffic grows, put Cloudflare in front so /_ipx is cached at the edge
+      // and each image is converted once instead of once per visitor.
+      maxAge: 60 * 60 * 24 * 30,
+      modifiers: {
+        format: 'webp',
+      },
+    },
+  },
   $development: {
     security: {
       headers: {
@@ -97,6 +116,10 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
+    prerender: {
+      // Prerendering IPX images silently aborts the build; serve them at runtime.
+      ignore: ['/_ipx'],
+    },
     compressPublicAssets: true,
     externals: {
       external: ['pino', 'pino-pretty'],
@@ -109,6 +132,12 @@ export default defineNuxtConfig({
     '/platform/**': { ssr: false },
     '/invite/**': { ssr: false },
     '/thakhin/**': { ssr: false },
+    // Pages can request many images; keep them out of the shared request budget.
+    '/_ipx/**': {
+      security: {
+        rateLimiter: { tokensPerInterval: 600, interval: 300000 },
+      },
+    },
   },
   app: {
     head: {

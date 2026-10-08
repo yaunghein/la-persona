@@ -634,9 +634,16 @@ async function copyEventLink() {
             :class="cover ? '' : 'bg-dark/50'"
           >
             <img
-              v-if="cover"
+              v-if="cover?.source === 'local'"
               :src="cover.previewUrl"
               alt="Cover photo preview"
+              class="size-full object-cover"
+            />
+            <NuxtImg
+              v-else-if="cover"
+              :src="cover.previewUrl"
+              alt="Cover photo preview"
+              width="448"
               class="size-full object-cover"
             />
             <div class="absolute inset-0 flex items-center justify-center">
@@ -689,8 +696,16 @@ async function copyEventLink() {
                 class="relative aspect-4/3 overflow-hidden rounded-lg"
               >
                 <img
+                  v-if="photo.source === 'local'"
                   :src="photo.previewUrl"
                   alt="Event photo preview"
+                  class="size-full object-cover"
+                />
+                <NuxtImg
+                  v-else
+                  :src="photo.previewUrl"
+                  alt="Event photo preview"
+                  width="224"
                   class="size-full object-cover"
                 />
                 <button

@@ -65,10 +65,11 @@ const logoSrc = computed(() =>
       <div
         class="relative aspect-[1/0.25] w-full overflow-hidden rounded-t-lg bg-[#232323]"
       >
-        <img
+        <NuxtImg
           v-if="coverSrc"
           :src="coverSrc"
           alt=""
+          width="1024"
           class="size-full object-cover"
         />
       </div>
@@ -80,9 +81,11 @@ const logoSrc = computed(() =>
           <div
             class="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#232323]"
           >
-            <img
+            <NuxtImg
               :src="logoSrc"
               :alt="data.name"
+              width="96"
+              height="96"
               class="size-full object-cover"
             />
           </div>

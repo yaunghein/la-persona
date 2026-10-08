@@ -23,14 +23,14 @@ const { SECTIONS } = inject(LandingContextKey)!;
       your brand with precision and style.
     </p>
     <div class="hidden items-center justify-center gap-20 sm:flex">
-      <img
+      <NuxtImg
         v-for="masterpiece in masterpieces"
         :src="masterpiece.image"
         :alt="masterpiece.alt"
         class="aspect-[1/2.02] w-61"
       />
     </div>
-    <img
+    <NuxtImg
       :src="masterpieces[1]!.image"
       :alt="masterpieces[1]!.alt"
       class="mx-auto aspect-[1/2.02] w-61 sm:hidden"

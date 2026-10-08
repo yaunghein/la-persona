@@ -322,10 +322,11 @@ const cardFooterActionSize = 'sm';
         }"
       >
         <div class="relative h-full min-h-0">
-          <img
+          <NuxtImg
             v-if="card.cardBackUrl"
             :src="getS3Url(card.cardBackUrl)"
             :alt="`${card.firstName} ${card.lastName || ''} card back`"
+            width="640"
             class="absolute inset-0 m-auto size-full rounded-md object-contain"
           />
           <div

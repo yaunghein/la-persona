@@ -4,7 +4,7 @@
       <div
         class="sticky top-0 h-svh w-full sm:top-14 sm:h-[calc(100dvh-3.5rem)]"
       >
-        <img
+        <NuxtImg
           src="/images/reveal-image.webp"
           class="absolute inset-0 h-full w-full object-cover"
           alt="La Persona Wallpaper"

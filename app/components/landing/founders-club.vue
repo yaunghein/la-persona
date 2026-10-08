@@ -47,7 +47,7 @@ const benefits = [
     id="founders-club"
     class="overflow-hidden pointer-events-none relative sm:min-h-svh bg-[#151515]"
   >
-    <img
+    <NuxtImg
       src="/images/founders-club-scene-landing-page.webp"
       alt="Founders Club Invitation"
       class="w-150 aspect-[1/1.69] mx-auto -mt-20"

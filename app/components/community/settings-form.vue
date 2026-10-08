@@ -246,9 +246,16 @@ onUnmounted(() => {
             class="relative aspect-[1/0.25] w-full overflow-hidden rounded-lg border border-[#232323] bg-dark"
           >
             <img
-              v-if="displayCover"
+              v-if="localCoverPreviewUrl"
+              :src="localCoverPreviewUrl"
+              alt=""
+              class="size-full object-cover"
+            />
+            <NuxtImg
+              v-else-if="displayCover"
               :src="displayCover"
               alt=""
+              width="1024"
               class="size-full object-cover"
             />
             <div class="absolute inset-0 flex items-center justify-center">
@@ -277,8 +284,17 @@ onUnmounted(() => {
               class="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#232323]"
             >
               <img
+                v-if="localLogoPreviewUrl"
+                :src="localLogoPreviewUrl"
+                :alt="form.name || 'Organization logo'"
+                class="size-full object-cover"
+              />
+              <NuxtImg
+                v-else
                 :src="displayLogo"
                 :alt="form.name || 'Organization logo'"
+                width="96"
+                height="96"
                 class="size-full object-cover"
               />
             </div>

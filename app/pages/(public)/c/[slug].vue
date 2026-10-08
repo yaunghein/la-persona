@@ -758,10 +758,12 @@ async function onSaveContact() {
               <div
                 class="grid aspect-square w-[4.56rem] overflow-hidden rounded-full"
               >
-                <img
+                <NuxtImg
                   v-if="getLinkIcon(link.label).includes('.')"
                   :src="getLinkIcon(link.label)"
                   :alt="link.label"
+                  width="73"
+                  height="73"
                   class="aspect-square h-full w-full object-cover"
                 />
                 <div

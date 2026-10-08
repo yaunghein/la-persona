@@ -479,10 +479,11 @@ function closeInfo() {
             class="flex items-center justify-between rounded-[4px] bg-[#232323] px-3 py-2"
           >
             <div class="flex items-center gap-2 text-sm">
-              <img
+              <NuxtImg
                 v-if="row.image"
                 :src="row.image"
                 :alt="`${row.platform} icon`"
+                width="16"
                 class="size-4 object-contain"
               />
               <UIcon v-else name="i-lucide-globe" class="size-4 text-white" />

@@ -19,6 +19,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.975.0",
     "@aws-sdk/s3-request-presigner": "^3.975.0",
+    "@nuxt/image": "^2.1.0",
     "@nuxt/ui": "^4.3.0",
     "@splinetool/runtime": "^1.12.39",
     "@tanstack/vue-query": "^5.92.9",
