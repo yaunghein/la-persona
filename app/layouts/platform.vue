@@ -126,8 +126,11 @@ const groups = computed(() => [
 ]);
 
 onMounted(async () => {
-  const cookie = useCookie('cookie-consent');
-  if (cookie.value === 'accepted') {
+  const cookie = useCookie<'accepted' | 'declined' | null>('cookie-consent', {
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: 'lax',
+  });
+  if (cookie.value) {
     return;
   }
 
@@ -149,6 +152,9 @@ onMounted(async () => {
         label: 'Opt out',
         color: 'neutral',
         variant: 'ghost',
+        onClick: () => {
+          cookie.value = 'declined';
+        },
       },
     ],
   });
