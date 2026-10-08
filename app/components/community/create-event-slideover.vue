@@ -855,45 +855,6 @@ async function copyEventLink() {
             </div>
           </div>
         </div>
-
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <UFormField
-            label="Registration"
-            name="registrationMode"
-            :class="formFieldClass"
-          >
-            <USelect
-              v-model="state.registrationMode"
-              :items="[
-                { label: 'Open', value: 'open' },
-                { label: 'Closed', value: 'closed' },
-                { label: 'Invite Only', value: 'invite_only' },
-              ]"
-              value-key="value"
-              color="neutral"
-              class="w-full"
-              :ui="selectUi"
-            />
-          </UFormField>
-
-          <UFormField
-            label="Approval"
-            name="approvalMode"
-            :class="formFieldClass"
-          >
-            <USelect
-              v-model="state.approvalMode"
-              :items="[
-                { label: 'Everyone', value: 'everyone' },
-                { label: 'Manual Approval', value: 'manual' },
-              ]"
-              value-key="value"
-              color="neutral"
-              class="w-full"
-              :ui="selectUi"
-            />
-          </UFormField>
-        </div>
       </UForm>
     </template>
 
