@@ -7,7 +7,11 @@ import {
   renderWallpaperCanvas,
   wallpaperFileSegment,
 } from '~/utils/wallpaper-image';
-import { downloadFile, shareFiles } from '~/utils/share-or-download';
+import {
+  downloadFile,
+  isMobileDevice,
+  shareFiles,
+} from '~/utils/share-or-download';
 
 const props = defineProps<{
   firstName?: string | null;
@@ -115,10 +119,6 @@ function publicCardUrl() {
   return `${origin}/c/${cardSlug}`;
 }
 
-function isMobileHandoff() {
-  return window.matchMedia('(max-width: 639px)').matches;
-}
-
 async function onDownload() {
   if (downloading.value) return;
 
@@ -136,7 +136,7 @@ async function onDownload() {
 
   downloading.value = true;
   try {
-    const mobile = isMobileHandoff();
+    const mobile = isMobileDevice();
     const matchedModel = mobile
       ? closestPhoneWallpaperModel(
           Math.round(window.screen.width * window.devicePixelRatio),

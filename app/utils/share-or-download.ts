@@ -12,8 +12,23 @@ function isShareAbortError(error: unknown) {
   return error instanceof DOMException && error.name === 'AbortError';
 }
 
-function canShareFiles(files: File[]) {
+export function isMobileDevice() {
   if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  if (/Android|iPhone|iPad|iPod/i.test(ua)) return true;
+
+  const uaData = (
+    navigator as Navigator & { userAgentData?: { mobile?: boolean } }
+  ).userAgentData;
+  if (uaData?.mobile) return true;
+
+  // iPadOS reports a desktop Mac user agent.
+  return /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+}
+
+// Desktop Safari/Chrome/Edge also pass canShare, but desktop should always download.
+function canShareFiles(files: File[]) {
+  if (!isMobileDevice()) return false;
   if (typeof navigator.canShare !== 'function') return false;
   if (typeof navigator.share !== 'function') return false;
 
