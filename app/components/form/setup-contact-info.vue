@@ -24,30 +24,39 @@ const { data: card, isLoading } = useQuery<SelectCard>({
     }),
 });
 
-const state = reactive<UpdateCardUpdateRequest & { phoneCountryCode: string }>({
-  firstName: undefined,
-  lastName: undefined,
-  position: undefined,
-  phone: '',
-  phoneCountryCode: 'MM',
-  email: undefined,
-  website: undefined,
-  note: undefined,
-  cardId: undefined,
-});
+const {
+  state,
+  hydrate,
+  clear: clearDraft,
+} = useFormDraft<UpdateCardUpdateRequest & { phoneCountryCode: string }>(
+  `card:${slug.value}:setup-contact`,
+  () => ({
+    firstName: undefined,
+    lastName: undefined,
+    position: undefined,
+    phone: '',
+    phoneCountryCode: 'MM',
+    email: undefined,
+    website: undefined,
+    note: undefined,
+    cardId: undefined,
+  })
+);
 
 watch(
   card,
   (val) => {
     if (!val) return;
-    state.firstName = val.firstName || '';
-    state.lastName = val.lastName || '';
-    state.position = val.position || '';
-    state.phone = val.phone || '';
-    state.phoneCountryCode = val.phoneCountryCode || 'MM';
-    state.email = val.email || '';
-    state.website = val.website || '';
-    state.cardId = val.id;
+    hydrate({
+      firstName: val.firstName || '',
+      lastName: val.lastName || '',
+      position: val.position || '',
+      phone: val.phone || '',
+      phoneCountryCode: val.phoneCountryCode || 'MM',
+      email: val.email || '',
+      website: val.website || '',
+      cardId: val.id,
+    });
   },
   { immediate: true }
 );
@@ -79,6 +88,7 @@ const { mutate: submitRequest, isPending: isSubmitting } = useMutation({
     });
   },
   onSuccess: async (updatedCard) => {
+    clearDraft();
     if (updatedCard) {
       queryClient.setQueryData(['cards', orgSlug, slug], updatedCard);
     }

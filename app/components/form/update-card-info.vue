@@ -43,7 +43,11 @@ const { data: card, isLoading } = useQuery<CardDTO>({
     }),
 });
 
-const state = reactive({
+const {
+  state,
+  hydrate,
+  clear: clearDraft,
+} = useFormDraft(`card:${slug.value}:info`, () => ({
   id: '',
   firstName: '',
   lastName: '',
@@ -55,7 +59,7 @@ const state = reactive({
   website: '',
   avatarUrl: '',
   socials: [] as SocialFormLink[],
-});
+}));
 const socialsListEl = ref<HTMLElement | null>(null);
 const isSocialSlideoverOpen = ref(false);
 const socialEditorMode = ref<'create' | 'edit'>('create');
@@ -159,20 +163,22 @@ watch(
   card,
   (val) => {
     if (!val) return;
-    state.id = val.id ?? '';
-    state.firstName = val.firstName ?? '';
-    state.lastName = val.lastName ?? '';
-    state.position = val.position ?? '';
-    state.company = val.company ?? '';
-    state.phone = val.phone ?? '';
-    state.phoneCountryCode = val.phoneCountryCode || 'MM';
-    state.email = val.email ?? '';
-    state.website = val.website ?? '';
-    state.avatarUrl = val.avatarUrl ?? '';
     const incomingSocials = JSON.parse(JSON.stringify(val.socials || [])) as
       | SocialFormLink[]
       | [];
-    state.socials = normalizeSocialLinksForForm(incomingSocials);
+    hydrate({
+      id: val.id ?? '',
+      firstName: val.firstName ?? '',
+      lastName: val.lastName ?? '',
+      position: val.position ?? '',
+      company: val.company ?? '',
+      phone: val.phone ?? '',
+      phoneCountryCode: val.phoneCountryCode || 'MM',
+      email: val.email ?? '',
+      website: val.website ?? '',
+      avatarUrl: val.avatarUrl ?? '',
+      socials: normalizeSocialLinksForForm(incomingSocials),
+    });
   },
   { immediate: true }
 );
@@ -269,6 +275,7 @@ const { mutate: updateCard, isPending: isSaving } = useMutation({
   },
   onSuccess: async (updatedCard) => {
     clearSelection();
+    clearDraft();
     if (!updatedCard) {
       toast.add({
         title: 'Card updated',

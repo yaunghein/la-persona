@@ -42,6 +42,7 @@ function goHome() {
   />
   <CommunityEventOnboardingCreateCard
     v-else-if="step === 'create-card'"
+    :draft-key="`event:${event.id}:onboarding-card`"
     @submit="goNext"
     @cancel="goHome"
   />

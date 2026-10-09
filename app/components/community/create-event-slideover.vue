@@ -96,17 +96,36 @@ const photosInputRef = ref<HTMLInputElement | null>(null);
 const cover = ref<DraftEventMedia | null>(null);
 const photos = ref<DraftEventMedia[]>([]);
 
-const state = reactive<FormState>({
-  title: '',
-  description: '',
-  location: '',
-  date: '',
-  startTime: '18:00',
-  endTime: '21:00',
-  capacity: null,
-  registrationMode: 'open',
-  approvalMode: 'everyone',
-});
+const {
+  state,
+  isDirty,
+  hydrate,
+  clear: clearDraft,
+  reset: resetDraft,
+} = useFormDraft<FormState>(
+  () =>
+    props.event?.id
+      ? `event:${props.event.id}:edit`
+      : `event:${organizationSlug.value}:create`,
+  () => ({
+    title: '',
+    description: '',
+    location: '',
+    date: '',
+    startTime: '18:00',
+    endTime: '21:00',
+    capacity: null,
+    registrationMode: 'open',
+    approvalMode: 'everyone',
+  })
+);
+const hydratedMediaEventId = ref<string | null>(null);
+const hasUnsavedChanges = computed(
+  () =>
+    isDirty.value ||
+    cover.value?.source === 'local' ||
+    photos.value.some((item) => item.source === 'local')
+);
 
 const timeOptions = eventTimeOptions();
 const remainingPhotoSlots = computed(
@@ -231,20 +250,7 @@ function isAllowedImage(file: File) {
   return typeOk && sizeOk;
 }
 
-function hydrateFromEvent(event: EventDTO) {
-  revokePreview(cover.value);
-  photos.value.forEach(revokePreview);
-  cover.value = remoteDraft(event.coverUrl);
-  photos.value = (event.photoUrls ?? []).map(remoteDraft);
-  state.title = event.title;
-  state.description = event.description ?? '';
-  state.location = event.location;
-  state.date = formatEventDateValue(event.startsAt);
-  state.startTime = formatEventTimeValue(event.startsAt);
-  state.endTime = formatEventTimeValue(event.endsAt);
-  state.capacity = event.capacity;
-  state.registrationMode = event.registrationMode || 'open';
-  state.approvalMode = event.approvalMode || 'everyone';
+function resetTransientUi() {
   capacityDraft.value = '';
   isDatePickerOpen.value = false;
   isCapacityEditorOpen.value = false;
@@ -255,34 +261,67 @@ function hydrateFromEvent(event: EventDTO) {
   if (photosInputRef.value) photosInputRef.value.value = '';
 }
 
-function resetForm() {
+function setMedia(next: {
+  cover: DraftEventMedia | null;
+  photos: DraftEventMedia[];
+}) {
   revokePreview(cover.value);
   photos.value.forEach(revokePreview);
-  cover.value = null;
-  photos.value = [];
-  state.title = '';
-  state.description = '';
-  state.location = '';
-  state.date = '';
-  state.startTime = '18:00';
-  state.endTime = '21:00';
-  state.capacity = null;
-  state.registrationMode = 'open';
-  state.approvalMode = 'everyone';
-  capacityDraft.value = '';
-  isDatePickerOpen.value = false;
-  isCapacityEditorOpen.value = false;
-  isDeleteConfirmOpen.value = false;
-  success.value = false;
-  createdEvent.value = null;
-  if (coverInputRef.value) coverInputRef.value.value = '';
-  if (photosInputRef.value) photosInputRef.value.value = '';
+  cover.value = next.cover;
+  photos.value = next.photos;
+}
+
+function hydrateFromEvent(event: EventDTO) {
+  if (hydratedMediaEventId.value !== event.id) {
+    setMedia({
+      cover: remoteDraft(event.coverUrl),
+      photos: (event.photoUrls ?? []).map(remoteDraft),
+    });
+    hydratedMediaEventId.value = event.id;
+  }
+  hydrate({
+    title: event.title,
+    description: event.description ?? '',
+    location: event.location,
+    date: formatEventDateValue(event.startsAt),
+    startTime: formatEventTimeValue(event.startsAt),
+    endTime: formatEventTimeValue(event.endsAt),
+    capacity: event.capacity,
+    registrationMode: event.registrationMode || 'open',
+    approvalMode: event.approvalMode || 'everyone',
+  });
+  resetTransientUi();
+}
+
+function resetForm() {
+  setMedia({ cover: null, photos: [] });
+  hydratedMediaEventId.value = null;
+  resetDraft();
+  resetTransientUi();
+}
+
+function discardChanges() {
+  if (props.event) {
+    resetDraft();
+    hydratedMediaEventId.value = null;
+    hydrateFromEvent(props.event);
+  } else {
+    resetForm();
+  }
 }
 
 watch(open, (isOpen) => {
   if (!isOpen) return;
-  if (props.event) hydrateFromEvent(props.event);
-  else resetForm();
+  if (props.event) {
+    hydrateFromEvent(props.event);
+    return;
+  }
+  if (success.value) resetDraft();
+  if (success.value || hydratedMediaEventId.value) {
+    setMedia({ cover: null, photos: [] });
+    hydratedMediaEventId.value = null;
+  }
+  resetTransientUi();
 });
 
 function triggerCoverUpload() {
@@ -399,6 +438,7 @@ const { mutate: createEvent, isPending: isCreating } = useMutation({
     });
   },
   onSuccess: (created) => {
+    clearDraft();
     createdEvent.value = created;
     success.value = true;
     queryClient.invalidateQueries({
@@ -437,6 +477,8 @@ const { mutate: updateEvent, isPending: isUpdating } = useMutation({
     });
   },
   onSuccess: (updated) => {
+    clearDraft();
+    hydratedMediaEventId.value = null;
     queryClient.invalidateQueries({
       queryKey: [...QUERY_KEYS.events, organizationSlug.value],
     });
@@ -472,6 +514,7 @@ const { mutate: deleteEvent, isPending: isDeleting } = useMutation({
     });
   },
   onSuccess: (deleted) => {
+    clearDraft();
     queryClient.invalidateQueries({
       queryKey: [...QUERY_KEYS.events, organizationSlug.value],
     });
@@ -883,6 +926,15 @@ async function copyEventLink() {
           :disabled="isSubmitting"
           class="h-9 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
           @click="openDeleteConfirm"
+        />
+        <UButton
+          v-if="hasUnsavedChanges"
+          label="Discard changes"
+          color="neutral"
+          variant="ghost"
+          :disabled="isSubmitting"
+          class="h-9 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          @click="discardChanges"
         />
         <UButton
           :label="isEdit ? 'Update Changes' : 'Create an Event'"

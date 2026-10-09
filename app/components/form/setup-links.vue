@@ -39,11 +39,14 @@ const { data: card, isPending: isCardPending } = useQuery<SelectCard>({
     }),
 });
 
-// 1. Initialize with one empty link placeholder
-const state = reactive({
+const {
+  state,
+  hydrate,
+  clear: clearDraft,
+} = useFormDraft(`card:${slug.value}:setup-links`, () => ({
   id: undefined as string | number | undefined,
   socials: [] as SocialFormLink[],
-});
+}));
 const socialsListEl = ref<HTMLElement | null>(null);
 const isSocialSlideoverOpen = ref(false);
 const socialEditorMode = ref<'create' | 'edit'>('create');
@@ -65,14 +68,13 @@ watch(
   card,
   (val) => {
     if (!val) return;
-    state.id = val.id;
-
-    // 2. If card has socials, use them; otherwise, keep the list empty
-    if (val.socials && val.socials.length > 0) {
-      state.socials = normalizeSocialLinksForForm(val.socials);
-    } else {
-      state.socials = [];
-    }
+    hydrate({
+      id: val.id,
+      socials:
+        val.socials && val.socials.length > 0
+          ? normalizeSocialLinksForForm(val.socials)
+          : [],
+    });
   },
   { immediate: true }
 );
@@ -94,6 +96,7 @@ const { mutate: submitRequest, isPending: isSubmitting } = useMutation({
     });
   },
   onSuccess: () => {
+    clearDraft();
     emit('completed');
   },
   onError: (err: any) => {

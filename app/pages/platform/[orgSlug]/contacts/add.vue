@@ -25,30 +25,23 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>;
 
-const state = reactive<Partial<Schema>>({
-  firstName: '',
-  lastName: '',
-  position: '',
-  company: '',
-  phone: '',
-  phoneCountryCode: 'MM',
-  email: '',
-});
+const { state, reset: resetForm } = useFormDraft<Partial<Schema>>(
+  () => `org:${orgSlug.value}:manual-contact`,
+  () => ({
+    firstName: '',
+    lastName: '',
+    position: '',
+    company: '',
+    phone: '',
+    phoneCountryCode: 'MM',
+    email: '',
+  })
+);
 
 const submitting = ref(false);
 
 const goBack = () => {
   navigateTo(`/platform/${orgSlug.value}/contacts`);
-};
-
-const resetForm = () => {
-  state.firstName = '';
-  state.lastName = '';
-  state.position = '';
-  state.company = '';
-  state.phone = '';
-  state.phoneCountryCode = 'MM';
-  state.email = '';
 };
 
 const onSubmit = async (event: FormSubmitEvent<Schema>) => {

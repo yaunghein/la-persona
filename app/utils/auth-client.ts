@@ -83,6 +83,7 @@ export const signOut = async () => {
   await authClient.signOut({
     fetchOptions: {
       onSuccess: () => {
+        clearFormDrafts();
         navigateTo({
           path: ROUTES.SIGN_IN,
           query: {

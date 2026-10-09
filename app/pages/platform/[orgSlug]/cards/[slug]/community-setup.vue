@@ -36,6 +36,7 @@ const {
 
 const submitting = ref(false);
 const isSettingUp = ref(false);
+const createCardDraftKey = computed(() => `card:${cardSlug.value}:onboarding`);
 
 const viewer = computed<EventFlowViewer>(() => ({
   isAuthenticated: Boolean(session.value),
@@ -115,6 +116,7 @@ async function onCreateCard(payload: {
         socials: payload.socials,
       },
     });
+    clearFormDraft(createCardDraftKey.value);
     isSettingUp.value = true;
     await refresh();
   } catch (error: any) {
@@ -210,6 +212,7 @@ async function finishSetup() {
           :email="card.email"
           :socials="card.socials"
           :submitting="submitting"
+          :draft-key="createCardDraftKey"
           @submit="onCreateCard"
           @cancel="goToEvent"
         />

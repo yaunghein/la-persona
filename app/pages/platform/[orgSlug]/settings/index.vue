@@ -29,7 +29,18 @@ const emptyForm = (): CommunitySettingsFormValues => ({
   cardBackUrl: '',
 });
 
-const form = ref<CommunitySettingsFormValues>(emptyForm());
+const {
+  state: form,
+  hydrate,
+  clear: clearDraft,
+} = useFormDraft<CommunitySettingsFormValues>(
+  () => `org:${organizationSlug.value}:settings`,
+  emptyForm
+);
+
+function updateForm(value: CommunitySettingsFormValues) {
+  Object.assign(form, value);
+}
 
 const { data, isLoading, isError, error, refetch } = useQuery({
   queryKey: ['community-settings', organizationSlug],
@@ -43,7 +54,7 @@ watch(
   data,
   (value) => {
     if (!value) return;
-    form.value = { ...value };
+    hydrate({ ...value });
   },
   { immediate: true }
 );
@@ -63,7 +74,8 @@ const { mutate: saveSettings, isPending: isSaving } = useMutation({
       },
     }),
   onSuccess: async (saved) => {
-    form.value = { ...saved };
+    clearDraft();
+    hydrate({ ...saved });
     queryClient.setQueryData(
       userOrganizationsQueryKey,
       (orgs: UserOrganization[] | undefined) =>
@@ -98,7 +110,7 @@ const { mutate: saveSettings, isPending: isSaving } = useMutation({
 });
 
 function onSubmit() {
-  if (!form.value.name.trim()) {
+  if (!form.name.trim()) {
     toast.add({
       title: 'Name required',
       description: 'Organization name cannot be empty.',
@@ -107,7 +119,7 @@ function onSubmit() {
     return;
   }
 
-  saveSettings(form.value);
+  saveSettings({ ...form });
 }
 
 function onDelete() {
@@ -146,7 +158,8 @@ function onDelete() {
   </div>
   <CommunitySettingsForm
     v-else
-    v-model="form"
+    :model-value="form"
+    @update:model-value="updateForm"
     :saving="isSaving"
     @submit="onSubmit"
     @delete="onDelete"

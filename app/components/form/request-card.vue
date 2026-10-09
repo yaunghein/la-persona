@@ -40,18 +40,21 @@ const {
   isValidCardLinkValue,
 } = useUrlNormalization();
 
-const state = reactive<RequestCardFormState>({
-  type: 'new_design' as 'new_design' | 'existing_design',
-  name: '',
-  position: '',
-  company: '',
-  phone: '',
-  phoneCountryCode: 'MM',
-  email: '',
-  website: '',
-  sourceCardId: '',
-  socials: [],
-});
+const { state, reset: resetForm } = useFormDraft<RequestCardFormState>(
+  () => `org:${organizationSlug.value}:request-card`,
+  () => ({
+    type: 'new_design',
+    name: '',
+    position: '',
+    company: '',
+    phone: '',
+    phoneCountryCode: 'MM',
+    email: '',
+    website: '',
+    sourceCardId: '',
+    socials: [],
+  })
+);
 const socialsListEl = ref<HTMLElement | null>(null);
 const isSocialSlideoverOpen = ref(false);
 const socialEditorMode = ref<'create' | 'edit'>('create');
@@ -409,6 +412,7 @@ const { mutate: insertCardRequest, isPending: isLoading } = useMutation({
     if (receiptPreviewUrl.value) URL.revokeObjectURL(receiptPreviewUrl.value);
     receiptPreviewUrl.value = null;
     receiptFile.value = null;
+    resetForm();
     success.value = true;
 
     toast.add({

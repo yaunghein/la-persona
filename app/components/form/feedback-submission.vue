@@ -28,10 +28,13 @@ const toast = useToast();
 const success = ref(false);
 const serverErrorMessage = ref<string | null>(null);
 
-const state = reactive<FeedbackSubmissionFormState>({
-  kind: props.kind,
-  message: '',
-});
+const { state, reset: resetForm } = useFormDraft<FeedbackSubmissionFormState>(
+  () => `feedback:${props.kind}`,
+  () => ({
+    kind: props.kind,
+    message: '',
+  })
+);
 
 const titleLabel = computed(() => FEEDBACK_KIND_LABELS[state.kind]);
 const submitLabelByKind: Record<FeedbackKind, string> = {
@@ -50,9 +53,7 @@ const placeholderByKind: Record<FeedbackKind, string> = {
 
 watch(
   () => props.kind,
-  (kind) => {
-    state.kind = kind;
-    state.message = '';
+  () => {
     success.value = false;
     serverErrorMessage.value = null;
   }
@@ -69,7 +70,7 @@ const { mutate: submitFeedback, isPending: isSubmitting } = useMutation({
   onSuccess: () => {
     success.value = true;
     serverErrorMessage.value = null;
-    state.message = '';
+    resetForm();
 
     toast.add({
       title: 'Submission Received',

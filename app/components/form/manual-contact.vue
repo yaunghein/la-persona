@@ -8,7 +8,7 @@ const emit = defineEmits<{
   submitted: [];
 }>();
 
-const { withOrganizationQuery } = useOrganizationSlug();
+const { organizationSlug, withOrganizationQuery } = useOrganizationSlug();
 const toast = useToast();
 
 const schema = z.object({
@@ -23,27 +23,20 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>;
 
-const state = reactive<Partial<Schema>>({
-  firstName: '',
-  lastName: '',
-  position: '',
-  company: '',
-  phone: '',
-  phoneCountryCode: 'MM',
-  email: '',
-});
+const { state, reset: resetForm } = useFormDraft<Partial<Schema>>(
+  () => `org:${organizationSlug.value}:manual-contact`,
+  () => ({
+    firstName: '',
+    lastName: '',
+    position: '',
+    company: '',
+    phone: '',
+    phoneCountryCode: 'MM',
+    email: '',
+  })
+);
 
 const submitting = ref(false);
-
-function resetForm() {
-  state.firstName = '';
-  state.lastName = '';
-  state.position = '';
-  state.company = '';
-  state.phone = '';
-  state.phoneCountryCode = 'MM';
-  state.email = '';
-}
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   submitting.value = true;
