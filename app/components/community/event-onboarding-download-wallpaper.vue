@@ -196,7 +196,7 @@ async function onDownload() {
       class="hide-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto p-6 sm:p-8 lg:px-16 lg:py-10"
     >
       <div
-        class="mx-auto flex min-h-0 w-full max-w-120 flex-1 flex-col gap-8 sm:max-w-112"
+        class="mx-auto flex min-h-0 w-full max-w-120 flex-1 flex-col gap-8 sm:max-w-md"
       >
         <div class="flex flex-col gap-6">
           <h1

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { CommunityMember } from '~~/shared/types/community-members';
+import { formatDateLabel } from '~~/shared/utils/datetime';
 
 const props = defineProps<{
   member: CommunityMember | null;
@@ -57,7 +58,7 @@ const pendingFields = computed(() => {
     { label: 'Phone Number', value: props.member.phone },
     { label: 'Email', value: props.member.email },
     { label: 'LinkedIn', value: props.member.linkedin },
-    { label: 'Submitted', value: props.member.joinedAt },
+    { label: 'Submitted', value: formatDateLabel(props.member.joinedAt) },
   ];
 });
 
@@ -157,7 +158,9 @@ function onViewPersona() {
           </div>
           <div class="flex items-center justify-between py-3">
             <span class="text-sm text-[#8b8b8b]">Joined</span>
-            <span class="text-sm text-white">{{ member.joinedAt }}</span>
+            <span class="text-sm text-white">{{
+              formatDateLabel(member.joinedAt)
+            }}</span>
           </div>
         </div>
 

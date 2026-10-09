@@ -6,7 +6,6 @@ import {
 import { handleApiError } from '~~/server/utils/errors';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
 import { updateEventBodySchema } from '~~/shared/types/event';
-import { wallClockDate } from '~~/shared/utils/event-datetime';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
 import { enrichLog } from '~~/server/utils/wide-event';
 import { sanitizeRichText } from '~~/server/utils/rich-text';
@@ -55,8 +54,8 @@ export default defineEventHandler(async (event) => {
         title: body.data.title,
         description: sanitizeRichText(body.data.description),
         location: body.data.location,
-        startsAt: wallClockDate(body.data.date, body.data.startTime),
-        endsAt: wallClockDate(body.data.date, body.data.endTime),
+        startsAt: new Date(body.data.startsAt),
+        endsAt: new Date(body.data.endsAt),
         capacity: body.data.capacity,
         coverUrl: body.data.coverUrl,
         photoUrls: body.data.photoUrls,

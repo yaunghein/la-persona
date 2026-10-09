@@ -20,6 +20,8 @@ import {
   ANALYTICS_PERIOD_OPTIONS,
   type AnalyticsPeriod,
 } from '~~/shared/utils/analytics-period';
+import { timezoneOffsetQuery } from '~~/shared/utils/datetime';
+import { format, parseISO } from 'date-fns';
 
 ChartJS.register(
   Title,
@@ -89,6 +91,7 @@ const { data: stats, isLoading } = useQuery<DashboardStats>({
         period: selectedPeriod.value,
         organizationSlug: props.orgSlug,
         ...(props.workspace ? { scope: 'workspace' } : {}),
+        ...timezoneOffsetQuery(),
       },
     }),
   enabled: () => !!props.orgSlug,
@@ -251,12 +254,8 @@ const hasLinkRows = computed(() => linkRows.value.length > 0);
 
 const chartData = computed(() => ({
   labels:
-    stats.value?.dailyViews.map((v) =>
-      new Date(v.date).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-      })
-    ) || [],
+    stats.value?.dailyViews.map((v) => format(parseISO(v.date), 'MMM d')) ||
+    [],
   datasets: [
     {
       data: stats.value?.dailyViews.map((v) => v.count) || [],

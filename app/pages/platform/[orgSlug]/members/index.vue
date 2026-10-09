@@ -9,7 +9,6 @@ import type {
   CommunityMember,
   CommunityMembersData,
 } from '~~/shared/types/community-members';
-
 const toast = useToast();
 const queryClient = useQueryClient();
 const { organizationSlug, withOrganizationQuery } = useOrganizationSlug();

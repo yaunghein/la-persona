@@ -5,6 +5,7 @@ definePageMeta({
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import { useQuery } from '@tanstack/vue-query';
+import { format } from 'date-fns';
 import { downloadFile } from '~/utils/share-or-download';
 import { vcfPhoneLines } from '~~/shared/utils/phone';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
@@ -315,7 +316,7 @@ const onExport = async () => {
   const blob = new Blob([`\uFEFF${csvContent}`], {
     type: 'text/csv;charset=utf-8;',
   });
-  const fileName = `contacts-${orgSlug.value || 'org'}-${new Date().toISOString().slice(0, 10)}.csv`;
+  const fileName = `contacts-${orgSlug.value || 'org'}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
   downloadFile({ blob, fileName });
 
   // toast.add({

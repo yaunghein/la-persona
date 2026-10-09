@@ -11,7 +11,6 @@ import {
   formatEventWeekdayDateLabel,
   registrationBlockReason,
   spotsRemaining,
-  timezoneOffsetQuery,
 } from '~~/shared/utils/event-datetime';
 import { eventGalleryImages } from '~~/shared/utils/event-media';
 import { communityCardPath } from '~~/shared/utils/routes';
@@ -84,15 +83,22 @@ const registrationBlock = computed(() =>
   })
 );
 
+// Server rendering doesn't know the viewer's timezone, so times fill in after mount.
+const isMounted = useMounted();
+
 const details = computed(() => {
   const rows: { label: string; value: string }[] = [
     {
       label: 'Date',
-      value: formatEventWeekdayDateLabel(props.event.startsAt),
+      value: isMounted.value
+        ? formatEventWeekdayDateLabel(props.event.startsAt)
+        : '',
     },
     {
       label: 'Time',
-      value: `${formatEventTimeLabel(props.event.startsAt)} – ${formatEventTimeLabel(props.event.endsAt)}`,
+      value: isMounted.value
+        ? `${formatEventTimeLabel(props.event.startsAt)} – ${formatEventTimeLabel(props.event.endsAt)}`
+        : '',
     },
     {
       label: 'Location',
@@ -152,12 +158,9 @@ async function startRegister() {
       `/api/events/${props.event.id}/register`,
       {
         method: 'POST',
-        query: {
-          ...(resolvedOrgSlug.value
-            ? { organizationSlug: resolvedOrgSlug.value }
-            : withOrganizationQuery()),
-          ...timezoneOffsetQuery(),
-        },
+        query: resolvedOrgSlug.value
+          ? { organizationSlug: resolvedOrgSlug.value }
+          : withOrganizationQuery(),
       }
     );
     registrationStatus.value =

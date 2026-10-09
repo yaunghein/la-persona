@@ -16,6 +16,7 @@ import {
   formatEventTimeValue,
   isEventDateValue,
   isEventTimeValue,
+  localDateTime,
 } from '~~/shared/utils/event-datetime';
 import {
   EVENT_IMAGE_MAX_BYTES,
@@ -65,19 +66,34 @@ function buildEventFormSchema(allowPast: boolean) {
       approvalMode: z.enum(['everyone', 'manual']),
     })
     .superRefine((value, ctx) => {
-      const issue = eventScheduleError(
-        value.date,
-        value.startTime,
-        value.endTime,
+      if (
+        !isEventDateValue(value.date) ||
+        !isEventTimeValue(value.startTime) ||
+        !isEventTimeValue(value.endTime)
+      ) {
+        return;
+      }
+      const message = eventScheduleError(
+        localDateTime(value.date, value.startTime),
+        localDateTime(value.date, value.endTime),
         { allowPast }
       );
-      if (!issue) return;
+      if (!message) return;
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: [issue.path],
-        message: issue.message,
+        path: ['endTime'],
+        message,
       });
     });
+}
+
+function toEventBody({ date, startTime, endTime, ...rest }: FormState) {
+  return {
+    ...rest,
+    description: rest.description || '',
+    startsAt: localDateTime(date, startTime).toISOString(),
+    endsAt: localDateTime(date, endTime).toISOString(),
+  };
 }
 
 type FormState = z.output<ReturnType<typeof buildEventFormSchema>>;
@@ -127,7 +143,9 @@ const hasUnsavedChanges = computed(
     photos.value.some((item) => item.source === 'local')
 );
 
-const timeOptions = eventTimeOptions();
+const timeOptions = computed(() =>
+  eventTimeOptions([state.startTime, state.endTime])
+);
 const remainingPhotoSlots = computed(
   () => EVENT_MAX_EXTRA_PHOTOS - photos.value.length
 );
@@ -430,11 +448,7 @@ const { mutate: createEvent, isPending: isCreating } = useMutation({
     return await $fetch<EventDTO>('/api/events', {
       method: 'POST',
       query: withOrganizationQuery(),
-      body: {
-        ...payload,
-        description: payload.description || '',
-        ...images,
-      },
+      body: { ...toEventBody(payload), ...images },
     });
   },
   onSuccess: (created) => {
@@ -469,11 +483,7 @@ const { mutate: updateEvent, isPending: isUpdating } = useMutation({
     return await $fetch<EventDTO>(`/api/events/${props.event.id}`, {
       method: 'PATCH',
       query: withOrganizationQuery(),
-      body: {
-        ...payload,
-        description: payload.description || '',
-        ...images,
-      },
+      body: { ...toEventBody(payload), ...images },
     });
   },
   onSuccess: (updated) => {

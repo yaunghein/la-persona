@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { EventAttendee } from '~~/shared/types/community-event-detail';
+import { formatDateLabel, formatTimeLabel } from '~~/shared/utils/datetime';
 
 defineOptions({ name: 'CommunityEventAttendeeProfileSlideover' });
 
@@ -107,7 +108,7 @@ function onViewPersona() {
           <div class="flex items-center justify-between px-4 py-3">
             <span class="text-sm text-[#8b8b8b]">Joined</span>
             <span class="text-sm font-bold text-white">{{
-              attendee.joinedAt
+              attendee.joinedAt ? formatDateLabel(attendee.joinedAt) : '—'
             }}</span>
           </div>
         </div>
@@ -120,12 +121,18 @@ function onViewPersona() {
             <span class="text-sm text-[#8b8b8b]">Registered</span>
             <span class="text-sm font-bold text-white">{{
               attendee.registeredAt
+                ? formatDateLabel(attendee.registeredAt)
+                : '—'
             }}</span>
           </div>
           <div class="flex items-center justify-between px-4 py-3">
             <span class="text-sm text-[#8b8b8b]">Checked In</span>
             <span class="text-sm font-bold text-white">
-              {{ attendee.checkedInAt ?? '—' }}
+              {{
+                attendee.checkedInAt
+                  ? formatTimeLabel(attendee.checkedInAt)
+                  : '—'
+              }}
             </span>
           </div>
         </section>

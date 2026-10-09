@@ -1,3 +1,5 @@
+import { formatTimeLabel } from '~~/shared/utils/datetime';
+
 export type CommunityEventDetailTab =
   | 'overview'
   | 'attendees'
@@ -6,16 +8,16 @@ export type CommunityEventDetailTab =
 
 export type EventAttendeeStatus = 'pending' | 'registered' | 'checked_in';
 
+/** Timestamps are UTC ISO strings; format them in the browser. */
 export type EventAttendee = {
   id: string;
   name: string;
   role: string;
   company: string;
   status: EventAttendeeStatus;
-  statusLabel: string;
   membershipStatus: string;
-  joinedAt: string;
-  registeredAt: string;
+  joinedAt: string | null;
+  registeredAt: string | null;
   checkedInAt: string | null;
   eventsAttended: number;
   connectionsMade: number;
@@ -31,6 +33,18 @@ export type EventAttendee = {
   website?: string | null;
   planCode?: string | null;
 };
+
+export function attendeeStatusLabel(
+  attendee: Pick<EventAttendee, 'status' | 'checkedInAt'>
+) {
+  if (attendee.status === 'checked_in') {
+    return attendee.checkedInAt
+      ? `Checked-in at ${formatTimeLabel(attendee.checkedInAt)}`
+      : 'Checked-in';
+  }
+  if (attendee.status === 'pending') return 'Pending approval';
+  return 'Registered';
+}
 
 export type EventDetailOverview = {
   dateTime: string;

@@ -2,6 +2,10 @@ import { and, eq, sql, gte, inArray } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { analytics, card, member, organization } from '~~/server/db/schema';
 import { requireOrganizationSession } from '~~/server/utils/organization-permissions';
+import {
+  requestTimezoneOffset,
+  viewerDaySql,
+} from '~~/server/utils/request-timezone';
 import { isOrganizationManagerRole } from '~~/shared/permissions/organization';
 import { parseAnalyticsPeriod, analyticsPeriodStart } from '~~/shared/utils/analytics-period';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
@@ -146,7 +150,10 @@ export default defineEventHandler(async (event) => {
 
       db
         .select({
-          date: sql`DATE_TRUNC('day', ${analytics.createdAt})`.as('day'),
+          date: viewerDaySql(
+            analytics.createdAt,
+            requestTimezoneOffset(event)
+          ).as('day'),
           count: sql<number>`count(*)::int`,
         })
         .from(analytics)

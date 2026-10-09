@@ -113,8 +113,8 @@ function onRegister(event: CommunityEvent) {
 function registrationBlock(event: CommunityEvent) {
   if (event.status === 'past') return 'past' as const;
   return registrationBlockReason({
-    startsAt: `${event.date}T${event.startTime}:00.000Z`,
-    endsAt: `${event.date}T${event.endTime}:00.000Z`,
+    startsAt: event.startsAt,
+    endsAt: event.endsAt,
     registrationMode: event.registrationMode,
     capacity: event.capacity,
     registeredCount: event.registeredCount,

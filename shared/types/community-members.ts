@@ -10,6 +10,7 @@ export type CommunityMember = {
   eventsAttended: number;
   status: CommunityMemberStatus;
   email?: string | null;
+  /** UTC ISO string; format it in the browser. */
   joinedAt: string;
   avatarUrl?: string | null;
   cardSlug?: string | null;

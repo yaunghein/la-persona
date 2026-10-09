@@ -8,6 +8,7 @@ import { QUERY_KEYS } from '~/utils/query-keys';
 import type { CommunityInsightsData } from '~~/shared/types/community-insights';
 import type { AnalyticsPeriod } from '~~/shared/utils/analytics-period';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
+import { timezoneOffsetQuery } from '~~/shared/utils/datetime';
 
 const route = useRoute();
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
@@ -59,6 +60,7 @@ const {
       query: {
         period: communityPeriod.value,
         organizationSlug: orgSlug.value,
+        ...timezoneOffsetQuery(),
       },
     }),
   enabled: () => showCommunityInsights.value && !!orgSlug.value,

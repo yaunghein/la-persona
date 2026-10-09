@@ -2,7 +2,7 @@
 import { Application } from '@splinetool/runtime';
 import type { EventAttendee } from '~~/shared/types/community-event-detail';
 import { applyCombinedCardToSpline } from '~/utils/spline-card';
-import { timezoneOffsetQuery } from '~~/shared/utils/event-datetime';
+import { formatTimeLabel } from '~~/shared/utils/datetime';
 
 type ScannerState = 'scanning' | 'success' | 'already' | 'not-found';
 type CameraPhase =
@@ -59,8 +59,9 @@ const slideoverTitle = computed(() => {
 });
 
 const slideoverDescription = computed(() => {
-  if (state.value !== 'already') return undefined;
-  return scannedAttendee.value?.checkedInAt || undefined;
+  const checkedInAt = scannedAttendee.value?.checkedInAt;
+  if (state.value !== 'already' || !checkedInAt) return undefined;
+  return formatTimeLabel(checkedInAt);
 });
 
 const showCameraRetry = computed(
@@ -404,7 +405,7 @@ async function lookupCode(code: string) {
       };
     }>(`/api/events/${props.eventId}/check-in/preview`, {
       method: 'POST',
-      query: { ...withOrganizationQuery(), ...timezoneOffsetQuery() },
+      query: withOrganizationQuery(),
       body: { code },
     });
 
@@ -420,17 +421,10 @@ async function lookupCode(code: string) {
       role: result.attendee.role,
       company: result.attendee.company,
       status: result.status === 'already' ? 'checked_in' : 'registered',
-      statusLabel:
-        result.status === 'already' ? 'Already checked in' : 'Registered',
       membershipStatus: 'Active',
-      joinedAt: result.attendee.joinedAt || '',
-      registeredAt: '',
-      checkedInAt: result.attendee.checkedInAt
-        ? new Date(result.attendee.checkedInAt).toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-          })
-        : null,
+      joinedAt: result.attendee.joinedAt ?? null,
+      registeredAt: null,
+      checkedInAt: result.attendee.checkedInAt ?? null,
       eventsAttended: 0,
       connectionsMade: 0,
       splineUrl: result.attendee.splineUrl,
@@ -480,7 +474,7 @@ async function confirmCheckIn() {
   try {
     await $fetch(`/api/events/${props.eventId}/check-in`, {
       method: 'POST',
-      query: { ...withOrganizationQuery(), ...timezoneOffsetQuery() },
+      query: withOrganizationQuery(),
       body: { code: scannedCode.value },
     });
     toast.add({

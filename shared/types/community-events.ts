@@ -20,6 +20,8 @@ export type CommunityEvent = {
   imageUrl: string;
   status: CommunityEventStatus;
   description: string;
+  startsAt: string;
+  endsAt: string;
   date: string;
   startTime: string;
   endTime: string;
@@ -72,6 +74,8 @@ export function toCommunityEvent(event: EventListItemDTO): CommunityEvent {
     imageUrl: event.coverUrl,
     status: eventStatus(event.endsAt),
     description: event.description ?? '',
+    startsAt: event.startsAt,
+    endsAt: event.endsAt,
     date: formatEventDateValue(event.startsAt),
     startTime: formatEventTimeValue(event.startsAt),
     endTime: formatEventTimeValue(event.endsAt),

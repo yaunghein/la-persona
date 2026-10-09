@@ -11,8 +11,6 @@ import {
   resolveEventFlowPath,
 } from '~~/shared/utils/event-flow';
 import { ROUTES } from '~~/shared/utils/routes';
-import { timezoneOffsetQuery } from '~~/shared/utils/event-datetime';
-
 const route = useRoute();
 const toast = useToast();
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
@@ -161,7 +159,7 @@ async function finishSetup() {
   try {
     await $fetch(`/api/events/${eventId.value}/register`, {
       method: 'POST',
-      query: { organizationSlug: orgSlug.value, ...timezoneOffsetQuery() },
+      query: { organizationSlug: orgSlug.value },
     });
     return navigateTo({
       path: ROUTES.EVENTS.PUBLIC(eventId.value),

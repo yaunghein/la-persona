@@ -11,42 +11,33 @@ export function isEventTimeValue(value: string) {
   return TIME_VALUE_RE.test(value);
 }
 
-export function wallClockDate(date: string, time: string) {
-  const [year = 0, month = 1, day = 1] = date.split('-').map(Number);
-  const [hours = 0, minutes = 0] = time.split(':').map(Number);
-  return new Date(Date.UTC(year, month - 1, day, hours, minutes, 0, 0));
+function asDate(value: Date | string) {
+  return typeof value === 'string' ? new Date(value) : value;
 }
 
+/** Form date + time on the runtime's clock (the organizer's device) as a UTC instant. */
+export function localDateTime(date: string, time: string) {
+  const [year = 0, month = 1, day = 1] = date.split('-').map(Number);
+  const [hours = 0, minutes = 0] = time.split(':').map(Number);
+  return new Date(year, month - 1, day, hours, minutes, 0, 0);
+}
+
+// Formatters below use the runtime's timezone; call them in the browser.
+
 export function formatEventDateLabel(startsAt: Date | string) {
-  const value = typeof startsAt === 'string' ? new Date(startsAt) : startsAt;
-  return format(
-    new Date(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()),
-    'd MMM yyyy'
-  );
+  return format(asDate(startsAt), 'd MMM yyyy');
 }
 
 export function formatEventWeekdayDateLabel(startsAt: Date | string) {
-  const value = typeof startsAt === 'string' ? new Date(startsAt) : startsAt;
-  return format(
-    new Date(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()),
-    'EEE, d MMM yyyy'
-  );
+  return format(asDate(startsAt), 'EEE, d MMM yyyy');
 }
 
 export function formatEventTimeValue(startsAt: Date | string) {
-  const value = typeof startsAt === 'string' ? new Date(startsAt) : startsAt;
-  const hours = String(value.getUTCHours()).padStart(2, '0');
-  const minutes = String(value.getUTCMinutes()).padStart(2, '0');
-  return `${hours}:${minutes}`;
+  return format(asDate(startsAt), 'HH:mm');
 }
 
 export function formatEventTimeLabel(startsAt: Date | string) {
-  const value = typeof startsAt === 'string' ? new Date(startsAt) : startsAt;
-  const hours = value.getUTCHours();
-  const minutes = String(value.getUTCMinutes()).padStart(2, '0');
-  const suffix = hours < 12 ? 'AM' : 'PM';
-  const hour12 = hours % 12 === 0 ? 12 : hours % 12;
-  return `${hour12}:${minutes} ${suffix}`;
+  return format(asDate(startsAt), 'h:mm a');
 }
 
 export function formatEventDateTimeRange(
@@ -57,103 +48,40 @@ export function formatEventDateTimeRange(
 }
 
 export function formatEventDateValue(startsAt: Date | string) {
-  const value = typeof startsAt === 'string' ? new Date(startsAt) : startsAt;
-  const year = value.getUTCFullYear();
-  const month = String(value.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(value.getUTCDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return format(asDate(startsAt), 'yyyy-MM-dd');
 }
 
 export type EventPhase = 'before' | 'live' | 'past';
 
 export type RegistrationBlock = 'past' | 'closed' | 'invite_only' | 'full';
 
-function asDate(value: Date | string) {
-  return typeof value === 'string' ? new Date(value) : value;
-}
-
-/** Stored event times are the wall clock the organizer typed, saved as UTC. */
-export function eventInstant(value: Date | string) {
-  return asDate(value).getTime();
-}
-
-/**
- * Minutes to add to local time to get UTC, as returned by
- * Date#getTimezoneOffset. Omit it to use this runtime's own zone; the server
- * needs the viewer's value sent from the browser.
- */
-export type TimezoneOffset = number | undefined;
-
-export function isTimezoneOffset(value: unknown): value is number {
-  return (
-    typeof value === 'number' &&
-    Number.isFinite(value) &&
-    Math.abs(value) <= 14 * 60
-  );
-}
-
-export function timezoneOffsetQuery() {
-  return { tzOffset: new Date().getTimezoneOffset() };
-}
-
-/** Viewer's wall clock expressed like the stored wall-clock timestamps. */
-function wallClockNowMs(timezoneOffset?: TimezoneOffset) {
-  const offset = isTimezoneOffset(timezoneOffset)
-    ? timezoneOffset
-    : new Date().getTimezoneOffset();
-  return Date.now() - offset * 60_000;
-}
-
 export function eventPhase(
   startsAt: Date | string,
-  endsAt: Date | string,
-  timezoneOffset?: TimezoneOffset
+  endsAt: Date | string
 ): EventPhase {
-  const now = wallClockNowMs(timezoneOffset);
-  if (eventInstant(endsAt) < now) return 'past';
-  if (eventInstant(startsAt) > now) return 'before';
+  const now = Date.now();
+  if (asDate(endsAt).getTime() < now) return 'past';
+  if (asDate(startsAt).getTime() > now) return 'before';
   return 'live';
 }
 
-export function eventStatus(
-  endsAt: Date | string,
-  timezoneOffset?: TimezoneOffset
-): 'upcoming' | 'past' {
-  return eventInstant(endsAt) >= wallClockNowMs(timezoneOffset)
-    ? 'upcoming'
-    : 'past';
+export function eventStatus(endsAt: Date | string): 'upcoming' | 'past' {
+  return asDate(endsAt).getTime() >= Date.now() ? 'upcoming' : 'past';
 }
 
 export function eventScheduleError(
-  date: string,
-  startTime: string,
-  endTime: string,
-  options: { allowPast: boolean; timezoneOffset?: TimezoneOffset }
+  startsAt: Date,
+  endsAt: Date,
+  options: { allowPast: boolean }
 ) {
-  if (
-    !isEventDateValue(date) ||
-    !isEventTimeValue(startTime) ||
-    !isEventTimeValue(endTime)
-  ) {
+  if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime())) {
     return null;
   }
 
-  if (endTime <= startTime) {
-    return {
-      path: 'endTime' as const,
-      message: 'End time must be after start time',
-    };
-  }
+  if (endsAt <= startsAt) return 'End time must be after start time';
 
-  if (
-    !options.allowPast &&
-    eventStatus(wallClockDate(date, endTime), options.timezoneOffset) ===
-      'past'
-  ) {
-    return {
-      path: 'endTime' as const,
-      message: 'This event has already ended',
-    };
+  if (!options.allowPast && eventStatus(endsAt) === 'past') {
+    return 'This event has already ended';
   }
 
   return null;
@@ -165,9 +93,8 @@ export function registrationBlockReason(input: {
   registrationMode: 'open' | 'closed' | 'invite_only';
   capacity: number | null;
   registeredCount: number;
-  timezoneOffset?: TimezoneOffset;
 }): RegistrationBlock | null {
-  if (eventStatus(input.endsAt, input.timezoneOffset) === 'past') return 'past';
+  if (eventStatus(input.endsAt) === 'past') return 'past';
   if (input.registrationMode === 'closed') return 'closed';
   if (input.registrationMode === 'invite_only') return 'invite_only';
   if (input.capacity != null && input.registeredCount >= input.capacity) {
@@ -197,18 +124,29 @@ export function spotsRemaining(
   return Math.max(capacity - registeredCount, 0);
 }
 
-export function eventTimeOptions() {
-  const options: { label: string; value: string }[] = [];
+function timeOptionLabel(value: string) {
+  const [hour = 0, minute = 0] = value.split(':').map(Number);
+  const suffix = hour < 12 ? 'AM' : 'PM';
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+  return `${hour12}:${String(minute).padStart(2, '0')} ${suffix}`;
+}
+
+/** Half-hour slots, plus any current values off the grid (e.g. an event created in another timezone). */
+export function eventTimeOptions(currentValues: string[] = []) {
+  const values = new Set<string>();
 
   for (let hour = 0; hour < 24; hour += 1) {
     for (const minute of [0, 30]) {
-      const value = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-      const suffix = hour < 12 ? 'AM' : 'PM';
-      const hour12 = hour % 12 === 0 ? 12 : hour % 12;
-      const label = `${hour12}:${String(minute).padStart(2, '0')} ${suffix}`;
-      options.push({ label, value });
+      values.add(
+        `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
+      );
     }
   }
+  for (const value of currentValues) {
+    if (isEventTimeValue(value)) values.add(value);
+  }
 
-  return options;
+  return [...values]
+    .sort()
+    .map((value) => ({ label: timeOptionLabel(value), value }));
 }

@@ -18,10 +18,16 @@ import {
 } from '../schema';
 import {
   ANALYTICS_PERIOD_OPTIONS,
+  analyticsPeriodDays,
   analyticsPeriodStart,
   type AnalyticsPeriod,
 } from '../../../shared/utils/analytics-period';
+import {
+  viewerRecentDays,
+  type TimezoneOffset,
+} from '../../../shared/utils/datetime';
 import type { CommunityInsightsData } from '../../../shared/types/community-insights';
+import { viewerDaySql } from '../../utils/request-timezone';
 
 const COMPLETED_REGISTRATION_STATUSES = ['registered', 'checked_in'] as const;
 
@@ -32,28 +38,6 @@ function formatCount(value: number) {
 function formatAttendance(checkedIn: number, registered: number) {
   if (registered <= 0) return '—';
   return `${Math.round((checkedIn / registered) * 100)}%`;
-}
-
-function eachDayInRange(start: Date, end: Date) {
-  const days: Date[] = [];
-  const cursor = new Date(start);
-  cursor.setHours(0, 0, 0, 0);
-  const last = new Date(end);
-  last.setHours(0, 0, 0, 0);
-
-  while (cursor <= last) {
-    days.push(new Date(cursor));
-    cursor.setDate(cursor.getDate() + 1);
-  }
-
-  return days;
-}
-
-function dayKey(value: Date) {
-  const year = value.getFullYear();
-  const month = String(value.getMonth() + 1).padStart(2, '0');
-  const day = String(value.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
 }
 
 const COMMUNITY_INSIGHTS_INFO = [
@@ -77,7 +61,8 @@ const COMMUNITY_INSIGHTS_INFO = [
 
 export async function getCommunityInsights(
   organizationId: string,
-  period: AnalyticsPeriod
+  period: AnalyticsPeriod,
+  timezoneOffset?: TimezoneOffset
 ): Promise<CommunityInsightsData> {
   const now = new Date();
   const since = analyticsPeriodStart(period, now);
@@ -113,7 +98,7 @@ export async function getCommunityInsights(
       .then((rows) => rows[0]),
     db
       .select({
-        date: sql<Date>`DATE_TRUNC('day', ${member.createdAt})`.as('day'),
+        date: viewerDaySql(member.createdAt, timezoneOffset).as('day'),
         value: count(),
       })
       .from(member)
@@ -204,18 +189,17 @@ export async function getCommunityInsights(
     0
   );
 
-  const joinsByDay = new Map<string, number>();
-  for (const row of dailyJoins) {
-    const date = row.date instanceof Date ? row.date : new Date(row.date);
-    joinsByDay.set(dayKey(date), Number(row.value ?? 0));
-  }
+  const joinsByDay = new Map(
+    dailyJoins.map((row) => [row.date, Number(row.value ?? 0)])
+  );
 
-  const memberGrowthDays = eachDayInRange(since, now);
+  const memberGrowthDays = viewerRecentDays(
+    analyticsPeriodDays(period) + 1,
+    timezoneOffset
+  );
   const memberGrowth = {
-    labels: memberGrowthDays.map((day) =>
-      day.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-    ),
-    values: memberGrowthDays.map((day) => joinsByDay.get(dayKey(day)) ?? 0),
+    labels: memberGrowthDays.map((day) => day.label),
+    values: memberGrowthDays.map((day) => joinsByDay.get(day.key) ?? 0),
   };
 
   return {

@@ -5,11 +5,7 @@ import {
   EVENT_MAX_EXTRA_PHOTOS,
   isAllowedEventImageUrl,
 } from '~~/shared/utils/event-media';
-import {
-  eventScheduleError,
-  isEventDateValue,
-  isEventTimeValue,
-} from '~~/shared/utils/event-datetime';
+import { eventScheduleError } from '~~/shared/utils/event-datetime';
 
 export type SelectEvent = InferSelectModel<typeof event>;
 export type InsertEvent = InferInsertModel<typeof event>;
@@ -101,13 +97,8 @@ const eventBodyFields = {
   title: z.string().trim().min(1, 'Event name is required'),
   description: z.string().trim().optional().or(z.literal('')),
   location: z.string().trim().min(1, 'Location is required'),
-  date: z.string().refine(isEventDateValue, { message: 'Date is required' }),
-  startTime: z
-    .string()
-    .refine(isEventTimeValue, { message: 'Start time is required' }),
-  endTime: z
-    .string()
-    .refine(isEventTimeValue, { message: 'End time is required' }),
+  startsAt: z.iso.datetime({ offset: true, message: 'Start time is required' }),
+  endsAt: z.iso.datetime({ offset: true, message: 'End time is required' }),
   capacity: z.number().int().positive().nullable(),
   coverUrl: eventImageUrlSchema,
   photoUrls: z.array(eventImageUrlSchema).max(EVENT_MAX_EXTRA_PHOTOS),
@@ -117,17 +108,16 @@ const eventBodyFields = {
 
 function eventBodySchema(allowPast: boolean) {
   return z.object(eventBodyFields).superRefine((value, ctx) => {
-    const issue = eventScheduleError(
-      value.date,
-      value.startTime,
-      value.endTime,
+    const message = eventScheduleError(
+      new Date(value.startsAt),
+      new Date(value.endsAt),
       { allowPast }
     );
-    if (!issue) return;
+    if (!message) return;
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      path: [issue.path],
-      message: issue.message,
+      path: ['endsAt'],
+      message,
     });
   });
 }

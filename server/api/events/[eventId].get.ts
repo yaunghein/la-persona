@@ -9,6 +9,7 @@ import {
   toViewerStatus,
 } from '~~/server/db/queries/event-registration';
 import { handleApiError } from '~~/server/utils/errors';
+import { requestTimezoneOffset } from '~~/server/utils/request-timezone';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
 import type { EventDetailDTO } from '~~/shared/types/event';
@@ -46,7 +47,8 @@ export default defineEventHandler(async (event) => {
       buildEventOverview(
         eventId,
         session.session.activeOrganizationId,
-        row.createdAt
+        row.createdAt,
+        requestTimezoneOffset(event)
       ),
     ]);
 

@@ -12,7 +12,6 @@ import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
 import { eventPhase } from '~~/shared/utils/event-datetime';
 import { parseCardSlugFromQr } from '~~/shared/utils/card-qr';
 import { enrichLog } from '~~/server/utils/wide-event';
-import { requestTimezoneOffset } from '~~/server/utils/request-timezone';
 
 const bodySchema = z.object({
   code: z.string().trim().min(1, 'QR code is required'),
@@ -53,12 +52,9 @@ export default defineEventHandler(async (event) => {
     }
     enrichLog(event, { event: { id: eventId, title: row.title } });
 
-    const tzOffset = requestTimezoneOffset(event);
-    const phase = eventPhase(row.startsAt, row.endsAt, tzOffset);
+    const phase = eventPhase(row.startsAt, row.endsAt);
     if (phase !== 'live') {
-      enrichLog(event, {
-        registration: { result: phase, tz_offset: tzOffset ?? null },
-      });
+      enrichLog(event, { registration: { result: phase } });
       throw createError({
         statusCode: 403,
         statusMessage:

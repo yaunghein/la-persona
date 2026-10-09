@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
-import type { EventAttendee } from '~~/shared/types/community-event-detail';
+import {
+  attendeeStatusLabel,
+  type EventAttendee,
+} from '~~/shared/types/community-event-detail';
 
 const props = defineProps<{
   attendees: EventAttendee[];
@@ -56,7 +59,7 @@ const filteredAttendees = computed(() => {
       attendee.name.toLowerCase().includes(query) ||
       attendee.role.toLowerCase().includes(query) ||
       attendee.company.toLowerCase().includes(query) ||
-      attendee.statusLabel.toLowerCase().includes(query) ||
+      attendeeStatusLabel(attendee).toLowerCase().includes(query) ||
       (attendee.email || '').toLowerCase().includes(query)
     );
   });
@@ -168,7 +171,9 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
           <span class="text-[#8b8b8b]">{{ row.original.email || '—' }}</span>
         </template>
         <template #status-cell="{ row }">
-          <span class="text-[#8b8b8b]">{{ row.original.statusLabel }}</span>
+          <span class="text-[#8b8b8b]">{{
+            attendeeStatusLabel(row.original)
+          }}</span>
         </template>
         <template #actions-cell="{ row }">
           <UDropdownMenu :items="getActionItems(row.original)">

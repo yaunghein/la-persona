@@ -10,7 +10,6 @@ import { requireOrganizationPermission } from '~~/server/utils/organization-perm
 import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
 import { eventStatus } from '~~/shared/utils/event-datetime';
 import { enrichLog } from '~~/server/utils/wide-event';
-import { requestTimezoneOffset } from '~~/server/utils/request-timezone';
 
 export default defineEventHandler(async (event) => {
   const { org } = await requireCommunityOrganization(event);
@@ -41,7 +40,7 @@ export default defineEventHandler(async (event) => {
     }
     enrichLog(event, { event: { id: eventId, title: row.title } });
 
-    if (eventStatus(row.endsAt, requestTimezoneOffset(event)) === 'past') {
+    if (eventStatus(row.endsAt) === 'past') {
       enrichLog(event, { registration: { result: 'event_ended' } });
       throw createError({
         statusCode: 403,

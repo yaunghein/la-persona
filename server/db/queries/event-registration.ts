@@ -7,6 +7,10 @@ import type {
   ViewerRegistrationStatus,
 } from '~~/shared/types/event';
 import type { EventAttendee } from '~~/shared/types/community-event-detail';
+import {
+  viewerRecentDays,
+  type TimezoneOffset,
+} from '~~/shared/utils/datetime';
 
 const COUNTED_STATUSES: EventRegistrationStatus[] = [
   'registered',
@@ -253,32 +257,26 @@ export async function countMembersJoinedSince(
   return row?.value ?? 0;
 }
 
-export async function getRegistrationTrend(eventId: string) {
+export async function getRegistrationTrend(
+  eventId: string,
+  timezoneOffset?: TimezoneOffset
+) {
   const labels: string[] = [];
   const values: number[] = [];
-  const now = new Date();
 
-  for (let offset = 6; offset >= 0; offset -= 1) {
-    const day = new Date(now);
-    day.setHours(0, 0, 0, 0);
-    day.setDate(day.getDate() - offset);
-    const next = new Date(day);
-    next.setDate(next.getDate() + 1);
-
+  for (const day of viewerRecentDays(7, timezoneOffset)) {
     const [row] = await db
       .select({ value: count() })
       .from(eventRegistration)
       .where(
         and(
           eq(eventRegistration.eventId, eventId),
-          gte(eventRegistration.registeredAt, day),
-          sql`${eventRegistration.registeredAt} < ${next}`
+          gte(eventRegistration.registeredAt, day.start),
+          sql`${eventRegistration.registeredAt} < ${day.end}`
         )
       );
 
-    labels.push(
-      day.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-    );
+    labels.push(day.label);
     values.push(row?.value ?? 0);
   }
 
@@ -288,14 +286,15 @@ export async function getRegistrationTrend(eventId: string) {
 export async function buildEventOverview(
   eventId: string,
   organizationId: string,
-  eventCreatedAt: Date
+  eventCreatedAt: Date,
+  timezoneOffset?: TimezoneOffset
 ): Promise<EventOverviewStats> {
   const [registrations, checkedIn, newMembersJoined, registrationTrend] =
     await Promise.all([
       countCountedRegistrations(eventId),
       countCheckedInRegistrations(eventId),
       countMembersJoinedSince(organizationId, eventCreatedAt),
-      getRegistrationTrend(eventId),
+      getRegistrationTrend(eventId, timezoneOffset),
     ]);
 
   const attendanceRate =
@@ -310,34 +309,6 @@ export async function buildEventOverview(
     newMembersJoined,
     registrationTrend,
   };
-}
-
-function formatDateLabel(value: Date) {
-  return value.toLocaleDateString('en-US', {
-    month: 'short',
-    day: '2-digit',
-    year: 'numeric',
-  });
-}
-
-function formatTimeLabel(value: Date | null) {
-  if (!value) return null;
-  return value.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-}
-
-function attendeeStatusLabel(
-  status: EventRegistrationStatus,
-  checkedInAt: Date | null
-) {
-  if (status === 'checked_in') {
-    const time = formatTimeLabel(checkedInAt);
-    return time ? `Checked-in at ${time}` : 'Checked-in';
-  }
-  if (status === 'pending') return 'Pending approval';
-  return 'Registered';
 }
 
 export async function listEventAttendees(
@@ -386,14 +357,10 @@ export async function listEventAttendees(
       role: row.card?.position || 'Member',
       company: row.card?.company || '',
       status: row.registration.status,
-      statusLabel: attendeeStatusLabel(
-        row.registration.status,
-        row.registration.checkedInAt
-      ),
       membershipStatus: row.member ? 'Active' : 'Guest',
-      joinedAt: row.member ? formatDateLabel(row.member.createdAt) : '—',
-      registeredAt: formatDateLabel(row.registration.registeredAt),
-      checkedInAt: formatTimeLabel(row.registration.checkedInAt),
+      joinedAt: row.member?.createdAt.toISOString() ?? null,
+      registeredAt: row.registration.registeredAt.toISOString(),
+      checkedInAt: row.registration.checkedInAt?.toISOString() ?? null,
       eventsAttended: checkInCounts.get(row.user.id) ?? 0,
       connectionsMade: 0,
       phone: row.card?.phone || undefined,

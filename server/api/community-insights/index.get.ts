@@ -1,5 +1,6 @@
 import { getCommunityInsights } from '~~/server/db/queries/community-insights';
 import { handleApiError } from '~~/server/utils/errors';
+import { requestTimezoneOffset } from '~~/server/utils/request-timezone';
 import {
   requireCommunityManager,
   requireCommunityOrganization,
@@ -15,7 +16,11 @@ export default defineEventHandler(async (event) => {
 
   try {
     const period = parseAnalyticsPeriod(getQuery(event).period);
-    return await getCommunityInsights(org.id, period);
+    return await getCommunityInsights(
+      org.id,
+      period,
+      requestTimezoneOffset(event)
+    );
   } catch (error) {
     handleApiError(error, {
       statusCode: 500,

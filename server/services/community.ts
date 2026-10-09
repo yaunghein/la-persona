@@ -44,14 +44,6 @@ function displayName(firstName: string, lastName?: string | null) {
   return [firstName, lastName].filter(Boolean).join(' ').trim();
 }
 
-function formatJoinedAt(value: Date) {
-  return value.toLocaleDateString('en-US', {
-    month: 'short',
-    day: '2-digit',
-    year: 'numeric',
-  });
-}
-
 export function communityRedirectPath(params: {
   organizationSlug: string;
   role?: string | null;
@@ -345,7 +337,7 @@ export async function listCommunityRoster(organizationId: string) {
       eventsAttended: checkInCounts.get(row.user.id) ?? 0,
       status: 'active' as const,
       email: communityCard?.email || row.user.email,
-      joinedAt: formatJoinedAt(row.member.createdAt),
+      joinedAt: row.member.createdAt.toISOString(),
       avatarUrl: communityCard?.avatarUrl || row.user.image,
       cardSlug: communityCard?.slug || null,
       firstName,
@@ -375,7 +367,7 @@ export async function listCommunityRoster(organizationId: string) {
     eventsAttended: 0,
     status: 'pending' as const,
     email: row.email,
-    joinedAt: formatJoinedAt(row.createdAt),
+    joinedAt: row.createdAt.toISOString(),
     avatarUrl: null,
     cardSlug: null,
     firstName: null,

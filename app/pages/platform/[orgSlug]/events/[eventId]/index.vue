@@ -17,8 +17,8 @@ import {
   formatEventDateTimeRange,
   formatEventDateValue,
   registrationBlockReason,
-  timezoneOffsetQuery,
 } from '~~/shared/utils/event-datetime';
+import { timezoneOffsetQuery } from '~~/shared/utils/datetime';
 
 const toast = useToast();
 const queryClient = useQueryClient();
@@ -41,7 +41,7 @@ const { data: event, isLoading } = useQuery<EventDetailDTO>({
   ]),
   queryFn: () =>
     $fetch(`/api/events/${eventId.value}`, {
-      query: withOrganizationQuery(),
+      query: { ...withOrganizationQuery(), ...timezoneOffsetQuery() },
     }),
   enabled: () => !!eventId.value && !!organizationSlug.value,
 });
@@ -65,7 +65,7 @@ const { mutate: approveAttendee } = useMutation({
   mutationFn: (attendee: EventAttendee) =>
     $fetch(`/api/events/${eventId.value}/attendees/${attendee.id}/approve`, {
       method: 'POST',
-      query: { ...withOrganizationQuery(), ...timezoneOffsetQuery() },
+      query: withOrganizationQuery(),
     }),
   onSuccess: async () => {
     await Promise.all([
