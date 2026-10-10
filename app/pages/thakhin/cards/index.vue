@@ -32,11 +32,23 @@ type CardRow = {
   organizationId: string;
   organizationName: string;
   organizationSlug: string;
+  organizationType: 'personal' | 'community';
   userId: string | null;
   linkedUserEmail: string | null;
   createdAt: string;
   updatedAt: string;
+  subscriptionStatus: string | null;
+  subscriptionPlanCode: string | null;
+  subscriptionEndAt: string | null;
 };
+
+type SubscriptionFilter =
+  | 'all'
+  | 'trial'
+  | 'active'
+  | 'pending_approval'
+  | 'expired'
+  | 'community';
 
 type OrgOption = { id: string; name: string; slug: string };
 
@@ -126,11 +138,48 @@ const rows = computed(() => cardsData.value || []);
 const claimFilter = ref<'all' | 'linked' | 'unclaimed'>('all');
 const orgFilter = ref('all');
 
+const subscriptionFilter = ref<SubscriptionFilter>('all');
+
 const claimFilterItems = [
   { label: 'All cards', value: 'all' },
   { label: 'Linked', value: 'linked' },
   { label: 'Unclaimed', value: 'unclaimed' },
 ];
+
+const subscriptionFilterItems: { label: string; value: SubscriptionFilter }[] = [
+  { label: 'All subscriptions', value: 'all' },
+  { label: 'Trial', value: 'trial' },
+  { label: 'Active', value: 'active' },
+  { label: 'Pending', value: 'pending_approval' },
+  { label: 'Expired', value: 'expired' },
+  { label: 'Community', value: 'community' },
+];
+
+const SUBSCRIPTION_BADGES: Record<
+  string,
+  { label: string; color: 'success' | 'warning' | 'error' | 'info' | 'neutral' }
+> = {
+  trial: { label: 'Trial', color: 'info' },
+  active: { label: 'Active', color: 'success' },
+  grace: { label: 'Grace', color: 'warning' },
+  pending_approval: { label: 'Pending', color: 'warning' },
+  expired: { label: 'Expired', color: 'error' },
+};
+
+function subscriptionBadge(row: CardRow) {
+  if (row.organizationType === 'community') {
+    return { label: 'Community', color: 'neutral' as const };
+  }
+  if (!row.subscriptionStatus) {
+    return { label: 'None', color: 'neutral' as const };
+  }
+  return (
+    SUBSCRIPTION_BADGES[row.subscriptionStatus] ?? {
+      label: row.subscriptionStatus,
+      color: 'neutral' as const,
+    }
+  );
+}
 
 const orgFilterItems = computed(() => {
   const names = [
@@ -151,7 +200,13 @@ const filteredRows = computed(() => {
       (claimFilter.value === 'unclaimed' && !row.userId);
     const matchesOrg =
       orgFilter.value === 'all' || row.organizationName === orgFilter.value;
-    return matchesClaim && matchesOrg;
+    const isCommunity = row.organizationType === 'community';
+    const matchesSubscription =
+      subscriptionFilter.value === 'all' ||
+      (subscriptionFilter.value === 'community'
+        ? isCommunity
+        : !isCommunity && row.subscriptionStatus === subscriptionFilter.value);
+    return matchesClaim && matchesOrg && matchesSubscription;
   });
 });
 
@@ -165,7 +220,7 @@ const {
   onPageChange,
 } = useThakhinTable(() => filteredRows.value.length);
 
-watch([claimFilter, orgFilter], resetPage);
+watch([claimFilter, orgFilter, subscriptionFilter], resetPage);
 const orgSelectItems = computed(() =>
   (orgOptions.value || []).map((o) => ({ label: o.name, value: o.id }))
 );
@@ -378,6 +433,15 @@ const columns: TableColumn<CardRow>[] = [
     accessorFn: (row) =>
       row.userId ? `Linked ${row.linkedUserEmail || ''}`.trim() : 'Unclaimed',
   },
+  {
+    id: 'subscription',
+    header: thakhinSortableHeader('SUBSCRIPTION'),
+    accessorFn: (row) => subscriptionBadge(row).label,
+  },
+  {
+    accessorKey: 'subscriptionEndAt',
+    header: thakhinSortableHeader('EXPIRES'),
+  },
   { accessorKey: 'email', header: thakhinSortableHeader('CARD EMAIL') },
   { accessorKey: 'createdAt', header: thakhinSortableHeader('CREATED') },
   THAKHIN_ACTIONS_COLUMN,
@@ -441,6 +505,12 @@ const selectUi = {
           class="w-48"
           size="sm"
         />
+        <USelect
+          v-model="subscriptionFilter"
+          :items="subscriptionFilterItems"
+          class="w-40"
+          size="sm"
+        />
       </template>
 
       <UTable
@@ -454,7 +524,7 @@ const selectUi = {
         :pagination-options="paginationOptions"
         :get-row-id="(row) => row.id"
         :ui="THAKHIN_TABLE_UI"
-        class="w-full min-w-[48rem]"
+        class="w-full min-w-5xl"
         @select="(_event, row) => openCard(row.original)"
       >
         <template #displayName-cell="{ row }">
@@ -475,6 +545,30 @@ const selectUi = {
           >
             {{ row.original.linkedUserEmail }}
           </p>
+        </template>
+        <template #subscription-cell="{ row }">
+          <UBadge :color="subscriptionBadge(row.original).color" variant="subtle">
+            {{ subscriptionBadge(row.original).label }}
+          </UBadge>
+          <p
+            v-if="row.original.subscriptionPlanCode"
+            class="mt-1 text-xs text-white/45"
+          >
+            {{ row.original.subscriptionPlanCode }}
+          </p>
+        </template>
+        <template #subscriptionEndAt-cell="{ row }">
+          <span
+            v-if="row.original.subscriptionEndAt"
+            :class="
+              row.original.subscriptionStatus === 'expired'
+                ? 'text-error'
+                : 'text-white/55'
+            "
+          >
+            {{ new Date(row.original.subscriptionEndAt).toLocaleDateString() }}
+          </span>
+          <span v-else class="text-white/30">—</span>
         </template>
         <template #createdAt-cell="{ row }">
           <span class="text-white/55">{{ formatDate(row.original.createdAt) }}</span>
