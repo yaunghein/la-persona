@@ -1,6 +1,7 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { subscriptionPayment, user } from '~~/server/db/schema';
+import { restoreSubscriptionsAfterRejection } from '~~/server/services/subscription';
 import { rejectSubscriptionPaymentBodySchema } from '~~/shared/types/subscription';
 import { requireAdminSession } from '~~/server/utils/admin-permissions';
 import { notifySubscriptionPaymentRejectedEmail } from '~~/server/utils/subscription-email-notifications';
@@ -78,8 +79,22 @@ export default defineEventHandler(async (event) => {
         note: nextNote || payment.note,
         updatedAt: now,
       })
-      .where(eq(subscriptionPayment.id, payment.id))
+      .where(
+        and(
+          eq(subscriptionPayment.id, payment.id),
+          eq(subscriptionPayment.status, 'submitted')
+        )
+      )
       .returning();
+
+    if (!updatedPayment) {
+      throw createError({
+        statusCode: 409,
+        statusMessage: 'This payment was already processed.',
+      });
+    }
+
+    await restoreSubscriptionsAfterRejection(tx, [payment.id], now);
 
     return { payment: updatedPayment };
   });

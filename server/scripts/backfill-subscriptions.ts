@@ -1,5 +1,12 @@
+import { eq, ne } from 'drizzle-orm';
 import { db } from '../db';
-import { card, cardSubscription, subscriptionPlan } from '../db/schema';
+import {
+  card,
+  cardSubscription,
+  organization,
+  subscriptionPlan,
+} from '../db/schema';
+import { ORGANIZATION_TYPES } from '../../shared/utils/constants';
 
 const TRIAL_DAYS = 30;
 
@@ -31,9 +38,11 @@ function addDays(base: Date, days: number) {
 async function main() {
   await db.insert(subscriptionPlan).values(defaultPlans).onConflictDoNothing();
 
-  const cards = await db.query.card.findMany({
-    columns: { id: true, createdAt: true },
-  });
+  const cards = await db
+    .select({ id: card.id, createdAt: card.createdAt })
+    .from(card)
+    .innerJoin(organization, eq(organization.id, card.organizationId))
+    .where(ne(organization.type, ORGANIZATION_TYPES.COMMUNITY));
 
   const now = new Date();
   let inserted = 0;

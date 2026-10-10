@@ -333,33 +333,18 @@ export default defineEventHandler(async (event) => {
         .where(eq(subscriptionPayment.id, payment.id));
     }
 
+    // Plan and period are applied on approval so a rejection leaves the card untouched.
     for (const item of insertedItems) {
       await tx
         .insert(cardSubscription)
         .values({
           cardId: item.cardId,
-          planCode: item.planCode,
           status: 'pending_approval',
           isTrial: false,
-          currentPeriodStartAt: item.startAt,
-          currentPeriodEndAt: item.endAt,
-          lastPaymentItemId: item.id,
-          activatedAt: null,
-          expiredAt: null,
         })
         .onConflictDoUpdate({
           target: cardSubscription.cardId,
-          set: {
-            planCode: item.planCode,
-            status: 'pending_approval',
-            isTrial: false,
-            currentPeriodStartAt: item.startAt,
-            currentPeriodEndAt: item.endAt,
-            lastPaymentItemId: item.id,
-            activatedAt: null,
-            expiredAt: null,
-            updatedAt: now,
-          },
+          set: { status: 'pending_approval', updatedAt: now },
         });
     }
 

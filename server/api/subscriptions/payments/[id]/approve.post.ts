@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import {
   cardSubscription,
@@ -48,6 +48,13 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    if (payment.status !== 'submitted') {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Only submitted payments can be approved.',
+      });
+    }
+
     const isLegacyLinkedByNote =
       /^((New|Existing) design request \([^)]+\))$/.test(payment.note || '');
     const isLinkedDesignRequest =
@@ -78,8 +85,20 @@ export default defineEventHandler(async (event) => {
         note: result.data.note ?? payment.note,
         updatedAt: now,
       })
-      .where(eq(subscriptionPayment.id, payment.id))
+      .where(
+        and(
+          eq(subscriptionPayment.id, payment.id),
+          eq(subscriptionPayment.status, 'submitted')
+        )
+      )
       .returning();
+
+    if (!updatedPayment) {
+      throw createError({
+        statusCode: 409,
+        statusMessage: 'This payment was already processed.',
+      });
+    }
 
     for (const item of items) {
       await tx

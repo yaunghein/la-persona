@@ -7,6 +7,7 @@ import {
 } from '~~/server/db/queries/card';
 import { ensureCommunityCard } from '~~/server/services/community';
 import { loadWorkspaceCards } from '~~/server/services/workspace-cards';
+import { expireStaleSubscriptions } from '~~/server/services/subscription';
 import {
   hasOrganizationPermission,
   requireOrganizationPermission,
@@ -19,6 +20,8 @@ export default defineEventHandler(async (event) => {
     event,
     ORGANIZATION_PERMISSIONS.CARD_READ
   );
+
+  await expireStaleSubscriptions();
 
   const requestQuery = getQuery(event);
   if (requestQuery.scope === 'workspace') {

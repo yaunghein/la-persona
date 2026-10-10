@@ -25,6 +25,7 @@ import {
   userDailyActivity,
 } from '~~/server/db/schema';
 import type { AdminOverview } from '~~/shared/types/admin-overview';
+import { expireStaleSubscriptions } from '~~/server/services/subscription';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 import {
   addYangonDays,
@@ -44,6 +45,8 @@ async function countWhere(table: any, where?: any) {
 }
 
 export async function getAdminOverview(): Promise<AdminOverview> {
+  await expireStaleSubscriptions();
+
   const today = yangonDay();
   const yesterday = addYangonDays(today, -1);
   const tomorrow = addYangonDays(today, 1);

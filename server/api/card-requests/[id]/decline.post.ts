@@ -2,6 +2,7 @@ import { and, eq, or } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { cardRequest, subscriptionPayment, user } from '~~/server/db/schema';
 import { requireAdminSession } from '~~/server/utils/admin-permissions';
+import { restoreSubscriptionsAfterRejection } from '~~/server/services/subscription';
 import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
@@ -60,7 +61,9 @@ export default defineEventHandler(async (event) => {
         );
     }
 
-    return payments.map((payment) => payment.id);
+    const ids = payments.map((payment) => payment.id);
+    await restoreSubscriptionsAfterRejection(tx, ids, now);
+    return ids;
   });
 
   const requester = await db.query.user.findFirst({

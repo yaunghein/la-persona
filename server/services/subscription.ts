@@ -1,6 +1,12 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray, lte, or } from 'drizzle-orm';
 import { db } from '~~/server/db';
-import { card, cardSubscription, member } from '~~/server/db/schema';
+import {
+  card,
+  cardSubscription,
+  member,
+  subscriptionPayment,
+  subscriptionPaymentItem,
+} from '~~/server/db/schema';
 
 export type SubscriptionStatus =
   | 'trial'
@@ -103,6 +109,110 @@ export function getEffectiveSubscriptionStatus(
   }
 
   return status as SubscriptionStatus;
+}
+
+export function resolveSubscriptionStatus(
+  subscription: {
+    isTrial: boolean;
+    trialEndAt: Date | null;
+    currentPeriodEndAt: Date | null;
+    activatedAt: Date | null;
+  },
+  now = new Date()
+): SubscriptionStatus {
+  if (subscription.activatedAt) {
+    return !subscription.currentPeriodEndAt ||
+      subscription.currentPeriodEndAt > now
+      ? 'active'
+      : 'expired';
+  }
+
+  if (subscription.isTrial && subscription.trialEndAt) {
+    return subscription.trialEndAt > now ? 'trial' : 'expired';
+  }
+
+  return 'expired';
+}
+
+type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/** Call after marking payments rejected so their cards leave `pending_approval`. */
+export async function restoreSubscriptionsAfterRejection(
+  tx: Transaction,
+  paymentIds: string[],
+  now = new Date()
+) {
+  if (paymentIds.length === 0) return;
+
+  const items = await tx
+    .select({ cardId: subscriptionPaymentItem.cardId })
+    .from(subscriptionPaymentItem)
+    .where(inArray(subscriptionPaymentItem.paymentId, paymentIds));
+  const cardIds = [...new Set(items.map((item) => item.cardId))];
+  if (cardIds.length === 0) return;
+
+  const stillPending = await tx
+    .select({ cardId: subscriptionPaymentItem.cardId })
+    .from(subscriptionPaymentItem)
+    .innerJoin(
+      subscriptionPayment,
+      eq(subscriptionPayment.id, subscriptionPaymentItem.paymentId)
+    )
+    .where(
+      and(
+        inArray(subscriptionPaymentItem.cardId, cardIds),
+        eq(subscriptionPayment.status, 'submitted')
+      )
+    );
+  const stillPendingCardIds = new Set(stillPending.map((row) => row.cardId));
+
+  const subscriptions = await tx
+    .select()
+    .from(cardSubscription)
+    .where(
+      and(
+        inArray(cardSubscription.cardId, cardIds),
+        eq(cardSubscription.status, 'pending_approval')
+      )
+    );
+
+  for (const subscription of subscriptions) {
+    if (stillPendingCardIds.has(subscription.cardId)) continue;
+    const status = resolveSubscriptionStatus(subscription, now);
+    await tx
+      .update(cardSubscription)
+      .set({
+        status,
+        expiredAt: status === 'expired' ? now : null,
+        updatedAt: now,
+      })
+      .where(eq(cardSubscription.id, subscription.id));
+  }
+}
+
+const EXPIRE_SWEEP_INTERVAL_MS = 60_000;
+let lastExpireSweepAt = 0;
+
+export async function expireStaleSubscriptions() {
+  const now = new Date();
+  if (now.getTime() - lastExpireSweepAt < EXPIRE_SWEEP_INTERVAL_MS) return;
+  lastExpireSweepAt = now.getTime();
+
+  await db
+    .update(cardSubscription)
+    .set({ status: 'expired', expiredAt: now, updatedAt: now })
+    .where(
+      or(
+        and(
+          eq(cardSubscription.status, 'trial'),
+          lte(cardSubscription.trialEndAt, now)
+        ),
+        and(
+          inArray(cardSubscription.status, ['active', 'grace']),
+          lte(cardSubscription.currentPeriodEndAt, now)
+        )
+      )
+    );
 }
 
 export function getDaysLeft(endAt?: Date | null) {
