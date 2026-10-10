@@ -640,27 +640,24 @@ async function copyEventLink() {
     <template #body>
       <div v-if="success" class="flex h-full items-center justify-center">
         <div
-          class="mx-auto flex max-w-60 flex-col items-center justify-center text-center"
+          class="mx-auto flex flex-col items-center justify-center text-center"
         >
           <Icon
             name="i-material-symbols:verified"
             class="size-24 text-[#8BF667]"
           />
           <div
-            class="mt-8 mb-4 text-xl font-semibold leading-none tracking-[2px] text-[#8BF667] uppercase"
+            class="mt-8 mb-4 text-xl font-semibold leading-none tracking-[2px] whitespace-nowrap text-[#8BF667] uppercase"
           >
             Your event is now live
           </div>
-          <div class="mb-5 text-sm leading-normal">
-            Your event has been successfully created.
-          </div>
-          <div class="mb-8 text-sm leading-normal text-muted">
+          <div class="mb-6 max-w-60 text-sm leading-normal text-muted">
             Share the link in your group or community to invite people.
           </div>
           <UButton
             label="Copy Event Link"
-            class="cursor-pointer rounded-full px-8 font-semibold"
-            size="xl"
+            class="cursor-pointer rounded-full px-5 font-semibold"
+            size="md"
             @click="copyEventLink"
           />
         </div>
