@@ -12,6 +12,7 @@ import {
   type CommunityEventsData,
 } from '~~/shared/types/community-events';
 import { publicEventAbsoluteUrl, ROUTES } from '~~/shared/utils/routes';
+import { GOOGLE_CALENDAR_QUERY_KEY } from '~~/shared/constants/google-calendar';
 
 const toast = useToast();
 const route = useRoute();
@@ -162,6 +163,34 @@ watch(
 
     viewingEvent.value = match;
     isViewOpen.value = true;
+  },
+  { immediate: true }
+);
+
+const {
+  isEnabled: isGoogleCalendarEnabled,
+  addToGoogleCalendar,
+  showConsentError,
+} = useGoogleCalendar();
+
+watch(
+  () =>
+    [route.query[GOOGLE_CALENDAR_QUERY_KEY], viewingEvent.value?.id] as const,
+  ([calendarState, eventId]) => {
+    if (!calendarState || !eventId || !isGoogleCalendarEnabled.value) return;
+
+    const { error } = route.query;
+    const query = { ...route.query };
+    delete query[GOOGLE_CALENDAR_QUERY_KEY];
+    delete query.error;
+    delete query.error_description;
+    router.replace({ path: route.path, query });
+
+    if (calendarState === 'add') {
+      addToGoogleCalendar(eventId, { afterConsent: true });
+    } else {
+      showConsentError(error);
+    }
   },
   { immediate: true }
 );

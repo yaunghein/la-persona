@@ -66,6 +66,12 @@ export function parsePlatformEventDetailPath(path: string) {
   return { orgSlug: match[1], eventId: match[2] };
 }
 
+export function isCommunitySetupBootstrapPath(path: string) {
+  return /^\/platform\/[^/?#]+\/community-setup\/[^/?#]+\/?(?:[?#]|$)/.test(
+    path
+  );
+}
+
 export function publicEventAbsoluteUrl(eventId: string) {
   if (!import.meta.client) return ROUTES.EVENTS.PUBLIC(eventId);
   return `${window.location.origin}${ROUTES.EVENTS.PUBLIC(eventId)}`;

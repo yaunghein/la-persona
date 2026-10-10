@@ -17,7 +17,11 @@ import { ROUTES } from '~~/shared/utils/routes';
 
 const socialProviders: {
   github?: { clientId: string; clientSecret: string };
-  google?: { clientId: string; clientSecret: string };
+  google?: {
+    clientId: string;
+    clientSecret: string;
+    accessType: 'offline';
+  };
   linkedin?: { clientId: string; clientSecret: string };
 } = {};
 
@@ -32,6 +36,8 @@ if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
   socialProviders.google = {
     clientId: env.GOOGLE_CLIENT_ID,
     clientSecret: env.GOOGLE_CLIENT_SECRET,
+    // Google Calendar sync needs a refresh token; access tokens expire after an hour.
+    accessType: 'offline',
   };
 }
 

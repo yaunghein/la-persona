@@ -10,6 +10,11 @@ import {
   organizationRoles,
 } from '~~/shared/permissions/organization';
 import { getSafeInternalPath } from '~~/shared/utils/safe-redirect';
+import { GOOGLE_CALENDAR_SCOPE } from '~~/shared/constants/google-calendar';
+import {
+  isCommunitySetupBootstrapPath,
+  ROUTES,
+} from '~~/shared/utils/routes';
 
 export const authClient = createAuthClient({
   plugins: [
@@ -53,16 +58,28 @@ function getAuthErrorCallbackURL() {
   return `${ROUTES.SIGN_IN}?redirectTo=${encodeURIComponent(redirectTo)}`;
 }
 
-export const signInWithSocial = async (provider: SocialProvider) => {
+export const signInWithSocial = async (
+  provider: SocialProvider,
+  scopes?: string[]
+) => {
   await authClient.signIn.social({
     provider,
+    scopes,
     callbackURL: getAuthCallbackURL(),
     newUserCallbackURL: getAuthCallbackURL(),
     errorCallbackURL: getAuthErrorCallbackURL(),
   });
 };
 
-export const signInWithGoogle = async () => signInWithSocial('google');
+// Signing in to register for an event is the one place calendar access is asked up front.
+function googleSignInScopes() {
+  if (!useRuntimeConfig().public.googleCalendarEnabled) return undefined;
+  if (!isCommunitySetupBootstrapPath(getAuthRedirectTo())) return undefined;
+  return [GOOGLE_CALENDAR_SCOPE];
+}
+
+export const signInWithGoogle = async () =>
+  signInWithSocial('google', googleSignInScopes());
 export const signInWithLinkedIn = async () => signInWithSocial('linkedin');
 
 export const signInWithMagicLink = async (email: string, name?: string) => {

@@ -65,6 +65,10 @@ export type EventListItemDTO = EventDTO & {
   viewerRegistrationStatus: ViewerRegistrationStatus;
 };
 
+export type AddToGoogleCalendarResult =
+  | { status: 'added' | 'updated'; htmlLink: string | null }
+  | { status: 'consent_required' };
+
 export type EventOverviewStats = {
   registrations: number;
   checkedIn: number;

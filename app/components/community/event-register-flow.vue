@@ -45,6 +45,23 @@ const resolvedOrgSlug = computed(
   () => props.organizationSlug || organizationSlug.value
 );
 
+// Server rendering doesn't know the viewer's timezone or clock, so time-based UI fills in after mount.
+const isMounted = useMounted();
+
+const {
+  isEnabled: isGoogleCalendarEnabled,
+  addingEventId,
+  addToGoogleCalendar,
+} = useGoogleCalendar(resolvedOrgSlug);
+const canAddToGoogleCalendar = computed(
+  () =>
+    isMounted.value &&
+    isGoogleCalendarEnabled.value &&
+    Boolean(resolvedOrgSlug.value) &&
+    registrationStatus.value === 'registered' &&
+    new Date(props.event.endsAt).getTime() > Date.now()
+);
+
 const organizerCardUrl = computed(() =>
   props.organizer?.cardSlug ? communityCardPath(props.organizer.cardSlug) : ''
 );
@@ -82,9 +99,6 @@ const registrationBlock = computed(() =>
     registeredCount: registeredCount.value,
   })
 );
-
-// Server rendering doesn't know the viewer's timezone, so times fill in after mount.
-const isMounted = useMounted();
 
 const details = computed(() => {
   const rows: { label: string; value: string }[] = [
@@ -411,15 +425,25 @@ onBeforeUnmount(() => {
             See Organizer
           </button>
         </template>
-        <UButton
-          v-else
-          :label="
-            howToUse ? 'Learn How to Use Community Card' : 'Explore Platform'
-          "
-          color="neutral"
-          class="h-13 w-full cursor-pointer justify-center rounded-full bg-[#232323] px-2.5 text-sm font-bold text-white hover:bg-[#2a2a2a]"
-          @click="onGotIt"
-        />
+        <div v-else class="flex w-full flex-col gap-3">
+          <UButton
+            v-if="canAddToGoogleCalendar"
+            label="Add to Google Calendar"
+            icon="i-simple-icons-googlecalendar"
+            color="neutral"
+            :loading="addingEventId === event.id"
+            class="h-13 w-full cursor-pointer justify-center rounded-full bg-white px-2.5 text-sm font-bold text-dark hover:bg-white/90"
+            @click="addToGoogleCalendar(event.id)"
+          />
+          <UButton
+            :label="
+              howToUse ? 'Learn How to Use Community Card' : 'Explore Platform'
+            "
+            color="neutral"
+            class="h-13 w-full cursor-pointer justify-center rounded-full bg-[#232323] px-2.5 text-sm font-bold text-white hover:bg-[#2a2a2a]"
+            @click="onGotIt"
+          />
+        </div>
         <PoweredByLaPersona v-if="isPage" />
       </div>
     </div>

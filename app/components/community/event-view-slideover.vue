@@ -66,6 +66,20 @@ function closedLabel(event: EventListItemDTO) {
   return 'Closed';
 }
 
+const {
+  isEnabled: isGoogleCalendarEnabled,
+  addingEventId,
+  addToGoogleCalendar,
+} = useGoogleCalendar();
+const canAddToGoogleCalendar = computed(() => {
+  const event = props.event;
+  if (!event || !isGoogleCalendarEnabled.value) return false;
+  const confirmed =
+    event.viewerRegistrationStatus === 'registered' ||
+    event.viewerRegistrationStatus === 'checked_in';
+  return confirmed && new Date(event.endsAt).getTime() > Date.now();
+});
+
 const organizerCardUrl = computed(() =>
   props.organizerCardSlug ? communityCardPath(props.organizerCardSlug) : ''
 );
@@ -161,6 +175,17 @@ function onViewOrganizer() {
             </span>
           </div>
         </div>
+
+        <UButton
+          v-if="canAddToGoogleCalendar"
+          label="Add to Google Calendar"
+          icon="i-simple-icons-googlecalendar"
+          color="neutral"
+          block
+          :loading="addingEventId === event.id"
+          class="h-11 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+          @click="addToGoogleCalendar(event.id)"
+        />
       </div>
     </template>
 

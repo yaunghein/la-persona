@@ -98,6 +98,9 @@ export default defineNuxtConfig({
       awsRegion: process.env.AWS_REGION,
       awsBucketName: process.env.AWS_BUCKET_NAME,
       baseUrl: process.env.BASE_URL,
+      // Calendar scope is unverified by Google; keep off in production until approved.
+      googleCalendarEnabled:
+        process.env.NUXT_PUBLIC_GOOGLE_CALENDAR_ENABLED === 'true',
     },
   },
   gtag: {
