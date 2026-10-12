@@ -1,4 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+// Crawlers need an absolute og:image. Pages override it via usePageSeo.
+const DEFAULT_OG_IMAGE = `${(process.env.BASE_URL || '').replace(/\/$/, '')}/og.png`;
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -134,6 +137,8 @@ export default defineNuxtConfig({
     '/platform': { ssr: false },
     '/platform/**': { ssr: false },
     '/invite/**': { ssr: false },
+    // Rendered on the server so shared join links get the community preview.
+    '/invite/community/join/**': { ssr: true },
     '/thakhin/**': { ssr: false },
     // Pages can request many images; keep them out of the shared request budget.
     '/_ipx/**': {
@@ -167,13 +172,8 @@ export default defineNuxtConfig({
           content:
             'Experience the elegance of a card tailored to your identity. From the sleek phone wallpaper to the interactive 3D design, each element reflects your brand with precision and style.',
         },
-        {
-          property: 'og:url',
-          content: 'https://imgsrc.io/guides/open-graph-meta-tags',
-        },
-        { property: 'og:image', content: '/og.png' },
-        { property: 'og:image:width', content: '1050' },
-        { property: 'og:image:height', content: '600' },
+        { property: 'og:site_name', content: 'LA PERSONA' },
+        { property: 'og:image', content: DEFAULT_OG_IMAGE },
         { name: 'twitter:card', content: 'summary_large_image' },
         {
           name: 'twitter:title',
@@ -184,7 +184,7 @@ export default defineNuxtConfig({
           content:
             'Experience the elegance of a card tailored to your identity. From the sleek phone wallpaper to the interactive 3D design, each element reflects your brand with precision and style.',
         },
-        { name: 'twitter:image', content: '/og.png' },
+        { name: 'twitter:image', content: DEFAULT_OG_IMAGE },
       ],
     },
   },

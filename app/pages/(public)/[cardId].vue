@@ -13,7 +13,7 @@ if (!card) {
   });
 }
 
-useSeoMeta({ ...getSeoTitle(`${card.name}`) });
+usePageSeo({ title: card.name });
 
 const isMenuOpen = ref(false);
 const isFormOpen = ref(false);

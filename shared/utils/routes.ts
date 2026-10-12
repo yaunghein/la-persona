@@ -56,8 +56,9 @@ export const ROUTES = {
   API: '/api',
 } as const;
 
+/** Community join links stay public so signed-out visitors and link previews see the community. */
 export function isProtectedInvitePath(path: string) {
-  return /^\/invite\/(?:card|community\/(?:accept|join))\/[^/]+\/?$/.test(path);
+  return /^\/invite\/(?:card|community\/accept)\/[^/]+\/?$/.test(path);
 }
 
 export function parsePlatformEventDetailPath(path: string) {

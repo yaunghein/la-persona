@@ -1,5 +1,9 @@
 <script setup lang="ts">
-useSeoMeta({ ...getSeoTitle('Sign In - LA PERSONA') });
+usePageSeo({
+  title: 'Sign In - LA PERSONA',
+  description:
+    'Sign in to LA PERSONA to manage your digital business card, contacts, and community events.',
+});
 
 import { Application } from '@splinetool/runtime';
 

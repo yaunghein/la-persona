@@ -5,6 +5,7 @@ import * as schema from './schema';
 export const db = drizzle({
   connection: {
     connectionString: env.DATABASE_URL,
+    options: '-c timezone=UTC',
   },
   casing: 'snake_case',
   schema,

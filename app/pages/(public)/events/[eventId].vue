@@ -25,8 +25,24 @@ const {
   refresh,
 } = await useFetch<PublicEventDTO>(() => `/api/public/events/${eventId.value}`);
 
-useSeoMeta({
-  ...getSeoTitle(event.value?.title ? `${event.value.title}` : 'Event'),
+usePageSeo({
+  title: () =>
+    event.value?.title || (error.value ? 'Event not found' : 'Event'),
+  description: () => {
+    if (!event.value) return null;
+    const { location, organizer, description } = event.value;
+    return truncateSeoText(
+      [
+        location,
+        organizer?.name && `Hosted by ${organizer.name}`,
+        description || 'Register on LA PERSONA.',
+      ]
+        .filter(Boolean)
+        .join(' · ')
+    );
+  },
+  image: () => event.value?.coverUrl,
+  imageAlt: () => event.value?.title,
 });
 
 const showHowToUse = ref(false);

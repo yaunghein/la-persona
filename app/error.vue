@@ -23,6 +23,7 @@ useSeoMeta({
     ? 'Page not found - LA PERSONA'
     : 'Something went wrong - LA PERSONA',
   description: description.value,
+  robots: 'noindex',
 });
 
 async function goHome() {

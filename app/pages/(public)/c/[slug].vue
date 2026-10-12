@@ -58,14 +58,6 @@ const seoDescription = computed(() => {
   return `Connect with ${name} on LA PERSONA.`;
 });
 
-const seoImage = computed(() => {
-  const cardBackUrl = getS3Url(card.value?.cardBackUrl);
-  if (cardBackUrl) return cardBackUrl;
-
-  const base = String(runtimeConfig.public.baseUrl || '').replace(/\/$/, '');
-  return `${base}/og.png`;
-});
-
 const shouldShowPoweredByLaPersona = computed(() => {
   const subscription = card.value?.subscription;
   const planCode = subscription?.planCode;
@@ -78,22 +70,12 @@ const shouldShowPoweredByLaPersona = computed(() => {
   return !isPremiumPlan && !isPaidStandardPlan;
 });
 
-useSeoMeta({
-  title: () => seoTitle.value,
-  ogTitle: () => seoTitle.value,
-  twitterTitle: () => seoTitle.value,
-  description: () => seoDescription.value,
-  ogDescription: () => seoDescription.value,
-  twitterDescription: () => seoDescription.value,
-  ogImage: () => seoImage.value,
-  twitterImage: () => seoImage.value,
-  ogImageAlt: () => cardFullName.value || 'LA PERSONA',
-  twitterCard: 'summary_large_image',
-  ogType: 'profile',
-  ogUrl: () => {
-    const base = String(runtimeConfig.public.baseUrl || '').replace(/\/$/, '');
-    return `${base}${route.path}`;
-  },
+usePageSeo({
+  title: seoTitle,
+  description: seoDescription,
+  image: () => getS3Url(card.value?.cardBackUrl),
+  imageAlt: () => cardFullName.value || 'LA PERSONA',
+  type: 'profile',
 });
 
 onMounted(async () => {

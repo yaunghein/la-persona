@@ -4,7 +4,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Application } from '@splinetool/runtime';
 
-useSeoMeta({
+usePageSeo({
   title: 'Meet the right people — LA PERSONA',
   description:
     'La Persona transforms how professionals introduce themselves, connect, and unlock opportunities—starting from a single interaction.',

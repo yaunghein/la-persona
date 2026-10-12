@@ -31,11 +31,15 @@ export type CommunityInviteStats = {
   foundedYear: number;
 };
 
-export type CommunityJoinPreview = CommunityInviteStats & {
-  token: string;
+/** What anyone holding a join link can see, signed in or not. */
+export type CommunityJoinPublicPreview = CommunityInviteStats & {
   organizationName: string;
   organizationSlug: string;
   logoUrl: string | null;
+};
+
+export type CommunityJoinPreview = CommunityJoinPublicPreview & {
+  token: string;
   alreadyMember: boolean;
 };
 

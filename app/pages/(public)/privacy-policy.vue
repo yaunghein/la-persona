@@ -1,5 +1,9 @@
 <script setup lang="ts">
-useSeoMeta({ ...getSeoTitle('Terms & Privacy Policy - LA PERSONA') });
+usePageSeo({
+  title: 'Terms & Privacy Policy - LA PERSONA',
+  description:
+    'How LA PERSONA collects, uses, and protects your data, and the terms for using our digital business cards.',
+});
 
 const termsSections = [
   {
