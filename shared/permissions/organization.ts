@@ -9,6 +9,7 @@ export const organizationPermissionStatements = {
   contactExchange: ['create', 'read', 'readAll', 'delete'],
   cardRequest: ['create', 'update'],
   media: ['upload'],
+  checkIn: ['read', 'create'],
 } as const;
 
 export const organizationAccessControl = createAccessControl(
@@ -22,6 +23,14 @@ export const organizationMemberRole = organizationAccessControl.newRole({
   media: ['upload'],
 });
 
+export const organizationVolunteerRole = organizationAccessControl.newRole({
+  organization: ['read'],
+  event: ['read'],
+  card: ['read', 'update'],
+  media: ['upload'],
+  checkIn: ['read', 'create'],
+});
+
 export const organizationAdminRole = organizationAccessControl.newRole({
   organization: ['read', 'update'],
   member: ['create', 'update', 'delete'],
@@ -31,6 +40,7 @@ export const organizationAdminRole = organizationAccessControl.newRole({
   contactExchange: ['create', 'read', 'readAll', 'delete'],
   cardRequest: ['create', 'update'],
   media: ['upload'],
+  checkIn: ['read', 'create'],
 });
 
 export const organizationOwnerRole = organizationAccessControl.newRole({
@@ -42,12 +52,14 @@ export const organizationOwnerRole = organizationAccessControl.newRole({
   contactExchange: ['create', 'read', 'readAll', 'delete'],
   cardRequest: ['create', 'update'],
   media: ['upload'],
+  checkIn: ['read', 'create'],
 });
 
 export const organizationRoles = {
   owner: organizationOwnerRole,
   admin: organizationAdminRole,
   member: organizationMemberRole,
+  volunteer: organizationVolunteerRole,
 };
 
 export const ORGANIZATION_PERMISSIONS = {
@@ -75,6 +87,8 @@ export const ORGANIZATION_PERMISSIONS = {
   CONTACT_EXCHANGE_READ_ALL: { contactExchange: ['readAll'] },
   CONTACT_EXCHANGE_DELETE: { contactExchange: ['delete'] },
   MEDIA_UPLOAD: { media: ['upload'] },
+  CHECK_IN_READ: { checkIn: ['read'] },
+  CHECK_IN_CREATE: { checkIn: ['create'] },
 } as const;
 
 export type OrganizationPermission = {
@@ -83,7 +97,11 @@ export type OrganizationPermission = {
   >;
 };
 
-export type OrganizationMemberRole = 'owner' | 'admin' | 'member';
+export type OrganizationMemberRole = 'owner' | 'admin' | 'member' | 'volunteer';
+
+export const COMMUNITY_INVITE_ROLES = ['member', 'volunteer'] as const;
+
+export type CommunityInviteRole = (typeof COMMUNITY_INVITE_ROLES)[number];
 
 export function isOrganizationManagerRole(
   role: string | null | undefined
@@ -96,4 +114,20 @@ export function isCommunityMemberOnly(params: {
   role?: string | null;
 }) {
   return params.type === 'community' && params.role === 'member';
+}
+
+export function isCommunityVolunteer(params: {
+  type?: string | null;
+  role?: string | null;
+}) {
+  return params.type === 'community' && params.role === 'volunteer';
+}
+
+export function canRunCheckIn(role: string | null | undefined): boolean {
+  return isOrganizationManagerRole(role) || role === 'volunteer';
+}
+
+export function formatCommunityRole(role: string | null | undefined): string {
+  if (!role) return 'Member';
+  return role.charAt(0).toUpperCase() + role.slice(1);
 }

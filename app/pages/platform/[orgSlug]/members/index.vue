@@ -9,6 +9,8 @@ import type {
   CommunityMember,
   CommunityMembersData,
 } from '~~/shared/types/community-members';
+import type { CommunityInviteRole } from '~~/shared/permissions/organization';
+
 const toast = useToast();
 const queryClient = useQueryClient();
 const { organizationSlug, withOrganizationQuery } = useOrganizationSlug();
@@ -100,6 +102,31 @@ const { mutate: removeMember, isPending: isRemoving } = useMutation({
   },
 });
 
+const { mutate: changeMemberRole } = useMutation({
+  mutationFn: (input: { member: CommunityMember; role: CommunityInviteRole }) =>
+    $fetch(`/api/community-members/${input.member.id}/role`, {
+      method: 'PATCH',
+      query: withOrganizationQuery(),
+      body: { role: input.role },
+    }),
+  onSuccess: async (_result, input) => {
+    await invalidateMembers();
+    toast.add({
+      title: 'Role updated',
+      description: `${input.member.name} is now a ${input.role}.`,
+      color: 'success',
+    });
+  },
+  onError: (error: { data?: { statusMessage?: string }; message?: string }) => {
+    toast.add({
+      title: 'Could not update role',
+      description:
+        error.data?.statusMessage || error.message || 'Please try again.',
+      color: 'error',
+    });
+  },
+});
+
 const { mutate: approveInvitation } = useMutation({
   mutationFn: (member: CommunityMember) =>
     $fetch(`/api/community-members/invitations/${member.id}/approve`, {
@@ -176,6 +203,7 @@ function confirmRemove() {
     @remove="onAskRemove"
     @approve="approveInvitation"
     @reject="rejectInvitation"
+    @change-role="(member, role) => changeMemberRole({ member, role })"
   />
   <CommunityInviteMembersSlideover
     v-model:open="isInviteOpen"

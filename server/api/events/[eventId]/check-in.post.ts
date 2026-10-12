@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
   const { org } = await requireCommunityOrganization(event);
   await requireOrganizationPermission(
     event,
-    ORGANIZATION_PERMISSIONS.EVENT_UPDATE
+    ORGANIZATION_PERMISSIONS.CHECK_IN_CREATE
   );
   const eventId = getRouterParam(event, 'eventId');
   const body = await readValidatedBody(event, bodySchema.safeParse);

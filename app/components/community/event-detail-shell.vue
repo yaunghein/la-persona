@@ -6,6 +6,7 @@ const props = defineProps<{
   title: string;
   status: 'upcoming' | 'past';
   activeTab: CommunityEventDetailTab;
+  canEdit?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -59,6 +60,7 @@ const selectedTab = computed({
 
         <div class="flex shrink-0 items-center gap-2 sm:pt-1">
           <UButton
+            v-if="canEdit"
             label="Edit Event Details"
             leading-icon="i-lucide-pencil"
             color="neutral"

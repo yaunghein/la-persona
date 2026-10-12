@@ -6,7 +6,11 @@ import { addCommunityMember } from '~~/server/services/community';
 import { handleApiError } from '~~/server/utils/errors';
 import { requireCommunityOrganization } from '~~/server/utils/organization-permissions';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
-import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+import {
+  COMMUNITY_INVITE_ROLES,
+  ORGANIZATION_PERMISSIONS,
+  type CommunityInviteRole,
+} from '~~/shared/permissions/organization';
 import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {
@@ -43,7 +47,12 @@ export default defineEventHandler(async (event) => {
         statusMessage: 'Invitation not found',
       });
     }
-    enrichLog(event, { invitation: { email: invite.email } });
+    const role: CommunityInviteRole = COMMUNITY_INVITE_ROLES.includes(
+      invite.role as CommunityInviteRole
+    )
+      ? (invite.role as CommunityInviteRole)
+      : 'member';
+    enrichLog(event, { invitation: { email: invite.email, role } });
 
     const account = await db.query.user.findFirst({
       where: eq(user.email, invite.email),
@@ -51,7 +60,7 @@ export default defineEventHandler(async (event) => {
     });
 
     if (account) {
-      await addCommunityMember(account.id, org.id);
+      await addCommunityMember(account.id, org.id, role);
       await auth.api.cancelInvitation({
         body: { invitationId },
         headers: event.headers,
@@ -63,7 +72,7 @@ export default defineEventHandler(async (event) => {
     await auth.api.createInvitation({
       body: {
         email: invite.email,
-        role: 'member',
+        role,
         organizationId: org.id,
         resend: true,
       },

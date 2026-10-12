@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { CommunityInviteRole } from '~~/shared/permissions/organization';
+
 const props = defineProps<{
   inviteLink: string;
 }>();
@@ -12,6 +14,11 @@ const open = defineModel<boolean>('open', { default: false });
 const toast = useToast();
 const { withOrganizationQuery } = useOrganizationSlug();
 const emailInput = ref('');
+const roleInput = ref<CommunityInviteRole>('member');
+const roleOptions: { label: string; value: CommunityInviteRole }[] = [
+  { label: 'Member', value: 'member' },
+  { label: 'Volunteer', value: 'volunteer' },
+];
 const isSending = ref(false);
 const qrDataUrl = ref('');
 
@@ -76,7 +83,7 @@ async function sendInvitations() {
     await $fetch('/api/community-members/invite', {
       method: 'POST',
       query: withOrganizationQuery(),
-      body: { email },
+      body: { email, role: roleInput.value },
     });
     toast.add({
       title: 'Invitation sent',
@@ -84,6 +91,7 @@ async function sendInvitations() {
       color: 'success',
     });
     emailInput.value = '';
+    roleInput.value = 'member';
     emit('sent');
   } catch (error: any) {
     toast.add({
@@ -166,6 +174,25 @@ function downloadQr() {
               v-model="emailInput"
               type="email"
               placeholder="example@company.com"
+              class="w-full"
+              size="xl"
+              :ui="inputUi"
+            />
+          </UFormField>
+
+          <UFormField
+            label="Role"
+            :description="
+              roleInput === 'volunteer'
+                ? 'Volunteers can view events, attendees, and run check-in, but cannot create or edit events.'
+                : 'Members can browse events and register.'
+            "
+            :class="formFieldClass"
+            :ui="{ description: 'mb-3 text-sm text-[#8b8b8b]' }"
+          >
+            <USelect
+              v-model="roleInput"
+              :items="roleOptions"
               class="w-full"
               size="xl"
               :ui="inputUi"

@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import type { CommunityMember } from '~~/shared/types/community-members';
+import {
+  formatCommunityRole,
+  type CommunityInviteRole,
+} from '~~/shared/permissions/organization';
 import { formatDateLabel } from '~~/shared/utils/datetime';
 
 const props = defineProps<{
@@ -10,7 +14,24 @@ const emit = defineEmits<{
   remove: [member: CommunityMember];
   approve: [member: CommunityMember];
   reject: [member: CommunityMember];
+  changeRole: [member: CommunityMember, role: CommunityInviteRole];
 }>();
+
+const roleOptions: { label: string; value: CommunityInviteRole }[] = [
+  { label: 'Member', value: 'member' },
+  { label: 'Volunteer', value: 'volunteer' },
+];
+
+// Owners/admins are managed elsewhere; only member ↔ volunteer is editable here.
+const editableRole = computed<CommunityInviteRole | null>(() => {
+  const role = props.member?.memberRole;
+  return role === 'member' || role === 'volunteer' ? role : null;
+});
+
+function onChangeRole(role: CommunityInviteRole) {
+  if (!props.member || role === editableRole.value) return;
+  emit('changeRole', props.member, role);
+}
 
 const open = defineModel<boolean>('open', { default: false });
 const toast = useToast();
@@ -58,6 +79,10 @@ const pendingFields = computed(() => {
     { label: 'Phone Number', value: props.member.phone },
     { label: 'Email', value: props.member.email },
     { label: 'LinkedIn', value: props.member.linkedin },
+    {
+      label: 'Invited As',
+      value: formatCommunityRole(props.member.memberRole),
+    },
     { label: 'Submitted', value: formatDateLabel(props.member.joinedAt) },
   ];
 });
@@ -155,6 +180,25 @@ function onViewPersona() {
           >
             <span class="text-sm text-[#8b8b8b]">Membership Status</span>
             <span class="text-sm text-white">{{ membershipStatusLabel }}</span>
+          </div>
+          <div
+            class="flex items-center justify-between gap-6 border-b border-[#232323] py-3"
+          >
+            <span class="text-sm text-[#8b8b8b]">Community Role</span>
+            <USelect
+              v-if="editableRole"
+              :model-value="editableRole"
+              :items="roleOptions"
+              size="sm"
+              class="w-36"
+              :ui="{
+                base: 'rounded-[4px] border-[#2a2a2a] bg-[#232323] text-white',
+              }"
+              @update:model-value="onChangeRole"
+            />
+            <span v-else class="text-sm text-white">{{
+              formatCommunityRole(member.memberRole)
+            }}</span>
           </div>
           <div class="flex items-center justify-between py-3">
             <span class="text-sm text-[#8b8b8b]">Joined</span>

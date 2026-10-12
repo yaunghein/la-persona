@@ -38,7 +38,7 @@ function closeSidebar() {
 
 function communityLinksFor(org: (typeof communityOrgs.value)[number]) {
   const base = `${ROUTES.PLATFORM.ROOT}/${org.slug}`;
-  if (isCommunityMemberOnlyOrg(org)) {
+  if (hasLimitedCommunityAccess(org)) {
     return [
       { label: 'Events', to: `${base}/events` },
       { label: 'About', to: `${base}/about` },

@@ -1,6 +1,6 @@
 import { isProtectedInvitePath, parsePlatformEventDetailPath } from '~~/shared/utils/routes';
 import type { UserOrganization } from '~/composables/user-organizations';
-import { isCommunityManager } from '~/composables/user-organizations';
+import { canRunCommunityCheckIn } from '~/composables/user-organizations';
 import { QUERY_KEYS } from '~/utils/query-keys';
 import type { QueryClient } from '@tanstack/vue-query';
 
@@ -32,7 +32,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
       }
     }
     const org = orgs.find((item) => item.slug === sharedEvent.orgSlug);
-    if (!isCommunityManager(org)) {
+    if (!canRunCommunityCheckIn(org)) {
       return navigateTo(ROUTES.EVENTS.PUBLIC(sharedEvent.eventId));
     }
   }

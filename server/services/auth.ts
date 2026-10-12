@@ -1,3 +1,4 @@
+import type { CommunityInviteRole } from '~~/shared/permissions/organization';
 import { nanoid } from 'nanoid';
 import { eq, and, inArray } from 'drizzle-orm';
 import { db } from '~~/server/db';
@@ -41,7 +42,7 @@ export async function insertOrganization(
 export async function insertMember(
   userId: string,
   organizationId: string,
-  role: 'owner' | 'member' = 'member'
+  role: 'owner' | CommunityInviteRole = 'member'
 ) {
   return await db
     .insert(member)

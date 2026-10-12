@@ -28,7 +28,11 @@ import {
   deleteRegistrationsForUserInOrganization,
 } from '~~/server/db/queries/event-registration';
 import type { CommunityMember } from '~~/shared/types/community-members';
-import { isOrganizationManagerRole } from '~~/shared/permissions/organization';
+import {
+  isOrganizationManagerRole,
+  type CommunityInviteRole,
+  type OrganizationMemberRole,
+} from '~~/shared/permissions/organization';
 import { ROUTES } from '~~/shared/utils/routes';
 
 function linkedinFromSocials(
@@ -200,10 +204,14 @@ async function findMembership(userId: string, organizationId: string) {
   return row ?? null;
 }
 
-export async function addCommunityMember(userId: string, organizationId: string) {
+export async function addCommunityMember(
+  userId: string,
+  organizationId: string,
+  role: CommunityInviteRole = 'member'
+) {
   const existing = await findMembership(userId, organizationId);
   if (!existing) {
-    await insertMember(userId, organizationId, 'member');
+    await insertMember(userId, organizationId, role);
   }
   await ensureCommunityCard(userId, organizationId);
   return findMembership(userId, organizationId);
@@ -336,6 +344,7 @@ export async function listCommunityRoster(organizationId: string) {
         : 0,
       eventsAttended: checkInCounts.get(row.user.id) ?? 0,
       status: 'active' as const,
+      memberRole: row.member.role as OrganizationMemberRole,
       email: communityCard?.email || row.user.email,
       joinedAt: row.member.createdAt.toISOString(),
       avatarUrl: communityCard?.avatarUrl || row.user.image,
@@ -366,6 +375,7 @@ export async function listCommunityRoster(organizationId: string) {
     connections: 0,
     eventsAttended: 0,
     status: 'pending' as const,
+    memberRole: (row.role || 'member') as OrganizationMemberRole,
     email: row.email,
     joinedAt: row.createdAt.toISOString(),
     avatarUrl: null,

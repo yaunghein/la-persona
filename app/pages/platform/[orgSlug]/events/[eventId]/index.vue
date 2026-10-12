@@ -25,6 +25,12 @@ const queryClient = useQueryClient();
 const route = useRoute();
 const { organizationSlug, withOrganizationQuery } = useOrganizationSlug();
 const eventId = computed(() => String(route.params.eventId || ''));
+const { data: userOrgs } = useUserOrganizations();
+const canManage = computed(() =>
+  isCommunityManager(
+    (userOrgs.value || []).find((org) => org.slug === organizationSlug.value)
+  )
+);
 
 const activeTab = ref<CommunityEventDetailTab>('overview');
 const isProfileOpen = ref(false);
@@ -220,6 +226,7 @@ async function onCheckedIn() {
     :title="eventDetail.title"
     :status="eventDetail.status"
     :active-tab="activeTab"
+    :can-edit="canManage"
     @back="goBack"
     @edit="onEdit"
     @share="onShare"
@@ -233,7 +240,7 @@ async function onCheckedIn() {
     <CommunityEventAttendees
       v-else-if="activeTab === 'attendees'"
       :attendees="eventDetail.attendees"
-      :allow-approve="phase !== 'past'"
+      :allow-approve="canManage && phase !== 'past'"
       @select="onSelectAttendee"
       @approve="approveAttendee"
     />
@@ -269,7 +276,7 @@ async function onCheckedIn() {
   />
 
   <CommunityCreateEventSlideover
-    v-if="event"
+    v-if="event && canManage"
     v-model:open="isEditOpen"
     :event="event"
     @deleted="goBack"

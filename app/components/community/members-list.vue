@@ -5,6 +5,10 @@ import type {
   CommunityMembersData,
   CommunityMembersTab,
 } from '~~/shared/types/community-members';
+import {
+  formatCommunityRole,
+  type CommunityInviteRole,
+} from '~~/shared/permissions/organization';
 
 const props = defineProps<{
   data: CommunityMembersData;
@@ -16,6 +20,7 @@ const emit = defineEmits<{
   remove: [member: CommunityMember];
   approve: [member: CommunityMember];
   reject: [member: CommunityMember];
+  changeRole: [member: CommunityMember, role: CommunityInviteRole];
 }>();
 
 const searchQuery = ref('');
@@ -74,6 +79,7 @@ const filteredMembers = computed(() => {
     return (
       member.name.toLowerCase().includes(query) ||
       member.role.toLowerCase().includes(query) ||
+      member.memberRole.toLowerCase().includes(query) ||
       member.company.toLowerCase().includes(query) ||
       member.status.toLowerCase().includes(query) ||
       (member.email || '').toLowerCase().includes(query)
@@ -98,6 +104,7 @@ watch(filteredMembers, () => {
 
 const columns: TableColumn<CommunityMember>[] = [
   { accessorKey: 'name', header: 'NAME' },
+  { accessorKey: 'memberRole', header: 'ROLE' },
   { accessorKey: 'company', header: 'COMPANY' },
   { accessorKey: 'connections', header: 'CONNECTIONS' },
   { id: 'events', header: 'EVENTS' },
@@ -131,6 +138,7 @@ function getActionItems(member: CommunityMember): DropdownMenuItem[][] {
         icon: 'i-lucide-user',
         onSelect: () => openProfile(member),
       },
+      ...roleActionItems(member),
       {
         label: 'Remove',
         icon: 'i-lucide-user-minus',
@@ -140,6 +148,39 @@ function getActionItems(member: CommunityMember): DropdownMenuItem[][] {
     ],
   ];
 }
+
+function roleActionItems(member: CommunityMember): DropdownMenuItem[] {
+  if (member.memberRole === 'member') {
+    return [
+      {
+        label: 'Make volunteer',
+        icon: 'i-lucide-scan-line',
+        onSelect: () => emit('changeRole', member, 'volunteer'),
+      },
+    ];
+  }
+  if (member.memberRole === 'volunteer') {
+    return [
+      {
+        label: 'Make member',
+        icon: 'i-lucide-user',
+        onSelect: () => emit('changeRole', member, 'member'),
+      },
+    ];
+  }
+  return [];
+}
+
+// Keep the open profile in sync after a refetch (e.g. role change).
+watch(
+  () => props.data.members,
+  (members) => {
+    if (!selectedMember.value) return;
+    selectedMember.value =
+      members.find((item) => item.id === selectedMember.value?.id) ??
+      selectedMember.value;
+  }
+);
 
 function openProfile(member: CommunityMember) {
   selectedMember.value = member;
@@ -246,6 +287,17 @@ function closeInfo() {
             <span class="font-medium text-white">{{ row.original.name }}</span>
             <span class="text-sm text-[#8b8b8b]">{{ row.original.role }}</span>
           </div>
+        </template>
+        <template #memberRole-cell="{ row }">
+          <span
+            :class="
+              row.original.memberRole === 'member'
+                ? 'text-[#8b8b8b]'
+                : 'text-white'
+            "
+          >
+            {{ formatCommunityRole(row.original.memberRole) }}
+          </span>
         </template>
         <template #company-cell="{ row }">
           <span class="text-[#8b8b8b]">{{ row.original.company }}</span>
@@ -362,5 +414,6 @@ function closeInfo() {
     @remove="emit('remove', $event)"
     @approve="emit('approve', $event)"
     @reject="emit('reject', $event)"
+    @change-role="(member, role) => emit('changeRole', member, role)"
   />
 </template>

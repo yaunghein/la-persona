@@ -38,7 +38,7 @@ type CommunityLink = {
 
 function linksFor(org: UserOrganization): CommunityLink[] {
   const base = `${ROUTES.PLATFORM.ROOT}/${org.slug}`;
-  if (isCommunityMemberOnlyOrg(org)) {
+  if (hasLimitedCommunityAccess(org)) {
     return [
       { label: 'Events', to: `${base}/events` },
       { label: 'About', to: `${base}/about` },

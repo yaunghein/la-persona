@@ -31,6 +31,9 @@ const currentOrg = computed(() =>
   (userOrgs.value || []).find((org) => org.slug === orgSlug.value)
 );
 const canManageEvents = computed(() => isCommunityManager(currentOrg.value));
+const canOpenEventDetail = computed(() =>
+  canRunCommunityCheckIn(currentOrg.value)
+);
 
 const memberInfoItems = [
   {
@@ -121,7 +124,7 @@ function replaceEventQuery(eventId: string | null) {
 }
 
 function onView(event: CommunityEvent) {
-  if (canManageEvents.value) {
+  if (canOpenEventDetail.value) {
     return navigateTo(ROUTES.EVENTS.PLATFORM(orgSlug.value, event.id));
   }
 
@@ -132,13 +135,13 @@ watch(
   [
     eventQueryId,
     () => data.value?.events,
-    canManageEvents,
+    canOpenEventDetail,
     () => userOrgs.value,
   ],
   () => {
     if (!userOrgs.value) return;
 
-    if (canManageEvents.value) {
+    if (canOpenEventDetail.value) {
       viewingEvent.value = null;
       isViewOpen.value = false;
       return;
@@ -196,7 +199,7 @@ watch(
 );
 
 watch(isViewOpen, (open) => {
-  if (open || canManageEvents.value) return;
+  if (open || canOpenEventDetail.value) return;
   replaceEventQuery(null);
 });
 

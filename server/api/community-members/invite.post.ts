@@ -3,11 +3,15 @@ import { auth } from '~~/server/auth';
 import { handleApiError } from '~~/server/utils/errors';
 import { requireCommunityOrganization } from '~~/server/utils/organization-permissions';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
-import { ORGANIZATION_PERMISSIONS } from '~~/shared/permissions/organization';
+import {
+  COMMUNITY_INVITE_ROLES,
+  ORGANIZATION_PERMISSIONS,
+} from '~~/shared/permissions/organization';
 import { enrichLog } from '~~/server/utils/wide-event';
 
 const bodySchema = z.object({
   email: z.string().trim().email('A valid email is required'),
+  role: z.enum(COMMUNITY_INVITE_ROLES).default('member'),
 });
 
 export default defineEventHandler(async (event) => {
@@ -30,6 +34,7 @@ export default defineEventHandler(async (event) => {
     invitation: {
       organization_id: org.id,
       email: body.data.email.toLowerCase(),
+      role: body.data.role,
     },
   });
 
@@ -37,7 +42,7 @@ export default defineEventHandler(async (event) => {
     const invitation = await auth.api.createInvitation({
       body: {
         email: body.data.email.toLowerCase(),
-        role: 'member',
+        role: body.data.role,
         organizationId: org.id,
         resend: true,
       },

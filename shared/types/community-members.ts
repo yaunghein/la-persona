@@ -1,3 +1,5 @@
+import type { OrganizationMemberRole } from '~~/shared/permissions/organization';
+
 export type CommunityMemberStatus = 'active' | 'pending';
 
 export type CommunityMember = {
@@ -9,6 +11,8 @@ export type CommunityMember = {
   connections: number;
   eventsAttended: number;
   status: CommunityMemberStatus;
+  /** Org role (owner/admin/member/volunteer); `role` above is the card job title. */
+  memberRole: OrganizationMemberRole;
   email?: string | null;
   /** UTC ISO string; format it in the browser. */
   joinedAt: string;

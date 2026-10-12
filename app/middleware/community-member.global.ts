@@ -2,6 +2,7 @@ import type { QueryClient } from '@tanstack/vue-query';
 import { QUERY_KEYS } from '~/utils/query-keys';
 import {
   isCommunityMemberOnly,
+  isCommunityVolunteer,
   type OrganizationMemberRole,
 } from '~~/shared/permissions/organization';
 import type { OrganizationType } from '~~/shared/utils/constants';
@@ -36,7 +37,9 @@ export default defineNuxtRouteMiddleware(async (to) => {
   }
 
   const org = orgs.find((item) => item.slug === orgSlug);
-  if (!isCommunityMemberOnly({ type: org?.type, role: org?.role })) return;
+  const access = { type: org?.type, role: org?.role };
+  const isVolunteer = isCommunityVolunteer(access);
+  if (!isCommunityMemberOnly(access) && !isVolunteer) return;
 
   const base = `${ROUTES.PLATFORM.ROOT}/${orgSlug}`;
   if (
@@ -45,7 +48,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
     to.path === `${base}/about` ||
     to.path === `${base}/cards` ||
     to.path.startsWith(`${base}/community-setup`) ||
-    to.path.startsWith(`${base}/cards/`)
+    to.path.startsWith(`${base}/cards/`) ||
+    (isVolunteer && to.path.startsWith(`${base}/events/`))
   ) {
     return;
   }
