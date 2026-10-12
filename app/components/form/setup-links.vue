@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useQuery, useMutation } from '@tanstack/vue-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import type { FormError, FormErrorEvent, FormSubmitEvent } from '#ui/types';
 import { useSortable } from '@vueuse/integrations/useSortable';
 import {
@@ -7,6 +7,7 @@ import {
   createEmptyCardLink,
 } from '~~/shared/constants/card-link-options';
 import {
+  buildContactSocialLinks,
   createLinkTypeItemsWithCustom,
   getCustomSocialLabelMissingIndexes,
   normalizeSocialLinksForForm,
@@ -23,6 +24,7 @@ const emit = defineEmits<{
 
 const route = useRoute();
 const toast = useToast();
+const queryClient = useQueryClient();
 const slug = computed(() => route.params.slug as string);
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
 const { normalizeLinkValuesWithHttps, isValidCardLinkValue } =
@@ -73,7 +75,7 @@ watch(
       socials:
         val.socials && val.socials.length > 0
           ? normalizeSocialLinksForForm(val.socials)
-          : [],
+          : buildContactSocialLinks(val),
     });
   },
   { immediate: true }
@@ -95,8 +97,12 @@ const { mutate: submitRequest, isPending: isSubmitting } = useMutation({
       },
     });
   },
-  onSuccess: () => {
+  onSuccess: async (updatedCard) => {
     clearDraft();
+    if (updatedCard) {
+      queryClient.setQueryData(['cards', orgSlug, slug], updatedCard);
+    }
+    await queryClient.invalidateQueries({ queryKey: ['cards'] });
     emit('completed');
   },
   onError: (err: any) => {

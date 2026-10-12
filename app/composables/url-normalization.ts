@@ -1,9 +1,21 @@
 const SCHEME_REGEX = /^[a-z][a-z\d+.-]*:/i;
 const IPV4_REGEX = /^(?:\d{1,3}\.){3}\d{1,3}$/;
+const TEL_REGEX = /^tel:\+?\d{6,15}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function isGmailLinkLabel(label?: string | null) {
   return String(label || '').trim().toLowerCase() === 'gmail';
+}
+
+function isPhoneLinkLabel(label?: string | null) {
+  return String(label || '').trim().toLowerCase() === 'phone';
+}
+
+function normalizeTel(rawValue?: string | null): string {
+  const value = String(rawValue || '').trim().replace(/^tel:/i, '');
+  if (!value) return '';
+
+  return `tel:${value.replace(/[\s()-]/g, '')}`;
 }
 
 function normalizeMailto(rawValue?: string | null): string {
@@ -39,6 +51,10 @@ export function useUrlNormalization() {
   ): string => {
     if (isGmailLinkLabel(label)) {
       return normalizeMailto(rawValue);
+    }
+
+    if (isPhoneLinkLabel(label)) {
+      return normalizeTel(rawValue);
     }
 
     return normalizeUrlWithHttps(rawValue);
@@ -87,6 +103,10 @@ export function useUrlNormalization() {
   ): boolean => {
     const normalized = normalizeCardLinkValue(rawValue, label);
     if (!normalized) return false;
+
+    if (isPhoneLinkLabel(label)) {
+      return TEL_REGEX.test(normalized);
+    }
 
     if (!isGmailLinkLabel(label)) {
       return isValidPublicWebUrl(normalized);

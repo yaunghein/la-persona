@@ -304,7 +304,7 @@ function unavailableLabel(event: CommunityEvent) {
     v-model:open="isInfoOpen"
     title="What are events?"
     :ui="{
-      content: 'sm:max-w-[480px] rounded-lg bg-[#171717]',
+      content: 'sm:max-w-120 rounded-lg bg-[#171717]',
       title: 'text-sm font-medium uppercase tracking-widest text-white',
       body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"

@@ -1,7 +1,5 @@
-import {
-  CARD_LINK_LABELS,
-  DEFAULT_CARD_LINK_LABEL,
-} from '~~/shared/constants/card-link-options';
+import { CARD_LINK_LABELS } from '~~/shared/constants/card-link-options';
+import { internationalPhone } from '~~/shared/utils/phone';
 
 export const CUSTOM_SOCIAL_LABEL = 'Custom';
 
@@ -59,35 +57,36 @@ export function resolveSocialLinksForSubmission(
   });
 }
 
-export function upsertWebsiteSocial(
-  socials:
-    | Array<{ label?: string | null; value?: string | null }>
-    | null
-    | undefined,
-  website: string
-): SocialSubmitLink[] {
-  const nextWebsite = String(website || '').trim();
-  const existing = (socials || [])
-    .map((link) => ({
-      label: String(link.label || '').trim(),
-      value: String(link.value || '').trim(),
-    }))
-    .filter((link) => link.label && link.value);
+export const CONTACT_LINK_LABELS = ['Gmail', 'Phone', 'Website'] as const;
 
-  if (!nextWebsite) return existing;
+export type ContactLinkLabel = (typeof CONTACT_LINK_LABELS)[number];
 
-  const websiteIndex = existing.findIndex(
-    (link) => link.label === DEFAULT_CARD_LINK_LABEL
-  );
-  const websiteLink = { label: DEFAULT_CARD_LINK_LABEL, value: nextWebsite };
+export type ContactLinkSource = {
+  email?: string | null;
+  phone?: string | null;
+  phoneCountryCode?: string | null;
+  website?: string | null;
+};
 
-  if (websiteIndex === -1) {
-    return [websiteLink, ...existing];
+export function contactLinkValue(
+  label: ContactLinkLabel,
+  source: ContactLinkSource
+): string {
+  if (label === 'Gmail') return String(source.email || '').trim();
+  if (label === 'Phone') {
+    return internationalPhone(String(source.phone || ''), source.phoneCountryCode);
   }
+  return String(source.website || '').trim();
+}
 
-  return existing.map((link, index) =>
-    index === websiteIndex ? websiteLink : link
-  );
+export function buildContactSocialLinks(
+  source: ContactLinkSource
+): SocialFormLink[] {
+  return CONTACT_LINK_LABELS.map((label) => ({
+    label,
+    value: contactLinkValue(label, source),
+    customLabel: '',
+  })).filter((link) => link.value);
 }
 
 export function getCustomSocialLabelMissingIndexes(

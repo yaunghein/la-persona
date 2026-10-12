@@ -6,11 +6,13 @@ import {
 } from '~~/shared/constants/card-link-options';
 import { DEFAULT_PHONE_COUNTRY_CODE } from '~~/shared/utils/phone';
 import {
+  buildContactSocialLinks,
   createLinkTypeItemsWithCustom,
   normalizeSocialLinksForForm,
   resolveSocialLinksForSubmission,
   type SocialFormLink,
 } from '~~/shared/utils/social-links';
+import type { PrefilledContactLinks } from '~~/app/composables/contact-link-prefill';
 
 const props = defineProps<{
   firstName?: string | null;
@@ -43,15 +45,31 @@ const toast = useToast();
 const { normalizeLinkValuesWithHttps, isValidCardLinkValue } =
   useUrlNormalization();
 
-const { state } = useFormDraft(props.draftKey, () => ({
-  firstName: props.firstName || '',
-  lastName: props.lastName || '',
-  position: props.position || '',
-  phone: props.phone || '',
-  phoneCountryCode: props.phoneCountryCode || DEFAULT_PHONE_COUNTRY_CODE,
-  email: props.email || '',
-  socials: normalizeSocialLinksForForm(props.socials || []) as SocialFormLink[],
-}));
+const { state } = useFormDraft(props.draftKey, () => {
+  const socials: SocialFormLink[] = props.socials?.length
+    ? normalizeSocialLinksForForm(props.socials)
+    : buildContactSocialLinks({
+        email: props.email,
+        phone: props.phone,
+        phoneCountryCode: props.phoneCountryCode,
+      });
+
+  return {
+    firstName: props.firstName || '',
+    lastName: props.lastName || '',
+    position: props.position || '',
+    phone: props.phone || '',
+    phoneCountryCode: props.phoneCountryCode || DEFAULT_PHONE_COUNTRY_CODE,
+    email: props.email || '',
+    socials,
+    prefilledLinks: props.socials?.length
+      ? {}
+      : (Object.fromEntries(
+          socials.map((link) => [link.label, link.value])
+        ) as PrefilledContactLinks),
+  };
+});
+const { prefill: prefillContactLink } = useContactLinkPrefill(state);
 
 const isSocialSlideoverOpen = ref(false);
 const isDeleteSocialConfirmOpen = ref(false);
@@ -337,6 +355,7 @@ watch(
             label="Phone Number (Required)"
             name="phone"
             :class="formFieldClass"
+            @focusout="prefillContactLink('Phone')"
           >
             <FormPhoneField
               v-model="state.phone"
@@ -350,6 +369,7 @@ watch(
             label="Email Address (Required)"
             name="email"
             :class="formFieldClass"
+            @focusout="prefillContactLink('Gmail')"
           >
             <UInput
               v-model="state.email"

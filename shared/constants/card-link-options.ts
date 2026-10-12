@@ -12,6 +12,7 @@ export const SOCIAL_MEDIA_LINK_LABELS = [
 
 export const OTHER_LINK_LABELS = [
   'Website',
+  'Phone',
   'Direct Message',
   'Portfolio',
   'Case Studies',

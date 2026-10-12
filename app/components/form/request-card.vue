@@ -14,6 +14,7 @@ import {
   resolveSocialLinksForSubmission,
   type SocialFormLink,
 } from '~~/shared/utils/social-links';
+import type { PrefilledContactLinks } from '~~/app/composables/contact-link-prefill';
 
 type RequestCardFormState = {
   type: 'new_design' | 'existing_design';
@@ -26,6 +27,7 @@ type RequestCardFormState = {
   website: string;
   sourceCardId: string;
   socials: SocialFormLink[];
+  prefilledLinks: PrefilledContactLinks;
 };
 
 const emit = defineEmits<{ close: []; submitted: [] }>();
@@ -53,8 +55,10 @@ const { state, reset: resetForm } = useFormDraft<RequestCardFormState>(
     website: '',
     sourceCardId: '',
     socials: [],
+    prefilledLinks: {},
   })
 );
+const { prefill: prefillContactLink } = useContactLinkPrefill(state);
 const socialsListEl = ref<HTMLElement | null>(null);
 const isSocialSlideoverOpen = ref(false);
 const socialEditorMode = ref<'create' | 'edit'>('create');
@@ -389,7 +393,7 @@ const { mutate: insertCardRequest, isPending: isLoading } = useMutation({
       headers: { 'Content-Type': compressed.type },
     });
 
-    const { type, sourceCardId, ...cardData } = formData;
+    const { type, sourceCardId, prefilledLinks: _, ...cardData } = formData;
     const socials = normalizeLinkValuesWithHttps(
       resolveSocialLinksForSubmission(state.socials)
     ).filter((social) => social.label || social.value);
@@ -489,6 +493,7 @@ function normalizeFormState(
     website: formData.website || '',
     sourceCardId: formData.sourceCardId || '',
     socials: formData.socials || [],
+    prefilledLinks: formData.prefilledLinks || {},
   };
 }
 
@@ -749,6 +754,7 @@ function onFormError(event: FormErrorEvent) {
         label="Phone Number"
         name="phone"
         class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        @focusout="prefillContactLink('Phone')"
       >
           <FormPhoneField
           v-model="state.phone"
@@ -765,6 +771,7 @@ function onFormError(event: FormErrorEvent) {
         label="Email Address"
         name="email"
         class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        @focusout="prefillContactLink('Gmail')"
       >
         <UInput
           v-model="state.email"
@@ -780,6 +787,7 @@ function onFormError(event: FormErrorEvent) {
         label="Personal Website / Portfolio"
         name="website"
         class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        @focusout="prefillContactLink('Website')"
       >
         <UInput
           v-model="state.website"

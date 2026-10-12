@@ -261,6 +261,7 @@ const iconMap: Record<string, string | ConcreteComponent> = {
   arrowDown: resolveComponent('IconArrowDown'),
   buyMeCoffee: resolveComponent('IconBuyMeCoffee'),
   saveContact: resolveComponent('IconSaveContact'),
+  phone: resolveComponent('IconPhone'),
 };
 const socialLinkLabelSet = new Set(
   SOCIAL_MEDIA_LINK_LABELS.map((label) => label.toLowerCase())
@@ -277,6 +278,7 @@ const linkAssetMap: Record<string, string> = {
   tiktok: '/images/card/tiktok.png',
   whatsapp: '/images/card/whatsapp.png',
   website: 'world',
+  phone: 'phone',
   'direct message': 'world',
   portfolio: 'world',
   'case studies': 'world',
@@ -303,6 +305,10 @@ function trackLinkClick(link: { label: string; value: string }) {
       ? { platform: normalizedLabel, url: link.value }
       : { label: link.label, url: link.value },
   });
+}
+
+function vcfUrlKey(value: string) {
+  return value.trim().toLowerCase().replace(/\/+$/, '');
 }
 
 function escapeVcfValue(value: string) {
@@ -407,6 +413,13 @@ function buildCardVcf(photo: { base64: string; imageType: string } | null) {
     ...(Array.isArray(card.value.socials)
       ? card.value.socials
           .filter((link) => link?.label?.trim() && link?.value?.trim())
+          // Email, phone and website already have their own lines above.
+          .filter((link) => !/^(mailto|tel):/i.test(link.value.trim()))
+          .filter(
+            (link) =>
+              !card.value?.website ||
+              vcfUrlKey(link.value) !== vcfUrlKey(card.value.website)
+          )
           .map(
             (link) =>
               `URL;TYPE=${escapeVcfValue(link.label)}:${escapeVcfValue(link.value)}`

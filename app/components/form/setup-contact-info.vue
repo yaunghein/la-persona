@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import type { FormError, FormSubmitEvent } from '#ui/types';
-import { upsertWebsiteSocial } from '~~/shared/utils/social-links';
 import { useUrlNormalization } from '~~/app/composables/url-normalization';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
 
@@ -76,10 +75,6 @@ const { mutate: submitRequest, isPending: isSubmitting } = useMutation({
       website,
       id: formData.cardId,
     };
-
-    if (website) {
-      body.socials = upsertWebsiteSocial(card.value?.socials, website);
-    }
 
     return await $fetch(`/api/cards`, {
       method: 'PATCH',
