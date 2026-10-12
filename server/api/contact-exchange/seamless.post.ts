@@ -2,11 +2,18 @@ import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { auth } from '~~/server/auth';
 import { db } from '~~/server/db';
-import { card, contactExchange } from '~~/server/db/schema';
+import { card, contactExchange, user } from '~~/server/db/schema';
 import { getPersonalOrganizationByUserId } from '~~/server/services/auth';
+import {
+  sendContactExchangeEmail,
+  type ContactExchangeEmailContact,
+} from '~~/server/utils/contact-exchange-email';
 import { handleApiError } from '~~/server/utils/errors';
-import { normalizePhoneCountryCode } from '~~/shared/utils/phone';
-import { enrichLog } from '~~/server/utils/wide-event';
+import {
+  internationalPhone,
+  normalizePhoneCountryCode,
+} from '~~/shared/utils/phone';
+import { enrichLog, trackEmailSends } from '~~/server/utils/wide-event';
 
 const seamlessExchangeSchema = z
   .object({
@@ -40,6 +47,21 @@ function toSeamlessContactRow(params: {
     source: 'seamless_exchange',
     laPersonaUserId: params.contactCard.userId,
     laPersonaCardId: params.contactCard.id,
+  };
+}
+
+function toEmailContact(
+  value: ContactCard,
+  fallbackEmail: string
+): ContactExchangeEmailContact {
+  return {
+    name: getCardDisplayName(value),
+    email: value.email || fallbackEmail,
+    phone: value.phone
+      ? internationalPhone(value.phone, value.phoneCountryCode)
+      : '',
+    company: value.company || '',
+    position: value.position || '',
   };
 }
 
@@ -193,13 +215,37 @@ export default defineEventHandler(async (event) => {
       };
     });
 
+    const ownerAccount = await db.query.user.findFirst({
+      where: eq(user.id, ownerCard.userId),
+      columns: { email: true },
+    });
+    const ownerEmail = ownerAccount?.email || ownerCard.email || '';
+    const scannerEmail = session.user.email || scannerCard.email || '';
+
     enrichLog(event, {
       contact_exchange: {
         card_id: payload.ownerCard.id,
+        scanner_card_id: payload.scannerCard.id,
         result: 'exchanged',
-        ...(ownerCard.email ? { owner_email: ownerCard.email } : {}),
+        ...(ownerEmail ? { owner_email: ownerEmail } : {}),
+        ...(scannerEmail ? { scanner_email: scannerEmail } : {}),
       },
     });
+
+    const sends = [
+      { to: ownerEmail, contact: toEmailContact(scannerCard, scannerEmail) },
+      { to: scannerEmail, contact: toEmailContact(ownerCard, ownerEmail) },
+    ].filter((item) => item.to);
+
+    if (sends.length > 0) {
+      enrichLog(event, {
+        email: { attempted: true, to: sends.map((item) => item.to) },
+      });
+      trackEmailSends(
+        event,
+        Promise.all(sends.map((item) => sendContactExchangeEmail(item)))
+      );
+    }
 
     return { success: true, data: payload };
   } catch (error) {

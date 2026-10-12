@@ -1,5 +1,6 @@
 import { requireAdminSession } from '~~/server/utils/admin-permissions';
 import { enrichLog } from '~~/server/utils/wide-event';
+import { contactsUrl } from '~~/server/utils/contact-exchange-email';
 
 export default defineEventHandler(async (event) => {
   const result = await readValidatedBody(event, emailSchema.safeParse);
@@ -19,7 +20,12 @@ export default defineEventHandler(async (event) => {
     enrichLog(event, {
       email: { template, to: result.data.to, attempted: true },
     });
-    const html = await renderEmailComponent(template, payload);
+    const html = await renderEmailComponent(
+      template,
+      template === 'ContactExchange'
+        ? { ...payload, contactsUrl: contactsUrl() }
+        : payload
+    );
     const response = await sendEmail({ ...result.data, html });
     return { success: true, data: response };
   } catch (error) {

@@ -168,38 +168,12 @@ export async function sendOnboardingInvitationEmail(params: {
   invitationId: string;
   email: string;
 }) {
-  const link = buildOnboardingInvitationLink(params.invitationId);
   await sendEmail({
     to: [params.email],
-    subject: 'You are invited to LA PERSONA',
-    html: `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111111;">
-        <h2 style="margin: 0 0 12px;">You are invited</h2>
-        <p style="margin: 0 0 16px;">
-          Click the button below to accept your invitation and continue onboarding.
-        </p>
-        <a
-          href="${link}"
-          style="
-            display: inline-block;
-            padding: 10px 18px;
-            border-radius: 9999px;
-            background: #111111;
-            color: #ffffff;
-            text-decoration: none;
-            font-weight: 600;
-          "
-        >
-          Accept Invitation
-        </a>
-        <p style="margin: 16px 0 0; font-size: 12px; color: #6b7280;">
-          If the button does not work, paste this URL in your browser:
-        </p>
-        <p style="margin: 8px 0 0; font-size: 12px; word-break: break-all; color: #6b7280;">
-          ${link}
-        </p>
-      </div>
-    `,
+    subject: 'Your LA PERSONA card is ready',
+    html: await renderEmailComponent('OnboardingInvitation', {
+      inviteUrl: buildOnboardingInvitationLink(params.invitationId),
+    }),
   });
 }
 

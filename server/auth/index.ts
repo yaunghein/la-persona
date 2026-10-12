@@ -57,15 +57,6 @@ function getFallbackNameFromEmail(email: string) {
   return localPart || 'User';
 }
 
-function escapeHtml(value: string) {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');
-}
-
 export const auth = betterAuth({
   baseURL: env.BASE_URL,
   database: drizzleAdapter(db, {
@@ -76,38 +67,10 @@ export const auth = betterAuth({
     magicLink({
       expiresIn: 60 * 30,
       sendMagicLink: async ({ email, url }, _ctx) => {
-        const safeUrl = escapeHtml(url);
         await sendEmail({
           to: [email],
           subject: 'Your LA PERSONA magic sign-in link',
-          html: `
-            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111111;">
-              <h2 style="margin: 0 0 12px;">Sign in to LA PERSONA</h2>
-              <p style="margin: 0 0 16px;">
-                Click the button below to continue. This link expires soon for your security.
-              </p>
-              <a
-                href="${safeUrl}"
-                style="
-                  display: inline-block;
-                  padding: 10px 18px;
-                  border-radius: 9999px;
-                  background: #111111;
-                  color: #ffffff;
-                  text-decoration: none;
-                  font-weight: 600;
-                "
-              >
-                Sign in with Magic Link
-              </a>
-              <p style="margin: 16px 0 0; font-size: 12px; color: #6b7280;">
-                If the button does not work, paste this URL in your browser:
-              </p>
-              <p style="margin: 8px 0 0; font-size: 12px; word-break: break-all; color: #6b7280;">
-                ${safeUrl}
-              </p>
-            </div>
-          `,
+          html: await renderEmailComponent('MagicLink', { url }),
         });
       },
     }),
@@ -127,42 +90,20 @@ export const auth = betterAuth({
           },
         },
       },
-      sendInvitationEmail: async ({ email, id, organization: invitedOrg, inviter }) => {
-        const inviteUrl = `${env.BASE_URL}${ROUTES.INVITE.COMMUNITY_ACCEPT(id)}`;
-        const safeUrl = escapeHtml(inviteUrl);
-        const orgName = escapeHtml(invitedOrg.name);
-        const inviterName = escapeHtml(inviter.user.name || 'A community organizer');
+      sendInvitationEmail: async ({
+        email,
+        id,
+        organization: invitedOrg,
+        inviter,
+      }) => {
         await sendEmail({
           to: [email],
           subject: `You're invited to join ${invitedOrg.name} on LA PERSONA`,
-          html: `
-            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111111;">
-              <h2 style="margin: 0 0 12px;">Join ${orgName}</h2>
-              <p style="margin: 0 0 16px;">
-                ${inviterName} invited you to join ${orgName} on LA PERSONA.
-              </p>
-              <a
-                href="${safeUrl}"
-                style="
-                  display: inline-block;
-                  padding: 10px 18px;
-                  border-radius: 9999px;
-                  background: #111111;
-                  color: #ffffff;
-                  text-decoration: none;
-                  font-weight: 600;
-                "
-              >
-                Accept invitation
-              </a>
-              <p style="margin: 16px 0 0; font-size: 12px; color: #6b7280;">
-                If the button does not work, paste this URL in your browser:
-              </p>
-              <p style="margin: 8px 0 0; font-size: 12px; word-break: break-all; color: #6b7280;">
-                ${safeUrl}
-              </p>
-            </div>
-          `,
+          html: await renderEmailComponent('CommunityInvitation', {
+            inviterName: inviter.user.name || 'A community organizer',
+            organizationName: invitedOrg.name,
+            inviteUrl: `${env.BASE_URL}${ROUTES.INVITE.COMMUNITY_ACCEPT(id)}`,
+          }),
         });
       },
     }),

@@ -1,0 +1,39 @@
+<script setup lang="ts">
+import EmailButton from './components/EmailButton.vue';
+import EmailFallbackLink from './components/EmailFallbackLink.vue';
+import EmailLayout from './components/EmailLayout.vue';
+
+defineProps<{
+  inviterName: string;
+  organizationName: string;
+  inviteUrl: string;
+}>();
+</script>
+
+<template>
+  <EmailLayout
+    :preview="`${inviterName} invited you to join ${organizationName}`"
+  >
+    <EHeading as="h4" style="margin: 0; font-weight: 600; letter-spacing: 1px">
+      YOU'RE INVITED
+    </EHeading>
+    <EText style="margin: 12px 0 0; line-height: 1.5">
+      <strong style="font-weight: 700">{{ inviterName }}</strong> invited you to
+      join <strong style="font-weight: 700">{{ organizationName }}</strong> on
+      <strong style="font-weight: 900">LA PERSONA</strong>.
+    </EText>
+
+    <EText style="margin: 32px 0 0">AS A MEMBER</EText>
+    <EText style="margin: 8px 0 0 8px; line-height: 1.5">
+      • Get your community card<br />
+      • Join community events<br />
+      • Connect with fellow members
+    </EText>
+
+    <EmailButton :href="inviteUrl">ACCEPT INVITATION</EmailButton>
+
+    <EHr style="border-color: #e5e6e9; margin: 0 0 24px" />
+
+    <EmailFallbackLink :href="inviteUrl" />
+  </EmailLayout>
+</template>

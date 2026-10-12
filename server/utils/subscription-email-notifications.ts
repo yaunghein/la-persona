@@ -1,9 +1,12 @@
 import { sendEmail } from '~~/server/utils/email';
-import { getAdminNotificationEmails } from '~~/server/utils/env';
+import { env, getAdminNotificationEmails } from '~~/server/utils/env';
 import {
   emailErrorLabel,
   type EmailSendResult,
 } from '~~/server/utils/wide-event';
+import { ROUTES } from '~~/shared/utils/routes';
+
+const platformUrl = () => `${env.BASE_URL}${ROUTES.PLATFORM.ROOT}`;
 
 function success(template: string, to: string[]): EmailSendResult {
   return { ok: true, template, to };
@@ -47,6 +50,7 @@ export async function notifySubscriptionSubmissionEmails(params: {
       {
         recipientName: payerName || payer,
         bodyText: userBodyText,
+        platformUrl: platformUrl(),
       }
     );
     await sendEmail({
@@ -101,6 +105,7 @@ export async function notifySubscriptionPaymentApprovedEmail(params: {
     const html = await renderEmailComponent('SubscriptionPaymentApprovedUser', {
       recipientName: payerName || to[0],
       bodyText,
+      platformUrl: platformUrl(),
     });
     await sendEmail({
       to,
@@ -127,6 +132,7 @@ export async function notifySubscriptionPaymentRejectedEmail(params: {
     const html = await renderEmailComponent('SubscriptionPaymentRejectedUser', {
       recipientName: payerName || to[0],
       bodyText,
+      platformUrl: platformUrl(),
     });
     await sendEmail({
       to,
