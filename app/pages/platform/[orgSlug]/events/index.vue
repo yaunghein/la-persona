@@ -89,9 +89,9 @@ const eventsListData = computed<CommunityEventsData>(() => ({
   title: canManageEvents.value ? 'Events in Your Community' : 'Events',
   searchPlaceholder: 'Search Events',
   statusOptions: [
-    { label: 'Upcoming Events', value: 'upcoming' },
-    { label: 'Registered Events', value: 'registered' },
-    { label: 'Past Events', value: 'past' },
+    { label: 'Upcoming', value: 'upcoming' },
+    { label: 'Registered', value: 'registered' },
+    { label: 'Past', value: 'past' },
   ],
   infoItems: canManageEvents.value ? ownerInfoItems : memberInfoItems,
   events: (data.value?.events ?? []).map(toCommunityEvent),
