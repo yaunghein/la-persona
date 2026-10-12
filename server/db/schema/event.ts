@@ -16,6 +16,7 @@ export const event = pgTable(
     title: text().notNull(),
     description: text(),
     location: text().notNull(),
+    mapUrl: text(),
     startsAt: timestamp().notNull(),
     endsAt: timestamp().notNull(),
     capacity: integer(),

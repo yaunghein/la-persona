@@ -54,6 +54,7 @@ export default defineEventHandler(async (event) => {
         title: body.data.title,
         description: sanitizeRichText(body.data.description),
         location: body.data.location,
+        mapUrl: body.data.mapUrl || null,
         startsAt: new Date(body.data.startsAt),
         endsAt: new Date(body.data.endsAt),
         capacity: body.data.capacity,

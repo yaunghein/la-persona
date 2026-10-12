@@ -71,6 +71,13 @@
       "when": 1791376129216,
       "tag": "0009_user_daily_activity",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791815599117,
+      "tag": "0010_first_thanos",
+      "breakpoints": true
     }
   ]
 }

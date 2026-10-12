@@ -52,6 +52,16 @@ function buildEventFormSchema(allowPast: boolean) {
       title: z.string().trim().min(1, 'Event name is required'),
       description: z.string().trim().optional().or(z.literal('')),
       location: z.string().trim().min(1, 'Location is required'),
+      mapUrl: z
+        .string()
+        .trim()
+        .pipe(
+          z.union([
+            z.literal(''),
+            z.url({ protocol: /^https?$/, message: 'Enter a valid map link' }),
+          ])
+        )
+        .optional(),
       date: z
         .string()
         .refine(isEventDateValue, { message: 'Date is required' }),
@@ -127,6 +137,7 @@ const {
     title: '',
     description: '',
     location: '',
+    mapUrl: '',
     date: '',
     startTime: '18:00',
     endTime: '21:00',
@@ -301,6 +312,7 @@ function hydrateFromEvent(event: EventDTO) {
     title: event.title,
     description: event.description ?? '',
     location: event.location,
+    mapUrl: event.mapUrl ?? '',
     date: formatEventDateValue(event.startsAt),
     startTime: formatEventTimeValue(event.startsAt),
     endTime: formatEventTimeValue(event.endsAt),
@@ -873,6 +885,20 @@ async function copyEventLink() {
           />
         </UFormField>
 
+        <UFormField
+          label="Google Maps link"
+          name="mapUrl"
+          :class="formFieldClass"
+        >
+          <UInput
+            v-model="state.mapUrl"
+            type="url"
+            placeholder="https://maps.app.goo.gl/..."
+            class="w-full"
+            :ui="inputUi"
+          />
+        </UFormField>
+
         <div class="flex flex-col gap-3">
           <p class="text-sm font-medium text-white">Capacity</p>
           <button
@@ -927,11 +953,12 @@ async function copyEventLink() {
       <div class="flex w-full items-center justify-end gap-4">
         <UButton
           v-if="isEdit"
-          label="Delete Event"
+          icon="i-lucide-trash-2"
+          aria-label="Delete event"
           color="neutral"
           variant="ghost"
           :disabled="isSubmitting"
-          class="h-9 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          class="mr-auto size-9 shrink-0 cursor-pointer justify-center rounded-full text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
           @click="openDeleteConfirm"
         />
         <UButton

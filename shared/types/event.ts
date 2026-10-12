@@ -101,6 +101,16 @@ const eventBodyFields = {
   title: z.string().trim().min(1, 'Event name is required'),
   description: z.string().trim().optional().or(z.literal('')),
   location: z.string().trim().min(1, 'Location is required'),
+  mapUrl: z
+    .string()
+    .trim()
+    .pipe(
+      z.union([
+        z.literal(''),
+        z.url({ protocol: /^https?$/, message: 'Enter a valid map link' }),
+      ])
+    )
+    .optional(),
   startsAt: z.iso.datetime({ offset: true, message: 'Start time is required' }),
   endsAt: z.iso.datetime({ offset: true, message: 'End time is required' }),
   capacity: z.number().int().positive().nullable(),

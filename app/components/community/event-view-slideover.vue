@@ -40,6 +40,7 @@ const details = computed(() => {
     {
       label: 'Location',
       value: props.event.location,
+      href: props.event.mapUrl || undefined,
     },
   ];
 });
@@ -170,9 +171,24 @@ function onViewOrganizer() {
             <span class="shrink-0 text-sm font-normal text-[#8b8b8b]">
               {{ item.label }}
             </span>
-            <span class="text-right text-sm font-bold text-white">
-              {{ item.value }}
-            </span>
+            <div class="flex min-w-0 flex-col items-end gap-1">
+              <span class="text-right text-sm font-bold text-white">
+                {{ item.value }}
+              </span>
+              <UButton
+                v-if="item.href"
+                :to="item.href"
+                target="_blank"
+                external
+                rel="noopener noreferrer"
+                variant="link"
+                color="neutral"
+                size="sm"
+                trailing-icon="i-lucide-external-link"
+                label="View on Google Map"
+                class="p-0 text-[#8b8b8b] hover:text-white"
+              />
+            </div>
           </div>
         </div>
 
