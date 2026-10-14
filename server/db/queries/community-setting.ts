@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { db } from '../../db';
-import { communitySetting } from '../schema';
+import { card, communitySetting } from '../schema';
 import type { InsertCommunitySetting } from '~~/shared/types/community-settings';
 import { env } from '~~/server/utils/env';
 
@@ -23,6 +23,21 @@ export const findCommunitySettingByOrganizationId = async (
     .limit(1);
 
   return row;
+};
+
+/** Community QR ticket background for a card, or '' when the community has none. */
+export const findEmailQrBackgroundByCardSlug = async (cardSlug: string) => {
+  const [row] = await db
+    .select({ url: communitySetting.emailQrBackgroundUrl })
+    .from(card)
+    .innerJoin(
+      communitySetting,
+      eq(communitySetting.organizationId, card.organizationId)
+    )
+    .where(eq(card.slug, cardSlug))
+    .limit(1);
+
+  return row?.url ?? '';
 };
 
 export const findCommunitySettingByInviteToken = async (token: string) => {
@@ -53,7 +68,15 @@ export const upsertCommunitySettingByOrganizationId = async (
     'description' | 'guidelines' | 'whyJoin' | 'coverUrl'
   > &
     Partial<
-      Pick<InsertCommunitySetting, 'splineUrl' | 'wallpaperUrl' | 'cardBackUrl'>
+      Pick<
+        InsertCommunitySetting,
+        | 'splineUrl'
+        | 'wallpaperUrl'
+        | 'cardBackUrl'
+        | 'emailQrBackgroundUrl'
+        | 'emailContactExchangeUrl'
+        | 'emailAfterEventUrl'
+      >
     >
 ) => {
   const existing = await findCommunitySettingByOrganizationId(organizationId);
@@ -65,6 +88,15 @@ export const upsertCommunitySettingByOrganizationId = async (
       : {}),
     ...(values.cardBackUrl !== undefined
       ? { cardBackUrl: values.cardBackUrl }
+      : {}),
+    ...(values.emailQrBackgroundUrl !== undefined
+      ? { emailQrBackgroundUrl: values.emailQrBackgroundUrl }
+      : {}),
+    ...(values.emailContactExchangeUrl !== undefined
+      ? { emailContactExchangeUrl: values.emailContactExchangeUrl }
+      : {}),
+    ...(values.emailAfterEventUrl !== undefined
+      ? { emailAfterEventUrl: values.emailAfterEventUrl }
       : {}),
   };
 

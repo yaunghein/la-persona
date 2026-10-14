@@ -39,6 +39,9 @@ type OrgCommunity = {
   splineUrl: string;
   wallpaperUrl: string;
   cardBackUrl: string;
+  emailQrBackgroundUrl: string;
+  emailContactExchangeUrl: string;
+  emailAfterEventUrl: string;
 };
 
 type OrgDetail = {
@@ -82,6 +85,9 @@ const editForm = reactive({
   splineUrl: '',
   wallpaperUrl: '',
   cardBackUrl: '',
+  emailQrBackgroundUrl: '',
+  emailContactExchangeUrl: '',
+  emailAfterEventUrl: '',
   applyToMemberCards: false,
 });
 
@@ -161,6 +167,9 @@ async function openEdit(row: OrgRow) {
   editForm.splineUrl = '';
   editForm.wallpaperUrl = '';
   editForm.cardBackUrl = '';
+  editForm.emailQrBackgroundUrl = '';
+  editForm.emailContactExchangeUrl = '';
+  editForm.emailAfterEventUrl = '';
   editForm.applyToMemberCards = false;
   isEditOpen.value = true;
 
@@ -178,6 +187,9 @@ async function openEdit(row: OrgRow) {
   editForm.splineUrl = detail.community.splineUrl;
   editForm.wallpaperUrl = detail.community.wallpaperUrl;
   editForm.cardBackUrl = detail.community.cardBackUrl;
+  editForm.emailQrBackgroundUrl = detail.community.emailQrBackgroundUrl;
+  editForm.emailContactExchangeUrl = detail.community.emailContactExchangeUrl;
+  editForm.emailAfterEventUrl = detail.community.emailAfterEventUrl;
 }
 
 function closeEdit() {
@@ -229,6 +241,9 @@ async function onSaveEdit() {
                 splineUrl: editForm.splineUrl,
                 wallpaperUrl: editForm.wallpaperUrl,
                 cardBackUrl: editForm.cardBackUrl,
+                emailQrBackgroundUrl: editForm.emailQrBackgroundUrl,
+                emailContactExchangeUrl: editForm.emailContactExchangeUrl,
+                emailAfterEventUrl: editForm.emailAfterEventUrl,
                 applyToMemberCards: editForm.applyToMemberCards,
               }
             : {}),
@@ -410,6 +425,9 @@ const brandRows = computed(() => {
     { label: 'Card back', value: community.cardBackUrl },
     { label: 'Logo', value: community.logoUrl },
     { label: 'Cover', value: community.coverImageUrl },
+    { label: 'Email QR background', value: community.emailQrBackgroundUrl },
+    { label: 'Email contact exchange', value: community.emailContactExchangeUrl },
+    { label: 'Email after event', value: community.emailAfterEventUrl },
   ];
 });
 
@@ -771,6 +789,35 @@ const selectMenuUi = {
                   received when they joined. Turn this on to copy the three
                   values above onto every card in this community.
                 </p>
+              </div>
+              <div
+                v-if="editingRow"
+                class="flex flex-col gap-6 border-y border-[#232323] py-6"
+              >
+                <p class="text-sm font-medium tracking-[1.4px] text-white uppercase">
+                  Email images
+                </p>
+                <ThakhinImageUploadField
+                  v-model="editForm.emailQrBackgroundUrl"
+                  :organization-id="editingRow.id"
+                  label="QR ticket background"
+                  hint="Use the ticket template layout (952 × 936). The QR is placed by position, so the white ticket must stay in the same spot."
+                  empty-text="Not set: emails use the default ticket background."
+                />
+                <ThakhinImageUploadField
+                  v-model="editForm.emailContactExchangeUrl"
+                  :organization-id="editingRow.id"
+                  label="Contact exchange (reminder email)"
+                  hint="Two phones exchanging cards, 952 px wide."
+                  empty-text="Not set: the reminder email hides this image."
+                />
+                <ThakhinImageUploadField
+                  v-model="editForm.emailAfterEventUrl"
+                  :organization-id="editingRow.id"
+                  label="Community card uses (after-event email)"
+                  hint="The three-panel image (share, stay ready, register), 952 px wide."
+                  empty-text="Not set: the after-event email hides this image."
+                />
               </div>
               <UFormField label="Description" :class="formFieldClass">
                 <CommunityRichTextEditor

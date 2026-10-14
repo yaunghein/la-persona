@@ -1,3 +1,9 @@
+import {
+  isQrFinderCell,
+  QR_DOT_RADIUS_RATIO,
+  ticketQrRect,
+} from '~~/shared/utils/qr-ticket';
+
 const QR_SIZE_RATIO = 0.3;
 const QR_PADDING_RATIO = 0.05;
 const QR_IMAGE_CORNER_RADIUS_PX = 16;
@@ -124,13 +130,6 @@ function hexToRgb(hex: string) {
   };
 }
 
-function isFinderCell(x: number, y: number, matrixSize: number) {
-  const inTopLeft = x <= 6 && y <= 6;
-  const inTopRight = x >= matrixSize - 7 && y <= 6;
-  const inBottomLeft = x <= 6 && y >= matrixSize - 7;
-  return inTopLeft || inTopRight || inBottomLeft;
-}
-
 async function createStyledQrCanvas(
   cardUrl: string,
   targetSize: number,
@@ -146,7 +145,7 @@ async function createStyledQrCanvas(
   const matrixSize = qr.modules.size as number;
   const matrixData = qr.modules.data as ArrayLike<number | boolean>;
   const moduleSize = targetSize / matrixSize;
-  const dotRadius = moduleSize * 0.42;
+  const dotRadius = moduleSize * QR_DOT_RADIUS_RATIO;
   const { r, g, b } = hexToRgb(colorHex);
 
   const qrCanvas = document.createElement('canvas');
@@ -169,7 +168,7 @@ async function createStyledQrCanvas(
       const drawX = x * moduleSize;
       const drawY = y * moduleSize;
 
-      if (isFinderCell(x, y, matrixSize)) {
+      if (isQrFinderCell(x, y, matrixSize)) {
         qrContext.fillRect(drawX, drawY, moduleSize, moduleSize);
         continue;
       }
@@ -318,6 +317,39 @@ export async function renderQrCanvas(options: {
     borderWidth,
     hexToRgba(qrColor, qrBorderOpacity)
   );
+
+  return canvas;
+}
+
+export async function renderTicketQrCanvas(options: {
+  backgroundUrl: string;
+  cardUrl: string;
+  qrColor?: string;
+}) {
+  if (!options.backgroundUrl || !options.cardUrl) {
+    throw new Error('QR is not ready');
+  }
+
+  const image = await loadImage(options.backgroundUrl);
+  const width = image.naturalWidth;
+  const height = image.naturalHeight;
+
+  const { x: qrX, y: qrY, size: qrSize } = ticketQrRect(width, height);
+
+  const styledQr = await createStyledQrCanvas(
+    options.cardUrl,
+    qrSize,
+    options.qrColor || DEFAULTS.qrColor
+  );
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Canvas context unavailable');
+
+  context.drawImage(image, 0, 0, width, height);
+  context.drawImage(styledQr, qrX, qrY, qrSize, qrSize);
 
   return canvas;
 }

@@ -5,6 +5,7 @@ import {
   findRegistrationByEventAndUser,
   updateEventRegistrationStatus,
 } from '~~/server/db/queries/event-registration';
+import { queueEventCheckInEmail } from '~~/server/services/event-check-in-email';
 import { handleApiError } from '~~/server/utils/errors';
 import { requireCommunityOrganization } from '~~/server/utils/organization-permissions';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
@@ -102,12 +103,11 @@ export default defineEventHandler(async (event) => {
       return registration;
     }
 
+    const checkedInAt = new Date();
     const updated = await updateEventRegistrationStatus(
       registration.id,
       'checked_in',
-      {
-        checkedInAt: new Date(),
-      }
+      { checkedInAt }
     );
 
     enrichLog(event, {
@@ -117,6 +117,17 @@ export default defineEventHandler(async (event) => {
         result: 'checked_in',
       },
     });
+
+    // Only a first check-in reaches here; repeat scans returned above.
+    if (updated) {
+      await queueEventCheckInEmail(event, {
+        userId: communityCard.userId,
+        cardFirstName: communityCard.firstName,
+        event: { id: eventId, title: row.title },
+        organization: { id: org.id, slug: org.slug },
+        checkedInAt,
+      });
+    }
 
     return updated;
   } catch (error) {

@@ -4,7 +4,7 @@ import {
   findRegistrationByIdAndEvent,
   updateEventRegistrationStatus,
 } from '~~/server/db/queries/event-registration';
-import { queueEventRegistrationEmail } from '~~/server/services/event-registration-email';
+import { queueEventRegistrationEmails } from '~~/server/services/event-registration-email';
 import { handleApiError } from '~~/server/utils/errors';
 import { requireCommunityOrganization } from '~~/server/utils/organization-permissions';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
@@ -80,10 +80,12 @@ export default defineEventHandler(async (event) => {
     enrichLog(event, { registration: { result: 'registered' } });
 
     if (updated) {
-      await queueEventRegistrationEmail(event, {
+      await queueEventRegistrationEmails(event, {
         userId: registration.userId,
         organization: org,
         event: { id: eventId, title: row.title },
+        status: 'registered',
+        notifyOwner: false,
       });
     }
 

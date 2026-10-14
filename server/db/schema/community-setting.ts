@@ -19,6 +19,10 @@ export const communitySetting = pgTable(
     splineUrl: text().default('').notNull(),
     wallpaperUrl: text().default('').notNull(),
     cardBackUrl: text().default('').notNull(),
+    // Community-branded email artwork, uploaded from Thakhin only.
+    emailQrBackgroundUrl: text().default('').notNull(),
+    emailContactExchangeUrl: text().default('').notNull(),
+    emailAfterEventUrl: text().default('').notNull(),
     description: text().default('').notNull(),
     guidelines: text().default('').notNull(),
     whyJoin: text().default('').notNull(),

@@ -1,9 +1,23 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq } from 'drizzle-orm';
 import type { H3Event } from 'h3';
 import { db } from '~~/server/db';
-import { card, user } from '~~/server/db/schema';
+import { countCountedRegistrations } from '~~/server/db/queries/event-registration';
+import {
+  card,
+  event as eventTable,
+  member,
+  user,
+} from '~~/server/db/schema';
 import { sendEmail } from '~~/server/utils/email';
 import { env } from '~~/server/utils/env';
+import { renderQrTicketPng } from '~~/server/utils/qr-ticket-image';
+import {
+  cardContactInfoUrl,
+  firstName,
+  loadEventEmailContent,
+  publicCardUrl,
+  qrTicketImageUrl,
+} from '~~/server/services/event-email-content';
 import {
   emailErrorLabel,
   enrichLog,
@@ -13,17 +27,21 @@ import {
 import { ROUTES } from '~~/shared/utils/routes';
 
 const TEMPLATE = 'event_registration';
+const OWNER_TEMPLATE = 'event_registration_owner';
 
 type EventRegistrationEmailParams = {
   userId: string;
   organization: { id: string; name: string; slug: string };
   event: { id: string; title: string };
+  /** Only `registered` gets the attendee QR email; `pending` waits for approval. */
+  status: 'registered' | 'pending';
+  notifyOwner: boolean;
 };
 
 async function buildEventRegistrationEmail(
   params: EventRegistrationEmailParams
 ) {
-  const [account, communityCard] = await Promise.all([
+  const [account, communityCard, content] = await Promise.all([
     db.query.user.findFirst({
       where: eq(user.id, params.userId),
       columns: { name: true, email: true },
@@ -40,28 +58,27 @@ async function buildEventRegistrationEmail(
       .orderBy(desc(card.createdAt))
       .limit(1)
       .then((rows) => rows[0]),
+    loadEventEmailContent({
+      eventId: params.event.id,
+      organizationId: params.organization.id,
+    }),
   ]);
 
-  if (!account?.email) return null;
-
-  const platformUrl = `${env.BASE_URL}${ROUTES.PLATFORM.ROOT}/${params.organization.slug}`;
-  const wallpaperUrl = communityCard
-    ? `${env.BASE_URL}${ROUTES.COMMUNITY_SETUP.CARD(
-        params.organization.slug,
-        communityCard.slug,
-        { step: 'download-wallpaper', eventId: params.event.id }
-      )}`
-    : platformUrl;
+  if (!account?.email || !communityCard || !content) return null;
 
   return {
     to: account.email,
+    cardSlug: communityCard.slug,
+    qrBackgroundUrl: content.images.qrBackgroundUrl,
     props: {
-      recipientName:
-        communityCard?.firstName || account.name?.split(' ')[0] || 'there',
+      ...content.details,
+      recipientName: firstName(communityCard.firstName, account.name),
       eventTitle: params.event.title,
-      organizationName: params.organization.name,
-      wallpaperUrl,
-      platformUrl,
+      qrImageUrl: qrTicketImageUrl(communityCard.slug, content.images.version),
+      contactInfoUrl: cardContactInfoUrl(
+        params.organization.slug,
+        communityCard.slug
+      ),
     },
   };
 }
@@ -71,11 +88,18 @@ async function sendEventRegistrationEmail(
 ): Promise<EmailSendResult> {
   const to = [email.to];
   try {
-    const html = await renderEmailComponent('EventRegistration', email.props);
+    const [html, qrPng] = await Promise.all([
+      renderEmailComponent('EventRegistration', email.props),
+      renderQrTicketPng(
+        publicCardUrl(email.cardSlug),
+        email.qrBackgroundUrl || undefined
+      ),
+    ]);
     await sendEmail({
       to,
       subject: `You're registered for ${email.props.eventTitle}`,
       html,
+      attachments: [{ filename: `${email.cardSlug}-qr.png`, content: qrPng }],
     });
     return { ok: true, template: TEMPLATE, to };
   } catch (error) {
@@ -83,16 +107,107 @@ async function sendEventRegistrationEmail(
   }
 }
 
-export async function queueEventRegistrationEmail(
+async function buildOwnerEmail(params: EventRegistrationEmailParams) {
+  const [owner, attendee, eventRow, registeredCount] = await Promise.all([
+    db
+      .select({ id: user.id, name: user.name, email: user.email })
+      .from(member)
+      .innerJoin(user, eq(user.id, member.userId))
+      .where(
+        and(
+          eq(member.organizationId, params.organization.id),
+          eq(member.role, 'owner')
+        )
+      )
+      .orderBy(asc(member.createdAt))
+      .limit(1)
+      .then((rows) => rows[0]),
+    db.query.user.findFirst({
+      where: eq(user.id, params.userId),
+      columns: { name: true, email: true },
+    }),
+    db.query.event.findFirst({
+      where: eq(eventTable.id, params.event.id),
+      columns: { capacity: true },
+    }),
+    countCountedRegistrations(params.event.id),
+  ]);
+
+  // Owners registering for their own event don't need to hear about it.
+  if (!owner?.email || owner.id === params.userId || !attendee?.email) {
+    return null;
+  }
+
+  return {
+    to: owner.email,
+    props: {
+      ownerName: owner.name?.split(' ')[0] || 'there',
+      attendeeName: attendee.name || attendee.email,
+      attendeeEmail: attendee.email,
+      eventTitle: params.event.title,
+      pending: params.status === 'pending',
+      registeredCount,
+      capacity: eventRow?.capacity ?? null,
+      attendeesUrl: `${env.BASE_URL}${ROUTES.EVENTS.PLATFORM(
+        params.organization.slug,
+        params.event.id
+      )}`,
+    },
+  };
+}
+
+async function sendOwnerEmail(
+  email: NonNullable<Awaited<ReturnType<typeof buildOwnerEmail>>>
+): Promise<EmailSendResult> {
+  const to = [email.to];
+  try {
+    const html = await renderEmailComponent(
+      'EventRegistrationOwner',
+      email.props
+    );
+    await sendEmail({
+      to,
+      subject: email.props.pending
+        ? `${email.props.attendeeName} is waiting for approval to join ${email.props.eventTitle}`
+        : `${email.props.attendeeName} registered for ${email.props.eventTitle}`,
+      html,
+    });
+    return { ok: true, template: OWNER_TEMPLATE, to };
+  } catch (error) {
+    return {
+      ok: false,
+      template: OWNER_TEMPLATE,
+      to,
+      error: emailErrorLabel(error),
+    };
+  }
+}
+
+/** Attendee QR email when registered, plus the community owner's heads-up. */
+export async function queueEventRegistrationEmails(
   event: H3Event,
   params: EventRegistrationEmailParams
 ) {
-  const email = await buildEventRegistrationEmail(params);
-  if (!email) return;
+  const [attendeeEmail, ownerEmail] = await Promise.all([
+    params.status === 'registered'
+      ? buildEventRegistrationEmail(params)
+      : null,
+    params.notifyOwner ? buildOwnerEmail(params) : null,
+  ]);
 
-  enrichLog(event, { email: { attempted: true, to: [email.to] } });
-  trackEmailSends(
-    event,
-    sendEventRegistrationEmail(email).then((result) => [result])
-  );
+  const sends: Promise<EmailSendResult>[] = [];
+  if (attendeeEmail) sends.push(sendEventRegistrationEmail(attendeeEmail));
+  if (ownerEmail) sends.push(sendOwnerEmail(ownerEmail));
+
+  enrichLog(event, {
+    email: {
+      attempted: sends.length > 0,
+      to: [attendeeEmail?.to, ownerEmail?.to].filter(Boolean),
+      // No community card means no QR to send.
+      ...(params.status === 'registered' && !attendeeEmail
+        ? { skipped: `${TEMPLATE}:no_card` }
+        : {}),
+    },
+  });
+  if (sends.length > 0) trackEmailSends(event, Promise.all(sends));
 }

@@ -30,6 +30,8 @@ export const event = pgTable(
       .$type<'everyone' | 'manual'>()
       .default('everyone')
       .notNull(),
+    reminderEmailSentAt: timestamp(),
+    afterEventEmailSentAt: timestamp(),
     createdAt: timestamp().defaultNow().notNull(),
     updatedAt: timestamp()
       .defaultNow()

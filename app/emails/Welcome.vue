@@ -9,27 +9,30 @@ const props = defineProps<Props>();
 </script>
 
 <template>
-  <EmailLayout preview="Welcome to LA PERSONA — your Founders' Club invitation">
-    <EText style="margin-top: -8px">Hi {{ props.name }},</EText>
+  <EmailLayout
+    preview="Welcome to LA PERSONA — your Founders' Club invitation"
+    show-banner
+  >
+    <EText style="margin-top: -8px">Hi&nbsp;{{ props.name }},</EText>
     <EText style="margin-top: -12px">
-      Welcome to <strong style="font-weight: 900">LA PERSONA</strong>.
+      Welcome to <strong style="font-weight: 900">LA&nbsp;PERSONA</strong>.
     </EText>
     <EText style="margin-top: -12px; line-height: 1.5">
       I'm Min, one of the co-founders. Thank you for your interest in our
-      Founders' Club invitation.
+      Founders' Club&nbsp;invitation.
     </EText>
 
     <EText style="margin-top: 32px">
-      AT LA <strong style="font-weight: 900">PERSONA</strong>
+      AT LA&nbsp;<strong style="font-weight: 900">PERSONA</strong>
     </EText>
     <EText style="margin-top: -12px; line-height: 1.5">
       We design premium, modern 3D digital cards that elevate how professionals
-      present themselves.
+      present&nbsp;themselves.
     </EText>
 
-    <EText style="margin-top: 32px"> OUR MISSION IS SIMPLE </EText>
+    <EText style="margin-top: 32px"> OUR MISSION IS&nbsp;SIMPLE </EText>
     <EText style="margin-top: -12px; line-height: 1.5">
-      To help elevate your presence.
+      To help elevate your&nbsp;presence.
     </EText>
 
     <EButton
@@ -52,20 +55,20 @@ const props = defineProps<Props>();
     <EHr />
 
     <EHeading as="h4" style="margin-top: 32px; font-weight: 600">
-      WHAT IS FOUNDERS' CLUB?
+      WHAT IS FOUNDERS'&nbsp;CLUB?
     </EHeading>
 
     <EText style="margin-top: -12px; line-height: 1.5">
       Founders' Club offer is not a regular membership. It's a limited early
       access circle created to reward our first supporters with lifetime
       recognition, exclusive benefits, and a premium digital identity experience
-      that won't be available again after product launch.
+      that won't be available again after product&nbsp;launch.
     </EText>
 
     <EText style="margin: -12px 0 0 8px; line-height: 1.5">
       • Limited to 20 members<br />
       • VIP care<br />
-      • Fully personalized
+      • Fully&nbsp;personalized
     </EText>
 
     <EText style="margin: 32px 0; line-height: 1.5">
@@ -75,7 +78,7 @@ const props = defineProps<Props>();
         download="founders-club-flyer"
         href="https://temporary.la-persona.com/pdfs/founders-club-flyer.pdf"
       >
-        Download the Flyer
+        Download the&nbsp;Flyer
       </a>
     </EText>
 
@@ -88,36 +91,36 @@ const props = defineProps<Props>();
     <EText style="margin: -12px 0 0 8px; line-height: 1.5">
       • Founders' Club Rate:
       <strong style="font-weight: 900">MMK 120,000</strong><br />
-      • Regular Rate: MMK 180,000
+      • Regular Rate: MMK&nbsp;180,000
     </EText>
 
     <EText style="margin: 6px 0 32px 0">
-      Flexible payment: one-time or split.
+      Flexible payment: one-time or&nbsp;split.
     </EText>
 
     <EHeading as="h4" style="margin-top: 32px; font-weight: 600">
-      HOSTING FEE AFTER 1 YEAR
+      HOSTING FEE AFTER 1&nbsp;YEAR
     </EHeading>
 
     <EText style="margin: -12px 0 32px 8px; line-height: 1.5">
       • Founders' Club Rate:
       <strong style="font-weight: 900">MMK 19,000</strong>/year
       <strong style="font-weight: 900">(Lifelong)</strong><br />
-      • Regular Rate: MMK 48,000/year
+      • Regular Rate: MMK&nbsp;48,000/year
     </EText>
 
     <EHr />
 
     <EHeading as="h4" style="margin-top: 32px; font-weight: 600">
-      JOIN IN 3 SIMPLE STEP
+      JOIN IN 3 SIMPLE&nbsp;STEP
     </EHeading>
 
     <EHeading as="h5" style="margin-top: 16px; font-weight: 600">
-      1. REACH OUT TO US
+      1. REACH OUT TO&nbsp;US
     </EHeading>
     <EText style="margin: -16px 0 0 16px; line-height: 1.5">
       Start the conversation by sending us a message through any of the
-      following channels:
+      following&nbsp;channels:
     </EText>
     <EText style="margin: 6px 0 0 22px; line-height: 1.5">
       •
@@ -146,27 +149,27 @@ const props = defineProps<Props>();
     </EText>
 
     <EHeading as="h5" style="margin-top: 16px; font-weight: 600">
-      2. CONFIRM YOUR ORDER
+      2. CONFIRM YOUR&nbsp;ORDER
     </EHeading>
     <EText style="margin: -16px 0 0 16px; line-height: 1.5">
-      We'll guide you through the details and finalize your confirmation.
+      We'll guide you through the details and finalize your&nbsp;confirmation.
     </EText>
 
     <EHeading as="h5" style="margin-top: 16px; font-weight: 600">
-      3. SCHEDULE YOUR DESIGN CONSULTATION
+      3. SCHEDULE YOUR DESIGN&nbsp;CONSULTATION
     </EHeading>
     <EText style="margin: -16px 0 0 16px; line-height: 1.5">
-      Book a dedicated session to craft your bespoke digital card with our team.
+      Book a dedicated session to craft your bespoke digital card with our&nbsp;team.
     </EText>
 
     <EText style="margin-top: 12px; line-height: 1.5">
-      Feel free to DM us to explore more or ask any questions.
+      Feel free to DM us to explore more or ask any&nbsp;questions.
     </EText>
 
     <EText style="margin-top: 32px">
       Warmest Regards,<br />
       Min Htet Myet<br />
-      Co-founder, <strong style="font-weight: 900">LA PERSONA</strong>
+      Co-founder, <strong style="font-weight: 900">LA&nbsp;PERSONA</strong>
     </EText>
   </EmailLayout>
 </template>

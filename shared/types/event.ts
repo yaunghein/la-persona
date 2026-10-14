@@ -12,10 +12,17 @@ export type InsertEvent = InferInsertModel<typeof event>;
 
 export type EventDTO = Omit<
   SelectEvent,
-  'startsAt' | 'endsAt' | 'createdAt' | 'updatedAt'
+  | 'startsAt'
+  | 'endsAt'
+  | 'reminderEmailSentAt'
+  | 'afterEventEmailSentAt'
+  | 'createdAt'
+  | 'updatedAt'
 > & {
   startsAt: string;
   endsAt: string;
+  reminderEmailSentAt: string | null;
+  afterEventEmailSentAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -36,6 +43,10 @@ export type EventRegistrationMode = (typeof EVENT_REGISTRATION_MODES)[number];
 
 export const EVENT_APPROVAL_MODES = ['everyone', 'manual'] as const;
 export type EventApprovalMode = (typeof EVENT_APPROVAL_MODES)[number];
+
+/** Emails an organizer sends to attendees from the event page. */
+export const EVENT_BROADCAST_KINDS = ['reminder', 'after_event'] as const;
+export type EventBroadcastKind = (typeof EVENT_BROADCAST_KINDS)[number];
 
 export const EVENT_REGISTRATION_STATUSES = [
   'pending',

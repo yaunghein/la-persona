@@ -8,6 +8,8 @@ export function toEventDTO(row: SelectEvent): EventDTO {
     ...row,
     startsAt: row.startsAt.toISOString(),
     endsAt: row.endsAt.toISOString(),
+    reminderEmailSentAt: row.reminderEmailSentAt?.toISOString() ?? null,
+    afterEventEmailSentAt: row.afterEventEmailSentAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

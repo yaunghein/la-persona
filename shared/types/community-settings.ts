@@ -17,7 +17,15 @@ export type CommunitySettingsFormValues = {
   cardBackUrl: string;
 };
 
-export type CommunitySettingsDTO = CommunitySettingsFormValues;
+/** Community-branded email artwork; only Thakhin edits these. */
+export type CommunityEmailImages = {
+  emailQrBackgroundUrl: string;
+  emailContactExchangeUrl: string;
+  emailAfterEventUrl: string;
+};
+
+export type CommunitySettingsDTO = CommunitySettingsFormValues &
+  CommunityEmailImages;
 
 export const updateCommunitySettingsBodySchema = z.object({
   name: z.string().trim().min(1, 'Organization name cannot be empty.'),
@@ -42,6 +50,9 @@ export function toCommunitySettingsDTO(params: {
   splineUrl?: string | null;
   wallpaperUrl?: string | null;
   cardBackUrl?: string | null;
+  emailQrBackgroundUrl?: string | null;
+  emailContactExchangeUrl?: string | null;
+  emailAfterEventUrl?: string | null;
 }): CommunitySettingsDTO {
   return {
     name: params.name,
@@ -53,5 +64,8 @@ export function toCommunitySettingsDTO(params: {
     splineUrl: params.splineUrl?.trim() || '',
     wallpaperUrl: params.wallpaperUrl?.trim() || '',
     cardBackUrl: params.cardBackUrl?.trim() || '',
+    emailQrBackgroundUrl: params.emailQrBackgroundUrl?.trim() || '',
+    emailContactExchangeUrl: params.emailContactExchangeUrl?.trim() || '',
+    emailAfterEventUrl: params.emailAfterEventUrl?.trim() || '',
   };
 }

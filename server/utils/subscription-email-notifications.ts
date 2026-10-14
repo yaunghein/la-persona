@@ -68,7 +68,7 @@ export async function notifySubscriptionSubmissionEmails(params: {
     const teamTemplate = 'submission_received_team';
     try {
       const teamHtml = await renderEmailComponent(
-        'SubscriptionSubmissionReceivedTeam',
+        'SubscriptionSubmissionReceivedAdmin',
         {
           payerName: payerName || 'Unknown',
           payerEmail: payer,

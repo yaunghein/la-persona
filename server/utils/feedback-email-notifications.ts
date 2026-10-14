@@ -24,7 +24,7 @@ export async function notifyFeedbackSubmissionEmail(params: {
   const template = 'feedback_team';
 
   try {
-    const html = await renderEmailComponent('FeedbackSubmissionReceivedTeam', {
+    const html = await renderEmailComponent('FeedbackSubmissionReceivedAdmin', {
       kindLabel,
       message: params.message,
       submitterName,

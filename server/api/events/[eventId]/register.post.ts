@@ -4,7 +4,7 @@ import {
   findRegistrationByEventAndUser,
   insertEventRegistration,
 } from '~~/server/db/queries/event-registration';
-import { queueEventRegistrationEmail } from '~~/server/services/event-registration-email';
+import { queueEventRegistrationEmails } from '~~/server/services/event-registration-email';
 import { handleApiError } from '~~/server/utils/errors';
 import { requireCommunityOrganization } from '~~/server/utils/organization-permissions';
 import { requireOrganizationPermission } from '~~/server/utils/organization-permissions';
@@ -88,11 +88,13 @@ export default defineEventHandler(async (event) => {
       },
     });
 
-    if (inserted && status === 'registered') {
-      await queueEventRegistrationEmail(event, {
+    if (inserted) {
+      await queueEventRegistrationEmails(event, {
         userId: session.user.id,
         organization: org,
         event: { id: eventId, title: row.title },
+        status,
+        notifyOwner: true,
       });
     }
 

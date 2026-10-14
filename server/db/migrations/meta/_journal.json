@@ -78,6 +78,13 @@
       "when": 1791815599117,
       "tag": "0010_first_thanos",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791984975861,
+      "tag": "0011_tired_pestilence",
+      "breakpoints": true
     }
   ]
 }

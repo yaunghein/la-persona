@@ -2,14 +2,31 @@
 withDefaults(
   defineProps<{
     preview?: string;
+    /** Marketing banner; only the Welcome email shows it. */
     showBanner?: boolean;
     boxed?: boolean;
   }>(),
-  { preview: '', showBanner: true, boxed: true }
+  { preview: '', showBanner: false, boxed: true }
 );
 
 const BANNER_URL =
   'https://www.la-persona.com/images/emails/welcome-email-banner.jpg';
+
+// Gmail and desktop Outlook ignore web fonts and use the fallbacks.
+const fontFaces = [
+  {
+    weight: 400,
+    url: 'https://fonts.gstatic.com/s/redhatdisplay/v21/8vIf7wUr0m80wwYf0QCXZzYzUoTK8RZQvRd-D1NYbmyWQk8z-FWZk33xGQ.woff2',
+  },
+  {
+    weight: 500,
+    url: 'https://fonts.gstatic.com/s/redhatdisplay/v21/8vIf7wUr0m80wwYf0QCXZzYzUoTK8RZQvRd-D1NYbl6WQk8z-FWZk33xGQ.woff2',
+  },
+  {
+    weight: 700,
+    url: 'https://fonts.gstatic.com/s/redhatdisplay/v21/8vIf7wUr0m80wwYf0QCXZzYzUoTK8RZQvRd-D1NYbouRQk8z-FWZk33xGQ.woff2',
+  },
+];
 
 const socialLinks = [
   { label: 'FACEBOOK', href: 'https://www.facebook.com/share/1A3rzUmSoh/' },
@@ -25,13 +42,15 @@ const socialLinks = [
   <EHtml>
     <EHead>
       <EFont
-        font-family="Inter"
-        :fallback-font-family="['Arial', 'sans-serif']"
-        :web-font="{
-          url: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;700',
-          format: 'woff2',
-        }"
+        v-for="face in fontFaces"
+        :key="face.weight"
+        font-family="Red Hat Display"
+        :fallback-font-family="['Arial', 'Helvetica', 'sans-serif']"
+        :font-weight="face.weight"
+        :web-font="{ url: face.url, format: 'woff2' }"
       />
+      <!-- Older templates style text inline; this evens out their lines too. -->
+      <EStyle>p, h1, h2, h3, h4 { text-wrap: pretty; }</EStyle>
     </EHead>
     <EPreview v-if="preview">{{ preview }}</EPreview>
     <EBody
@@ -56,7 +75,7 @@ const socialLinks = [
             text-align: center;
           "
         >
-          LA <strong>PERSONA</strong>
+          LA&nbsp;<strong>PERSONA</strong>
         </EText>
 
         <slot v-if="!boxed" />
@@ -74,21 +93,8 @@ const socialLinks = [
           </EContainer>
         </EContainer>
 
-        <EText
-          style="
-            margin-top: 40px;
-            font-size: 14px;
-            text-align: center;
-            color: #121212;
-            font-weight: 500;
-            text-transform: uppercase;
-          "
-        >
-          Elevating Professional Presence.
-        </EText>
-
         <EContainer
-          style="max-width: 285px; margin: 24px auto 32px; text-align: center"
+          style="max-width: 285px; margin: 40px auto 32px; text-align: center"
         >
           <a
             v-for="link in socialLinks"

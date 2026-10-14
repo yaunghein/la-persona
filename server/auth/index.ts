@@ -93,17 +93,24 @@ export const auth = betterAuth({
       sendInvitationEmail: async ({
         email,
         id,
+        role,
         organization: invitedOrg,
         inviter,
       }) => {
+        const isVolunteer = role === 'volunteer';
         await sendEmail({
           to: [email],
-          subject: `You're invited to join ${invitedOrg.name} on LA PERSONA`,
-          html: await renderEmailComponent('CommunityInvitation', {
-            inviterName: inviter.user.name || 'A community organizer',
-            organizationName: invitedOrg.name,
-            inviteUrl: `${env.BASE_URL}${ROUTES.INVITE.COMMUNITY_ACCEPT(id)}`,
-          }),
+          subject: isVolunteer
+            ? `You're invited to volunteer with ${invitedOrg.name} on LA PERSONA`
+            : `You're invited to join ${invitedOrg.name} on LA PERSONA`,
+          html: await renderEmailComponent(
+            isVolunteer ? 'CommunityVolunteerInvitation' : 'CommunityInvitation',
+            {
+              inviterName: inviter.user.name || 'A community organizer',
+              organizationName: invitedOrg.name,
+              inviteUrl: `${env.BASE_URL}${ROUTES.INVITE.COMMUNITY_ACCEPT(id)}`,
+            }
+          ),
         });
       },
     }),

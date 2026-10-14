@@ -20,6 +20,9 @@ const adminUpdateOrganizationSchema = z.object({
   splineUrl: z.string().optional(),
   wallpaperUrl: z.string().optional(),
   cardBackUrl: z.string().optional(),
+  emailQrBackgroundUrl: z.string().optional(),
+  emailContactExchangeUrl: z.string().optional(),
+  emailAfterEventUrl: z.string().optional(),
   applyToMemberCards: z.boolean().optional(),
 });
 
@@ -81,6 +84,9 @@ export default defineEventHandler(async (event) => {
     'splineUrl',
     'wallpaperUrl',
     'cardBackUrl',
+    'emailQrBackgroundUrl',
+    'emailContactExchangeUrl',
+    'emailAfterEventUrl',
   ] as const;
   const writesCommunitySettings =
     existing.type === ORGANIZATION_TYPES.COMMUNITY &&
@@ -117,6 +123,15 @@ export default defineEventHandler(async (event) => {
         : {}),
       ...(result.data.cardBackUrl !== undefined
         ? { cardBackUrl: result.data.cardBackUrl.trim() }
+        : {}),
+      ...(result.data.emailQrBackgroundUrl !== undefined
+        ? { emailQrBackgroundUrl: result.data.emailQrBackgroundUrl.trim() }
+        : {}),
+      ...(result.data.emailContactExchangeUrl !== undefined
+        ? { emailContactExchangeUrl: result.data.emailContactExchangeUrl.trim() }
+        : {}),
+      ...(result.data.emailAfterEventUrl !== undefined
+        ? { emailAfterEventUrl: result.data.emailAfterEventUrl.trim() }
         : {}),
     });
 

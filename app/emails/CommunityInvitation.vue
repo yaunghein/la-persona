@@ -20,14 +20,14 @@ defineProps<{
     <EText style="margin: 12px 0 0; line-height: 1.5">
       <strong style="font-weight: 700">{{ inviterName }}</strong> invited you to
       join <strong style="font-weight: 700">{{ organizationName }}</strong> on
-      <strong style="font-weight: 900">LA PERSONA</strong>.
+      <strong style="font-weight: 900">LA&nbsp;PERSONA</strong>.
     </EText>
 
-    <EText style="margin: 32px 0 0">AS A MEMBER</EText>
+    <EText style="margin: 32px 0 0">AS A&nbsp;MEMBER</EText>
     <EText style="margin: 8px 0 0 8px; line-height: 1.5">
       • Get your community card<br />
       • Join community events<br />
-      • Connect with fellow members
+      • Connect with fellow&nbsp;members
     </EText>
 
     <EmailButton :href="inviteUrl">ACCEPT INVITATION</EmailButton>

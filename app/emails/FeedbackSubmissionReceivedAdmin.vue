@@ -19,7 +19,6 @@ const rows = [
 
 <template>
   <EmailLayout
-    :show-banner="false"
     :preview="`New ${kindLabel.toLowerCase()} from ${submitterName}`"
   >
     <EText

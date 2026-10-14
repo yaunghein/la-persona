@@ -4,7 +4,7 @@ defineProps<{ href: string }>();
 
 <template>
   <EText style="margin: 0; font-size: 12px; line-height: 1.5; color: #888888">
-    If the button doesn't work, paste this link into your browser:
+    If the button doesn't work, paste this link into your&nbsp;browser:
   </EText>
   <EText
     style="

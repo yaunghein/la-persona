@@ -10,7 +10,10 @@ import type {
   CommunityEventDetailTab,
   EventAttendee,
 } from '~~/shared/types/community-event-detail';
-import type { EventDetailDTO } from '~~/shared/types/event';
+import type {
+  EventBroadcastKind,
+  EventDetailDTO,
+} from '~~/shared/types/event';
 import { publicEventAbsoluteUrl } from '~~/shared/utils/routes';
 import {
   eventPhase,
@@ -38,6 +41,8 @@ const isScannerOpen = ref(false);
 const isWalkInOpen = ref(false);
 const isEditOpen = ref(false);
 const selectedAttendee = ref<EventAttendee | null>(null);
+const isBroadcastOpen = ref(false);
+const broadcastKind = ref<EventBroadcastKind>('reminder');
 
 const { data: event, isLoading } = useQuery<EventDetailDTO>({
   queryKey: computed(() => [
@@ -188,6 +193,61 @@ async function onShare() {
   }
 }
 
+const broadcastRecipientCount = computed(() => {
+  const attendees = attendeesData.value?.attendees ?? [];
+  return attendees.filter((attendee) =>
+    broadcastKind.value === 'reminder'
+      ? attendee.status !== 'pending'
+      : attendee.status === 'checked_in'
+  ).length;
+});
+
+const broadcastLastSentAt = computed(() =>
+  broadcastKind.value === 'reminder'
+    ? (event.value?.reminderEmailSentAt ?? null)
+    : (event.value?.afterEventEmailSentAt ?? null)
+);
+
+function onSendEmail(kind: EventBroadcastKind) {
+  broadcastKind.value = kind;
+  isBroadcastOpen.value = true;
+}
+
+const { mutate: sendBroadcast, isPending: isSendingBroadcast } = useMutation({
+  mutationFn: (kind: EventBroadcastKind) =>
+    $fetch<{ recipientCount: number; skipped: number }>(
+      `/api/events/${eventId.value}/broadcast-email`,
+      {
+        method: 'POST',
+        query: withOrganizationQuery(),
+        body: { kind },
+      }
+    ),
+  onSuccess: async (result) => {
+    isBroadcastOpen.value = false;
+    await queryClient.invalidateQueries({
+      queryKey: [...QUERY_KEYS.event, organizationSlug.value, eventId.value],
+    });
+    toast.add({
+      title: 'Emails on the way',
+      description:
+        `Sending to ${result.recipientCount} ${result.recipientCount === 1 ? 'attendee' : 'attendees'}.` +
+        (result.skipped > 0
+          ? ` ${result.skipped} without a community card were skipped (no QR ticket).`
+          : ''),
+      color: 'success',
+    });
+  },
+  onError: (error: { data?: { statusMessage?: string }; message?: string }) => {
+    toast.add({
+      title: 'Could not send emails',
+      description:
+        error.data?.statusMessage || error.message || 'Please try again.',
+      color: 'error',
+    });
+  },
+});
+
 async function onCheckedIn() {
   await Promise.all([
     queryClient.invalidateQueries({
@@ -226,10 +286,12 @@ async function onCheckedIn() {
     :title="eventDetail.title"
     :status="eventDetail.status"
     :active-tab="activeTab"
+    :phase="phase"
     :can-edit="canManage"
     @back="goBack"
     @edit="onEdit"
     @share="onShare"
+    @send-email="onSendEmail"
     @update:active-tab="activeTab = $event"
   >
     <CommunityEventOverview
@@ -268,6 +330,16 @@ async function onCheckedIn() {
     :event-id="eventId"
     :attendees="eventDetail.attendees"
     @checked-in="onCheckedIn"
+  />
+
+  <CommunityEventBroadcastEmailModal
+    v-if="canManage"
+    v-model:open="isBroadcastOpen"
+    :kind="broadcastKind"
+    :recipient-count="broadcastRecipientCount"
+    :last-sent-at="broadcastLastSentAt"
+    :sending="isSendingBroadcast"
+    @confirm="sendBroadcast(broadcastKind)"
   />
 
   <CommunityEventWalkInRegistrationSlideover

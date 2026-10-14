@@ -66,6 +66,9 @@ export default defineEventHandler(async (event) => {
             splineUrl: setting?.splineUrl,
             wallpaperUrl: setting?.wallpaperUrl,
             cardBackUrl: setting?.cardBackUrl,
+            emailQrBackgroundUrl: setting?.emailQrBackgroundUrl,
+            emailContactExchangeUrl: setting?.emailContactExchangeUrl,
+            emailAfterEventUrl: setting?.emailAfterEventUrl,
           })
         : null,
   };

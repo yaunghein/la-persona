@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import type { TabsItem } from '@nuxt/ui';
+import type { DropdownMenuItem, TabsItem } from '@nuxt/ui';
 import type { CommunityEventDetailTab } from '~~/shared/types/community-event-detail';
+import type { EventBroadcastKind } from '~~/shared/types/event';
+import type { EventPhase } from '~~/shared/utils/event-datetime';
 
 const props = defineProps<{
   title: string;
   status: 'upcoming' | 'past';
   activeTab: CommunityEventDetailTab;
+  phase: EventPhase;
   canEdit?: boolean;
 }>();
 
@@ -13,6 +16,7 @@ const emit = defineEmits<{
   back: [];
   edit: [];
   share: [];
+  'send-email': [kind: EventBroadcastKind];
   'update:activeTab': [tab: CommunityEventDetailTab];
 }>();
 
@@ -21,6 +25,21 @@ const tabItems: TabsItem[] = [
   { label: 'Attendees', value: 'attendees' },
   { label: 'Check-in', value: 'check-in' },
 ];
+
+const emailActions = computed<DropdownMenuItem[]>(() => [
+  {
+    label: 'Send reminder email',
+    icon: 'i-lucide-bell',
+    disabled: props.phase === 'past',
+    onSelect: () => emit('send-email', 'reminder'),
+  },
+  {
+    label: 'Send after-event email',
+    icon: 'i-lucide-mail-check',
+    disabled: props.phase === 'before',
+    onSelect: () => emit('send-email', 'after_event'),
+  },
+]);
 
 const selectedTab = computed({
   get: () => props.activeTab,
@@ -76,6 +95,19 @@ const selectedTab = computed({
             class="h-10! w-20! cursor-pointer rounded-full p-0 text-white flex items-center justify-center bg-white/5 hover:bg-white/15 active:hover:bg-white/20"
             @click="emit('share')"
           />
+          <UDropdownMenu
+            v-if="canEdit"
+            :items="emailActions"
+            :content="{ align: 'end' }"
+          >
+            <UButton
+              icon="i-lucide-ellipsis"
+              color="neutral"
+              aria-label="Event email actions"
+              :ui="{ leadingIcon: 'size-4' }"
+              class="h-10! w-20! cursor-pointer rounded-full p-0 text-white flex items-center justify-center bg-white/5 hover:bg-white/15 active:hover:bg-white/20"
+            />
+          </UDropdownMenu>
         </div>
       </div>
 
