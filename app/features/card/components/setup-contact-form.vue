@@ -1,0 +1,236 @@
+<script setup lang="ts">
+import type { FormError } from '#ui/types';
+import { resolvedPhoneFields } from '~~/shared/utils/phone';
+
+const emit = defineEmits<{
+  continued: [];
+}>();
+
+type SetupContactForm = {
+  firstName: string;
+  lastName: string;
+  position: string;
+  phone: string;
+  phoneCountryCode: string;
+  email: string;
+  website: string;
+};
+
+const route = useRoute();
+const toast = useToast();
+const slug = computed(() => route.params.slug as string);
+const { normalizeUrlWithHttps, isValidPublicWebUrl } = useUrlNormalization();
+
+const { data: card, isLoading } = useCardQuery(slug);
+
+const {
+  state,
+  hydrate,
+  clear: clearDraft,
+} = useFormDraft<SetupContactForm>(`card:${slug.value}:setup-contact`, () => ({
+  firstName: '',
+  lastName: '',
+  position: '',
+  phone: '',
+  phoneCountryCode: 'MM',
+  email: '',
+  website: '',
+}));
+
+watch(
+  card,
+  (val) => {
+    if (!val) return;
+    hydrate({
+      firstName: val.firstName || '',
+      lastName: val.lastName || '',
+      position: val.position || '',
+      phone: val.phone || '',
+      phoneCountryCode: val.phoneCountryCode || 'MM',
+      email: val.email || '',
+      website: val.website || '',
+    });
+  },
+  { immediate: true }
+);
+
+const { mutate: updateCard, isPending: isSubmitting } =
+  useUpdateCardMutation(slug);
+
+function saveContactInfo(form: SetupContactForm) {
+  updateCard(
+    {
+      firstName: form.firstName,
+      lastName: form.lastName,
+      position: form.position,
+      email: form.email,
+      website: normalizeUrlWithHttps(form.website),
+      ...resolvedPhoneFields(form.phone, form.phoneCountryCode),
+    },
+    {
+      onSuccess: () => {
+        clearDraft();
+        emit('continued');
+      },
+      onError: (err: any) => {
+        toast.add({
+          title: 'Submission Failed',
+          description: err.data?.statusMessage || 'Action failed',
+          color: 'error',
+        });
+      },
+    }
+  );
+}
+
+function validate(formData: Partial<SetupContactForm>): FormError[] {
+  const errors: FormError[] = [];
+
+  if (!formData.firstName?.trim()) {
+    errors.push({
+      name: 'firstName',
+      message: 'First Name is required.',
+    });
+  }
+
+  if (!formData.position?.trim()) {
+    errors.push({
+      name: 'position',
+      message: 'Professional Title / Role is required.',
+    });
+  }
+
+  if (!formData.email?.trim()) {
+    errors.push({
+      name: 'email',
+      message: 'Email is required.',
+    });
+  } else {
+    const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+      formData.email.trim()
+    );
+
+    if (!isEmailValid) {
+      errors.push({
+        name: 'email',
+        message: 'Please enter a valid email address.',
+      });
+    }
+  }
+
+  const website = String(formData.website || '').trim();
+  if (website && !isValidPublicWebUrl(website)) {
+    errors.push({
+      name: 'website',
+      message: 'Please enter a valid URL.',
+    });
+  }
+
+  return errors;
+}
+
+function onSubmit() {
+  saveContactInfo(state);
+}
+</script>
+
+<template>
+  <div class="bg-elevated/25 rounded-md p-4 sm:p-8">
+    <!-- <div v-if="isLoading" class="grid grid-cols-2 gap-5">
+      <USkeleton v-for="i in 6" :key="i" class="h-12 w-full" />
+      <USkeleton class="h-20 col-span-2 w-full" />
+    </div> -->
+    <h1
+      class="text-md sm:text-xl font-medium uppercase tracking-widest text-white"
+    >
+      Let's get started
+    </h1>
+    <p class="mt-2 sm:mt-4 mb-8 text-sm text-muted">
+      Create your La Persona business card in two steps.
+    </p>
+
+    <UForm
+      :state="state"
+      :validate="validate"
+      @submit="onSubmit"
+      class="space-y-4 grid grid-cols-1 md:grid-cols-2 w-full gap-x-5"
+    >
+      <UFormField
+        label="First Name"
+        name="firstName"
+        required
+        class="text-sm font-semibold"
+      >
+        <UInput
+          v-model="state.firstName"
+          variant="soft"
+          class="w-full"
+          size="xl"
+        />
+      </UFormField>
+
+      <UFormField label="Last Name" name="lastName">
+        <UInput
+          v-model="state.lastName"
+          variant="soft"
+          class="w-full"
+          size="xl"
+        />
+      </UFormField>
+
+      <UFormField label="Professional Title / Role" name="position" required>
+        <UInput
+          v-model="state.position"
+          placeholder="e.g. Engineer, Designer, etc."
+          variant="soft"
+          class="w-full"
+          size="xl"
+        />
+      </UFormField>
+
+      <UFormField label="Phone Number" name="phone">
+        <FormPhoneField
+          v-model="state.phone"
+          v-model:country-code="state.phoneCountryCode"
+          name="phone"
+          variant="soft"
+          size="xl"
+        />
+      </UFormField>
+
+      <UFormField label="Email Address" name="email" required>
+        <UInput v-model="state.email" variant="soft" class="w-full" size="xl" />
+      </UFormField>
+
+      <UFormField label="Website" name="website">
+        <UInput
+          v-model="state.website"
+          variant="soft"
+          class="w-full"
+          size="xl"
+        />
+      </UFormField>
+
+      <!-- <UFormField label="Note" name="note" class="md:col-span-2">
+        <UTextarea
+          v-model="state.note"
+          class="w-full"
+          placeholder="Tell us about the changes..."
+          variant="soft"
+          size="xl"
+        />
+      </UFormField> -->
+
+      <div class="md:col-span-2 flex justify-end pt-4">
+        <UButton
+          type="submit"
+          class="h-10 rounded-full px-5 font-semibold"
+          icon="material-symbols:keyboard-double-arrow-right"
+          :loading="isSubmitting"
+        >
+          Continue
+        </UButton>
+      </div>
+    </UForm>
+  </div>
+</template>

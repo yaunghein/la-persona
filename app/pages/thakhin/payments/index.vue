@@ -1,54 +1,22 @@
 <script setup lang="ts">
-definePageMeta({
-  layout: 'thakhin',
-});
-
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
-import { useQuery, useQueryClient } from '@tanstack/vue-query';
-import { useThakhinTable } from '~/composables/thakhin-table';
+import type { PaymentForReview } from '~~/shared/contracts/billing';
 import {
   THAKHIN_ACTIONS_COLUMN,
   THAKHIN_TABLE_UI,
   thakhinSortableHeader,
 } from '~/utils/thakhin-table';
 
-type PaymentRow = {
-  id: string;
-  organizationId: string;
-  paidByUserId: string;
-  payerName: string | null;
-  payerEmail: string | null;
-  receiptUrl: string;
-  paymentReference: string | null;
-  paymentMethod: string | null;
-  status: string;
-  note: string | null;
-  linkedRequestId: string | null;
-  linkedRequestStatus: string | null;
-  itemCount: number;
-  totalAmountMinor: number;
-  currency: string | null;
-  items: {
-    planCode: string;
-    amountMinor: number;
-    currency: string;
-    startAt: string;
-    endAt: string;
-    cardId: string;
-  }[];
-  createdAt: string;
-  updatedAt: string;
-};
-
-const toast = useToast();
-const queryClient = useQueryClient();
-
-const { data, isLoading: pending } = useQuery({
-  queryKey: QUERY_KEYS.payments,
-  queryFn: () => $fetch<PaymentRow[]>('/api/subscriptions/payments'),
+definePageMeta({
+  layout: 'thakhin',
 });
 
-const rows = computed(() => data.value || []);
+type PaymentRow = PaymentForReview;
+
+const toast = useToast();
+const { data, isLoading: pending } = usePaymentReviewQueueQuery();
+const rows = computed(() => data.value?.items ?? []);
+const { mutateAsync: reviewPayment } = useReviewPaymentMutation();
 
 const filterPayer = ref('');
 const filterStatus = ref<'all' | 'submitted' | 'approved' | 'rejected'>('submitted');
@@ -107,11 +75,10 @@ function statusColor(status: string) {
 
 async function approvePayment(row: PaymentRow) {
   try {
-    await $fetch(`/api/subscriptions/payments/${row.id}/approve`, {
-      method: 'POST',
+    await reviewPayment({
+      paymentId: row.id,
+      decision: { status: 'approved' },
     });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.payments });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminOverview });
     toast.add({
       title: 'Payment approved',
       description: `${row.id} is now approved.`,
@@ -129,12 +96,10 @@ async function approvePayment(row: PaymentRow) {
 
 async function rejectPayment(row: PaymentRow) {
   try {
-    await $fetch(`/api/subscriptions/payments/${row.id}/reject`, {
-      method: 'POST',
-      body: {},
+    await reviewPayment({
+      paymentId: row.id,
+      decision: { status: 'rejected' },
     });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.payments });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminOverview });
     toast.add({
       title: 'Payment rejected',
       description: `${row.id} was marked rejected.`,

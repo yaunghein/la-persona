@@ -1,49 +1,30 @@
 <script setup lang="ts">
-definePageMeta({
-  layout: 'thakhin',
-});
-
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
-import { useQuery, useQueryClient } from '@tanstack/vue-query';
-import { useThakhinTable } from '~/composables/thakhin-table';
+import type {
+  CardRequestForReview,
+  CardUpdateRequestForReview,
+} from '~~/shared/contracts/card';
 import {
   THAKHIN_ACTIONS_COLUMN,
   THAKHIN_TABLE_UI,
   thakhinSortableHeader,
 } from '~/utils/thakhin-table';
 
-type CardRequestRow = {
-  id: string;
-  type: 'new_design' | 'existing_design';
-  status: string;
-  paymentReceiptUrl: string;
-  cardData: {
-    name?: string;
-    position?: string;
-    company?: string;
-    phone?: string;
-    email?: string;
-    website?: string;
-    sourceCardId?: string;
-  };
-  requesterName: string | null;
-  requesterEmail: string | null;
-  paymentId: string | null;
-  paymentStatus: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
+definePageMeta({
+  layout: 'thakhin',
+});
+
+type CardRequestRow = CardRequestForReview;
+type UpdateRow = CardUpdateRequestForReview;
 
 const toast = useToast();
 const route = useRoute();
-const queryClient = useQueryClient();
 
-const { data, isLoading: pending } = useQuery({
-  queryKey: QUERY_KEYS.cardRequests,
-  queryFn: () => $fetch<CardRequestRow[]>('/api/card-requests'),
-});
-
-const rows = computed(() => data.value || []);
+const { data, isLoading: pending } = useCardRequestsQuery();
+const rows = computed(() => data.value?.items ?? []);
+const { mutateAsync: reviewCardRequest } = useReviewCardRequestMutation();
+const { mutateAsync: reviewCardUpdateRequest } =
+  useReviewCardRequestMutation('card-update-requests');
 
 const filterName = ref('');
 const filterEmail = ref('');
@@ -95,35 +76,10 @@ function typeLabel(type: CardRequestRow['type']) {
   return type === 'existing_design' ? 'Existing Design' : 'New Design';
 }
 
-type UpdateRow = {
-  id: string;
-  firstName: string | null;
-  lastName: string | null;
-  position: string | null;
-  phone: string | null;
-  email: string | null;
-  website: string | null;
-  note: string | null;
-  status: string;
-  cardId: string;
-  cardSlug: string;
-  cardFirstName: string;
-  cardLastName: string | null;
-  cardPosition: string;
-  cardPhone: string | null;
-  cardEmail: string | null;
-  cardWebsite: string | null;
-  requesterName: string | null;
-  requesterEmail: string | null;
-  createdAt: string;
-};
-
-const { data: updateData, isLoading: updatesLoading } = useQuery({
-  queryKey: QUERY_KEYS.cardUpdateRequests,
-  queryFn: () => $fetch<UpdateRow[]>('/api/card-update-requests'),
-});
+const { data: updateData, isLoading: updatesLoading } =
+  useCardUpdateRequestsQuery();
 const updateRows = computed(() =>
-  (updateData.value || []).filter((row) =>
+  (updateData.value?.items ?? []).filter((row) =>
     updateStatus.value === 'all' ? true : row.status === updateStatus.value
   )
 );
@@ -142,14 +98,10 @@ const {
 
 async function decideUpdate(row: UpdateRow, decision: 'approve' | 'decline') {
   try {
-    await $fetch(`/api/card-update-requests/${row.id}/${decision}`, {
-      method: 'POST',
+    await reviewCardUpdateRequest({
+      requestId: row.id,
+      status: decision === 'approve' ? 'approved' : 'declined',
     });
-    await queryClient.invalidateQueries({
-      queryKey: QUERY_KEYS.cardUpdateRequests,
-    });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminCards });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminOverview });
     toast.add({
       title: decision === 'approve' ? 'Update applied' : 'Update declined',
       color: 'success',
@@ -165,7 +117,11 @@ async function decideUpdate(row: UpdateRow, decision: 'approve' | 'decline') {
 
 const updateColumns: TableColumn<UpdateRow>[] = [
   { accessorKey: 'requesterEmail', header: thakhinSortableHeader('EMAIL') },
-  { accessorKey: 'cardSlug', header: thakhinSortableHeader('CARD') },
+  {
+    id: 'cardSlug',
+    accessorFn: (row) => row.card.slug,
+    header: thakhinSortableHeader('CARD'),
+  },
   { accessorKey: 'status', header: thakhinSortableHeader('STATUS') },
   { accessorKey: 'note', header: thakhinSortableHeader('NOTE') },
   { accessorKey: 'createdAt', header: thakhinSortableHeader('CREATED') },
@@ -205,8 +161,7 @@ function statusColor(status: string) {
 
 async function approveRequest(row: CardRequestRow) {
   try {
-    await $fetch(`/api/card-requests/${row.id}/approve`, { method: 'POST' });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.cardRequests });
+    await reviewCardRequest({ requestId: row.id, status: 'approved' });
     toast.add({
       title: 'Request approved',
       description: `${row.cardData?.name || 'Request'} is now approved.`,
@@ -224,10 +179,7 @@ async function approveRequest(row: CardRequestRow) {
 
 async function declineRequest(row: CardRequestRow) {
   try {
-    await $fetch(`/api/card-requests/${row.id}/decline`, { method: 'POST' });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.cardRequests });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.payments });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminOverview });
+    await reviewCardRequest({ requestId: row.id, status: 'declined' });
     toast.add({
       title: 'Request declined',
       description: 'Linked submitted payments were rejected.',
@@ -491,13 +443,13 @@ const columns: TableColumn<CardRequestRow>[] = [
     <USlideover v-model:open="updateOpen" title="Card update" :ui="{ content: 'bg-[#171717]' }">
       <template #body>
         <div v-if="selectedUpdate" class="space-y-2 text-sm text-white/80">
-          <p class="text-white">{{ selectedUpdate.cardFirstName }} {{ selectedUpdate.cardLastName }}</p>
+          <p class="text-white">{{ selectedUpdate.card.firstName }} {{ selectedUpdate.card.lastName }}</p>
           <p>Requested by {{ selectedUpdate.requesterEmail }}</p>
-          <p>Name: {{ selectedUpdate.cardFirstName }} {{ selectedUpdate.cardLastName }} → {{ selectedUpdate.firstName }} {{ selectedUpdate.lastName }}</p>
-          <p>Position: {{ selectedUpdate.cardPosition }} → {{ selectedUpdate.position }}</p>
-          <p>Phone: {{ selectedUpdate.cardPhone }} → {{ selectedUpdate.phone }}</p>
-          <p>Email: {{ selectedUpdate.cardEmail }} → {{ selectedUpdate.email }}</p>
-          <p>Website: {{ selectedUpdate.cardWebsite }} → {{ selectedUpdate.website }}</p>
+          <p>Name: {{ selectedUpdate.card.firstName }} {{ selectedUpdate.card.lastName }} → {{ selectedUpdate.requested.firstName }} {{ selectedUpdate.requested.lastName }}</p>
+          <p>Position: {{ selectedUpdate.card.position }} → {{ selectedUpdate.requested.position }}</p>
+          <p>Phone: {{ selectedUpdate.card.phone }} → {{ selectedUpdate.requested.phone }}</p>
+          <p>Email: {{ selectedUpdate.card.email }} → {{ selectedUpdate.requested.email }}</p>
+          <p>Website: {{ selectedUpdate.card.website }} → {{ selectedUpdate.requested.website }}</p>
           <p v-if="selectedUpdate.note">Note: {{ selectedUpdate.note }}</p>
         </div>
       </template>

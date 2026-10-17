@@ -2,7 +2,7 @@ import {
   FEEDBACK_KIND_LABELS,
   type FeedbackKind,
 } from '~~/shared/types/feedback';
-import { sendEmail } from '~~/server/utils/email';
+import { sendEmail } from '~~/server/lib/mailer';
 import { env } from '~~/env';
 import {
   emailErrorLabel,

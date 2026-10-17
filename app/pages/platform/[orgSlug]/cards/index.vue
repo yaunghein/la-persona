@@ -1,49 +1,15 @@
 <script setup lang="ts">
+import type { FeatureGuideItem } from '~/components/ui/feature-guide-modal.vue';
+import type { CardDetail } from '~~/shared/contracts/card';
+import { cardHolderName } from '~/features/card/utils/card-badge';
+
 definePageMeta({
   layout: 'platform',
 });
 
-import { useQuery } from '@tanstack/vue-query';
-import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
-
 useSeoMeta({ ...getSeoTitle('Cards - LA PERSONA') });
 
-const route = useRoute();
-const orgSlug = computed(() => String(route.params.orgSlug || ''));
-const toast = useToast();
-const isInfoOpen = ref(false);
-const { data: session } = await authClient.useSession(useFetch);
-const hasSeenInfoPopup = useLocalStorage(
-  `lp-info-popup:cards:${session.value?.user.id || 'anonymous'}`,
-  false
-);
-
-onMounted(() => {
-  if (hasSeenInfoPopup.value) return;
-  isInfoOpen.value = true;
-  hasSeenInfoPopup.value = true;
-});
-
-const {
-  data: cards,
-  isLoading: pending,
-  error,
-  refetch: refresh,
-} = useQuery<CardDTO[]>({
-  queryKey: ['cards', 'workspace', orgSlug],
-  queryFn: async () =>
-    $fetch('/api/cards', {
-      query: { organizationSlug: orgSlug.value, scope: 'workspace' },
-    }),
-});
-
-const isSlideoverOpen = ref(false);
-const isPendingInfoOpen = ref(false);
-const selectedPendingCardName = ref('');
-const isDeleteConfirmOpen = ref(false);
-const isDeleting = ref(false);
-const selectedCardToDelete = ref<CardDTO | null>(null);
-const infoItems = [
+const guideItems: FeatureGuideItem[] = [
   {
     icon: 'i-lucide-eye',
     title: 'View Your Cards',
@@ -69,105 +35,58 @@ const infoItems = [
   },
 ];
 
-const getS3Url = (path?: string | null) => {
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
+const toast = useToast();
+const isGuideOpen = await useFirstVisitGuide('cards');
+const { data: cards, isLoading } = useWorkspaceCardsQuery();
+const { mutateAsync: deleteCard, isPending: isDeleting } =
+  useDeleteCardMutation();
 
-  return resolveObjectStorageUrl(path);
-};
+const isRequestOpen = ref(false);
+const pendingCardName = ref<string | null>(null);
+const isPendingInfoOpen = computed({
+  get: () => pendingCardName.value !== null,
+  set: (open) => {
+    if (!open) pendingCardName.value = null;
+  },
+});
+const cardToDelete = ref<CardDetail | null>(null);
+const isDeleteOpen = computed({
+  get: () => cardToDelete.value !== null,
+  set: (open) => {
+    if (!open) cardToDelete.value = null;
+  },
+});
 
-function openPendingInfo(cardName: string) {
-  selectedPendingCardName.value = cardName;
-  isPendingInfoOpen.value = true;
+function openGuide() {
+  isGuideOpen.value = true;
 }
 
-function openDeleteConfirm(card: CardDTO) {
-  selectedCardToDelete.value = card;
-  isDeleteConfirmOpen.value = true;
+function openRequestForm() {
+  isRequestOpen.value = true;
 }
 
-function closeDeleteConfirm() {
-  isDeleteConfirmOpen.value = false;
-  selectedCardToDelete.value = null;
+function closeRequestForm() {
+  isRequestOpen.value = false;
 }
 
-async function onConfirmDelete() {
-  if (!selectedCardToDelete.value) return;
-
-  isDeleting.value = true;
+async function confirmDelete() {
+  if (!cardToDelete.value) return;
   try {
-    await $fetch(`/api/cards/${selectedCardToDelete.value.slug}`, {
-      method: 'DELETE',
-      query: { organizationSlug: orgSlug.value },
-    });
-
+    await deleteCard(cardToDelete.value.slug);
     toast.add({
       title: 'Card deleted',
       description: 'The card has been removed successfully.',
       color: 'success',
     });
-
-    closeDeleteConfirm();
-    await refresh();
-  } catch (error: any) {
+    cardToDelete.value = null;
+  } catch (error) {
     toast.add({
       title: 'Delete failed',
-      description:
-        error?.data?.statusMessage || error?.statusMessage || 'Try again.',
+      description: apiErrorMessage(error, 'Try again.'),
       color: 'error',
     });
-  } finally {
-    isDeleting.value = false;
   }
 }
-
-function isCommunityCard(card: CardDTO) {
-  return card.organizationType === ORGANIZATION_TYPES.COMMUNITY;
-}
-
-function cardEditorPath(card: CardDTO) {
-  const slug = card.organizationSlug || orgSlug.value;
-  return `/platform/${slug}/cards/${card.slug}`;
-}
-
-function getCardBadgeLabel(card: CardDTO) {
-  if (isCommunityCard(card)) {
-    return card.organizationName || 'Community';
-  }
-
-  if (card.subscription?.status === 'pending_approval') return 'Pending';
-
-  const planCode = card.subscription?.planCode;
-  const isTrial =
-    card.subscription?.status === 'trial' || card.subscription?.isTrial;
-
-  // Keep explicit/special plan names visible even during trial periods.
-  if (planCode === 'friend-family') return 'Friends & Family';
-  if (planCode === 'founder-club') return "Founders' Club";
-  if (planCode === 'premium') return 'Premium';
-  if (isTrial) return 'Standard (Trial)';
-
-  if (card.subscription?.planName?.trim()) {
-    return card.subscription.planName.trim();
-  }
-
-  if (planCode === 'standard') return 'Standard';
-  return 'No Plan';
-}
-
-function getCardBadgeColor(card: CardDTO) {
-  if (card.subscription?.status === 'pending_approval') return 'warning';
-  if (card.subscription?.status === 'active') return 'success';
-  return 'neutral';
-}
-
-function hasSplinePreview(card: CardDTO) {
-  return Boolean(card.splineUrl?.trim());
-}
-
-const isSmUp = useMediaQuery('(min-width: 640px)');
-const cardFooterActionSize = 'sm';
-// const cardFooterActionSize = computed(() => (isSmUp.value ? 'sm' : 'sm'));
 </script>
 
 <template>
@@ -188,11 +107,7 @@ const cardFooterActionSize = 'sm';
           variant="ghost"
           class="flex items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323] cursor-pointer"
           aria-label="Open cards information"
-          @click="
-            () => {
-              isInfoOpen = true;
-            }
-          "
+          @click="openGuide"
         />
       </div>
 
@@ -201,16 +116,12 @@ const cardFooterActionSize = 'sm';
         leading-icon="i-lucide-plus"
         color="neutral"
         class="self-start sm:self-auto h-10 cursor-pointer flex items-center justify-center rounded-full border-2 border-[#232323] bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
-        @click="
-          () => {
-            isSlideoverOpen = true;
-          }
-        "
+        @click="openRequestForm"
       />
     </div>
 
     <USlideover
-      v-model:open="isSlideoverOpen"
+      v-model:open="isRequestOpen"
       side="right"
       inset
       title="REQUEST NEW CARD"
@@ -222,78 +133,20 @@ const cardFooterActionSize = 'sm';
       }"
     >
       <template #body>
-        <FormRequestCard
-          @close="isSlideoverOpen = false"
-          @submitted="refresh()"
-        />
+        <CardRequestForm @close="closeRequestForm" />
       </template>
     </USlideover>
 
-    <UModal
-      v-model:open="isInfoOpen"
+    <UiFeatureGuideModal
+      v-model:open="isGuideOpen"
       title="What is cards?"
-      :ui="{
-        content: 'sm:max-w-[480px] rounded-lg bg-[#171717]',
-        title: 'text-sm font-medium uppercase tracking-widest text-white',
-        body: 'px-5 py-4 sm:px-6 sm:py-5',
-      }"
-    >
-      <template #body>
-        <div class="space-y-5 sm:space-y-6">
-          <div class="space-y-2">
-            <h3
-              class="text-lg font-medium leading-tight tracking-widest uppercase text-white sm:text-xl"
-            >
-              Your cards, all in one place
-            </h3>
-            <p class="text-sm leading-relaxed text-[#8b8b8b]">
-              Manage your card library and subscription actions quickly.
-            </p>
-          </div>
-
-          <div class="space-y-0">
-            <div
-              v-for="(item, index) in infoItems"
-              :key="item.title"
-              class="py-3 sm:py-3.5"
-              :class="
-                index < infoItems.length - 1 ? 'border-b border-[#2a2a2a]' : ''
-              "
-            >
-              <div class="flex items-start gap-3">
-                <UIcon
-                  :name="item.icon"
-                  class="shrink-0 mt-0.5 size-4.5 text-white sm:size-5"
-                />
-                <div class="min-w-0">
-                  <p class="text-sm font-medium text-white">{{ item.title }}</p>
-                  <p class="mt-1.5 text-sm leading-relaxed text-[#8b8b8b]">
-                    {{ item.description }}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex justify-end">
-            <UButton
-              size="md"
-              label="Understood"
-              color="neutral"
-              class="h-10 justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
-              @click="
-                () => {
-                  isInfoOpen = false;
-                }
-              "
-            />
-          </div>
-        </div>
-      </template>
-    </UModal>
+      heading="Your cards, all in one place"
+      description="Manage your card library and subscription actions quickly."
+      :items="guideItems"
+    />
 
     <div
-      v-if="pending"
+      v-if="isLoading"
       class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 sm:gap-6"
     >
       <USkeleton
@@ -307,109 +160,15 @@ const cardFooterActionSize = 'sm';
       v-else-if="cards?.length"
       class="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3"
     >
-      <UCard
+      <CardLibraryTile
         v-for="card in cards"
         :key="card.id"
-        variant="outline"
-        class="aspect-[1/0.9] w-full min-h-0 overflow-hidden bg-[#232323]"
-        :ui="{
-          root: 'flex h-full min-h-0 flex-col',
-          body: 'min-h-0 flex-1 p-8 lg:p-10',
-          footer: 'shrink-0 bg-[#171717]',
-        }"
-      >
-        <div class="relative h-full min-h-0">
-          <NuxtImg
-            v-if="card.cardBackUrl"
-            :src="getS3Url(card.cardBackUrl)"
-            :alt="`${card.firstName} ${card.lastName || ''} card back`"
-            width="640"
-            class="absolute inset-0 m-auto size-full rounded-md object-contain"
-          />
-          <div
-            v-else
-            class="flex h-full w-full items-center justify-center rounded-md border border-[#2a2a2a] bg-[#1f1f1f]"
-          >
-            <UIcon
-              name="i-material-symbols:cards-star-outline-rounded"
-              class="size-8 text-[#8b8b8b]"
-            />
-          </div>
-          <UBadge
-            class="absolute -right-6.5 -top-6.5 max-w-[70%] font-semibold xs:-top-9.5 xs:-right-9.5 sm:-top-7.5 sm:-right-7.5"
-            :class="[
-              isCommunityCard(card) ? 'normal-case' : 'uppercase',
-              card.subscription?.status === 'pending_approval' &&
-              !isCommunityCard(card)
-                ? 'cursor-pointer bg-amber-500/20 text-amber-300'
-                : 'bg-[#171717] text-white',
-            ]"
-            :color="getCardBadgeColor(card)"
-            size="sm"
-            @click="
-              !isCommunityCard(card) &&
-              card.subscription?.status === 'pending_approval' &&
-              openPendingInfo(`${card.firstName} ${card.lastName || ''}`.trim())
-            "
-          >
-            <OverflowMarquee
-              v-if="isCommunityCard(card)"
-              :text="getCardBadgeLabel(card)"
-            />
-            <template v-else>{{ getCardBadgeLabel(card) }}</template>
-          </UBadge>
-        </div>
+        :card="card"
+        @delete="cardToDelete = $event"
+        @show-pending-info="pendingCardName = $event"
+      />
 
-        <template #footer>
-          <div>
-            <div>{{ card.firstName }} {{ card.lastName }}</div>
-          </div>
-          <div class="mt-4 flex items-center justify-start gap-2">
-            <UButton
-              v-if="hasSplinePreview(card)"
-              icon="i-lucide-scan-eye"
-              color="primary"
-              :size="cardFooterActionSize"
-              class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
-              target="_blank"
-              :href="`/c/${card.slug}`"
-            />
-            <UPopover
-              v-else
-              :ui="{
-                content:
-                  'max-w-[240px] rounded-md border border-[#2a2a2a] bg-[#171717] p-3 text-sm text-white leading-relaxed',
-              }"
-            >
-              <UButton
-                icon="i-lucide-scan-eye"
-                color="primary"
-                :size="cardFooterActionSize"
-                class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
-              />
-
-              <template #content>3D card is still cooking.</template>
-            </UPopover>
-            <UButton
-              icon="i-lucide-square-pen"
-              color="primary"
-              :size="cardFooterActionSize"
-              class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
-              :href="cardEditorPath(card)"
-            />
-            <UButton
-              v-if="!isCommunityCard(card)"
-              icon="i-lucide-trash"
-              color="primary"
-              :size="cardFooterActionSize"
-              class="bg-white/5 text-red-500 hover:bg-white/15 ml-auto active:hover:bg-white/20"
-              @click="openDeleteConfirm(card)"
-            />
-          </div>
-        </template>
-      </UCard>
-
-      <PlatformPremiumCardCta />
+      <BillingPremiumCardCta />
     </div>
 
     <UContainer v-else class="h-[calc(100vh-10rem)] min-h-96">
@@ -433,52 +192,21 @@ const cardFooterActionSize = 'sm';
     </UContainer>
   </div>
 
-  <PendingApprovalInfo
+  <CardPendingApprovalInfo
     v-model:open="isPendingInfoOpen"
-    :card-name="selectedPendingCardName"
+    :card-name="pendingCardName ?? ''"
   />
 
-  <UModal
-    v-model:open="isDeleteConfirmOpen"
-    :close="false"
-    :dismissible="!isDeleting"
-    :ui="{
-      content: 'bg-[#171717] max-w-md',
-      title: 'text-white',
-      body: 'pt-4',
-      footer: 'justify-end gap-2',
-    }"
+  <UiConfirmDeleteModal
+    v-model:open="isDeleteOpen"
     title="Delete Card?"
+    :pending="isDeleting"
+    @confirm="confirmDelete"
   >
-    <template #body>
-      <p class="text-sm text-[#bcbcbc] leading-relaxed">
-        This action cannot be undone. The card
-        <span class="text-white font-medium">
-          "{{ selectedCardToDelete?.firstName }}
-          {{ selectedCardToDelete?.lastName || '' }}"
-        </span>
-        and related subscription records will be removed.
-      </p>
-    </template>
-
-    <template #footer>
-      <UButton
-        size="xl"
-        label="Cancel"
-        color="neutral"
-        variant="ghost"
-        class="rounded-full px-5"
-        :disabled="isDeleting"
-        @click="closeDeleteConfirm"
-      />
-      <UButton
-        size="xl"
-        label="Delete"
-        color="error"
-        class="rounded-full px-6 font-medium"
-        :loading="isDeleting"
-        @click="onConfirmDelete"
-      />
-    </template>
-  </UModal>
+    This action cannot be undone. The card
+    <span class="font-medium text-white">
+      "{{ cardToDelete ? cardHolderName(cardToDelete) : '' }}"
+    </span>
+    and related subscription records will be removed.
+  </UiConfirmDeleteModal>
 </template>

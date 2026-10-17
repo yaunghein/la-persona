@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { magicLink, admin, organization } from 'better-auth/plugins';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { APIError } from 'better-auth/api';
 import { db } from '../db';
 import { env } from '~~/env';
 import {
@@ -8,11 +9,15 @@ import {
   organizationRoles,
 } from '~~/shared/permissions/organization';
 import {
+  platformAccessControl,
+  platformRoles,
+} from '~~/shared/permissions/platform';
+import {
   setupDefaultOrganization,
   getPersonalOrganizationByUserId,
   getAnyOrganizationByUserId,
 } from '~~/server/services/auth';
-import { sendEmail } from '~~/server/utils/email';
+import { sendEmail } from '~~/server/lib/mailer';
 import { ROUTES } from '~~/shared/utils/routes';
 
 const socialProviders: {
@@ -74,10 +79,25 @@ export const auth = betterAuth({
         });
       },
     }),
-    admin(),
+    admin({
+      ac: platformAccessControl,
+      roles: platformRoles,
+    }),
     organization({
       ac: organizationAccessControl,
       roles: organizationRoles,
+      // Organizations are provisioned by the app (personal on sign-up, communities by Thakhin).
+      allowUserToCreateOrganization: false,
+      organizationHooks: {
+        // Ownership is only ever assigned at creation; never through a role change.
+        beforeUpdateMemberRole: async ({ newRole }) => {
+          if (newRole.split(',').includes('owner')) {
+            throw new APIError('FORBIDDEN', {
+              message: 'Ownership cannot be granted by a role change.',
+            });
+          }
+        },
+      },
       schema: {
         organization: {
           additionalFields: {
@@ -85,7 +105,7 @@ export const auth = betterAuth({
               type: 'string',
               required: true,
               defaultValue: 'personal',
-              input: true,
+              input: false,
             },
           },
         },

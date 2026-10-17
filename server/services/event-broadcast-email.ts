@@ -15,7 +15,7 @@ import {
   qrTicketImageUrl,
   type EventEmailContent,
 } from '~~/server/services/event-email-content';
-import { sendBatchEmails } from '~~/server/utils/email';
+import { sendBatchEmails } from '~~/server/lib/mailer';
 import {
   emailErrorLabel,
   enrichLog,

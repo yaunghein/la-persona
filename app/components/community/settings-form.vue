@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import imageCompression from 'browser-image-compression';
 import type { CommunitySettingsFormValues } from '~~/shared/types/community-settings';
 
 const props = defineProps<{
@@ -125,31 +124,15 @@ function clearFileSelection(
   if (input) input.value = '';
 }
 
-async function uploadImage(
+async function uploadSettingsImage(
   file: File,
   options: { maxSizeMB: number; maxWidthOrHeight: number }
 ) {
-  const compressed = await imageCompression(file, options);
-
-  const { uploadUrl, fileKey } = await $fetch('/api/s3/presigned', {
-    method: 'POST',
-    query: { organizationSlug: organizationSlug.value },
-    body: {
-      fileType: compressed.type,
-      fileName: file.name,
-    },
-  });
-
-  const uploadResponse = await fetch(uploadUrl, {
-    method: 'PUT',
-    body: compressed,
-    headers: { 'Content-Type': compressed.type },
-  });
-
-  if (!uploadResponse.ok) {
-    throw new Error('Upload failed');
-  }
-
+  const fileKey = await uploadImage(
+    file,
+    { organizationSlug: organizationSlug.value },
+    options
+  );
   return resolveMediaUrl(fileKey);
 }
 
@@ -157,7 +140,7 @@ async function onUpdate() {
   isUploadingImage.value = true;
   try {
     if (selectedLogoFile.value) {
-      const logoUrl = await uploadImage(selectedLogoFile.value, {
+      const logoUrl = await uploadSettingsImage(selectedLogoFile.value, {
         maxSizeMB: 0.8,
         maxWidthOrHeight: 1200,
       });
@@ -171,7 +154,7 @@ async function onUpdate() {
     }
 
     if (selectedCoverFile.value) {
-      const coverImageUrl = await uploadImage(selectedCoverFile.value, {
+      const coverImageUrl = await uploadSettingsImage(selectedCoverFile.value, {
         maxSizeMB: 1.5,
         maxWidthOrHeight: 2400,
       });

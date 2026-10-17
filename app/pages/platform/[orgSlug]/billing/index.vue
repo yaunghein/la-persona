@@ -1,24 +1,9 @@
 <script setup lang="ts">
+import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
+
 definePageMeta({
   layout: 'platform',
 });
-
-import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
-import { useQuery } from '@tanstack/vue-query';
-
-type BillingRow = {
-  id: string;
-  paymentId: string;
-  dueDate: string;
-  description: string;
-  status: string;
-  amountMinor: number;
-  currency: string;
-  startAt: string;
-  endAt: string;
-  createdAt: string;
-  updatedAt: string;
-};
 
 type BillingTableRow = {
   id: string;
@@ -48,14 +33,7 @@ const sortOrder = ref<'desc' | 'asc'>(parseSortOrder(route.query.sort));
 const page = ref(parsePage(route.query.page));
 
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
-const { data, isLoading: pending } = useQuery({
-  queryKey: ['billing', orgSlug],
-  queryFn: () =>
-    $fetch<BillingRow[]>('/api/subscriptions/billing', {
-      query: { organizationSlug: orgSlug.value },
-    }),
-  enabled: () => !!orgSlug.value,
-});
+const { data, isLoading: pending } = useBillingHistoryQuery(orgSlug);
 
 const rows = computed(() => data.value || []);
 

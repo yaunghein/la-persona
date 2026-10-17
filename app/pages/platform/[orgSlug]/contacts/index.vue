@@ -1,119 +1,24 @@
 <script setup lang="ts">
+import { format } from 'date-fns';
+import type { FeatureGuideItem } from '~/components/ui/feature-guide-modal.vue';
+import type { ContactSummary } from '~~/shared/contracts/contact';
+import type { ContactListScope } from '~/features/contact/composables/use-contact-queries';
+import { roleHasPermission } from '~~/shared/permissions/organization';
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
+import {
+  contactVcardFileName,
+  toContactVcard,
+} from '~/features/contact/utils/contact-vcard';
+
 definePageMeta({
   layout: 'platform',
 });
 
-import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
-import { useQuery } from '@tanstack/vue-query';
-import { format } from 'date-fns';
-import { downloadFile } from '~/utils/share-or-download';
-import { vcfPhoneLines } from '~~/shared/utils/phone';
-import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
+type ViewMode = 'list' | 'grid';
 
-type Contact = {
-  id: string;
-  name: string;
-  role: string;
-  company: string;
-  phone: string;
-  phoneCountryCode: string | null;
-  email: string;
-  origin: string;
-  originTo?: string;
-  isLaPersonaContact: boolean;
-  personaCardTo?: string;
-};
-type ContactActionItem = {
-  id: string;
-  name: string;
-  role: string;
-  company: string;
-  phone: string;
-  phoneCountryCode: string | null;
-  email: string;
-  personaCardTo?: string;
-};
+const PAGE_SIZE: Record<ViewMode, number> = { list: 10, grid: 6 };
 
-type ContactRow = {
-  id: string;
-  name: string;
-  role: string;
-  nameRole: string;
-  company: string;
-  phone: string;
-  phoneCountryCode: string | null;
-  email: string;
-  origin: string;
-  originTo?: string;
-  isLaPersonaContact: boolean;
-  personaCardTo?: string;
-  actions: string;
-};
-type ContactExchangeDTO = {
-  id: string;
-  name: string;
-  phone: string;
-  phoneCountryCode: string | null;
-  email: string | null;
-  position: string | null;
-  company: string | null;
-  cardId: string | null;
-  source: string;
-  laPersonaUserId: string | null;
-  laPersonaCardId: string | null;
-  laPersonaCardSlug: string | null;
-  reciprocalExchangeId: string | null;
-  cardSlug: string | null;
-  cardFirstName: string | null;
-  cardLastName: string | null;
-  cardOrganizationSlug: string | null;
-};
-type ContactsResponse = {
-  isOwner: boolean;
-  cards: { id: string; label: string }[];
-  contacts: ContactExchangeDTO[];
-};
-
-const toast = useToast();
-const isInfoOpen = ref(false);
-const isCreateContactSlideoverOpen = ref(false);
-const isDeleteConfirmOpen = ref(false);
-const isDeletingContact = ref(false);
-const selectedContactToDelete = ref<{ id: string; name: string } | null>(null);
-const route = useRoute();
-const router = useRouter();
-const orgSlug = computed(() => String(route.params.orgSlug || ''));
-const { data: userOrgs, isLoading: isOrgsLoading } = useUserOrganizations();
-const isPersonalWorkspace = computed(() => {
-  const org = (userOrgs.value || []).find((item) => item.slug === orgSlug.value);
-  return org?.type === ORGANIZATION_TYPES.PERSONAL;
-});
-const { data: session } = await authClient.useSession(useFetch);
-const hasSeenInfoPopup = useLocalStorage(
-  `lp-info-popup:contacts:${session.value?.user.id || 'anonymous'}`,
-  false
-);
-
-onMounted(() => {
-  if (hasSeenInfoPopup.value) return;
-  isInfoOpen.value = true;
-  hasSeenInfoPopup.value = true;
-});
-
-const parseViewMode = (value: unknown): 'list' | 'grid' =>
-  value === 'grid' ? 'grid' : 'list';
-
-const parsePage = (value: unknown) => {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed < 1) return 1;
-  return Math.floor(parsed);
-};
-
-const viewMode = ref<'list' | 'grid'>(parseViewMode(route.query.view));
-const selectedCardId = ref('all');
-const ownerSearchQuery = ref('');
-
-const infoItems = [
+const guideItems: FeatureGuideItem[] = [
   {
     icon: 'i-lucide-users',
     title: 'Track Every Connection',
@@ -138,146 +43,99 @@ const infoItems = [
     description: 'Save any contact to your phone.',
   },
 ];
-const {
-  data: contactsResponse,
-  isLoading: isContactsLoading,
-  refetch: refetchContacts,
-} = useQuery<ContactsResponse>({
-  queryKey: [
-    'contact-exchange',
-    orgSlug,
-    () => selectedCardId.value,
-    isPersonalWorkspace,
-  ],
-  queryFn: async () =>
-    $fetch<ContactsResponse>('/api/contact-exchange', {
-      query: {
-        cardId: selectedCardId.value,
-        organizationSlug: orgSlug.value,
-        ...(isPersonalWorkspace.value ? { scope: 'workspace' } : {}),
-      },
-    }),
-  enabled: () => !isOrgsLoading.value,
-});
-const isOwner = computed(() => contactsResponse.value?.isOwner === true);
-const ownerCardItems = computed(() => [
-  { id: 'all', label: 'All Cards' },
-  ...(contactsResponse.value?.cards || []),
-]);
-const contactsData = computed(() => contactsResponse.value?.contacts || []);
-const filteredContactsData = computed(() => {
-  const query = ownerSearchQuery.value.trim().toLowerCase();
-  if (!isOwner.value || !query) return contactsData.value;
 
-  return contactsData.value.filter((item) => {
-    const cardName = [item.cardFirstName, item.cardLastName]
-      .filter(Boolean)
-      .join(' ')
-      .toLowerCase();
-    return [
-      item.name,
-      item.phone,
-      item.email || '',
-      item.company || '',
-      item.position || '',
-      cardName,
-    ].some((value) => value.toLowerCase().includes(query));
-  });
-});
-const contacts = computed<ContactRow[]>(() =>
-  filteredContactsData.value.map((item) => {
-    const role = item.position?.trim() || 'No role';
-    const sourceCardName = [item.cardFirstName, item.cardLastName]
-      .filter(Boolean)
-      .join(' ')
-      .trim();
-    const isLaPersonaContact = item.source === 'seamless_exchange';
-    const personaCardTo =
-      isLaPersonaContact && item.laPersonaCardSlug
-        ? `/c/${item.laPersonaCardSlug}`
-        : undefined;
-    const originLabel = isLaPersonaContact
-      ? 'Seamless Exchange'
-      : item.cardId && sourceCardName
-        ? `From ${sourceCardName}`
-        : item.cardId
-          ? 'From Card Exchange'
-          : 'Added Manually';
-    const originTo =
-      !isLaPersonaContact && item.cardId && item.cardSlug
-        ? `/platform/${item.cardOrganizationSlug || orgSlug.value}/cards/${item.cardSlug}`
-        : undefined;
-    return {
-      id: item.id,
-      name: item.name,
-      role,
-      nameRole: `${item.name}\n${role}`,
-      company: item.company || 'N/A',
-      phone: item.phone || 'N/A',
-      phoneCountryCode: item.phoneCountryCode,
-      email: item.email || 'N/A',
-      origin: originLabel,
-      originTo,
-      isLaPersonaContact,
-      personaCardTo,
-      actions: '⋮',
-    };
-  })
+const route = useRoute();
+const router = useRouter();
+const toast = useToast();
+const isGuideOpen = await useFirstVisitGuide('contacts');
+
+const orgSlug = computed(() => String(route.params.orgSlug || ''));
+const { data: userOrgs, isLoading: isOrgsLoading } = useUserOrganizations();
+const currentOrg = computed(() =>
+  userOrgs.value?.find((org) => org.slug === orgSlug.value)
 );
-
-const page = ref(parsePage(route.query.page));
-const listItemsPerPage = 10;
-const gridItemsPerPage = 6;
-const itemsPerPage = computed(() =>
-  viewMode.value === 'grid' ? gridItemsPerPage : listItemsPerPage
+// The personal workspace shows contacts of every card the user holds.
+const isPersonalWorkspace = computed(
+  () => currentOrg.value?.type === ORGANIZATION_TYPES.PERSONAL
 );
-
-const total = computed(() => contacts.value.length);
-const hasContacts = computed(() => total.value > 0);
-const isSearchEmptyState = computed(
+const canSeeOrigin = computed(
   () =>
-    isOwner.value &&
-    ownerSearchQuery.value.trim().length > 0 &&
-    !hasContacts.value
-);
-const maxPage = computed(() =>
-  Math.max(1, Math.ceil(total.value / itemsPerPage.value))
+    isPersonalWorkspace.value ||
+    roleHasPermission(currentOrg.value?.role, 'contactExchange:readAll')
 );
 
-const pagedContacts = computed(() => {
-  const start = (page.value - 1) * itemsPerPage.value;
-  return contacts.value.slice(start, start + itemsPerPage.value);
-});
-
-const gridContacts = computed<Contact[]>(() =>
-  pagedContacts.value.map((contact, index) => ({
-    id: contact.id,
-    name: contact.name,
-    role: contact.role,
-    company: index % 3 === 0 ? 'N/A' : contact.company,
-    phone: contact.phone,
-    phoneCountryCode: contact.phoneCountryCode,
-    email: contact.email,
-    origin: contact.origin,
-    originTo: contact.originTo,
-    isLaPersonaContact: contact.isLaPersonaContact,
-    personaCardTo: contact.personaCardTo,
-  }))
-);
-
-const onCreateContact = () => {
-  isCreateContactSlideoverOpen.value = true;
+const parseViewMode = (value: unknown): ViewMode =>
+  value === 'grid' ? 'grid' : 'list';
+const parsePage = (value: unknown) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 1 ? Math.floor(parsed) : 1;
 };
 
-function escapeCsvCell(value: string) {
-  const safeValue = String(value ?? '')
-    .replace(/\r?\n/g, ' ')
-    .trim();
-  return `"${safeValue.replace(/"/g, '""')}"`;
+const viewMode = ref<ViewMode>(parseViewMode(route.query.view));
+const page = ref(parsePage(route.query.page));
+const pageSize = computed(() => PAGE_SIZE[viewMode.value]);
+
+const listScope = computed<ContactListScope>(() =>
+  isPersonalWorkspace.value
+    ? { workspace: true }
+    : { organizationSlug: orgSlug.value }
+);
+
+const { data: contactPage, isLoading } = useContactsQuery(
+  () => ({
+    scope: listScope.value,
+    limit: pageSize.value,
+    offset: (page.value - 1) * pageSize.value,
+  }),
+  { enabled: () => !isOrgsLoading.value }
+);
+
+const contacts = computed(() => contactPage.value?.items ?? []);
+const total = computed(() => contactPage.value?.total ?? 0);
+const hasContacts = computed(() => total.value > 0);
+
+const isCreateOpen = ref(false);
+const contactToDelete = ref<ContactSummary | null>(null);
+const isDeleteOpen = computed({
+  get: () => contactToDelete.value !== null,
+  set: (open) => {
+    if (!open) contactToDelete.value = null;
+  },
+});
+const { mutateAsync: deleteContact, isPending: isDeleting } =
+  useDeleteContactMutation();
+
+function saveContactToPhone(contact: ContactSummary) {
+  downloadFile({
+    blob: new Blob([toContactVcard(contact)], {
+      type: 'text/vcard;charset=utf-8',
+    }),
+    fileName: contactVcardFileName(contact),
+  });
 }
 
-const onExport = async () => {
-  if (!contacts.value.length) {
+async function confirmDelete() {
+  const contact = contactToDelete.value;
+  if (!contact) return;
+  try {
+    await deleteContact(contact.id);
+    toast.add({
+      title: 'Contact deleted',
+      description: `"${contact.name}" was removed.`,
+      color: 'success',
+    });
+    contactToDelete.value = null;
+  } catch (error: any) {
+    toast.add({
+      title: 'Delete failed',
+      description: error?.data?.statusMessage || 'Please try again.',
+      color: 'error',
+    });
+  }
+}
+
+async function exportContacts() {
+  if (!hasContacts.value) {
     toast.add({
       title: 'Nothing to export',
       description: 'No contacts available in the current table.',
@@ -285,310 +143,60 @@ const onExport = async () => {
     });
     return;
   }
-
-  const headers = isOwner.value
-    ? ['Name', 'Role', 'Company', 'Phone', 'Email', 'Origin']
-    : ['Name', 'Role', 'Company', 'Phone', 'Email'];
-
-  const rows = contacts.value.map((contact) =>
-    isOwner.value
-      ? [
-          contact.name,
-          normalizeContactField(contact.role),
-          normalizeContactField(contact.company),
-          normalizeContactField(contact.phone),
-          normalizeContactField(contact.email),
-          normalizeContactField(contact.origin),
-        ]
-      : [
-          contact.name,
-          normalizeContactField(contact.role),
-          normalizeContactField(contact.company),
-          normalizeContactField(contact.phone),
-          normalizeContactField(contact.email),
-        ]
-  );
-
-  const csvContent = [headers, ...rows]
-    .map((row) => row.map((cell) => escapeCsvCell(cell)).join(','))
-    .join('\r\n');
-
-  const blob = new Blob([`\uFEFF${csvContent}`], {
-    type: 'text/csv;charset=utf-8;',
-  });
-  const fileName = `contacts-${orgSlug.value || 'org'}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
-  downloadFile({ blob, fileName });
-
-  // toast.add({
-  //   title: 'Export complete',
-  //   description: `${contacts.value.length} contact(s) downloaded as CSV.`,
-  //   color: 'success',
-  // });
-};
-
-function normalizeContactField(value: string) {
-  const normalized = String(value || '').trim();
-  return !normalized || normalized.toUpperCase() === 'N/A' ? '' : normalized;
-}
-
-function escapeVcfValue(value: string) {
-  return value
-    .replace(/\\/g, '\\\\')
-    .replace(/\n/g, '\\n')
-    .replace(/,/g, '\\,')
-    .replace(/;/g, '\\;');
-}
-
-function splitName(fullName: string) {
-  const normalized = normalizeContactField(fullName);
-  if (!normalized) return { firstName: '', lastName: '' };
-
-  const parts = normalized.split(/\s+/).filter(Boolean);
-  if (parts.length === 1) return { firstName: parts[0] || '', lastName: '' };
-
-  return {
-    firstName: parts.slice(0, -1).join(' '),
-    lastName: parts[parts.length - 1] || '',
-  };
-}
-
-function createVcfContent(contact: ContactActionItem) {
-  const fullName = normalizeContactField(contact.name);
-  const phone = normalizeContactField(contact.phone);
-  const email = normalizeContactField(contact.email);
-  const title = normalizeContactField(contact.role);
-  const org = normalizeContactField(contact.company);
-  const { firstName, lastName } = splitName(fullName);
-
-  const lines = [
-    'BEGIN:VCARD',
-    'VERSION:3.0',
-    `FN;CHARSET=UTF-8:${escapeVcfValue(fullName)}`,
-    `N;CHARSET=UTF-8:${escapeVcfValue(lastName)};${escapeVcfValue(firstName)};;;`,
-    ...vcfPhoneLines(phone, contact.phoneCountryCode).map(
-      (value) => `TEL;TYPE=CELL:${escapeVcfValue(value)}`
-    ),
-    email ? `EMAIL;CHARSET=UTF-8;TYPE=INTERNET:${escapeVcfValue(email)}` : '',
-    title ? `TITLE;CHARSET=UTF-8:${escapeVcfValue(title)}` : '',
-    org ? `ORG;CHARSET=UTF-8:${escapeVcfValue(org)}` : '',
-    `REV:${new Date().toISOString()}`,
-    'END:VCARD',
-  ].filter(Boolean);
-
-  return `${lines.join('\r\n')}\r\n`;
-}
-
-function sanitizeVcfFilename(value: string) {
-  return (
-    normalizeContactField(value)
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '') || 'contact'
-  );
-}
-
-async function saveContactAsVcf(contact: ContactActionItem) {
-  const content = createVcfContent(contact);
-  const fileName = `${sanitizeVcfFilename(contact.name)}.vcf`;
-  const blob = new Blob([content], { type: 'text/vcard;charset=utf-8' });
-  downloadFile({ blob, fileName });
-
-  // toast.add({
-  //   title: 'Contact saved',
-  //   description: `${contact.name} downloaded as VCF.`,
-  //   color: 'success',
-  // });
-}
-
-function openDeleteConfirm(contact: { id: string; name: string }) {
-  selectedContactToDelete.value = contact;
-  isDeleteConfirmOpen.value = true;
-}
-
-function closeDeleteConfirm() {
-  isDeleteConfirmOpen.value = false;
-  selectedContactToDelete.value = null;
-}
-
-async function onConfirmDelete() {
-  if (!selectedContactToDelete.value) return;
-
-  isDeletingContact.value = true;
   try {
-    await $fetch(`/api/contact-exchange/${selectedContactToDelete.value.id}`, {
-      method: 'DELETE',
-      query: { organizationSlug: orgSlug.value },
+    const blob = await downloadContactsCsv(listScope.value);
+    downloadFile({
+      blob,
+      fileName: `contacts-${orgSlug.value || 'org'}-${format(new Date(), 'yyyy-MM-dd')}.csv`,
     });
-    await refetchContacts();
-    toast.add({
-      title: 'Contact deleted',
-      description: `"${selectedContactToDelete.value.name}" was removed.`,
-      color: 'success',
-    });
-    closeDeleteConfirm();
   } catch (error: any) {
     toast.add({
-      title: 'Delete failed',
-      description:
-        error?.data?.statusMessage ||
-        error?.statusMessage ||
-        'Please try again.',
+      title: 'Export failed',
+      description: error?.data?.statusMessage || 'Please try again.',
       color: 'error',
     });
-  } finally {
-    isDeletingContact.value = false;
   }
 }
 
-function getActionItems(contact: ContactActionItem): DropdownMenuItem[][] {
-  const personaCardActions: DropdownMenuItem[] = contact.personaCardTo
-    ? [
-        {
-          label: 'View PERSONA Card',
-          icon: 'i-lucide-external-link',
-          onSelect: () => navigateTo(contact.personaCardTo),
-        },
-      ]
-    : [];
-
-  return [
-    [
-      {
-        label: 'Save Contact',
-        icon: 'i-lucide-download',
-        onSelect: () => saveContactAsVcf(contact),
-      },
-      ...personaCardActions,
-    ],
-    [
-      {
-        label: 'Delete Contact',
-        icon: 'i-lucide-trash-2',
-        color: 'error',
-        onSelect: () => openDeleteConfirm(contact),
-      },
-    ],
-  ];
+function openGuide() {
+  isGuideOpen.value = true;
 }
 
-const setViewMode = (mode: 'list' | 'grid') => {
-  if (viewMode.value !== mode) {
-    viewMode.value = mode;
-    page.value = 1;
-  }
-};
+function openCreateContact() {
+  isCreateOpen.value = true;
+}
 
-const toggleViewMode = () => {
-  setViewMode(viewMode.value === 'list' ? 'grid' : 'list');
-};
+function closeCreateContact() {
+  isCreateOpen.value = false;
+}
+
+function setViewMode(mode: ViewMode) {
+  if (viewMode.value === mode) return;
+  viewMode.value = mode;
+  page.value = 1;
+}
 
 watch(
   () => route.query,
   (query) => {
-    const nextView = parseViewMode(query.view);
-    const nextPage = parsePage(query.page);
-    if (viewMode.value !== nextView) viewMode.value = nextView;
-    if (page.value !== nextPage) page.value = nextPage;
+    viewMode.value = parseViewMode(query.view);
+    page.value = parsePage(query.page);
   }
 );
 
-watch([selectedCardId, ownerSearchQuery], () => {
-  page.value = 1;
-});
-
-watch([viewMode, page, maxPage], async () => {
-  if (page.value > maxPage.value) {
-    page.value = maxPage.value;
+watch([viewMode, page], async ([view, current]) => {
+  const query = { view, page: String(current) };
+  if (route.query.view === query.view && route.query.page === query.page) {
     return;
   }
-
-  const nextView = viewMode.value;
-  const nextPage = String(page.value);
-  const currentView = parseViewMode(route.query.view);
-  const currentPage = String(parsePage(route.query.page));
-
-  if (currentView === nextView && currentPage === nextPage) return;
-
-  await router.replace({
-    query: {
-      ...route.query,
-      view: nextView,
-      page: nextPage,
-    },
-  });
+  await router.replace({ query: { ...route.query, ...query } });
 });
 
-const columns: TableColumn<ContactRow>[] = [
-  {
-    accessorKey: 'nameRole',
-    header: 'NAME',
-    meta: {
-      class: {
-        th: 'text-sm font-medium uppercase tracking-widest text-white',
-        td: 'text-sm font-medium leading-[1.35]',
-      },
-    },
-  },
-  {
-    accessorKey: 'company',
-    header: 'COMPANY',
-    meta: {
-      class: {
-        th: 'text-sm font-medium uppercase tracking-widest text-white',
-        td: 'text-sm font-medium text-muted',
-      },
-    },
-  },
-  {
-    accessorKey: 'phone',
-    header: 'PHONE NUMBER',
-    meta: {
-      class: {
-        th: 'text-sm font-medium uppercase tracking-widest text-white',
-        td: 'text-sm font-medium text-muted',
-      },
-    },
-  },
-  {
-    accessorKey: 'email',
-    header: 'EMAIL',
-    meta: {
-      class: {
-        th: 'text-sm font-medium uppercase tracking-widest text-white',
-        td: 'text-sm font-medium text-muted',
-      },
-    },
-  },
-  {
-    accessorKey: 'origin',
-    header: 'ORIGIN',
-    meta: {
-      class: {
-        th: 'text-sm font-medium uppercase tracking-widest text-white',
-        td: 'text-sm font-medium text-muted',
-      },
-    },
-  },
-  {
-    id: 'actions',
-    accessorKey: 'actions',
-    header: '',
-    meta: {
-      class: {
-        th: 'w-10',
-        td: 'text-right text-muted text-base',
-      },
-    },
-  },
-];
-const visibleColumns = computed(() =>
-  isOwner.value
-    ? columns
-    : columns.filter((column) => {
-        if (!('accessorKey' in column)) return true;
-        return column.accessorKey !== 'origin';
-      })
-);
+// Stay on a real page after deletes shrink the list.
+watch(total, (count) => {
+  const lastPage = Math.max(1, Math.ceil(count / pageSize.value));
+  if (page.value > lastPage) page.value = lastPage;
+});
 </script>
 
 <template>
@@ -597,11 +205,11 @@ const visibleColumns = computed(() =>
     :class="!hasContacts && 'min-h-[calc(100dvh-7rem)]'"
   >
     <div
-      class="flex flex-col gap-3 sm:pb-0 sm:flex-row sm:items-center sm:justify-between"
+      class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:pb-0"
     >
       <div class="flex items-center gap-2">
         <h1
-          class="text-2xl font-medium leading-tight tracking-widest uppercase"
+          class="text-2xl font-medium uppercase leading-tight tracking-widest"
         >
           People you've connected with
         </h1>
@@ -610,106 +218,79 @@ const visibleColumns = computed(() =>
           icon="material-symbols:info-outline"
           color="neutral"
           variant="ghost"
-          class="flex items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323] cursor-pointer"
+          class="flex cursor-pointer items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323]"
           aria-label="Open contacts information"
-          @click="
-            () => {
-              isInfoOpen = true;
-            }
-          "
+          @click="openGuide"
         />
       </div>
 
-      <div class="flex items-center gap-2 sm:hidden fixed top-3.75 right-4">
+      <div class="fixed right-4 top-3.75 flex items-center gap-2 sm:hidden">
         <UButton
           icon="material-symbols:list-alt-outline-sharp"
           color="neutral"
           variant="ghost"
-          class="flex items-center justify-center cursor-pointer text-muted"
-          @click="toggleViewMode"
+          class="flex cursor-pointer items-center justify-center text-muted"
+          aria-label="Toggle view"
+          @click="setViewMode(viewMode === 'list' ? 'grid' : 'list')"
         />
         <UButton
           v-if="hasContacts"
           icon="material-symbols:download-sharp"
           color="neutral"
           variant="ghost"
-          class="flex items-center justify-center cursor-pointer text-muted"
-          @click="onExport"
+          class="flex cursor-pointer items-center justify-center text-muted"
+          aria-label="Export contacts"
+          @click="exportContacts"
         />
       </div>
 
       <div
         class="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap"
       >
-        <UInput
-          v-if="isOwner"
-          v-model="ownerSearchQuery"
-          placeholder="Search contacts..."
-          icon="i-lucide-search"
-          class="w-64 hidden"
-          :ui="{
-            base: 'h-9 rounded-full border-[#232323] bg-[#171717] px-3 text-white placeholder:text-muted',
-          }"
-        />
-        <USelectMenu
-          v-if="isOwner"
-          v-model="selectedCardId"
-          value-key="id"
-          :items="ownerCardItems"
-          :search-input="false"
-          class="w-48 hidden"
-          :ui="{
-            base: 'h-10 rounded-full border-[#232323] bg-[#171717] px-3 text-white',
-            content: 'border border-[#2a2a2a] bg-[#171717]',
-            item: 'text-white data-[highlighted]:bg-[#232323]',
-            value: 'text-white',
-          }"
-        />
         <UButton
           v-if="hasContacts"
           label="Create New Contact"
           leading-icon="i-material-symbols-add"
           color="neutral"
-          class="h-10 cursor-pointer flex items-center justify-center rounded-full border-2 border-[#232323] bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
-          @click="onCreateContact"
+          class="flex h-10 cursor-pointer items-center justify-center rounded-full border-2 border-[#232323] bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
+          @click="openCreateContact"
         />
-
         <UButton
           icon="i-material-symbols-download-sharp"
           color="neutral"
           variant="ghost"
-          class="hidden h-10 w-16 cursor-pointer sm:flex px-5 items-center justify-center rounded-full border-2 border-[#232323] bg-[#232323] p-0 text-white hover:bg-[#2a2a2a]"
-          @click="onExport"
+          class="hidden h-10 w-16 cursor-pointer items-center justify-center rounded-full border-2 border-[#232323] bg-[#232323] p-0 px-5 text-white hover:bg-[#2a2a2a] sm:flex"
+          aria-label="Export contacts"
+          @click="exportContacts"
         />
-
         <UFieldGroup class="hidden sm:flex">
           <UButton
             icon="i-lucide-table-2"
-            class="cursor-pointer size-9 rounded-l-md border-2 border-[#232323] hover:bg-[#232323] p-0 flex items-center justify-center"
+            class="flex size-9 cursor-pointer items-center justify-center rounded-l-md border-2 border-[#232323] p-0 hover:bg-[#232323]"
             aria-label="List view"
-            @click="setViewMode('list')"
             :variant="viewMode === 'list' ? 'solid' : 'ghost'"
             :class="
               viewMode === 'list' ? 'bg-[#232323] text-white' : 'text-muted'
             "
+            @click="setViewMode('list')"
           />
           <UButton
             size="xl"
             icon="i-lucide-layout-grid"
-            class="cursor-pointer size-9 rounded-r-md border-2 border-[#232323] hover:bg-[#232323] p-0 flex items-center justify-center"
+            class="flex size-9 cursor-pointer items-center justify-center rounded-r-md border-2 border-[#232323] p-0 hover:bg-[#232323]"
             aria-label="Grid view"
-            @click="setViewMode('grid')"
             :variant="viewMode === 'grid' ? 'solid' : 'ghost'"
             :class="
               viewMode === 'grid' ? 'bg-[#232323] text-white' : 'text-muted'
             "
+            @click="setViewMode('grid')"
           />
         </UFieldGroup>
       </div>
     </div>
 
     <USlideover
-      v-model:open="isCreateContactSlideoverOpen"
+      v-model:open="isCreateOpen"
       side="right"
       inset
       title="CREATE NEW CONTACT"
@@ -720,42 +301,18 @@ const visibleColumns = computed(() =>
       }"
     >
       <template #body>
-        <FormManualContact
-          @close="isCreateContactSlideoverOpen = false"
-          @submitted="refetchContacts()"
+        <ContactManualForm
+          :organization-slug="orgSlug"
+          @created="closeCreateContact"
         />
       </template>
     </USlideover>
 
-    <div v-if="isContactsLoading" class="flex-1 space-y-3">
+    <div v-if="isLoading" class="flex-1 space-y-3">
       <USkeleton
         v-for="index in 6"
         :key="index"
         class="h-16 w-full rounded-md"
-      />
-    </div>
-
-    <div
-      v-else-if="isSearchEmptyState"
-      class="flex flex-1 flex-col items-center justify-center gap-4"
-    >
-      <UIcon name="i-lucide-search-x" class="size-8 text-muted" />
-      <h2 class="text-base font-medium uppercase tracking-widest text-white">
-        No matching contacts
-      </h2>
-      <p class="max-w-52 text-center text-sm text-muted">
-        No contacts match your search. Try another keyword.
-      </p>
-      <UButton
-        size="xl"
-        label="Clear Search"
-        color="neutral"
-        class="mt-2 rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
-        @click="
-          () => {
-            ownerSearchQuery = '';
-          }
-        "
       />
     </div>
 
@@ -778,156 +335,40 @@ const visibleColumns = computed(() =>
         label="Create New Contact"
         leading-icon="i-material-symbols-add"
         color="neutral"
-        class="h-10 mt-2 rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
-        @click="onCreateContact"
+        class="mt-2 h-10 rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+        @click="openCreateContact"
       />
     </div>
 
     <div
       v-else-if="viewMode === 'list'"
-      class="hide-scrollbar flex-1 overflow-x-auto overflow-y-hidden -mx-4 sm:mx-0 px-4 sm:px-0"
+      class="hide-scrollbar -mx-4 flex-1 overflow-y-hidden overflow-x-auto px-4 sm:mx-0 sm:px-0"
     >
-      <UTable
-        :data="pagedContacts"
-        :columns="visibleColumns"
-        :ui="{
-          th: 'px-4 py-4 border-b border-[#232323]',
-          td: 'px-4 py-3 border-b border-[#232323]',
-          tr: 'bg-transparent',
-          empty: 'py-16 text-center text-sm text-muted',
-        }"
-        class="w-full min-w-250"
-      >
-        <template #nameRole-cell="{ row }">
-          <div class="leading-[1.35]">
-            <p class="flex items-center gap-1 text-sm font-medium text-white">
-              {{ row.original.name }}
-              <NuxtLink
-                v-if="
-                  row.original.isLaPersonaContact && row.original.personaCardTo
-                "
-                :to="row.original.personaCardTo"
-                class="scale-90 inline-flex h-4 w-7 shrink-0 cursor-pointer transition hover:opacity-80"
-                aria-label="La Persona contact"
-              >
-                <IconLpBadge />
-              </NuxtLink>
-            </p>
-            <p class="text-sm font-medium text-muted">
-              {{ row.original.role }}
-            </p>
-          </div>
-        </template>
-        <template v-if="isOwner" #origin-cell="{ row }">
-          <UButton
-            size="xl"
-            v-if="row.original.originTo"
-            :to="row.original.originTo"
-            color="neutral"
-            variant="link"
-            class="h-auto p-0 text-sm font-medium text-muted"
-          >
-            <UIcon name="i-lucide-external-link" class="ml-1 size-4" />
-            <span>{{ row.original.origin }}</span>
-          </UButton>
-          <span v-else class="text-sm font-medium text-muted">
-            {{ row.original.origin }}
-          </span>
-        </template>
-        <template #actions-cell="{ row }">
-          <UDropdownMenu :items="getActionItems(row.original)">
-            <UButton
-              size="xl"
-              icon="i-mdi-dots-vertical"
-              color="neutral"
-              variant="ghost"
-              class="text-muted"
-            />
-          </UDropdownMenu>
-        </template>
-      </UTable>
+      <ContactTable
+        :contacts="contacts"
+        :show-origin="canSeeOrigin"
+        @save="saveContactToPhone"
+        @delete="contactToDelete = $event"
+      />
     </div>
 
-    <div v-else class="flex-1">
-      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
-        <UCard
-          v-for="contact in gridContacts"
-          :key="contact.id"
-          :ui="{
-            root: 'rounded-[8px] bg-[#171717] border border-transparent',
-            body: 'p-5 sm:p-4',
-            footer: 'border-t border-[#232323] p-5 sm:p-4',
-          }"
-        >
-          <div class="space-y-2">
-            <p
-              class="flex items-center gap-1 text-xl font-medium leading-none text-white sm:text-[20px]"
-            >
-              {{ contact.name }}
-              <NuxtLink
-                v-if="contact.isLaPersonaContact && contact.personaCardTo"
-                :to="contact.personaCardTo"
-                class="inline-flex scale-90 h-4 w-7 shrink-0 cursor-pointer transition hover:opacity-80"
-                aria-label="La Persona contact"
-              >
-                <IconLpBadge />
-              </NuxtLink>
-            </p>
-            <p class="text-md leading-none text-muted sm:text-sm">
-              {{ contact.role }}
-            </p>
-          </div>
-
-          <div
-            class="mt-12 space-y-4 text-md leading-none text-muted sm:mt-10 sm:space-y-2 sm:text-sm"
-          >
-            <p>{{ contact.phone }}</p>
-            <p>{{ contact.email }}</p>
-            <p>{{ contact.company }}</p>
-          </div>
-
-          <template #footer>
-            <div
-              class="flex items-end"
-              :class="isOwner ? 'justify-between' : 'justify-end'"
-            >
-              <div v-if="isOwner">
-                <p class="text-[14px] text-muted sm:text-xs">Origin</p>
-                <UButton
-                  size="xl"
-                  v-if="contact.originTo"
-                  :to="contact.originTo"
-                  color="neutral"
-                  variant="link"
-                  class="mt-2 h-auto p-0 text-md leading-none text-white underline-offset-2 sm:mt-1 sm:text-sm"
-                >
-                  {{ contact.origin }}
-                </UButton>
-              </div>
-
-              <UDropdownMenu :items="getActionItems(contact)">
-                <UButton
-                  size="xl"
-                  icon="i-mdi-dots-vertical"
-                  color="neutral"
-                  variant="ghost"
-                  class="text-muted"
-                />
-              </UDropdownMenu>
-            </div>
-          </template>
-        </UCard>
-      </div>
-    </div>
+    <ContactCardGrid
+      v-else
+      class="flex-1"
+      :contacts="contacts"
+      :show-origin="canSeeOrigin"
+      @save="saveContactToPhone"
+      @delete="contactToDelete = $event"
+    />
 
     <div
       v-if="hasContacts"
-      class="mt-auto flex items-center justify-center sm:justify-end pt-4 sm:pt-0"
+      class="mt-auto flex items-center justify-center pt-4 sm:justify-end sm:pt-0"
     >
       <UPagination
         v-model:page="page"
         :total="total"
-        :items-per-page="itemsPerPage"
+        :items-per-page="pageSize"
         :sibling-count="0"
         show-controls
         show-edges
@@ -943,109 +384,22 @@ const visibleColumns = computed(() =>
     </div>
   </div>
 
-  <UModal
-    v-model:open="isInfoOpen"
+  <UiFeatureGuideModal
+    v-model:open="isGuideOpen"
     title="What is Contacts?"
-    :ui="{
-      content:
-        'sm:max-w-[480px] rounded-lg bg-[#171717]',
-      title: 'text-sm font-medium uppercase tracking-widest text-white',
-      body: 'px-5 py-4 sm:px-6 sm:py-5',
-    }"
-  >
-    <template #body>
-      <div class="space-y-5 sm:space-y-6">
-        <div class="space-y-2">
-          <h3
-            class="text-lg font-medium leading-tight tracking-widest uppercase text-white sm:text-xl"
-          >
-            Your network, all in one place
-          </h3>
-          <p class="text-sm leading-relaxed text-[#8b8b8b]">
-            Capture, review, and act on every contact.
-          </p>
-        </div>
+    heading="Your network, all in one place"
+    description="Capture, review, and act on every contact."
+    :items="guideItems"
+  />
 
-        <div class="space-y-0">
-          <div
-            v-for="(item, index) in infoItems"
-            :key="item.title"
-            class="py-3 sm:py-3.5"
-            :class="
-              index < infoItems.length - 1 ? 'border-b border-[#2a2a2a]' : ''
-            "
-          >
-            <div class="flex items-start gap-3">
-              <UIcon
-                :name="item.icon"
-                class="mt-0.5 size-4.5 shrink-0 text-white sm:size-5"
-              />
-              <div class="min-w-0">
-                <p class="text-sm font-medium text-white">{{ item.title }}</p>
-                <p class="mt-1.5 text-sm leading-relaxed text-[#8b8b8b]">
-                  {{ item.description }}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex justify-end">
-          <UButton
-            size="md"
-            label="Understood"
-            color="neutral"
-            class="h-10 justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
-            @click="
-              () => {
-                isInfoOpen = false;
-              }
-            "
-          />
-        </div>
-      </div>
-    </template>
-  </UModal>
-
-  <UModal
-    v-model:open="isDeleteConfirmOpen"
-    :close="false"
-    :dismissible="!isDeletingContact"
-    :ui="{
-      content: 'bg-[#171717] max-w-md',
-      title: 'text-white',
-      body: 'pt-4',
-      footer: 'justify-end gap-2',
-    }"
+  <UiConfirmDeleteModal
+    v-model:open="isDeleteOpen"
     title="Delete Contact?"
+    :pending="isDeleting"
+    @confirm="confirmDelete"
   >
-    <template #body>
-      <p class="text-sm leading-relaxed text-[#bcbcbc]">
-        This action cannot be undone. The contact
-        <span class="font-medium text-white">
-          "{{ selectedContactToDelete?.name }}"
-        </span>
-        will be removed.
-      </p>
-    </template>
-    <template #footer>
-      <UButton
-        size="xl"
-        label="Cancel"
-        color="neutral"
-        variant="ghost"
-        class="rounded-full px-5"
-        :disabled="isDeletingContact"
-        @click="closeDeleteConfirm"
-      />
-      <UButton
-        size="xl"
-        label="Delete"
-        color="error"
-        class="rounded-full px-6 font-medium"
-        :loading="isDeletingContact"
-        @click="onConfirmDelete"
-      />
-    </template>
-  </UModal>
+    This action cannot be undone. The contact
+    <span class="font-medium text-white">"{{ contactToDelete?.name }}"</span>
+    will be removed.
+  </UiConfirmDeleteModal>
 </template>

@@ -1,0 +1,324 @@
+import {
+  findCardOwnerEmail,
+  findLatestCardInOrganization,
+  findPersonalCardForUser,
+  type CardRecord,
+} from '~~/server/features/card/card.repository';
+import {
+  deleteContact,
+  insertContact,
+  insertLegacyContactExchange,
+  listContacts,
+  upsertSeamlessExchange,
+  type ContactScope,
+} from '~~/server/features/contact/contact.repository';
+import { toContactSummary } from '~~/server/features/contact/contact.mapper';
+import {
+  sendContactExchangeEmail,
+  type ExchangedContact,
+} from '~~/server/features/contact/contact.notifications';
+import { findWorkspaceCardsForUser } from '~~/server/db/queries/workspace-cards';
+import { toCsv } from '~~/server/lib/csv';
+import type { EmailSendResult } from '~~/server/utils/wide-event';
+import type { Page } from '~~/shared/contracts/collection';
+import type {
+  ContactSummary,
+  CreateContactExchangeRequest,
+  CreateLegacyContactExchangeRequest,
+  CreateManualContactRequest,
+  ListContactsQuery,
+} from '~~/shared/contracts/contact';
+import { cards as legacyCards } from '~~/shared/utils/cards';
+import { contactOriginLabel } from '~~/shared/utils/contact-origin';
+import {
+  internationalPhone,
+  normalizePhoneCountryCode,
+  resolvedPhoneFields,
+} from '~~/shared/utils/phone';
+
+type FormExchangeInput = Extract<
+  CreateContactExchangeRequest,
+  { mode: 'form' }
+>;
+
+/** Emails continue after the response; the handler tracks them on the wide event. */
+export type EmailDeliveries = {
+  recipients: string[];
+  deliveries: Promise<EmailSendResult[]>;
+};
+
+function cardHolderName(value: Pick<CardRecord, 'firstName' | 'lastName'>) {
+  return [value.firstName, value.lastName].filter(Boolean).join(' ').trim();
+}
+
+function cardAsExchangedContact(
+  value: CardRecord,
+  fallbackEmail: string | null
+): ExchangedContact {
+  return {
+    name: cardHolderName(value),
+    email: value.email || fallbackEmail || '',
+    phone: value.phone
+      ? internationalPhone(value.phone, value.phoneCountryCode)
+      : '',
+    company: value.company || '',
+    position: value.position || '',
+  };
+}
+
+function deliverContactExchangeEmails(
+  sends: { to: string | null | undefined; contact: ExchangedContact }[]
+): EmailDeliveries {
+  const addressed = sends.filter(
+    (send): send is { to: string; contact: ExchangedContact } => !!send.to
+  );
+  return {
+    recipients: addressed.map((send) => send.to),
+    deliveries: Promise.all(addressed.map(sendContactExchangeEmail)),
+  };
+}
+
+async function toContactPage(
+  scope: ContactScope,
+  query: ListContactsQuery
+): Promise<Page<ContactSummary>> {
+  const { rows, total } = await listContacts(scope, query);
+  return {
+    items: rows.map(toContactSummary),
+    total,
+    limit: query.limit,
+    offset: query.offset,
+  };
+}
+
+/** Managers see every card's contacts; members only their own cards'. */
+export function organizationContactScope(
+  organizationId: string,
+  ownerUserId: string | null
+): ContactScope {
+  return ownerUserId
+    ? { organizationId, cardOwnerUserId: ownerUserId }
+    : { organizationId };
+}
+
+/** Every card the user holds across personal and community workspaces. */
+export async function workspaceContactScope(
+  userId: string
+): Promise<ContactScope> {
+  const workspaceCards = await findWorkspaceCardsForUser(userId);
+  return { cardIds: workspaceCards.map((item) => item.id) };
+}
+
+export function listContactPage(scope: ContactScope, query: ListContactsQuery) {
+  return toContactPage(scope, query);
+}
+
+/** Upper bound for one export; far above any real workspace today. */
+const CONTACT_EXPORT_LIMIT = 10_000;
+
+export async function exportContactsCsv(
+  scope: ContactScope,
+  query: Omit<ListContactsQuery, 'limit' | 'offset'>,
+  options: { includeOrigin: boolean }
+) {
+  const { items } = await toContactPage(scope, {
+    ...query,
+    limit: CONTACT_EXPORT_LIMIT,
+    offset: 0,
+  });
+  const header = ['Name', 'Role', 'Company', 'Phone', 'Email'];
+  return toCsv([
+    options.includeOrigin ? [...header, 'Origin'] : header,
+    ...items.map((contact) => {
+      const row = [
+        contact.name,
+        contact.position,
+        contact.company,
+        contact.phone,
+        contact.email,
+      ];
+      return options.includeOrigin ? [...row, contactOriginLabel(contact)] : row;
+    }),
+  ]);
+}
+
+export async function createManualContact(params: {
+  organizationId: string;
+  ownerUserId: string | null;
+  input: CreateManualContactRequest;
+}) {
+  const targetCard = await findLatestCardInOrganization(
+    params.organizationId,
+    params.ownerUserId ?? undefined
+  );
+  if (!targetCard) {
+    throw conflict(
+      'Create a card in this workspace before adding contacts.',
+      'card_required'
+    );
+  }
+
+  const { input } = params;
+  const phoneFields = resolvedPhoneFields(input.phone, input.phoneCountryCode);
+  return insertContact({
+    name: `${input.firstName} ${input.lastName}`.trim(),
+    phone: phoneFields.phone || input.phone,
+    phoneCountryCode: phoneFields.phoneCountryCode,
+    email: input.email || null,
+    position: input.position,
+    company: input.company || null,
+    cardId: targetCard.id,
+    source: 'manual',
+  });
+}
+
+export { deleteContact };
+
+/**
+ * A visitor fills the public form on a card: save the contact for the card,
+ * email the card holder the visitor's details and, when the visitor left an
+ * email, send them the card holder's details.
+ */
+export async function exchangeContactViaForm(
+  ownerCard: CardRecord,
+  input: FormExchangeInput
+) {
+  const phone = input.phone.trim();
+  const saved = await insertContact({
+    cardId: ownerCard.id,
+    source: 'public_form',
+    name: input.name,
+    phone,
+    phoneCountryCode: phone
+      ? normalizePhoneCountryCode(input.phoneCountryCode)
+      : null,
+    email: input.email || null,
+    company: input.company || null,
+    position: input.position || null,
+  });
+
+  const ownerAccountEmail = await findCardOwnerEmail(ownerCard.id);
+  const visitor: ExchangedContact = {
+    name: input.name,
+    email: input.email || '',
+    phone: phone ? internationalPhone(phone, input.phoneCountryCode) : '',
+    company: input.company || '',
+    position: input.position || '',
+  };
+
+  return {
+    contactId: saved.id,
+    emails: deliverContactExchangeEmails([
+      { to: ownerCard.email || ownerAccountEmail, contact: visitor },
+      {
+        to: input.email,
+        contact: cardAsExchangedContact(ownerCard, ownerAccountEmail),
+      },
+    ]),
+  };
+}
+
+/** A signed-in member swaps cards with the card holder; both get each other. */
+export async function exchangeContactSeamlessly(
+  ownerCard: CardRecord,
+  visitor: { userId: string; email: string }
+) {
+  if (!ownerCard.userId) {
+    throw conflict(
+      'This card is not linked to a La Persona account yet.',
+      'card_unclaimed'
+    );
+  }
+  if (ownerCard.userId === visitor.userId) {
+    throw badRequest(
+      'You cannot exchange contact with your own card.',
+      'own_card'
+    );
+  }
+
+  const visitorCard = await findPersonalCardForUser(visitor.userId);
+  if (!visitorCard) {
+    throw conflict(
+      'Create your La Persona card before using Seamless Exchange.',
+      'card_required'
+    );
+  }
+
+  const toSide = (holderCard: CardRecord, contactCard: CardRecord) => ({
+    cardId: holderCard.id,
+    name: cardHolderName(contactCard),
+    phone: contactCard.phone || '',
+    phoneCountryCode: contactCard.phone
+      ? normalizePhoneCountryCode(contactCard.phoneCountryCode)
+      : null,
+    email: contactCard.email || null,
+    company: contactCard.company || null,
+    position: contactCard.position || null,
+    laPersonaUserId: contactCard.userId,
+    laPersonaCardId: contactCard.id,
+  });
+
+  const { ownerContactId, visitorContactId } = await upsertSeamlessExchange(
+    toSide(ownerCard, visitorCard),
+    toSide(visitorCard, ownerCard)
+  );
+
+  const ownerEmail =
+    (await findCardOwnerEmail(ownerCard.id)) || ownerCard.email || '';
+  const visitorEmail = visitor.email || visitorCard.email || '';
+
+  return {
+    ownerContactId,
+    visitorContactId,
+    visitorCardId: visitorCard.id,
+    emails: deliverContactExchangeEmails([
+      { to: ownerEmail, contact: cardAsExchangedContact(visitorCard, visitorEmail) },
+      { to: visitorEmail, contact: cardAsExchangedContact(ownerCard, ownerEmail) },
+    ]),
+  };
+}
+
+/** Pre-platform static cards keep their own table; the owner email comes from the card, never the client. */
+export async function exchangeContactWithLegacyCard(
+  legacyCardId: string,
+  input: CreateLegacyContactExchangeRequest
+) {
+  const legacyCard = legacyCards.find((item) => item.id === legacyCardId);
+  if (!legacyCard) throw notFound('Card');
+
+  const saved = await insertLegacyContactExchange({
+    name: input.name,
+    phone: input.phone,
+    email: input.email || '',
+    company: input.company || null,
+    position: input.position || null,
+    ownerEmail: legacyCard.email,
+  });
+
+  return {
+    contactId: saved.id,
+    ownerEmail: legacyCard.email,
+    emails: deliverContactExchangeEmails([
+      {
+        to: legacyCard.email,
+        contact: {
+          name: input.name,
+          email: input.email || '',
+          phone: input.phone,
+          company: input.company || '',
+          position: input.position || '',
+        },
+      },
+      {
+        to: input.email,
+        contact: {
+          name: legacyCard.name,
+          email: legacyCard.email,
+          phone: legacyCard.phone,
+          company: '',
+          position: '',
+        },
+      },
+    ]),
+  };
+}

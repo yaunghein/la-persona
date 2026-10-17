@@ -59,11 +59,11 @@ function goToDashboard() {
     </div>
 
     <div class="px-5 pb-5 max-w-284 mx-auto">
-      <FormSetupContactInfo
+      <CardSetupContactForm
         v-if="step === 'contact'"
         @continued="step = 'link'"
       />
-      <FormSetupLinks
+      <CardSetupLinksForm
         v-if="step === 'link'"
         @back="step = 'contact'"
         @completed="goToDashboard"

@@ -271,7 +271,7 @@ function unavailableLabel(event: CommunityEvent) {
         </div>
       </article>
 
-      <PlatformPremiumCardCta v-if="pagedEvents.length" />
+      <BillingPremiumCardCta v-if="pagedEvents.length" />
 
       <div
         v-if="!pagedEvents.length"

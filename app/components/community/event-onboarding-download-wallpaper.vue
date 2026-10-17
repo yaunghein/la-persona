@@ -141,7 +141,7 @@ async function onDownload() {
           Math.round(window.screen.height * window.devicePixelRatio)
         )
       : null;
-    const wallpaperProxyUrl = `/api/s3/image-proxy?url=${encodeURIComponent(assetUrl)}`;
+    const wallpaperProxyUrl = imageProxyUrl(assetUrl);
     const wallpaperCanvas = await renderWallpaperCanvas({
       wallpaperProxyUrl,
       cardUrl,

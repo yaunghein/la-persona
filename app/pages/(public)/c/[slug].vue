@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { PublicCard } from '~~/shared/contracts/card';
+import type { CreateContactExchangeRequest } from '~~/shared/contracts/contact';
 import { Application } from '@splinetool/runtime';
 import type { ConcreteComponent } from 'vue';
 import { SOCIAL_MEDIA_LINK_LABELS } from '~~/shared/constants/card-link-options';
@@ -6,12 +8,11 @@ import { downloadFile } from '~/utils/share-or-download';
 import { applyCombinedCardToSpline } from '~/utils/spline-card';
 import { vcfPhoneLines } from '~~/shared/utils/phone';
 
-const { trackEvent } = useAnalytics();
 const route = useRoute();
 const { normalizeCardLinkValue } = useUrlNormalization();
 
 const { slug } = route.params;
-const { data: card } = await useFetch<CardDTO>(`/api/public/cards/${slug}`);
+const { data: card } = await useFetch<PublicCard>(`/api/public/cards/${slug}`);
 
 if (!card.value) {
   throw createError({
@@ -21,13 +22,6 @@ if (!card.value) {
 }
 
 const { data: session } = await authClient.useSession(useFetch);
-
-function getS3Url(path?: string | null) {
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
-
-  return resolveObjectStorageUrl(path);
-}
 
 const cardFullName = computed(() =>
   [card.value?.firstName, card.value?.lastName].filter(Boolean).join(' ').trim()
@@ -55,10 +49,9 @@ const seoDescription = computed(() => {
 });
 
 const shouldShowPoweredByLaPersona = computed(() => {
-  const subscription = card.value?.subscription;
-  const planCode = subscription?.planCode;
-  const status = subscription?.effectiveStatus ?? subscription?.status;
-  const isTrial = subscription?.isTrial || status === 'trial';
+  const plan = card.value?.plan;
+  const planCode = plan?.code;
+  const isTrial = plan?.isTrial || plan?.status === 'trial';
 
   const isPremiumPlan = planCode === 'premium' || planCode === 'founder-club';
   const isPaidStandardPlan = planCode === 'standard' && !isTrial;
@@ -69,7 +62,7 @@ const shouldShowPoweredByLaPersona = computed(() => {
 usePageSeo({
   title: seoTitle,
   description: seoDescription,
-  image: () => getS3Url(card.value?.cardBackUrl),
+  image: () => resolveObjectStorageUrl(card.value?.cardBackUrl),
   imageAlt: () => cardFullName.value || 'LA PERSONA',
   type: 'profile',
 });
@@ -78,10 +71,7 @@ onMounted(async () => {
   if (!card || !card.value) return;
 
   // Track View
-  trackEvent({
-    cardId: card.value.id,
-    organizationId: card.value.organizationId,
-    userId: card.value.userId,
+  recordCardInteraction(card.value!.slug, {
     type: 'view',
     metadata: { path: route.path },
   });
@@ -101,8 +91,8 @@ onMounted(async () => {
       phoneCountryCode: card.value.phoneCountryCode,
       email: card.value.email,
       website: card.value.website,
-      planCode: card.value.subscription?.planCode,
-      joinedAt: card.value.createdAt,
+      planCode: card.value.plan?.code,
+      joinedAt: card.value.joinedAt,
     });
   });
 });
@@ -158,17 +148,12 @@ const onExchangeContactClick = async () => {
   isMenuOpen.value = false;
   isSeamlessExchanging.value = true;
   try {
-    await $fetch('/api/contact-exchange/seamless', {
+    await $fetch(`/api/public/cards/${card.value.slug}/contact-exchanges`, {
       method: 'POST',
-      body: {
-        ownerCardId: card.value.id,
-      },
+      body: { mode: 'seamless' } satisfies CreateContactExchangeRequest,
     });
 
-    trackEvent({
-      cardId: card.value.id,
-      organizationId: card.value.organizationId,
-      userId: card.value.userId,
+    recordCardInteraction(card.value!.slug, {
       type: 'save_action',
       metadata: { action: 'seamless_exchange' },
     });
@@ -200,37 +185,20 @@ const onSubmit = async (e: SubmitEvent) => {
   isSubmitting.value = true;
 
   try {
-    await $fetch('/api/email/send', {
+    await $fetch(`/api/public/cards/${card.value!.slug}/contact-exchanges`, {
       method: 'POST',
       body: {
-        name: data.name,
-        to: [data.ownerEmail],
-        subject: `New Contact Exchange from ${(data.name as string).split(' ')[0]} 👋`,
-        template: 'ContactExchange',
-        email: data.email,
-        phone: data.phone,
-        company: data.company,
-        position: data.position,
+        mode: 'form',
+        name: String(data.name ?? ''),
+        email: String(data.email ?? ''),
+        phone: String(data.phone ?? ''),
+        phoneCountryCode: String(data.phoneCountryCode ?? '') || null,
+        company: String(data.company ?? ''),
+        position: String(data.position ?? ''),
       },
     });
 
-    await $fetch('/api/contact-exchange', {
-      method: 'POST',
-      body: {
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        phoneCountryCode: data.phoneCountryCode,
-        company: data.company,
-        position: data.position,
-        cardId: card.value!.id,
-      },
-    });
-
-    trackEvent({
-      cardId: card.value!.id,
-      organizationId: card.value!.organizationId,
-      userId: card.value!.userId,
+    recordCardInteraction(card.value!.slug, {
       type: 'save_action',
       metadata: { action: 'contact_exchange' },
     });
@@ -292,10 +260,7 @@ function trackLinkClick(link: { label: string; value: string }) {
   const normalizedLabel = (link.label || '').trim().toLowerCase();
   const isSocial = socialLinkLabelSet.has(normalizedLabel);
 
-  trackEvent({
-    cardId: card.value.id,
-    organizationId: card.value.organizationId,
-    userId: card.value.userId,
+  recordCardInteraction(card.value!.slug, {
     type: isSocial ? 'social_click' : 'link_click',
     metadata: isSocial
       ? { platform: normalizedLabel, url: link.value }
@@ -347,7 +312,7 @@ async function getPhotoForVcf() {
   const avatarUrl = resolveCardAvatarUrl(card.value?.avatarUrl);
   const candidateUrls = [
     avatarUrl
-      ? `/api/s3/image-proxy?url=${encodeURIComponent(avatarUrl)}`
+      ? imageProxyUrl(avatarUrl)
       : null,
     avatarUrl,
     '/images/reveal-image.webp',
@@ -448,10 +413,7 @@ async function onSaveContact() {
     const blob = new Blob([vcf], { type: 'text/vcard;charset=utf-8' });
     downloadFile({ blob, fileName });
 
-    trackEvent({
-      cardId: card.value.id,
-      organizationId: card.value.organizationId,
-      userId: card.value.userId,
+    recordCardInteraction(card.value!.slug, {
       type: 'save_action',
       metadata: { action: 'vcf_download' },
     });
@@ -616,7 +578,6 @@ async function onSaveContact() {
                 class="h-[2.8rem] w-full appearance-none border border-[#494949] bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
-            <input type="hidden" name="ownerEmail" :value="card.email" />
           </form>
         </div>
         <div

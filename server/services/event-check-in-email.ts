@@ -8,7 +8,7 @@ import {
   formatYangonDateTime,
   loadEventEmailContent,
 } from '~~/server/services/event-email-content';
-import { sendEmail } from '~~/server/utils/email';
+import { sendEmail } from '~~/server/lib/mailer';
 import {
   emailErrorLabel,
   enrichLog,

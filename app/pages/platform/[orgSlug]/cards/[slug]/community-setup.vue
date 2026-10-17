@@ -1,9 +1,4 @@
 <script setup lang="ts">
-definePageMeta({
-  layout: false,
-});
-
-import type { CardDTO } from '~~/shared/types/card';
 import {
   isCommunityCardComplete,
   parseCommunitySetupStep,
@@ -11,6 +6,11 @@ import {
   resolveEventFlowPath,
 } from '~~/shared/utils/event-flow';
 import { ROUTES } from '~~/shared/utils/routes';
+
+definePageMeta({
+  layout: false,
+});
+
 const route = useRoute();
 const toast = useToast();
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
@@ -25,12 +25,11 @@ const { data: session } = await authClient.useSession(useFetch);
 
 const {
   data: card,
-  pending,
+  isPending: pending,
   error,
-  refresh,
-} = await useFetch<CardDTO>(() => `/api/cards/${cardSlug.value}`, {
-  query: { organizationSlug: orgSlug.value },
-});
+  refetch: refresh,
+} = useCardQuery(cardSlug);
+const { mutateAsync: updateCard } = useUpdateCardMutation(cardSlug);
 
 const submitting = ref(false);
 const isSettingUp = ref(false);
@@ -100,19 +99,14 @@ async function onCreateCard(payload: {
   if (!card.value) return;
   submitting.value = true;
   try {
-    await $fetch('/api/cards', {
-      method: 'PATCH',
-      query: { organizationSlug: orgSlug.value },
-      body: {
-        id: card.value.id,
-        firstName: payload.firstName,
-        lastName: payload.lastName || null,
-        position: payload.position,
-        phone: payload.phone,
-        phoneCountryCode: payload.phoneCountryCode,
-        email: payload.email,
-        socials: payload.socials,
-      },
+    await updateCard({
+      firstName: payload.firstName,
+      lastName: payload.lastName || null,
+      position: payload.position,
+      phone: payload.phone,
+      phoneCountryCode: payload.phoneCountryCode,
+      email: payload.email,
+      socials: payload.socials,
     });
     clearFormDraft(createCardDraftKey.value);
     isSettingUp.value = true;
@@ -120,8 +114,7 @@ async function onCreateCard(payload: {
   } catch (error: any) {
     toast.add({
       title: 'Could not save card',
-      description:
-        error?.data?.statusMessage || error?.statusMessage || 'Try again.',
+      description: apiErrorMessage(error, 'Try again.'),
       color: 'error',
     });
   } finally {
@@ -226,7 +219,7 @@ async function finishSetup() {
         <CommunityEventOnboardingSettingUp
           v-else-if="isSettingUp"
           class="min-h-0 flex-1"
-          :organizer-name="card.organizationName || 'this community'"
+          :organizer-name="card.organization.name || 'this community'"
           @next="onSettingUpNext"
         />
         <CommunityEventOnboardingDownloadWallpaper

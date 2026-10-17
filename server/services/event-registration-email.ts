@@ -8,7 +8,7 @@ import {
   member,
   user,
 } from '~~/server/db/schema';
-import { sendEmail } from '~~/server/utils/email';
+import { sendEmail } from '~~/server/lib/mailer';
 import { env } from '~~/env';
 import { renderQrTicketPng } from '~~/server/utils/qr-ticket-image';
 import {

@@ -50,29 +50,14 @@ const onSubmit = async (e: SubmitEvent) => {
   isSubmitting.value = true;
 
   try {
-    await $fetch('/api/email/send', {
+    await $fetch(`/api/public/legacy-cards/${card.id}/contact-exchanges`, {
       method: 'POST',
       body: {
-        name: data.name,
-        to: [data.ownerEmail],
-        subject: `New Contact Exchange from ${(data.name as string).split(' ')[0]} 👋`,
-        template: 'ContactExchange',
-        email: data.email,
-        phone: data.phone,
-        company: data.company,
-        position: data.position,
-      },
-    });
-
-    await $fetch('/api/contact-exchange-before-platform', {
-      method: 'POST',
-      body: {
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        company: data.company,
-        position: data.position,
-        ownerEmail: data.ownerEmail,
+        name: String(data.name ?? ''),
+        email: String(data.email ?? ''),
+        phone: String(data.phone ?? ''),
+        company: String(data.company ?? ''),
+        position: String(data.position ?? ''),
       },
     });
 
@@ -252,7 +237,6 @@ async function onActionClick(link: { action?: string; label: string }) {
                 class="h-[2.8rem] w-full appearance-none border border-white/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
-            <input type="hidden" name="ownerEmail" :value="card.email" />
           </form>
         </div>
         <div

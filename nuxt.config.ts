@@ -3,6 +3,26 @@
 // Crawlers need an absolute og:image. Pages override it via usePageSeo.
 const DEFAULT_OG_IMAGE = `${(process.env.BASE_URL || '').replace(/\/$/, '')}/og.png`;
 
+// Feature modules under app/features/<domain>. Components auto-import with the
+// domain as prefix (features/event/components/create-slideover.vue -> <EventCreateSlideover>).
+const FEATURE_DOMAINS = [
+  'admin',
+  'analytics',
+  'auth',
+  'billing',
+  'card',
+  'contact',
+  'event',
+  'feedback',
+  'marketing',
+  'media',
+  'onboarding',
+  'organization',
+] as const;
+
+const toPascalCase = (value: string) =>
+  value.replace(/(^|-)(\w)/g, (_, __, letter: string) => letter.toUpperCase());
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -81,6 +101,16 @@ export default defineNuxtConfig({
       },
     },
   },
+  components: [
+    '~/components',
+    ...FEATURE_DOMAINS.map((domain) => ({
+      path: `~/features/${domain}/components`,
+      prefix: toPascalCase(domain),
+    })),
+  ],
+  imports: {
+    dirs: ['features/*/composables', 'features/*/utils'],
+  },
   css: ['~/assets/css/main.css'],
   colorMode: {
     preference: 'dark',
@@ -112,6 +142,13 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
+    experimental: {
+      tasks: true,
+    },
+    scheduledTasks: {
+      // Keep stored subscription statuses in sync with trial/term end dates.
+      '*/10 * * * *': ['subscriptions:expire'],
+    },
     prerender: {
       // Prerendering IPX images silently aborts the build; serve them at runtime.
       ignore: ['/_ipx'],

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useQuery } from '@tanstack/vue-query';
 import { getSafeInternalPath } from '~~/shared/utils/safe-redirect';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
@@ -68,14 +67,7 @@ const {
   data: cards,
   isError: isCardsError,
   isPending,
-} = useQuery({
-  queryKey: ['cards', orgSlug],
-  queryFn: () =>
-    $fetch('/api/cards', {
-      query: { organizationSlug: orgSlug.value },
-    }),
-  enabled: () => !!orgSlug.value,
-});
+} = useOrganizationCardsQuery(orgSlug);
 
 /** True when the watcher could not route yet and there is no redirect escape hatch. */
 const syncStuck = ref(false);

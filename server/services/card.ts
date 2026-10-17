@@ -17,7 +17,7 @@ export const splitName = (fullName: string | null | undefined) => {
   }
 
   const parts = name.split(/\s+/);
-  const firstName = parts[0];
+  const firstName = parts[0] || 'My';
   const lastName = parts.length > 1 ? parts.slice(1).join(' ') : 'Card';
 
   return { firstName, lastName };

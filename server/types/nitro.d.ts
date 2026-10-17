@@ -1,10 +1,10 @@
-import type { User, Session } from 'better-auth';
+import type { Principal } from '~~/server/utils/authorization';
 import type { WideEvent } from '~~/server/utils/wide-event';
 
 declare module 'h3' {
   interface H3EventContext {
-    user: User | null;
-    session: Session | null;
+    /** Set by `01.authentication` when the request carries a valid session. */
+    principal?: Principal;
     wideEvent?: WideEvent;
     wideEventStartedAt?: number;
     wideEventEmitted?: boolean;

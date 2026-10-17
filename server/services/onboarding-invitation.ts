@@ -12,7 +12,7 @@ import {
   subscriptionPaymentItem,
   session,
 } from '~~/server/db/schema';
-import { sendEmail } from '~~/server/utils/email';
+import { sendEmail } from '~~/server/lib/mailer';
 import { env } from '~~/env';
 import { slugify } from '~~/shared/utils/slugify';
 import { ROUTES } from '~~/shared/utils/routes';

@@ -75,8 +75,8 @@ export function isNoisyPath(pathname: string) {
       : pathname;
   return (
     path === '/api/auth/get-session' ||
-    path === '/api/analytics' ||
-    path === '/api/s3/image-proxy'
+    path === '/api/public/image-proxy' ||
+    /^\/api\/public\/cards\/[^/]+\/interactions$/.test(path)
   );
 }
 
@@ -259,11 +259,12 @@ export function emitWideEvent(event: H3Event) {
     event.context.params as RouteParams | undefined
   );
 
-  const user = event.context.user;
+  const user = event.context.principal?.user;
   if (!wide.user_id && user?.id) wide.user_id = user.id;
   if (!wide.user_email && user?.email) wide.user_email = user.email;
 
-  const organizationId = event.context.session?.activeOrganizationId;
+  const organizationId =
+    event.context.principal?.session.activeOrganizationId;
   if (!wide.organization_id && organizationId) {
     wide.organization_id = organizationId;
   }

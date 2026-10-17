@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import imageCompression from 'browser-image-compression';
 
 const props = defineProps<{
   organizationId: string;
@@ -41,25 +40,11 @@ async function onFileChange(event: Event) {
   uploading.value = true;
   try {
     // Emails show these at 476px wide; keep 2x for sharp retina rendering.
-    const compressed = await imageCompression(file, {
-      maxSizeMB: 1,
-      maxWidthOrHeight: 1904,
-    });
-    const { uploadUrl, fileKey } = await $fetch('/api/s3/admin-presigned', {
-      method: 'POST',
-      body: {
-        organizationId: props.organizationId,
-        fileType: compressed.type,
-        fileName: file.name,
-      },
-    });
-    const response = await fetch(uploadUrl, {
-      method: 'PUT',
-      body: compressed,
-      headers: { 'Content-Type': compressed.type },
-    });
-    if (!response.ok) throw new Error('Upload failed');
-
+    const fileKey = await uploadImage(
+      file,
+      { organizationId: props.organizationId },
+      { maxSizeMB: 1, maxWidthOrHeight: 1904 }
+    );
     url.value = resolveObjectStorageUrl(fileKey);
   } catch (error: any) {
     toast.add({

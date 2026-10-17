@@ -2,7 +2,6 @@
 import { parseDate } from '@internationalized/date';
 import type { DateValue } from '@internationalized/date';
 import { useMutation, useQueryClient } from '@tanstack/vue-query';
-import imageCompression from 'browser-image-compression';
 import { QUERY_KEYS } from '~/utils/query-keys';
 import type { FormErrorEvent, FormSubmitEvent } from '@nuxt/ui';
 import { format, parseISO } from 'date-fns';
@@ -218,41 +217,19 @@ function revokePreview(item: DraftEventMedia | null) {
   }
 }
 
-async function uploadImage(file: File) {
-  const compressed = await imageCompression(file, {
-    maxSizeMB: 1.5,
-    maxWidthOrHeight: 2400,
-  });
-
-  const { uploadUrl, fileKey } = await $fetch<{
-    uploadUrl: string;
-    fileKey: string;
-  }>('/api/s3/presigned', {
-    method: 'POST',
-    query: withOrganizationQuery(),
-    body: {
-      fileType: compressed.type,
-      fileName: file.name,
-    },
-  });
-
-  const uploadResponse = await fetch(uploadUrl, {
-    method: 'PUT',
-    body: compressed,
-    headers: { 'Content-Type': compressed.type },
-  });
-
-  if (!uploadResponse.ok) {
-    throw new Error('Upload failed');
-  }
-
+async function uploadEventImage(file: File) {
+  const fileKey = await uploadImage(
+    file,
+    { organizationSlug: organizationSlug.value },
+    { maxSizeMB: 1.5, maxWidthOrHeight: 2400 }
+  );
   return resolveObjectStorageUrl(fileKey);
 }
 
 async function storedImageUrl(item: DraftEventMedia) {
   if (item.source === 'remote') return item.previewUrl;
   if (!item.file) throw new Error('Upload failed');
-  return uploadImage(item.file);
+  return uploadEventImage(item.file);
 }
 
 async function uploadedImageUrls() {

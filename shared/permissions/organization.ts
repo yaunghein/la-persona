@@ -1,4 +1,7 @@
-import { createAccessControl } from 'better-auth/plugins/access';
+import {
+  createAccessControl,
+  type Role,
+} from 'better-auth/plugins/access';
 
 export const organizationPermissionStatements = {
   organization: ['read', 'update', 'delete'],
@@ -90,6 +93,43 @@ export const ORGANIZATION_PERMISSIONS = {
   CHECK_IN_READ: { checkIn: ['read'] },
   CHECK_IN_CREATE: { checkIn: ['create'] },
 } as const;
+
+type OrganizationPermissionStatements = typeof organizationPermissionStatements;
+
+/** A single org-scoped permission, written `resource:action` (e.g. `event:update`). */
+export type OrganizationPermissionKey = {
+  [Resource in keyof OrganizationPermissionStatements]: `${Resource}:${OrganizationPermissionStatements[Resource][number]}`;
+}[keyof OrganizationPermissionStatements];
+
+export function isOrganizationRole(
+  role: string | null | undefined
+): role is OrganizationMemberRole {
+  return !!role && role in organizationRoles;
+}
+
+/**
+ * Checks a member role against a permission in memory, using the same access
+ * control definition better-auth enforces. Better-auth stores multiple roles
+ * comma-separated; any granting role is enough.
+ */
+export function roleHasPermission(
+  role: string | null | undefined,
+  permission: OrganizationPermissionKey
+): boolean {
+  const [resource, action] = permission.split(':') as [
+    keyof OrganizationPermissionStatements,
+    string,
+  ];
+  return String(role ?? '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(isOrganizationRole)
+    .some(
+      (memberRole) =>
+        (organizationRoles[memberRole] as Role).authorize({ [resource]: [action] })
+          .success
+    );
+}
 
 export type OrganizationPermission = {
   [Resource in keyof typeof organizationPermissionStatements]?: ReadonlyArray<
