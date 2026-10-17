@@ -13,7 +13,6 @@ export type CardPricingTable = {
   currency: string;
   standardPlanPriceMinor: number;
   premiumPlanPriceMinor: number;
-  customDesignFeeMinor: number;
 };
 
 const PREMIUM_PLAN_CODES = new Set(['premium', 'founder-club']);
@@ -49,7 +48,7 @@ export function isPremiumUpgrade(scenario: CardPaymentScenario) {
 
 /**
  * Price breakdown for a scenario. Upgrades waive hosting for the term and
- * charge the custom design fee; renewals charge the plan's hosting fee.
+ * charge the premium plan price as the design fee; renewals charge the plan's hosting fee.
  */
 export function quoteCardPayment(
   kind: CardPaymentKind,
@@ -67,7 +66,7 @@ export function quoteCardPayment(
         { label: 'Hosting Fee', amountMinor: 0, isFree: true },
         {
           label: 'Custom Design Fee',
-          amountMinor: pricing.customDesignFeeMinor,
+          amountMinor: pricing.premiumPlanPriceMinor,
           isFree: false,
         },
       ]

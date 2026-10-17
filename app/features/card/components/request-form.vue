@@ -128,10 +128,10 @@ const showPricingSummary = computed(() => {
   return Boolean(state.sourceCardId && derivedPlan.value);
 });
 
-/** Amount shown on KBZ Pay QR line (custom design only for new; plan price for existing). */
+/** Amount shown on KBZ Pay QR line (premium plan price for new; source plan price for existing). */
 const requestPaymentTotalMinor = computed(() => {
   if (state.type === 'new_design' && cardPaymentPricing.value) {
-    return cardPaymentPricing.value.customDesignFeeMinor;
+    return cardPaymentPricing.value.premiumPlanPriceMinor;
   }
   if (
     state.type === 'existing_design' &&
@@ -840,10 +840,10 @@ function onFormError(event: FormErrorEvent) {
             <span class="font-bold">
               <template v-if="cardPaymentPricing">
                 {{
-                  cardPaymentPricing.customDesignFeeMinor === 0
+                  cardPaymentPricing.premiumPlanPriceMinor === 0
                     ? 'Free of charge'
                     : formatMinorAmount(
-                        cardPaymentPricing.customDesignFeeMinor,
+                        cardPaymentPricing.premiumPlanPriceMinor,
                         cardPaymentPricing.currency
                       )
                 }}

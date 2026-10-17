@@ -74,7 +74,6 @@ export type CardPricing = {
   currency: string;
   standardPlanPriceMinor: number;
   premiumPlanPriceMinor: number;
-  customDesignFeeMinor: number;
 };
 
 export type BillingHistoryEntry = {

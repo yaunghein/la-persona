@@ -1,5 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-// Build-time values only. Runtime env is validated and read through `~~/env` (ArkEnv).
+// Build-time values only. Runtime env is validated and read through `~~/env`.
 // Crawlers need an absolute og:image. Pages override it via usePageSeo.
 const DEFAULT_OG_IMAGE = `${(process.env.BASE_URL || '').replace(/\/$/, '')}/og.png`;
 
@@ -27,8 +27,6 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   modules: [
-    '@arkenv/nuxt/module',
-    '~~/modules/arkenv-process-env',
     '@nuxt/ui',
     'nuxt-email-renderer',
     '@vueuse/nuxt',
@@ -113,6 +111,20 @@ export default defineNuxtConfig({
     dirs: ['features/*/composables', 'features/*/utils'],
   },
   css: ['~/assets/css/main.css'],
+  typescript: {
+    // drizzle-kit's config runs in Node outside Nuxt; type-check it with nuxt.config.
+    nodeTsConfig: { include: ['../drizzle.config.ts'] },
+  },
+  // Browser-readable env (`PublicEnv` in env.ts), inlined at build time.
+  runtimeConfig: {
+    public: {
+      BASE_URL: process.env.BASE_URL,
+      AWS_REGION: process.env.AWS_REGION,
+      AWS_BUCKET_NAME: process.env.AWS_BUCKET_NAME,
+      GTAG_ID: process.env.GTAG_ID,
+      GOOGLE_CALENDAR_ENABLED: process.env.GOOGLE_CALENDAR_ENABLED,
+    },
+  },
   colorMode: {
     preference: 'dark',
   },

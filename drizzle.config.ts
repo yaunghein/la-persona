@@ -1,6 +1,6 @@
 import { defineConfig } from 'drizzle-kit';
 
-// drizzle-kit runs outside Nuxt, so ArkEnv's Nitro boot gate never runs here.
+// drizzle-kit runs outside Nuxt, so env.ts is not used here.
 // `bun run db:*` loads `.env`; fail fast with a clear message if it is missing.
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error('DATABASE_URL is required for drizzle-kit.');

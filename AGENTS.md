@@ -1,6 +1,6 @@
 # LA PERSONA — Agent Guide
 
-Nuxt 4 + Vue 3 + Nuxt UI + Tailwind + Better Auth + Drizzle + TanStack Vue Query + ArkEnv digital business card platform.
+Nuxt 4 + Vue 3 + Nuxt UI + Tailwind + Better Auth + Drizzle + TanStack Vue Query digital business card platform.
 
 Prefer project MCPs over guessing: **Nuxt**, **Nuxt UI**, **Figma**, **Tailwind**, **GSAP**, **Swiper**, **Better Auth**. Use them when implementing UI, motion, or auth.
 
@@ -14,7 +14,6 @@ Project skills live in `.agents/skills/` (symlinked into `.claude/skills/`). Loa
 | Auth, uploads, user-supplied URLs/HTML, emails, anything an attacker can reach                               | `vibesec`                    |
 | Nitro handlers, route rules, caching, storage, tasks, server config                                          | `nitro`                      |
 | Nuxt config, routing, `useFetch`, middleware, rendering modes                                                | `nuxt`                       |
-| Adding or changing environment variables (`env.ts`)                                                          | `arkenv`                     |
 | `U*` components, Nuxt UI theming, forms, overlays                                                            | `nuxt-ui`                    |
 | Better Auth config, sessions, protected routes                                                               | `nuxt-better-auth`           |
 | Non-trivial Vue SFC work, reactivity, composables                                                            | `vue` / `vue-best-practices` |
@@ -42,7 +41,7 @@ Package manager: **bun**.
 Same domain names on both sides: `admin`, `analytics`, `auth`, `billing`, `card`, `contact`, `event`, `feedback`, `marketing`, `media`, `onboarding`, `organization`.
 
 ```
-env.ts                         # ArkEnv schema: the only place env vars are declared
+env.ts                         # zod schema: the only place env vars are declared
 shared/                        # safe for client + server
   contracts/<domain>.ts        # API contract: zod request schemas + response types
   permissions/                 # better-auth access control (organization.ts, platform.ts)
@@ -95,12 +94,10 @@ server/
 
 ## Environment
 
-- Declare every variable in `env.ts` (ArkType DSL via `@arkenv/nuxt`) and import it as `import { env } from '~~/env'` on both server and client.
+- Declare every variable in `env.ts` (zod: `PublicEnv` for browser-readable keys, `ServerEnv` extends it) and import it as `import { env } from '~~/env'` on both server and client.
 - Never read `process.env` or `useRuntimeConfig()` for app config. The only exceptions are build-time reads in `nuxt.config.ts`.
-- Public keys need no `NUXT_PUBLIC_` prefix. Add them to `exposeToClient` in `env.ts`. They are inlined at build time, so changing one needs a rebuild.
-- Server keys are validated at Nitro boot, and a bad value stops the server.
-  - `modules/arkenv-process-env.ts` makes production read the real unprefixed env.
-  - It also works around an ArkEnv tracing bug. Keep it.
+- Public keys need no `NUXT_PUBLIC_` prefix. Add them to `PublicEnv` and to `runtimeConfig.public` in `nuxt.config.ts`. They are inlined at build time, so changing one needs a rebuild.
+- Server keys are read from the real `process.env` and validated when the server starts; a bad value stops it.
 - Keep `.env.example` in sync with `env.ts`.
 
 ## API
@@ -235,6 +232,7 @@ No client logger. No per-query SQL logs. CLI scripts are not requests.
 ## Efficiency rules
 
 - Read existing similar pages/components before writing new ones; match file naming and folder placement.
-- Do not overcomplicate — simplest scalable solution wins.
+- Follow KISS. Never overengineer: no extra layers, helpers, config or abstractions the task does not need. The simplest solution that works wins.
+- A question is not a request to change code. Answer it; edit only when asked.
 - Do not expand scope (extra refactors, docs, drive-by cleanups) unless asked.
 - When unsure about Nuxt / Nuxt UI / Better Auth APIs, check MCP docs rather than assuming Next.js or older Nuxt patterns.

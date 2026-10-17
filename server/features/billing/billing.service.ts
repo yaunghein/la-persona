@@ -1,4 +1,3 @@
-import { env } from '~~/env';
 import {
   activatePaidSubscription,
   decideSubmittedPayment,
@@ -51,7 +50,7 @@ export async function listPlans(): Promise<
   return { items: await listSubscriptionPlans() };
 }
 
-/** Standard and premium hosting prices plus the custom design fee. */
+/** Standard and premium plan prices. */
 export async function loadCardPricing(): Promise<CardPricingTable> {
   const plans = await listActivePlansByCode(['standard', 'premium']);
   const standard = plans.find((plan) => plan.code === 'standard');
@@ -66,7 +65,6 @@ export async function loadCardPricing(): Promise<CardPricingTable> {
     currency: standard.currency.toUpperCase(),
     standardPlanPriceMinor: standard.priceMinor,
     premiumPlanPriceMinor: premium.priceMinor,
-    customDesignFeeMinor: env.CUSTOM_DESIGN_FEE,
   };
 }
 
