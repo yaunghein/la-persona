@@ -482,7 +482,7 @@ const columns: TableColumn<UserRow>[] = [
             color="error"
             variant="soft"
             :disabled="isSelfDetail"
-            class="mr-auto h-10 cursor-pointer rounded-full px-5 text-sm font-medium"
+            class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium"
             @click="openDelete(detail)"
           />
           <UButton

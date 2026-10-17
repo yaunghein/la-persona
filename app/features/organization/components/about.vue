@@ -175,7 +175,7 @@ const logoSrc = computed(() =>
             leading-icon="i-lucide-log-out"
             color="error"
             variant="soft"
-            class="h-10 cursor-pointer justify-center rounded-full pr-6 pl-5 text-sm font-medium sm:mr-auto"
+            class="h-10 cursor-pointer justify-center rounded-full pr-6 pl-5 text-sm font-medium"
             @click="emit('quit')"
           />
           <UButton

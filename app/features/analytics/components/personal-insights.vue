@@ -323,7 +323,7 @@ function openInfo() {
           :ui="{
             base: 'h-10 rounded-lg border-none bg-[#171717] px-4 text-white shadow-lg sm:shadow-none',
             content: 'bg-[#171717] border border-[#2a2a2a]',
-            item: 'text-white data-[highlighted]:bg-[#232323]',
+            item: 'text-white data-highlighted:bg-[#232323]',
             value: 'text-white',
           }"
         />
@@ -343,7 +343,7 @@ function openInfo() {
             base: 'h-10 rounded-lg border-none bg-[#171717] px-4 text-white shadow-lg sm:shadow-none',
             content:
               'w-[calc(100vw-2rem)] bg-[#171717] border border-[#2a2a2a] sm:w-96',
-            item: 'text-white data-[highlighted]:bg-[#232323]',
+            item: 'text-white data-highlighted:bg-[#232323]',
             value: 'text-white',
           }"
         />

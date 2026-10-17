@@ -210,7 +210,7 @@ onUnmounted(() => {
     </div>
 
     <div
-      class="flex w-full flex-col gap-8 rounded-lg bg-[#171717] p-6 pb-10 sm:p-8 sm:pb-12"
+      class="flex w-full flex-col gap-8 rounded-lg bg-[#171717] p-6 pb-8 sm:p-8"
     >
       <section class="flex flex-col gap-8">
         <div class="flex flex-col gap-3">
@@ -333,7 +333,7 @@ onUnmounted(() => {
           leading-icon="i-lucide-trash-2"
           color="error"
           variant="soft"
-          class="h-10 cursor-pointer justify-center rounded-full pr-6 pl-5 text-sm font-medium sm:mr-auto"
+          class="h-10 cursor-pointer justify-center rounded-full pr-6 pl-5 text-sm font-medium"
           @click="emit('delete')"
         />
         <UButton

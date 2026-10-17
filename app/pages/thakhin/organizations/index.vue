@@ -963,7 +963,7 @@ const selectMenuUi = {
           leading-icon="i-lucide-trash-2"
           color="error"
           variant="soft"
-          class="mr-auto h-10 cursor-pointer rounded-full px-5 text-sm font-medium"
+          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium"
           @click="openDeleteFromDetail"
         />
         <UButton
