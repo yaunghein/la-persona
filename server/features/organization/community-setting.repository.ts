@@ -1,0 +1,186 @@
+import { eq } from 'drizzle-orm';
+import { nanoid } from 'nanoid';
+import { db } from '~~/server/db';
+import { card, communitySetting } from '~~/server/db/schema';
+
+type InsertCommunitySetting = typeof communitySetting.$inferInsert;
+import { env } from '~~/env';
+
+function communityBrandDefaults() {
+  return {
+    splineUrl: env.DEFAULT_SPLINE_URL,
+    wallpaperUrl: env.DEFAULT_WALLPAPER_URL,
+    cardBackUrl: env.DEFAULT_CARD_BACK_URL,
+  };
+}
+
+export const findCommunitySettingByOrganizationId = async (
+  organizationId: string
+) => {
+  const [row] = await db
+    .select()
+    .from(communitySetting)
+    .where(eq(communitySetting.organizationId, organizationId))
+    .limit(1);
+
+  return row;
+};
+
+/** Community QR ticket background for a card, or '' when the community has none. */
+export const findEmailQrBackgroundByCardSlug = async (cardSlug: string) => {
+  const [row] = await db
+    .select({ url: communitySetting.emailQrBackgroundUrl })
+    .from(card)
+    .innerJoin(
+      communitySetting,
+      eq(communitySetting.organizationId, card.organizationId)
+    )
+    .where(eq(card.slug, cardSlug))
+    .limit(1);
+
+  return row?.url ?? '';
+};
+
+export const findCommunitySettingByInviteToken = async (token: string) => {
+  const [row] = await db
+    .select()
+    .from(communitySetting)
+    .where(eq(communitySetting.inviteToken, token))
+    .limit(1);
+
+  return row;
+};
+
+export const JOIN_LINK_LIFETIME_DAYS = 30;
+
+export function joinLinkExpiry(from = new Date()) {
+  return new Date(from.getTime() + JOIN_LINK_LIFETIME_DAYS * 24 * 60 * 60 * 1000);
+}
+
+/** Replaces the join token; links shared before stop working immediately. */
+export const rotateInviteToken = async (organizationId: string) => {
+  const [updated] = await db
+    .update(communitySetting)
+    .set({ inviteToken: nanoid(), inviteTokenExpiresAt: joinLinkExpiry() })
+    .where(eq(communitySetting.organizationId, organizationId))
+    .returning();
+
+  return updated;
+};
+
+export const insertCommunitySetting = async (
+  values: InsertCommunitySetting
+) => {
+  const [inserted] = await db
+    .insert(communitySetting)
+    .values(values)
+    .returning();
+
+  return inserted;
+};
+
+export const upsertCommunitySettingByOrganizationId = async (
+  organizationId: string,
+  values: Pick<
+    InsertCommunitySetting,
+    'description' | 'guidelines' | 'whyJoin' | 'coverUrl'
+  > &
+    Partial<
+      Pick<
+        InsertCommunitySetting,
+        | 'splineUrl'
+        | 'wallpaperUrl'
+        | 'cardBackUrl'
+        | 'emailQrBackgroundUrl'
+        | 'emailContactExchangeUrl'
+        | 'emailAfterEventUrl'
+      >
+    >
+) => {
+  const existing = await findCommunitySettingByOrganizationId(organizationId);
+  const defaults = communityBrandDefaults();
+  const brand = {
+    ...(values.splineUrl !== undefined ? { splineUrl: values.splineUrl } : {}),
+    ...(values.wallpaperUrl !== undefined
+      ? { wallpaperUrl: values.wallpaperUrl }
+      : {}),
+    ...(values.cardBackUrl !== undefined
+      ? { cardBackUrl: values.cardBackUrl }
+      : {}),
+    ...(values.emailQrBackgroundUrl !== undefined
+      ? { emailQrBackgroundUrl: values.emailQrBackgroundUrl }
+      : {}),
+    ...(values.emailContactExchangeUrl !== undefined
+      ? { emailContactExchangeUrl: values.emailContactExchangeUrl }
+      : {}),
+    ...(values.emailAfterEventUrl !== undefined
+      ? { emailAfterEventUrl: values.emailAfterEventUrl }
+      : {}),
+  };
+
+  if (existing) {
+    const [updated] = await db
+      .update(communitySetting)
+      .set({
+        description: values.description,
+        guidelines: values.guidelines,
+        whyJoin: values.whyJoin,
+        coverUrl: values.coverUrl,
+        ...brand,
+      })
+      .where(eq(communitySetting.organizationId, organizationId))
+      .returning();
+
+    return updated;
+  }
+
+  return insertCommunitySetting({
+    organizationId,
+    inviteToken: nanoid(),
+    inviteTokenExpiresAt: joinLinkExpiry(),
+    description: values.description,
+    guidelines: values.guidelines,
+    whyJoin: values.whyJoin,
+    coverUrl: values.coverUrl,
+    ...defaults,
+    ...brand,
+  });
+};
+
+export const ensureCommunitySetting = async (organizationId: string) => {
+  const existing = await findCommunitySettingByOrganizationId(organizationId);
+  const defaults = communityBrandDefaults();
+
+  if (existing) {
+    const needsToken = !existing.inviteToken;
+    const needsBrand =
+      !existing.splineUrl?.trim() ||
+      !existing.wallpaperUrl?.trim() ||
+      !existing.cardBackUrl?.trim();
+
+    if (!needsToken && !needsBrand) return existing;
+
+    const [updated] = await db
+      .update(communitySetting)
+      .set({
+        inviteToken: existing.inviteToken || nanoid(),
+        splineUrl: existing.splineUrl?.trim() || defaults.splineUrl,
+        wallpaperUrl: existing.wallpaperUrl?.trim() || defaults.wallpaperUrl,
+        cardBackUrl: existing.cardBackUrl?.trim() || defaults.cardBackUrl,
+      })
+      .where(eq(communitySetting.organizationId, organizationId))
+      .returning();
+
+    return updated ?? existing;
+  }
+
+  return insertCommunitySetting({
+    organizationId,
+    inviteToken: nanoid(),
+    inviteTokenExpiresAt: joinLinkExpiry(),
+    description: '',
+    guidelines: '',
+    whyJoin: '',
+    ...defaults,
+  });
+};

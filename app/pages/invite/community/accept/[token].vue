@@ -1,51 +1,32 @@
 <script setup lang="ts">
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
-import type {
-  CommunityInvitationPreview,
-  CommunityJoinResult,
-} from '~~/shared/types/community-members';
-import { QUERY_KEYS } from '~/utils/query-keys';
-
 useSeoMeta({ ...getSeoTitle('Community invitation - LA PERSONA') });
 
 const route = useRoute();
-const queryClient = useQueryClient();
-const token = computed(() => String(route.params.token || ''));
+const toast = useToast();
+const invitationId = computed(() => String(route.params.token || ''));
 
-const { data, isPending, isError, error, refetch } = useQuery({
-  queryKey: computed(() => ['community-invitation', token.value]),
-  queryFn: () =>
-    $fetch<CommunityInvitationPreview>(
-      `/api/community-invitations/${token.value}`
-    ),
-  enabled: () => !!token.value,
-});
+const { data, isPending, isError, error, refetch } =
+  useInvitationPreviewQuery(invitationId);
+const { mutate: acceptInvitation, isPending: isAccepting } =
+  useAcceptInvitationMutation(invitationId);
 
-const { mutate: accept, isPending: isAccepting } = useMutation({
-  mutationFn: () =>
-    $fetch<CommunityJoinResult>(
-      `/api/community-invitations/${token.value}/accept`,
-      { method: 'POST' }
-    ),
-  onSuccess: async (result) => {
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.organizations });
-    await navigateTo(result.redirectTo);
-  },
-  onError: (err: { data?: { statusMessage?: string }; message?: string }) => {
-    useToast().add({
-      title: 'Could not accept invitation',
-      description: err.data?.statusMessage || err.message || 'Try again.',
-      color: 'error',
-    });
-  },
-});
+function accept() {
+  acceptInvitation(undefined, {
+    onSuccess: (result) => {
+      if (result.status === 'accepted') return navigateTo(result.redirectTo);
+    },
+    onError: (error) => {
+      toast.add({
+        title: 'Could not accept invitation',
+        description: apiErrorMessage(error, 'Try again.'),
+        color: 'error',
+      });
+    },
+  });
+}
 
-const errorMessage = computed(
-  () =>
-    (error.value as { data?: { statusMessage?: string }; message?: string })
-      ?.data?.statusMessage ||
-    (error.value as { message?: string })?.message ||
-    'This invitation is invalid.'
+const errorMessage = computed(() =>
+  apiErrorMessage(error.value, 'This invitation is invalid.')
 );
 
 const canAccept = computed(
@@ -95,7 +76,7 @@ function onAction() {
 </script>
 
 <template>
-  <InviteInvitationScreen
+  <UiInvitationScreen
     :pending="isPending"
     :error-title="isError ? 'Invitation unavailable' : undefined"
     :error-message="isError ? errorMessage : undefined"

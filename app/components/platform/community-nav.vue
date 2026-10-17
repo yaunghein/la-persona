@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { UserOrganization } from '~/composables/user-organizations';
+import type { UserOrganization } from '~~/shared/contracts/organization';
 
 const props = defineProps<{
   orgs: UserOrganization[];

@@ -1,14 +1,10 @@
 <script setup lang="ts">
+import type { AnalyticsPeriod } from '~~/shared/utils/analytics-period';
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
+
 definePageMeta({
   layout: 'platform',
 });
-
-import { useQuery } from '@tanstack/vue-query';
-import { QUERY_KEYS } from '~/utils/query-keys';
-import type { CommunityInsightsData } from '~~/shared/types/community-insights';
-import type { AnalyticsPeriod } from '~~/shared/utils/analytics-period';
-import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
-import { timezoneOffsetQuery } from '~~/shared/utils/datetime';
 
 const route = useRoute();
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
@@ -53,17 +49,8 @@ const {
   data: communityInsights,
   isPending: isCommunityInsightsPending,
   isError: isCommunityInsightsError,
-} = useQuery<CommunityInsightsData>({
-  queryKey: [...QUERY_KEYS.communityInsights, orgSlug, communityPeriod],
-  queryFn: () =>
-    $fetch<CommunityInsightsData>('/api/community-insights', {
-      query: {
-        period: communityPeriod.value,
-        organizationSlug: orgSlug.value,
-        ...timezoneOffsetQuery(),
-      },
-    }),
-  enabled: () => showCommunityInsights.value && !!orgSlug.value,
+} = useCommunityInsightsQuery(orgSlug, communityPeriod, {
+  enabled: showCommunityInsights,
 });
 
 </script>

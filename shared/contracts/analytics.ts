@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { ANALYTICS_PERIODS } from '~~/shared/utils/analytics-period';
+import { isTimezoneOffset } from '~~/shared/utils/datetime';
 
 export const CARD_INTERACTION_TYPES = [
   'view',
@@ -25,3 +27,57 @@ export const RecordCardInteractionRequest = z.object({
 });
 
 export type RecordCardInteractionRequest = z.infer<typeof RecordCardInteractionRequest>;
+
+/** `?period=7d|30d|90d&cardId=&tzOffset=` (tzOffset groups by the viewer's day). */
+export const AnalyticsQuery = z.object({
+  period: z.enum(ANALYTICS_PERIODS).default('7d'),
+  cardId: z.string().trim().min(1).optional(),
+  tzOffset: z.coerce.number().refine(isTimezoneOffset).optional(),
+});
+
+export type AnalyticsQuery = z.infer<typeof AnalyticsQuery>;
+
+/** Interaction totals and breakdowns for the cards in scope. */
+export type CardAnalyticsSummary = {
+  /** True when the viewer sees every card in scope (not just the ones they hold). */
+  coversAllCards: boolean;
+  period: (typeof ANALYTICS_PERIODS)[number];
+  totalStats: { type: CardInteractionType; count: number }[];
+  dailyViews: { date: string; count: number }[];
+  socialClicks: { platform: string; count: number }[];
+  linkClicks: { label: string; count: number }[];
+  saveActions: { action: string; count: number }[];
+  socialConfiguredLabels: string[];
+  otherConfiguredLabels: string[];
+};
+
+export type CommunityMetric = {
+  label: string;
+  value: string;
+};
+
+export type CommunityEventPerformance = {
+  id: string;
+  event: string;
+  registered: number;
+  checkedIn: number;
+  attendance: string;
+};
+
+export type CommunityMemberGrowth = {
+  labels: string[];
+  values: number[];
+};
+
+export type CommunityInsightsData = {
+  title: string;
+  periodOptions: { label: string; value: string }[];
+  metrics: CommunityMetric[];
+  memberGrowth: CommunityMemberGrowth;
+  eventPerformance: CommunityEventPerformance[];
+  infoItems: {
+    icon: string;
+    title: string;
+    description: string;
+  }[];
+};

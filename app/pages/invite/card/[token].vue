@@ -123,7 +123,7 @@ const errorMessage = computed(() => {
 </script>
 
 <template>
-  <InviteInvitationScreen
+  <UiInvitationScreen
     :pending="pending"
     :error-title="error || !invitation ? 'Invitation not found' : undefined"
     :error-message="error || !invitation ? errorMessage : undefined"

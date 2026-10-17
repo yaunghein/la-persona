@@ -1,14 +1,7 @@
 <script setup lang="ts">
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
-import type {
-  CommunityJoinPreview,
-  CommunityJoinPublicPreview,
-  CommunityJoinResult,
-} from '~~/shared/types/community-members';
-import { QUERY_KEYS } from '~/utils/query-keys';
+import type { JoinLinkPreview } from '~~/shared/contracts/organization';
 
 const route = useRoute();
-const queryClient = useQueryClient();
 const token = computed(() => String(route.params.token || ''));
 
 const { data: session } = await authClient.useSession(useFetch);
@@ -19,8 +12,8 @@ const {
   pending: isPreviewPending,
   error: previewError,
   refresh: refreshPreview,
-} = await useFetch<CommunityJoinPublicPreview>(
-  () => `/api/public/community-join/${token.value}`
+} = await useFetch<JoinLinkPreview>(
+  () => `/api/public/join-links/${token.value}`
 );
 
 usePageSeo({
@@ -47,43 +40,20 @@ usePageSeo({
   noindex: true,
 });
 
-// Membership needs a session; signed-out visitors only see the public preview.
-const {
-  data: viewerPreview,
-  isPending: isViewerPending,
-  isError: isViewerError,
-  error: viewerError,
-  refetch,
-} = useQuery({
-  queryKey: computed(() => ['community-join', token.value]),
-  queryFn: () =>
-    $fetch<CommunityJoinPreview>(`/api/community-join/${token.value}`),
-  enabled: () => !!token.value && !!session.value,
-});
+const data = computed(() => preview.value ?? null);
+const alreadyMember = computed(() => !!preview.value?.alreadyMember);
+const error = computed(() => previewError.value);
 
-const data = computed(() => viewerPreview.value ?? preview.value ?? null);
-const alreadyMember = computed(() => !!viewerPreview.value?.alreadyMember);
-const error = computed(
-  () => previewError.value ?? (isViewerError.value ? viewerError.value : null)
-);
+const { mutate: join, isPending: isJoining } = useJoinCommunityMutation(token);
 
-const { mutate: join, isPending: isJoining } = useMutation({
-  mutationFn: () =>
-    $fetch<CommunityJoinResult>(`/api/community-join/${token.value}`, {
-      method: 'POST',
-    }),
-  onSuccess: async (result) => {
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.organizations });
-    await navigateTo(result.redirectTo);
-  },
-});
+function joinCommunity() {
+  join(undefined, {
+    onSuccess: (result) => navigateTo(result.redirectTo),
+  });
+}
 
-const errorMessage = computed(
-  () =>
-    (error.value as { data?: { statusMessage?: string }; message?: string })
-      ?.data?.statusMessage ||
-    (error.value as { message?: string })?.message ||
-    'This invite link is invalid.'
+const errorMessage = computed(() =>
+  apiErrorMessage(error.value, 'This invite link is invalid or has expired.')
 );
 
 const meta = computed(() =>
@@ -106,17 +76,16 @@ function onAction() {
   if (alreadyMember.value && data.value) {
     return navigateTo(`${ROUTES.PLATFORM.ROOT}/${data.value.organizationSlug}`);
   }
-  join();
+  joinCommunity();
 }
 
 function onRetry() {
   void refreshPreview();
-  if (session.value) void refetch();
 }
 </script>
 
 <template>
-  <InviteInvitationScreen
+  <UiInvitationScreen
     :pending="isPreviewPending"
     :error-title="error ? 'Invite unavailable' : undefined"
     :error-message="error ? errorMessage : undefined"
@@ -129,7 +98,6 @@ function onRetry() {
     "
     :action-label="actionLabel"
     :action-loading="isJoining"
-    :action-disabled="!!session && isViewerPending"
     @action="onAction"
     @retry="onRetry"
   />

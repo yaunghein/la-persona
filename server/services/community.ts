@@ -17,7 +17,7 @@ import { insertMember } from '~~/server/services/auth';
 import {
   ensureCommunitySetting,
   findCommunitySettingByOrganizationId,
-} from '~~/server/db/queries/community-setting';
+} from '~~/server/features/organization/community-setting.repository';
 import {
   findCardByUserIdAndOrganization,
   findCardsByUserIdAndOrganization,
@@ -27,7 +27,7 @@ import {
   countCheckedInByUsersInOrganization,
   deleteRegistrationsForUserInOrganization,
 } from '~~/server/db/queries/event-registration';
-import type { CommunityMember } from '~~/shared/types/community-members';
+import type { CommunityMember } from '~~/shared/contracts/organization';
 import {
   isOrganizationManagerRole,
   type CommunityInviteRole,

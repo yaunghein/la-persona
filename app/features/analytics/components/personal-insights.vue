@@ -1,0 +1,572 @@
+<script setup lang="ts">
+import { cardHolderName } from '~/features/card/utils/card-badge';
+import { Line } from 'vue-chartjs';
+import {
+  Chart as ChartJS,
+  Title,
+  Tooltip,
+  Legend,
+  LineElement,
+  LinearScale,
+  PointElement,
+  CategoryScale,
+  ArcElement,
+} from 'chart.js';
+import {
+  OTHER_LINK_LABELS,
+  SOCIAL_MEDIA_LINK_LABELS,
+} from '~~/shared/constants/card-link-options';
+import {
+  ANALYTICS_PERIOD_OPTIONS,
+  type AnalyticsPeriod,
+} from '~~/shared/utils/analytics-period';
+import { format, parseISO } from 'date-fns';
+
+ChartJS.register(
+  Title,
+  Tooltip,
+  Legend,
+  LineElement,
+  LinearScale,
+  PointElement,
+  CategoryScale,
+  ArcElement
+);
+
+const props = defineProps<{
+  orgSlug: string;
+  userName?: string | null;
+  workspace?: boolean;
+}>();
+
+const selectedCardId = ref('all');
+const selectedPeriod = ref<AnalyticsPeriod>('7d');
+const { data: session } = await authClient.useSession(useFetch);
+const isInfoOpen = await useFirstVisitGuide('analytics');
+
+watch(
+  () => props.orgSlug,
+  () => {
+    selectedCardId.value = 'all';
+    selectedPeriod.value = '7d';
+  }
+);
+
+const { data: stats, isLoading } = useCardAnalyticsQuery(() => ({
+  scope: props.orgSlug
+    ? props.workspace
+      ? { workspace: true }
+      : { organizationSlug: props.orgSlug }
+    : null,
+  period: selectedPeriod.value,
+  cardId: selectedCardId.value === 'all' ? null : selectedCardId.value,
+}));
+
+const isOwner = computed(() => stats.value?.coversAllCards === true);
+const showCardFilter = computed(() => props.workspace || isOwner.value);
+
+const { data: workspaceCards } = useWorkspaceCardsQuery({
+  enabled: () => !!props.workspace,
+});
+const { data: organizationCards } = useOrganizationCardsQuery(
+  () => props.orgSlug,
+  { enabled: () => isOwner.value && !props.workspace }
+);
+
+const ownerCardItems = computed(() => {
+  const cards = (props.workspace ? workspaceCards.value : organizationCards.value) ?? [];
+  return [
+    { id: 'all', label: 'All Cards' },
+    ...cards.map((item) => ({
+      id: item.id,
+      label:
+        props.workspace && item.organization.type === 'community'
+          ? `${cardHolderName(item)} · ${item.organization.name}`
+          : cardHolderName(item),
+    })),
+  ];
+});
+const analyticsHeading = computed(() => {
+  if (showCardFilter.value && selectedCardId.value !== 'all') {
+    const selectedCard = ownerCardItems.value.find(
+      (item) => item.id === selectedCardId.value
+    );
+    return `${selectedCard?.label || 'Card'}'s Analytics`;
+  }
+
+  const displayName = props.userName || session.value?.user?.name || 'Your';
+  return `${displayName}'s Analytics`;
+});
+const periodOptions = ANALYTICS_PERIOD_OPTIONS;
+
+const infoItems = [
+  {
+    icon: 'i-lucide-eye',
+    title: 'Track Total Views',
+    description: 'Monitor how often your cards are being opened.',
+  },
+  {
+    icon: 'i-lucide-share-2',
+    title: 'Measure Click Behavior',
+    description:
+      'See social and link click-through performance for your audience.',
+  },
+  {
+    icon: 'i-lucide-refresh-cw',
+    title: 'Review Save Actions',
+    description: 'Understand how users exchange contacts or save your details.',
+  },
+  {
+    icon: 'i-lucide-filter',
+    title: 'Filter by Card',
+    description:
+      'Start with every card, then focus on one personal or community card.',
+  },
+];
+
+const totalViews = computed(
+  () => stats.value?.totalStats.find((s) => s.type === 'view')?.count || 0
+);
+const cardSaves = computed(
+  () =>
+    stats.value?.totalStats.find((s) => s.type === 'save_action')?.count || 0
+);
+const socialTotal = computed(
+  () =>
+    stats.value?.totalStats.find((s) => s.type === 'social_click')?.count || 0
+);
+const conversionRate = computed(() =>
+  totalViews.value > 0
+    ? ((cardSaves.value / totalViews.value) * 100).toFixed(0)
+    : 0
+);
+const socialLabelSet = new Set(
+  SOCIAL_MEDIA_LINK_LABELS.map((label) => label.toLowerCase())
+);
+const otherLabelSet = new Set(
+  OTHER_LINK_LABELS.map((label) => label.toLowerCase())
+);
+
+const exchangeCount = computed(
+  () =>
+    stats.value?.saveActions.find((a) => a.action === 'contact_exchange')
+      ?.count || 0
+);
+const vcfCount = computed(
+  () =>
+    stats.value?.saveActions.find((a) => a.action === 'vcf_download')?.count ||
+    0
+);
+const hasDonutData = computed(
+  () => exchangeCount.value > 0 || vcfCount.value > 0
+);
+
+const socialCountMap = computed(() => {
+  const map = new Map<string, number>();
+  for (const item of stats.value?.socialClicks || []) {
+    const key = (item.platform || '').trim().toLowerCase();
+    map.set(key, (map.get(key) || 0) + item.count);
+  }
+  for (const item of stats.value?.linkClicks || []) {
+    const key = (item.label || '').trim().toLowerCase();
+    if (!socialLabelSet.has(key)) continue;
+    map.set(key, (map.get(key) || 0) + item.count);
+  }
+  return map;
+});
+const socialImageMap: Record<string, string> = {
+  facebook: '/images/card/facebook.png',
+  github: '/images/card/github.png',
+  gmail: '/images/card/gmail.png',
+  instagram: '/images/card/instagram.png',
+  line: '/images/card/line.png',
+  linkedin: '/images/card/linkedin.png',
+  telegram: '/images/card/telegram.png',
+  tiktok: '/images/card/tiktok.png',
+  whatsapp: '/images/card/whatsapp.png',
+};
+const socialRows = computed(() =>
+  (stats.value?.socialConfiguredLabels || []).map((label) => {
+    const key = label.toLowerCase();
+    return {
+      platform: label,
+      image: socialImageMap[key] || '',
+      count: socialCountMap.value.get(key) || 0,
+    };
+  })
+);
+
+const linkCountMap = computed(() => {
+  const map = new Map<string, number>();
+  for (const item of stats.value?.linkClicks || []) {
+    const key = (item.label || '').trim().toLowerCase();
+    map.set(key, (map.get(key) || 0) + item.count);
+  }
+  for (const item of stats.value?.socialClicks || []) {
+    const key = (item.platform || '').trim().toLowerCase();
+    if (!otherLabelSet.has(key)) continue;
+    map.set(key, (map.get(key) || 0) + item.count);
+  }
+  return map;
+});
+const linkRows = computed(() =>
+  (stats.value?.otherConfiguredLabels || []).map((label) => ({
+    label,
+    count: linkCountMap.value.get(label.toLowerCase()) || 0,
+  }))
+);
+const hasSocialRows = computed(() => socialRows.value.length > 0);
+const hasLinkRows = computed(() => linkRows.value.length > 0);
+
+const chartData = computed(() => ({
+  labels:
+    stats.value?.dailyViews.map((v) => format(parseISO(v.date), 'MMM d')) ||
+    [],
+  datasets: [
+    {
+      data: stats.value?.dailyViews.map((v) => v.count) || [],
+      borderColor: '#ffffff',
+      borderWidth: 2,
+      backgroundColor: 'transparent',
+      tension: 0.35,
+      pointRadius: 0,
+      pointHoverRadius: 4,
+      pointHitRadius: 24,
+      pointHoverBackgroundColor: '#ffffff',
+      pointHoverBorderColor: '#ffffff',
+      pointHoverBorderWidth: 0,
+    },
+  ],
+}));
+
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  interaction: {
+    mode: 'index' as const,
+    intersect: false,
+  },
+  scales: {
+    y: {
+      beginAtZero: true,
+      grid: { color: 'rgba(255, 255, 255, 0.06)' },
+      border: { color: 'rgba(255, 255, 255, 0.15)' },
+      ticks: { color: '#8b8b8b', font: { size: 10 } },
+    },
+    x: {
+      grid: { color: 'rgba(255, 255, 255, 0.06)' },
+      border: { color: 'rgba(255, 255, 255, 0.15)' },
+      ticks: { color: '#8b8b8b', font: { size: 10 } },
+    },
+  },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      enabled: true,
+      displayColors: false,
+      backgroundColor: '#171717',
+      borderColor: '#2a2a2a',
+      borderWidth: 1,
+      titleColor: '#ffffff',
+      bodyColor: '#ffffff',
+      padding: 10,
+      callbacks: {
+        label: (ctx: any) => `Views: ${ctx?.parsed?.y ?? 0}`,
+      },
+    },
+  },
+};
+
+function openInfo() {
+  isInfoOpen.value = true;
+}
+
+</script>
+
+<template>
+  <div v-if="isLoading" class="flex flex-col gap-4">
+    <USkeleton class="h-8 w-64 rounded-md" />
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+      <USkeleton v-for="i in 4" :key="i" class="h-32 rounded-lg" />
+    </div>
+    <USkeleton class="h-80 w-full rounded-lg" />
+  </div>
+  <div v-else class="space-y-4">
+    <div
+      class="flex flex-col sm:flex-row gap-3 sm:gap-0 items-center justify-between"
+    >
+      <div class="flex items-center gap-2">
+        <h1
+          class="text-xl sm:text-2xl font-medium leading-tight tracking-widest uppercase"
+        >
+          {{ analyticsHeading }}
+        </h1>
+        <UButton
+          size="lg"
+          icon="material-symbols:info-outline"
+          color="neutral"
+          variant="ghost"
+          class="flex items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323] cursor-pointer"
+          aria-label="Open analytics information"
+          @click="openInfo"
+        />
+      </div>
+
+      <div class="flex w-full items-center gap-2 sm:w-auto">
+        <USelectMenu
+          v-model="selectedPeriod"
+          value-key="value"
+          :items="periodOptions"
+          :search-input="false"
+          class="min-w-0 flex-1 sm:w-40 sm:flex-none"
+          :ui="{
+            base: 'h-10 rounded-lg border-none bg-[#171717] px-4 text-white',
+            content: 'bg-[#171717] border border-[#2a2a2a]',
+            item: 'text-white data-[highlighted]:bg-[#232323]',
+            value: 'text-white',
+          }"
+        />
+        <USelectMenu
+          v-if="showCardFilter"
+          v-model="selectedCardId"
+          value-key="id"
+          :items="ownerCardItems"
+          :search-input="{
+            placeholder: 'Search cards...',
+            icon: 'i-lucide-search',
+          }"
+          :filter-fields="['label']"
+          class="min-w-0 flex-1 sm:w-56 sm:flex-none"
+          :ui="{
+            base: 'h-10 rounded-lg border-none bg-[#171717] px-4 text-white',
+            content: 'bg-[#171717] border border-[#2a2a2a]',
+            item: 'text-white data-[highlighted]:bg-[#232323]',
+            value: 'text-white',
+          }"
+        />
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
+        <div
+          class="mb-4 grid size-8 sm:size-11 place-items-center rounded-[4px] bg-[#232323]"
+        >
+          <UIcon name="i-lucide-eye" class="size-5 text-white/70" />
+        </div>
+        <p
+          class="text-xs font-medium uppercase tracking-[1.2px] text-[#8b8b8b] whitespace-nowrap -mt-1 mb-4"
+        >
+          Total Views
+        </p>
+        <p class="mt-1 text-3xl font-bold leading-[1.1] -mb-1 text-white">
+          {{ totalViews }}
+        </p>
+      </div>
+      <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
+        <div
+          class="mb-4 grid size-8 sm:size-11 place-items-center rounded-[4px] bg-[#232323]"
+        >
+          <UIcon name="i-lucide-download" class="size-5 text-white/70" />
+        </div>
+        <p
+          class="text-xs font-medium uppercase tracking-[1.2px] text-[#8b8b8b] whitespace-nowrap -mt-1 mb-4"
+        >
+          Exchange or Save
+        </p>
+        <p class="mt-1 text-3xl font-bold leading-[1.1] -mb-1 text-white">
+          {{ cardSaves }}
+        </p>
+      </div>
+      <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
+        <div
+          class="mb-4 grid size-8 sm:size-11 place-items-center rounded-[4px] bg-[#232323]"
+        >
+          <UIcon name="i-lucide-percent" class="size-5 text-white/70" />
+        </div>
+        <p
+          class="text-xs font-medium uppercase tracking-[1.2px] text-[#8b8b8b] whitespace-nowrap -mt-1 mb-4"
+        >
+          Conversion Rate
+        </p>
+        <p class="mt-1 text-3xl font-bold leading-[1.1] -mb-1 text-white">
+          {{ conversionRate }}%
+        </p>
+      </div>
+      <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
+        <div
+          class="mb-4 grid size-8 sm:size-11 place-items-center rounded-[4px] bg-[#232323]"
+        >
+          <UIcon name="i-lucide-share-2" class="size-5 text-white/70" />
+        </div>
+        <p
+          class="text-xs font-medium uppercase tracking-[1.2px] text-[#8b8b8b] whitespace-nowrap -mt-1 mb-4"
+        >
+          Social Clicks
+        </p>
+        <p class="mt-1 text-3xl font-bold leading-[1.1] -mb-1 text-white">
+          {{ socialTotal }}
+        </p>
+      </div>
+    </div>
+
+    <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
+      <h2
+        class="text-xl sm:text-2xl font-medium leading-tight tracking-widest uppercase"
+      >
+        Views Over Time
+      </h2>
+      <p class="mt-1 text-sm text-[#8b8b8b]">
+        Daily card opens for the past 7 days
+      </p>
+      <div class="mt-4 h-60">
+        <Line :data="chartData" :options="chartOptions as any" />
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
+        <h3
+          class="text-xl sm:text-2xl font-medium leading-tight tracking-widest uppercase"
+        >
+          Social Media Click-Throughs
+        </h3>
+        <p class="mt-1 text-sm text-[#8b8b8b]">
+          Which platforms are driving engagement
+        </p>
+        <div v-if="hasSocialRows" class="mt-6 space-y-2">
+          <div
+            v-for="row in socialRows"
+            :key="row.platform"
+            class="flex items-center justify-between rounded-[4px] bg-[#232323] px-3 py-2"
+          >
+            <div class="flex items-center gap-2 text-sm">
+              <NuxtImg
+                v-if="row.image"
+                :src="row.image"
+                :alt="`${row.platform} icon`"
+                width="16"
+                class="size-4 object-contain"
+              />
+              <UIcon v-else name="i-lucide-globe" class="size-4 text-white" />
+              <span>{{ row.platform }}</span>
+            </div>
+            <span class="text-sm font-medium">{{ row.count }}</span>
+          </div>
+        </div>
+        <div
+          v-else
+          class="mt-6 flex min-h-38 flex-col items-center justify-center gap-2 rounded-[4px] bg-[#232323] text-center"
+        >
+          <UIcon
+            name="i-lucide-mouse-pointer-click"
+            class="size-5 text-white/70"
+          />
+          <p class="text-sm text-[#8b8b8b]">No social links configured.</p>
+        </div>
+      </div>
+
+      <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
+        <h3
+          class="text-xl sm:text-2xl font-medium leading-tight tracking-widest uppercase"
+        >
+          Portfolio & Link Clicks
+        </h3>
+        <p class="mt-1 text-sm text-[#8b8b8b]">
+          External URL engagement tracking
+        </p>
+        <div v-if="hasLinkRows" class="mt-6 space-y-2">
+          <div
+            v-for="row in linkRows"
+            :key="row.label"
+            class="flex items-center justify-between rounded-[4px] bg-[#232323] px-3 py-2"
+          >
+            <div class="flex items-center gap-2 text-sm">
+              <UIcon name="i-lucide-link-2" class="size-4 text-white/80" />
+              <span>{{ row.label }}</span>
+            </div>
+            <span class="text-sm font-medium">{{ row.count }}</span>
+          </div>
+        </div>
+        <div
+          v-else
+          class="mt-6 flex min-h-38 flex-col items-center justify-center gap-2 text-center"
+        >
+          <UIcon name="i-lucide-link-2" class="size-5 text-white/70" />
+          <p class="text-sm text-[#8b8b8b]">No links configured yet.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
+        <h3
+          class="text-xl sm:text-2xl font-medium leading-tight tracking-widest uppercase"
+        >
+          Card Save Actions
+        </h3>
+        <p class="mt-1 text-sm text-[#8b8b8b]">
+          Breakdown of how users saved your card
+        </p>
+        <div class="mt-6 space-y-3">
+          <div
+            class="flex items-center justify-between rounded-[4px] bg-[#232323] p-4"
+          >
+            <div class="flex items-center gap-3">
+              <div
+                class="grid size-9 place-items-center rounded-[4px] bg-[#171717]"
+              >
+                <UIcon
+                  name="i-lucide-refresh-cw"
+                  class="size-4 text-white/75"
+                />
+              </div>
+              <div class="max-w-48">
+                <p class="text-sm">Exchange Contacts</p>
+                <p class="text-xs text-[#8b8b8b]">
+                  {{ exchangeCount }} people have connected with you.
+                </p>
+              </div>
+            </div>
+            <span class="text-3xl leading-[1.1] font-bold">{{
+              exchangeCount
+            }}</span>
+          </div>
+          <div
+            class="flex items-center justify-between rounded-[4px] bg-[#232323] p-4"
+          >
+            <div class="flex items-center gap-3">
+              <div
+                class="grid size-9 place-items-center rounded-[4px] bg-[#171717]"
+              >
+                <UIcon name="i-lucide-download" class="size-4 text-white/75" />
+              </div>
+              <div class="max-w-48">
+                <p class="text-sm">Add to Contacts</p>
+                <p class="text-xs text-[#8b8b8b]">
+                  {{ vcfCount }} people have saved your contact to their phones.
+                </p>
+              </div>
+            </div>
+            <span class="text-3xl leading-[1.1] font-bold">{{ vcfCount }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div
+        v-if="hasDonutData"
+        class="flex items-center justify-center rounded-lg bg-[#171717] p-4 sm:p-6"
+      >
+        <AnalyticsDonutChart :data="[exchangeCount, vcfCount]" />
+      </div>
+    </div>
+  </div>
+
+  <UiFeatureGuideModal
+    v-model:open="isInfoOpen"
+    title="What is analytics?"
+    heading="Understand your card performance"
+    description="Use these insights to learn what drives engagement."
+    :items="infoItems"
+  />
+</template>

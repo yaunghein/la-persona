@@ -1,22 +1,18 @@
 <script setup lang="ts">
+import { communityCardPath } from '~~/shared/utils/routes';
+
 definePageMeta({
   layout: 'platform',
 });
 
-import { useQuery } from '@tanstack/vue-query';
-import type { CommunityAboutDTO } from '~~/shared/types/community-about';
-import { communityCardPath } from '~~/shared/utils/routes';
-
 const toast = useToast();
-const { organizationSlug, withOrganizationQuery } = useOrganizationSlug();
+const { organizationSlug } = useOrganizationSlug();
+const { data, isLoading, isError, error, refetch } =
+  useCommunityAboutQuery(organizationSlug);
 
-const { data, isLoading, isError, error, refetch } = useQuery({
-  queryKey: ['community-about', organizationSlug],
-  queryFn: () =>
-    $fetch<CommunityAboutDTO>('/api/community-about', {
-      query: withOrganizationQuery(),
-    }),
-});
+function retry() {
+  refetch();
+}
 
 function onQuit() {
   toast.add({
@@ -49,25 +45,16 @@ function onViewOrganizer() {
   </div>
   <div v-else-if="isError" class="flex flex-col items-start gap-4">
     <p class="text-sm text-[#8b8b8b]">
-      {{
-        (error as { data?: { statusMessage?: string }; message?: string })?.data
-          ?.statusMessage ||
-        (error as { message?: string })?.message ||
-        'Could not load community about.'
-      }}
+      {{ apiErrorMessage(error, 'Could not load community about.') }}
     </p>
     <UButton
       label="Try again"
       color="neutral"
       class="h-9 rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
-      @click="
-        () => {
-          refetch();
-        }
-      "
+      @click="retry"
     />
   </div>
-  <CommunityAbout
+  <OrganizationAbout
     v-else-if="data"
     :data="data"
     @quit="onQuit"

@@ -4,7 +4,7 @@ definePageMeta({
 });
 
 import { useQueryClient } from '@tanstack/vue-query';
-import type { UserOrganization } from '~/composables/user-organizations';
+import type { UserOrganization } from '~~/shared/contracts/organization';
 import { QUERY_KEYS } from '~/utils/query-keys';
 import { ROUTES } from '~~/shared/utils/routes';
 const route = useRoute();

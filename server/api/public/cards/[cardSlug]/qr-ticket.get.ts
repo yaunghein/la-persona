@@ -1,4 +1,4 @@
-import { findEmailQrBackgroundByCardSlug } from '~~/server/db/queries/community-setting';
+import { findEmailQrBackgroundByCardSlug } from '~~/server/features/organization/community-setting.repository';
 import { env } from '~~/env';
 import { renderQrTicketPng } from '~~/server/utils/qr-ticket-image';
 import { enrichLog } from '~~/server/utils/wide-event';

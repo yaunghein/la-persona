@@ -1,9 +1,9 @@
 import { eq } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { card, member, organization, user } from '~~/server/db/schema';
-import { findCommunitySettingByOrganizationId } from '~~/server/db/queries/community-setting';
+import { findCommunitySettingByOrganizationId } from '~~/server/features/organization/community-setting.repository';
 import { requireAdminSession } from '~~/server/utils/admin-permissions';
-import { toCommunitySettingsDTO } from '~~/shared/types/community-settings';
+import { toCommunitySettingsDTO } from '~~/shared/contracts/organization';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
 export default defineEventHandler(async (event) => {

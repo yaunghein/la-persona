@@ -13,6 +13,7 @@ export const organizationPermissionStatements = {
   cardRequest: ['create', 'update'],
   media: ['upload'],
   checkIn: ['read', 'create'],
+  insight: ['read'],
 } as const;
 
 export const organizationAccessControl = createAccessControl(
@@ -35,6 +36,7 @@ export const organizationVolunteerRole = organizationAccessControl.newRole({
 });
 
 export const organizationAdminRole = organizationAccessControl.newRole({
+  insight: ['read'],
   organization: ['read', 'update'],
   member: ['create', 'update', 'delete'],
   invitation: ['create', 'cancel'],
@@ -47,6 +49,7 @@ export const organizationAdminRole = organizationAccessControl.newRole({
 });
 
 export const organizationOwnerRole = organizationAccessControl.newRole({
+  insight: ['read'],
   organization: ['read', 'update', 'delete'],
   member: ['create', 'update', 'delete'],
   invitation: ['create', 'cancel'],

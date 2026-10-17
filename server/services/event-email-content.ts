@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { db } from '~~/server/db';
-import { findCommunitySettingByOrganizationId } from '~~/server/db/queries/community-setting';
+import { findCommunitySettingByOrganizationId } from '~~/server/features/organization/community-setting.repository';
 import { event as eventTable } from '~~/server/db/schema';
 import { env } from '~~/env';
 import { ROUTES } from '~~/shared/utils/routes';

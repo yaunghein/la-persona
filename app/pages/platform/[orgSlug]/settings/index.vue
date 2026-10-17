@@ -1,21 +1,13 @@
 <script setup lang="ts">
+import { UpdateCommunitySettingsRequest } from '~~/shared/contracts/organization';
+import type { CommunitySettingsFormValues } from '~~/shared/contracts/organization';
+
 definePageMeta({
   layout: 'platform',
 });
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
-import type {
-  CommunitySettingsDTO,
-  CommunitySettingsFormValues,
-} from '~~/shared/types/community-settings';
-import {
-  userOrganizationsQueryKey,
-  type UserOrganization,
-} from '~~/app/composables/user-organizations';
-
 const toast = useToast();
-const queryClient = useQueryClient();
-const { organizationSlug, withOrganizationQuery } = useOrganizationSlug();
+const { organizationSlug } = useOrganizationSlug();
 
 const emptyForm = (): CommunitySettingsFormValues => ({
   name: '',
@@ -42,13 +34,8 @@ function updateForm(value: CommunitySettingsFormValues) {
   Object.assign(form, value);
 }
 
-const { data, isLoading, isError, error, refetch } = useQuery({
-  queryKey: ['community-settings', organizationSlug],
-  queryFn: () =>
-    $fetch<CommunitySettingsDTO>('/api/community-settings', {
-      query: withOrganizationQuery(),
-    }),
-});
+const { data, isLoading, isError, error, refetch } =
+  useCommunitySettingsQuery(organizationSlug);
 
 watch(
   data,
@@ -59,55 +46,29 @@ watch(
   { immediate: true }
 );
 
-const { mutate: saveSettings, isPending: isSaving } = useMutation({
-  mutationFn: (values: CommunitySettingsFormValues) =>
-    $fetch<CommunitySettingsDTO>('/api/community-settings', {
-      method: 'PATCH',
-      query: withOrganizationQuery(),
-      body: {
-        name: values.name,
-        description: values.description,
-        guidelines: values.guidelines,
-        whyJoin: values.whyJoin,
-        logoUrl: values.logoUrl,
-        coverImageUrl: values.coverImageUrl,
-      },
-    }),
-  onSuccess: async (saved) => {
-    clearDraft();
-    hydrate({ ...saved });
-    queryClient.setQueryData(
-      userOrganizationsQueryKey,
-      (orgs: UserOrganization[] | undefined) =>
-        (orgs ?? []).map((org) =>
-          org.slug === organizationSlug.value
-            ? { ...org, name: saved.name, logo: saved.logoUrl || null }
-            : org
-        )
-    );
-    await Promise.all([
-      queryClient.invalidateQueries({
-        queryKey: ['community-settings', organizationSlug.value],
-      }),
-      queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey }),
-    ]);
-    toast.add({
-      title: 'Settings updated',
-      description: 'Community settings were saved.',
-      color: 'success',
-    });
-  },
-  onError: (error: { data?: { statusMessage?: string }; message?: string }) => {
-    toast.add({
-      title: 'Could not save',
-      description:
-        error.data?.statusMessage ||
-        error.message ||
-        'Community settings could not be saved.',
-      color: 'error',
-    });
-  },
-});
+const { mutate: updateSettings, isPending: isSaving } =
+  useUpdateCommunitySettingsMutation(organizationSlug);
+
+function saveSettings(values: CommunitySettingsFormValues) {
+  updateSettings(UpdateCommunitySettingsRequest.parse(values), {
+    onSuccess: (saved) => {
+      clearDraft();
+      hydrate({ ...saved });
+      toast.add({
+        title: 'Settings updated',
+        description: 'Community settings were saved.',
+        color: 'success',
+      });
+    },
+    onError: (error) => {
+      toast.add({
+        title: 'Could not save',
+        description: apiErrorMessage(error, 'Community settings could not be saved.'),
+        color: 'error',
+      });
+    },
+  });
+}
 
 function onSubmit() {
   if (!form.name.trim()) {
@@ -120,6 +81,10 @@ function onSubmit() {
   }
 
   saveSettings({ ...form });
+}
+
+function retry() {
+  refetch();
 }
 
 function onDelete() {
@@ -138,25 +103,16 @@ function onDelete() {
   </div>
   <div v-else-if="isError" class="flex flex-col items-start gap-4">
     <p class="text-sm text-[#8b8b8b]">
-      {{
-        (error as { data?: { statusMessage?: string }; message?: string })?.data
-          ?.statusMessage ||
-        (error as { message?: string })?.message ||
-        'Could not load community settings.'
-      }}
+      {{ apiErrorMessage(error, 'Could not load community settings.') }}
     </p>
     <UButton
       label="Try again"
       color="neutral"
       class="h-9 rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
-      @click="
-        () => {
-          refetch();
-        }
-      "
+      @click="retry"
     />
   </div>
-  <CommunitySettingsForm
+  <OrganizationSettingsForm
     v-else
     :model-value="form"
     @update:model-value="updateForm"

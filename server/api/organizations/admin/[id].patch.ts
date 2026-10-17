@@ -2,7 +2,7 @@ import { and, eq, ne } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '~~/server/db';
 import { card, organization } from '~~/server/db/schema';
-import { upsertCommunitySettingByOrganizationId } from '~~/server/db/queries/community-setting';
+import { upsertCommunitySettingByOrganizationId } from '~~/server/features/organization/community-setting.repository';
 import { updateCommunityCardsBrand } from '~~/server/services/community';
 import { requireAdminSession } from '~~/server/utils/admin-permissions';
 import { slugify } from '~~/shared/utils/slugify';

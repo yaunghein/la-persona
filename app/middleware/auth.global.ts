@@ -1,8 +1,5 @@
 import { isProtectedInvitePath, parsePlatformEventDetailPath } from '~~/shared/utils/routes';
-import type { UserOrganization } from '~/composables/user-organizations';
-import { canRunCommunityCheckIn } from '~/composables/user-organizations';
-import { QUERY_KEYS } from '~/utils/query-keys';
-import type { QueryClient } from '@tanstack/vue-query';
+import { canRunCommunityCheckIn } from '~/features/organization/utils/organization-roles';
 
 export default defineNuxtRouteMiddleware(async (to) => {
   const sessionState = await authClient.useSession(useFetch);
@@ -19,18 +16,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
   }
 
   if (sharedEvent && session?.value) {
-    const queryClient = useNuxtApp().$queryClient as QueryClient | undefined;
-    let orgs = queryClient?.getQueryData<UserOrganization[]>(
-      QUERY_KEYS.organizations
-    );
-    if (!orgs) {
-      try {
-        orgs = await $fetch<UserOrganization[]>('/api/organizations');
-        queryClient?.setQueryData(QUERY_KEYS.organizations, orgs);
-      } catch {
-        return navigateTo(ROUTES.EVENTS.PUBLIC(sharedEvent.eventId));
-      }
-    }
+    const orgs = await loadUserOrganizations().catch(() => null);
+    if (!orgs) return navigateTo(ROUTES.EVENTS.PUBLIC(sharedEvent.eventId));
     const org = orgs.find((item) => item.slug === sharedEvent.orgSlug);
     if (!canRunCommunityCheckIn(org)) {
       return navigateTo(ROUTES.EVENTS.PUBLIC(sharedEvent.eventId));
