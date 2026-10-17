@@ -5,7 +5,7 @@ import { env } from '~~/env';
 const require = createRequire(import.meta.url);
 
 const options: pino.LoggerOptions = {
-  level: env.LOG_LEVEL,
+  level: 'info',
   timestamp: pino.stdTimeFunctions.isoTime,
   base: {
     service: 'la-persona',
