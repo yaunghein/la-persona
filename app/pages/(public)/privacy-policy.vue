@@ -285,14 +285,14 @@ const privacySections = [
       target="_blank"
       class="group text-xs font-light uppercase leading-normal"
     >
-      <AnimatedText text="Facebook" />
+      <UiAnimatedText text="Facebook" />
     </a>
     <a
       href="https://www.linkedin.com/company/la-persona-mm/"
       target="_blank"
       class="group text-xs font-light uppercase leading-normal"
     >
-      <AnimatedText text="LinkedIn" />
+      <UiAnimatedText text="LinkedIn" />
     </a>
   </footer>
 </template>

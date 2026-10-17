@@ -1,10 +1,10 @@
 import { nanoid } from 'nanoid';
 import { env } from '~~/env';
-import { countContactsByCardIds } from '~~/server/db/queries/contact-exchange';
+import { countContactsByCardIds } from '~~/server/features/contact/contact.repository';
 import {
   countCheckedInByUsersInOrganization,
   deleteRegistrationsForUserInOrganization,
-} from '~~/server/db/queries/event-registration';
+} from '~~/server/features/event/registration.repository';
 import {
   countMembersAndEvents,
   countOwners,
@@ -30,8 +30,8 @@ import {
   rotateInviteToken,
   upsertCommunitySettingByOrganizationId,
 } from '~~/server/features/organization/community-setting.repository';
-import { sanitizeRichText } from '~~/server/utils/rich-text';
-import { splitName } from '~~/server/services/card';
+import { sanitizeRichText } from '~~/server/lib/html-sanitizer';
+import { splitPersonName } from '~~/shared/utils/person-name';
 import type { Collection } from '~~/shared/contracts/collection';
 import type {
   CommunityAbout,
@@ -50,7 +50,10 @@ import {
   type CommunityInviteRole,
   type OrganizationMemberRole,
 } from '~~/shared/permissions/organization';
-import { ORGANIZATION_TYPES, type OrganizationType } from '~~/shared/utils/constants';
+import {
+  ORGANIZATION_TYPES,
+  type OrganizationType,
+} from '~~/shared/utils/constants';
 import { ROUTES } from '~~/shared/utils/routes';
 import { slugify } from '~~/shared/utils/slugify';
 
@@ -98,7 +101,10 @@ export async function communityInviteStats(
  * Every community member holds a community card, branded with the
  * community's design and seeded from their personal card.
  */
-export async function ensureCommunityCard(userId: string, organizationId: string) {
+export async function ensureCommunityCard(
+  userId: string,
+  organizationId: string
+) {
   const existing = await findUserCardInOrganization(userId, organizationId);
   if (existing) return existing;
 
@@ -110,7 +116,7 @@ export async function ensureCommunityCard(userId: string, organizationId: string
 
   const names = personalCard
     ? { firstName: personalCard.firstName, lastName: personalCard.lastName }
-    : splitName(account?.name);
+    : splitPersonName(account?.name);
   const firstName = names.firstName || 'Member';
   const lastName = names.lastName || null;
 
@@ -158,19 +164,31 @@ export async function removeMember(params: {
   organizationId: string;
   actorRole: string;
 }) {
-  const target = await findMemberInOrganization(params.memberId, params.organizationId);
+  const target = await findMemberInOrganization(
+    params.memberId,
+    params.organizationId
+  );
   if (!target) throw notFound('Member');
 
   if (target.role === 'owner') {
     if (params.actorRole !== 'owner') {
-      throw forbidden('Only an owner can remove another owner.', 'owner_protected');
+      throw forbidden(
+        'Only an owner can remove another owner.',
+        'owner_protected'
+      );
     }
     if ((await countOwners(params.organizationId)) <= 1) {
-      throw conflict('The last owner cannot be removed from this community.', 'last_owner');
+      throw conflict(
+        'The last owner cannot be removed from this community.',
+        'last_owner'
+      );
     }
   }
 
-  await deleteRegistrationsForUserInOrganization(target.userId, params.organizationId);
+  await deleteRegistrationsForUserInOrganization(
+    target.userId,
+    params.organizationId
+  );
   await deleteMemberWithCommunityData({
     memberId: target.id,
     userId: target.userId,
@@ -180,17 +198,28 @@ export async function removeMember(params: {
 }
 
 /** Managers keep their role; only member and volunteer can be switched here. */
-export async function assertMemberRoleChangeable(memberId: string, organizationId: string) {
+export async function assertMemberRoleChangeable(
+  memberId: string,
+  organizationId: string
+) {
   const target = await findMemberInOrganization(memberId, organizationId);
   if (!target) throw notFound('Member');
   if (isOrganizationManagerRole(target.role)) {
-    throw forbidden('Owner and admin roles cannot be changed here.', 'manager_role_locked');
+    throw forbidden(
+      'Owner and admin roles cannot be changed here.',
+      'manager_role_locked'
+    );
   }
   return target;
 }
 
-function linkedinFromSocials(socials: { label: string; value: string }[] | null | undefined) {
-  return socials?.find((item) => item.label.toLowerCase().includes('linkedin'))?.value || null;
+function linkedinFromSocials(
+  socials: { label: string; value: string }[] | null | undefined
+) {
+  return (
+    socials?.find((item) => item.label.toLowerCase().includes('linkedin'))
+      ?.value || null
+  );
 }
 
 function fullName(firstName: string, lastName?: string | null) {
@@ -205,7 +234,9 @@ export async function listCommunityRoster(
   const userIds = rows.map((row) => row.user.id);
   const cards = await listCardsOfUsersInOrganization(userIds, organizationId);
   const cardByUserId = new Map(
-    cards.filter((item) => item.userId).map((item) => [item.userId as string, item])
+    cards
+      .filter((item) => item.userId)
+      .map((item) => [item.userId as string, item])
   );
 
   const [checkIns, connections, invitations] = await Promise.all([
@@ -216,8 +247,9 @@ export async function listCommunityRoster(
 
   const members: CommunityMember[] = rows.map((row) => {
     const communityCard = cardByUserId.get(row.user.id);
-    const fallbackName = splitName(row.user.name);
-    const firstName = communityCard?.firstName || fallbackName.firstName || row.user.name;
+    const fallbackName = splitPersonName(row.user.name);
+    const firstName =
+      communityCard?.firstName || fallbackName.firstName || row.user.name;
     const lastName = communityCard?.lastName || fallbackName.lastName || null;
     return {
       id: row.member.id,
@@ -225,7 +257,9 @@ export async function listCommunityRoster(
       name: fullName(firstName, lastName) || row.user.name,
       role:
         communityCard?.position ||
-        (isOrganizationManagerRole(row.member.role) ? row.member.role : 'Member'),
+        (isOrganizationManagerRole(row.member.role)
+          ? row.member.role
+          : 'Member'),
       company: communityCard?.company || '',
       connections: communityCard ? (connections.get(communityCard.id) ?? 0) : 0,
       eventsAttended: checkIns.get(row.user.id) ?? 0,
@@ -267,7 +301,9 @@ export async function listCommunityRoster(
 
 // ── Join links ──────────────────────────────────────────────────────────────
 
-export async function describeJoinLink(organizationId: string): Promise<JoinLink> {
+export async function describeJoinLink(
+  organizationId: string
+): Promise<JoinLink> {
   const setting = await ensureCommunitySetting(organizationId);
   return {
     url: setting ? joinLinkUrl(setting.inviteToken) : '',
@@ -275,7 +311,9 @@ export async function describeJoinLink(organizationId: string): Promise<JoinLink
   };
 }
 
-export async function issueNewJoinLink(organizationId: string): Promise<JoinLink> {
+export async function issueNewJoinLink(
+  organizationId: string
+): Promise<JoinLink> {
   await ensureCommunitySetting(organizationId);
   const setting = await rotateInviteToken(organizationId);
   if (!setting) throw notFound('Community');
@@ -289,7 +327,8 @@ export async function issueNewJoinLink(organizationId: string): Promise<JoinLink
 async function resolveJoinLink(token: string) {
   const setting = await findCommunitySettingByInviteToken(token);
   const isExpired =
-    !setting?.inviteTokenExpiresAt || setting.inviteTokenExpiresAt.getTime() < Date.now();
+    !setting?.inviteTokenExpiresAt ||
+    setting.inviteTokenExpiresAt.getTime() < Date.now();
   if (!setting || isExpired) throw notFound('Invite link');
 
   const organization = await findOrganizationById(setting.organizationId);
@@ -332,13 +371,19 @@ export async function joinCommunityWithLink(
 
 // ── Profile (settings + about) ──────────────────────────────────────────────
 
-export async function describeCommunitySettings(organizationId: string): Promise<CommunitySettings> {
+export async function describeCommunitySettings(
+  organizationId: string
+): Promise<CommunitySettings> {
   const [organization, setting] = await Promise.all([
     findOrganizationById(organizationId),
     ensureCommunitySetting(organizationId),
   ]);
   if (!organization || !setting) throw notFound('Community');
-  return toCommunitySettings({ ...setting, name: organization.name, logo: organization.logo });
+  return toCommunitySettings({
+    ...setting,
+    name: organization.name,
+    logo: organization.logo,
+  });
 }
 
 /** Rich text is sanitized on write, so every renderer can trust stored HTML. */
@@ -353,22 +398,30 @@ export async function updateCommunitySettings(
   if (!organization) throw notFound('Community');
 
   const setting = await upsertCommunitySettingByOrganizationId(organizationId, {
-    description: sanitizeRichText(changes.description),
-    guidelines: sanitizeRichText(changes.guidelines),
-    whyJoin: sanitizeRichText(changes.whyJoin),
+    description: sanitizeRichText(changes.description) ?? '',
+    guidelines: sanitizeRichText(changes.guidelines) ?? '',
+    whyJoin: sanitizeRichText(changes.whyJoin) ?? '',
     coverUrl: changes.coverImageUrl,
   });
   if (!setting) throw notFound('Community');
-  return toCommunitySettings({ ...setting, name: organization.name, logo: organization.logo });
+  return toCommunitySettings({
+    ...setting,
+    name: organization.name,
+    logo: organization.logo,
+  });
 }
 
-export async function describeCommunityAbout(organizationId: string): Promise<CommunityAbout> {
-  const [settings, counts, organization, organizerCardSlug] = await Promise.all([
-    describeCommunitySettings(organizationId),
-    countMembersAndEvents(organizationId),
-    findOrganizationById(organizationId),
-    findOrganizerCardSlug(organizationId),
-  ]);
+export async function describeCommunityAbout(
+  organizationId: string
+): Promise<CommunityAbout> {
+  const [settings, counts, organization, organizerCardSlug] = await Promise.all(
+    [
+      describeCommunitySettings(organizationId),
+      countMembersAndEvents(organizationId),
+      findOrganizationById(organizationId),
+      findOrganizerCardSlug(organizationId),
+    ]
+  );
   return {
     ...settings,
     ...counts,

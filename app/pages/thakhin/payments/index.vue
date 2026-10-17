@@ -2,10 +2,10 @@
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import type { PaymentForReview } from '~~/shared/contracts/billing';
 import {
-  THAKHIN_ACTIONS_COLUMN,
-  THAKHIN_TABLE_UI,
-  thakhinSortableHeader,
-} from '~/utils/thakhin-table';
+  ADMIN_ACTIONS_COLUMN,
+  ADMIN_TABLE_UI,
+  sortableHeader,
+} from '~/features/admin/utils/admin-table';
 
 definePageMeta({
   layout: 'thakhin',
@@ -19,11 +19,12 @@ const rows = computed(() => data.value?.items ?? []);
 const { mutateAsync: reviewPayment } = useReviewPaymentMutation();
 
 const filterPayer = ref('');
-const filterStatus = ref<'all' | 'submitted' | 'approved' | 'rejected'>('submitted');
+const filterStatus = ref<'all' | 'submitted' | 'approved' | 'rejected'>(
+  'submitted'
+);
 const filterLink = ref<'all' | 'linked' | 'standalone'>('all');
 const selectedPayment = ref<PaymentRow | null>(null);
 const paymentOpen = ref(false);
-
 
 const filteredRows = computed(() => {
   return rows.value.filter((row) => {
@@ -54,7 +55,7 @@ const {
   paginationTotal,
   resetPage,
   onPageChange,
-} = useThakhinTable(() => filteredRows.value.length);
+} = useAdminTable(() => filteredRows.value.length);
 
 watch([filterPayer, filterStatus, filterLink], resetPage);
 
@@ -162,13 +163,13 @@ function getActionItems(row: PaymentRow): DropdownMenuItem[][] {
 }
 
 const columns: TableColumn<PaymentRow>[] = [
-  { accessorKey: 'id', header: thakhinSortableHeader('PAYMENT ID') },
-  { accessorKey: 'payerName', header: thakhinSortableHeader('PAYER') },
-  { accessorKey: 'payerEmail', header: thakhinSortableHeader('EMAIL') },
-  { accessorKey: 'itemCount', header: thakhinSortableHeader('ITEMS') },
+  { accessorKey: 'id', header: sortableHeader('PAYMENT ID') },
+  { accessorKey: 'payerName', header: sortableHeader('PAYER') },
+  { accessorKey: 'payerEmail', header: sortableHeader('EMAIL') },
+  { accessorKey: 'itemCount', header: sortableHeader('ITEMS') },
   {
     accessorKey: 'totalAmountMinor',
-    header: thakhinSortableHeader('AMOUNT'),
+    header: sortableHeader('AMOUNT'),
   },
   {
     accessorKey: 'receiptUrl',
@@ -178,22 +179,22 @@ const columns: TableColumn<PaymentRow>[] = [
   },
   {
     accessorKey: 'linkedRequestId',
-    header: thakhinSortableHeader('LINKED REQUEST'),
+    header: sortableHeader('LINKED REQUEST'),
   },
-  { accessorKey: 'status', header: thakhinSortableHeader('STATUS') },
-  { accessorKey: 'createdAt', header: thakhinSortableHeader('CREATED AT') },
-  THAKHIN_ACTIONS_COLUMN,
+  { accessorKey: 'status', header: sortableHeader('STATUS') },
+  { accessorKey: 'createdAt', header: sortableHeader('CREATED AT') },
+  ADMIN_ACTIONS_COLUMN,
 ];
 </script>
 
 <template>
   <div class="flex flex-col gap-6">
-    <ThakhinPageHeader
+    <AdminPageHeader
       title="Payments"
       description="Approve or reject standalone subscription payments. Payments tied to a design request are decided on Requests."
     />
 
-    <ThakhinTableFrame
+    <AdminTableFrame
       :page="pagination.pageIndex + 1"
       :total="paginationTotal"
       :items-per-page="pagination.pageSize"
@@ -246,9 +247,14 @@ const columns: TableColumn<PaymentRow>[] = [
         :loading="pending"
         :pagination-options="paginationOptions"
         :get-row-id="(row) => row.id"
-        :ui="THAKHIN_TABLE_UI"
+        :ui="ADMIN_TABLE_UI"
         class="w-full min-w-[48rem]"
-        @select="(_event, row) => { selectedPayment = row.original; paymentOpen = true }"
+        @select="
+          (_event, row) => {
+            selectedPayment = row.original;
+            paymentOpen = true;
+          }
+        "
       >
         <template #payerName-cell="{ row }">
           <span class="font-medium text-white">
@@ -261,7 +267,9 @@ const columns: TableColumn<PaymentRow>[] = [
         </template>
 
         <template #totalAmountMinor-cell="{ row }">
-          {{ formatMoney(row.original.totalAmountMinor, row.original.currency) }}
+          {{
+            formatMoney(row.original.totalAmountMinor, row.original.currency)
+          }}
         </template>
 
         <template #receiptUrl-cell="{ row }">
@@ -282,10 +290,7 @@ const columns: TableColumn<PaymentRow>[] = [
         <template #linkedRequestId-cell="{ row }">
           <span v-if="row.original.linkedRequestId" class="text-white/80">
             {{ row.original.linkedRequestId }}
-            <span
-              v-if="row.original.linkedRequestStatus"
-              class="text-white/40"
-            >
+            <span v-if="row.original.linkedRequestStatus" class="text-white/40">
               · {{ row.original.linkedRequestStatus }}
             </span>
           </span>
@@ -299,20 +304,35 @@ const columns: TableColumn<PaymentRow>[] = [
         </template>
 
         <template #createdAt-cell="{ row }">
-          <span class="text-white/55">{{ formatDate(row.original.createdAt) }}</span>
+          <span class="text-white/55">{{
+            formatDate(row.original.createdAt)
+          }}</span>
         </template>
 
         <template #actions-cell="{ row }">
-          <ThakhinRowMenu :items="getActionItems(row.original)" />
+          <AdminRowMenu :items="getActionItems(row.original)" />
         </template>
       </UTable>
-    </ThakhinTableFrame>
+    </AdminTableFrame>
 
-    <USlideover v-model:open="paymentOpen" title="Payment" :ui="{ content: 'bg-[#171717]' }">
+    <USlideover
+      v-model:open="paymentOpen"
+      title="Payment"
+      :ui="{ content: 'bg-[#171717]' }"
+    >
       <template #body>
         <div v-if="selectedPayment" class="space-y-3 text-sm text-white/80">
-          <p class="text-white">{{ selectedPayment.payerName }} · {{ selectedPayment.payerEmail }}</p>
-          <p>{{ formatMoney(selectedPayment.totalAmountMinor, selectedPayment.currency) }}</p>
+          <p class="text-white">
+            {{ selectedPayment.payerName }} · {{ selectedPayment.payerEmail }}
+          </p>
+          <p>
+            {{
+              formatMoney(
+                selectedPayment.totalAmountMinor,
+                selectedPayment.currency
+              )
+            }}
+          </p>
           <p>Status: {{ selectedPayment.status }}</p>
           <p v-if="selectedPayment.note">{{ selectedPayment.note }}</p>
           <NuxtLink
@@ -322,9 +342,19 @@ const columns: TableColumn<PaymentRow>[] = [
           >
             Linked request {{ selectedPayment.linkedRequestId }}
           </NuxtLink>
-          <div v-for="item in selectedPayment.items" :key="item.cardId" class="border-t border-[#2a2a2a] pt-2">
-            <p>{{ item.planCode }} · {{ formatMoney(item.amountMinor, item.currency) }}</p>
-            <p>{{ new Date(item.startAt).toLocaleDateString() }} – {{ new Date(item.endAt).toLocaleDateString() }}</p>
+          <div
+            v-for="item in selectedPayment.items"
+            :key="item.cardId"
+            class="border-t border-[#2a2a2a] pt-2"
+          >
+            <p>
+              {{ item.planCode }} ·
+              {{ formatMoney(item.amountMinor, item.currency) }}
+            </p>
+            <p>
+              {{ new Date(item.startAt).toLocaleDateString() }} –
+              {{ new Date(item.endAt).toLocaleDateString() }}
+            </p>
           </div>
         </div>
       </template>

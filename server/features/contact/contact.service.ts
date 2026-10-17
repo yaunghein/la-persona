@@ -1,6 +1,7 @@
 import {
   findCardOwnerEmail,
   findLatestCardInOrganization,
+  listWorkspaceCards,
   findPersonalCardForUser,
   type CardRecord,
 } from '~~/server/features/card/card.repository';
@@ -17,7 +18,6 @@ import {
   sendContactExchangeEmail,
   type ExchangedContact,
 } from '~~/server/features/contact/contact.notifications';
-import { findWorkspaceCardsForUser } from '~~/server/db/queries/workspace-cards';
 import { toCsv } from '~~/server/lib/csv';
 import type { EmailSendResult } from '~~/server/utils/wide-event';
 import type { Page } from '~~/shared/contracts/collection';
@@ -105,8 +105,8 @@ export function organizationContactScope(
 export async function workspaceContactScope(
   userId: string
 ): Promise<ContactScope> {
-  const workspaceCards = await findWorkspaceCardsForUser(userId);
-  return { cardIds: workspaceCards.map((item) => item.id) };
+  const workspaceCards = await listWorkspaceCards(userId);
+  return { cardIds: workspaceCards.map((row) => row.card.id) };
 }
 
 export function listContactPage(scope: ContactScope, query: ListContactsQuery) {
@@ -137,7 +137,9 @@ export async function exportContactsCsv(
         contact.phone,
         contact.email,
       ];
-      return options.includeOrigin ? [...row, contactOriginLabel(contact)] : row;
+      return options.includeOrigin
+        ? [...row, contactOriginLabel(contact)]
+        : row;
     }),
   ]);
 }
@@ -272,8 +274,14 @@ export async function exchangeContactSeamlessly(
     visitorContactId,
     visitorCardId: visitorCard.id,
     emails: deliverContactExchangeEmails([
-      { to: ownerEmail, contact: cardAsExchangedContact(visitorCard, visitorEmail) },
-      { to: visitorEmail, contact: cardAsExchangedContact(ownerCard, ownerEmail) },
+      {
+        to: ownerEmail,
+        contact: cardAsExchangedContact(visitorCard, visitorEmail),
+      },
+      {
+        to: visitorEmail,
+        contact: cardAsExchangedContact(ownerCard, ownerEmail),
+      },
     ]),
   };
 }

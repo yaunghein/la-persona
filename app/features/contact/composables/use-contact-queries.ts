@@ -68,7 +68,9 @@ export function useDeleteContactMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (contactId: string) =>
-      $fetch(`/api/contacts/${contactId}`, { method: 'DELETE' }),
+      $fetch<void>(`/api/contacts/${contactId}` as string, {
+        method: 'DELETE',
+      }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: contactQueryKeys.all }),
   });

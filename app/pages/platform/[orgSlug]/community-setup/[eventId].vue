@@ -1,14 +1,12 @@
 <script setup lang="ts">
+import { ROUTES } from '~~/shared/utils/routes';
+
 definePageMeta({
   layout: false,
 });
 
-import { useQueryClient } from '@tanstack/vue-query';
-import type { UserOrganization } from '~~/shared/contracts/organization';
-import { QUERY_KEYS } from '~/utils/query-keys';
-import { ROUTES } from '~~/shared/utils/routes';
 const route = useRoute();
-const queryClient = useQueryClient();
+const { mutateAsync: joinEventCommunity } = useJoinEventCommunityMutation();
 const toast = useToast();
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
 const eventId = computed(() => String(route.params.eventId || ''));
@@ -34,22 +32,7 @@ onMounted(async () => {
   }
 
   try {
-    const result = await $fetch<{
-      organizationSlug: string;
-      eventId: string;
-      cardSlug: string | null;
-      alreadyMember: boolean;
-      cardComplete: boolean;
-    }>(`/api/events/${eventId.value}/join-community`, {
-      method: 'POST',
-    });
-
-    try {
-      const orgs = await $fetch<UserOrganization[]>('/api/organizations');
-      queryClient.setQueryData(QUERY_KEYS.organizations, orgs);
-    } catch {
-      // Membership is already saved. Continue even if the sidebar cache refresh fails.
-    }
+    const result = await joinEventCommunity(eventId.value);
 
     if (result.alreadyMember && result.cardComplete) {
       await navigateTo(ROUTES.EVENTS.PUBLIC(result.eventId), { replace: true });
@@ -70,10 +53,10 @@ onMounted(async () => {
   } catch (error: any) {
     toast.add({
       title: 'Could not continue',
-      description:
-        error?.data?.statusMessage ||
-        error?.statusMessage ||
-        'Please try again from the event page.',
+      description: apiErrorMessage(
+        error,
+        'Please try again from the event page.'
+      ),
       color: 'error',
     });
     await navigateTo(ROUTES.EVENTS.PUBLIC(eventId.value), { replace: true });

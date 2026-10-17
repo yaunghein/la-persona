@@ -31,7 +31,7 @@ import {
   sendPaymentSubmissionEmails,
 } from '~~/server/features/billing/billing.notifications';
 import type { CardWithContext } from '~~/server/features/card/card.repository';
-import { restoreSubscriptionsAfterRejection } from '~~/server/services/subscription';
+import { restoreSubscriptionsAfterRejection } from '~~/server/features/billing/subscription.repository';
 import type {
   BillingHistoryEntry,
   CardPaymentKind,
@@ -45,7 +45,9 @@ import type {
 import type { Collection, Page } from '~~/shared/contracts/collection';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
-export async function listPlans(): Promise<Collection<SubscriptionPlanSummary>> {
+export async function listPlans(): Promise<
+  Collection<SubscriptionPlanSummary>
+> {
   return { items: await listSubscriptionPlans() };
 }
 
@@ -105,7 +107,9 @@ export async function quoteCardPaymentFor(
 }
 
 function cardHolderName(target: CardWithContext) {
-  return [target.card.firstName, target.card.lastName].filter(Boolean).join(' ');
+  return [target.card.firstName, target.card.lastName]
+    .filter(Boolean)
+    .join(' ');
 }
 
 /**
@@ -177,7 +181,9 @@ export async function submitCardPayment(params: {
       `Payment ID: ${receipt.paymentId}`,
       `Organization: ${target.organization.name}`,
       `Card: ${cardHolderName(target)} — plan: ${quote.planCode}`,
-      ...(receipt.cardRequestId ? [`Card request ID: ${receipt.cardRequestId}`] : []),
+      ...(receipt.cardRequestId
+        ? [`Card request ID: ${receipt.cardRequestId}`]
+        : []),
     ],
   });
 
@@ -236,19 +242,26 @@ export async function reviewPayment(
         status: 'approved',
         note: decision.note ?? payment.note,
       });
-      if (!updated) throw conflict('This payment was already processed.', 'payment_decided');
+      if (!updated)
+        throw conflict(
+          'This payment was already processed.',
+          'payment_decided'
+        );
       for (const item of items) await activatePaidSubscription(tx, item, now);
       return { payment: updated, itemCount: items.length };
     }
 
-    const details = [decision.reason, decision.note].filter(Boolean).join(' — ');
+    const details = [decision.reason, decision.note]
+      .filter(Boolean)
+      .join(' — ');
     const updated = await decideSubmittedPayment(tx, payment.id, {
       status: 'rejected',
       note: [payment.note, details ? `\nRejected: ${details}` : '']
         .filter(Boolean)
         .join(''),
     });
-    if (!updated) throw conflict('This payment was already processed.', 'payment_decided');
+    if (!updated)
+      throw conflict('This payment was already processed.', 'payment_decided');
     await restoreSubscriptionsAfterRejection(tx, [payment.id], now);
     return { payment: updated, itemCount: 0 };
   });
@@ -282,8 +295,11 @@ export async function reviewPayment(
 export async function listPaymentsAwaitingReview(
   query: ListPaymentsQuery
 ): Promise<Page<PaymentForReview>> {
-  const { payments, items, requests, total } = await listPaymentsForReview(query);
-  const requestStatusById = new Map(requests.map((row) => [row.id, row.status]));
+  const { payments, items, requests, total } =
+    await listPaymentsForReview(query);
+  const requestStatusById = new Map(
+    requests.map((row) => [row.id, row.status])
+  );
 
   return {
     items: payments.map(({ payment, payerName, payerEmail }) => {
@@ -305,7 +321,10 @@ export async function listPaymentsAwaitingReview(
           ? (requestStatusById.get(linkedRequestId) ?? null)
           : null,
         itemCount: lines.length,
-        totalAmountMinor: lines.reduce((sum, item) => sum + (item.amountMinor || 0), 0),
+        totalAmountMinor: lines.reduce(
+          (sum, item) => sum + (item.amountMinor || 0),
+          0
+        ),
         currency: lines[0]?.currency ?? null,
         items: lines.map((item) => ({
           cardId: item.cardId,

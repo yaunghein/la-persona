@@ -150,10 +150,7 @@ async function finishSetup() {
 
   finishing.value = true;
   try {
-    await $fetch(`/api/events/${eventId.value}/register`, {
-      method: 'POST',
-      query: { organizationSlug: orgSlug.value },
-    });
+    await registerForEvent(eventId.value);
     return navigateTo({
       path: ROUTES.EVENTS.PUBLIC(eventId.value),
       query: { registered: '1' },
@@ -161,10 +158,10 @@ async function finishSetup() {
   } catch (error: any) {
     toast.add({
       title: 'Could not register',
-      description:
-        error?.data?.statusMessage ||
-        error?.statusMessage ||
-        'Your card is ready. You can register from the event page.',
+      description: apiErrorMessage(
+        error,
+        'Your card is ready. You can register from the event page.'
+      ),
       color: 'error',
     });
     return navigateTo(ROUTES.EVENTS.PUBLIC(eventId.value));
@@ -177,69 +174,66 @@ async function finishSetup() {
 <template>
   <div class="flex h-dvh overflow-hidden bg-[#171717]">
     <div class="flex h-full min-h-0 w-full flex-col bg-[#171717]">
-        <div
-          v-if="pending"
-          class="flex flex-1 items-center justify-center"
-        >
-          <UIcon
-            name="i-lucide-loader-circle"
-            class="size-6 animate-spin text-[#8b8b8b]"
-          />
-        </div>
-        <div
-          v-else-if="error || !card"
-          class="flex flex-1 items-center justify-center px-6 text-center text-sm text-[#8b8b8b]"
-        >
-          This community card could not be loaded.
-        </div>
-        <CommunityEventOnboardingCreateCard
-          v-else-if="step === 'create-card' && !isSettingUp"
-          class="min-h-0 flex-1"
-          :first-name="card.firstName"
-          :last-name="card.lastName"
-          :position="card.position"
-          :phone="card.phone"
-          :phone-country-code="card.phoneCountryCode"
-          :email="card.email"
-          :socials="card.socials"
-          :submitting="submitting"
-          :draft-key="createCardDraftKey"
-          @submit="onCreateCard"
-          @cancel="goToEvent"
+      <div v-if="pending" class="flex flex-1 items-center justify-center">
+        <UIcon
+          name="i-lucide-loader-circle"
+          class="size-6 animate-spin text-[#8b8b8b]"
         />
-        <div
-          v-else-if="!isSettingUp && step !== 'download-wallpaper'"
-          class="flex flex-1 items-center justify-center"
-        >
-          <UIcon
-            name="i-lucide-loader-circle"
-            class="size-6 animate-spin text-[#8b8b8b]"
-          />
-        </div>
-        <CommunityEventOnboardingSettingUp
-          v-else-if="isSettingUp"
-          class="min-h-0 flex-1"
-          :organizer-name="card.organization.name || 'this community'"
-          @next="onSettingUpNext"
+      </div>
+      <div
+        v-else-if="error || !card"
+        class="flex flex-1 items-center justify-center px-6 text-center text-sm text-[#8b8b8b]"
+      >
+        This community card could not be loaded.
+      </div>
+      <EventOnboardingCreateCard
+        v-else-if="step === 'create-card' && !isSettingUp"
+        class="min-h-0 flex-1"
+        :first-name="card.firstName"
+        :last-name="card.lastName"
+        :position="card.position"
+        :phone="card.phone"
+        :phone-country-code="card.phoneCountryCode"
+        :email="card.email"
+        :socials="card.socials"
+        :submitting="submitting"
+        :draft-key="createCardDraftKey"
+        @submit="onCreateCard"
+        @cancel="goToEvent"
+      />
+      <div
+        v-else-if="!isSettingUp && step !== 'download-wallpaper'"
+        class="flex flex-1 items-center justify-center"
+      >
+        <UIcon
+          name="i-lucide-loader-circle"
+          class="size-6 animate-spin text-[#8b8b8b]"
         />
-        <CommunityEventOnboardingDownloadWallpaper
-          v-else-if="step === 'download-wallpaper'"
-          class="min-h-0 flex-1"
-          :first-name="card.firstName"
-          :last-name="card.lastName"
-          :position="card.position"
-          :phone="card.phone"
-          :phone-country-code="card.phoneCountryCode"
-          :email="card.email"
-          :website="card.website"
-          :plan-code="card.subscription?.planCode"
-          :spline-url="card.splineUrl"
-          :wallpaper-url="card.wallpaperUrl"
-          :joined-at="card.createdAt"
-          :card-slug="card.slug"
-          @next="finishSetup"
-          @skip="finishSetup"
-        />
+      </div>
+      <EventOnboardingSettingUp
+        v-else-if="isSettingUp"
+        class="min-h-0 flex-1"
+        :organizer-name="card.organization.name || 'this community'"
+        @next="onSettingUpNext"
+      />
+      <EventOnboardingDownloadWallpaper
+        v-else-if="step === 'download-wallpaper'"
+        class="min-h-0 flex-1"
+        :first-name="card.firstName"
+        :last-name="card.lastName"
+        :position="card.position"
+        :phone="card.phone"
+        :phone-country-code="card.phoneCountryCode"
+        :email="card.email"
+        :website="card.website"
+        :plan-code="card.subscription?.planCode"
+        :spline-url="card.splineUrl"
+        :wallpaper-url="card.wallpaperUrl"
+        :joined-at="card.createdAt"
+        :card-slug="card.slug"
+        @next="finishSetup"
+        @skip="finishSetup"
+      />
     </div>
   </div>
 </template>

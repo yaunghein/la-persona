@@ -4,39 +4,17 @@ definePageMeta({
 });
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
-import { useQuery, useQueryClient } from '@tanstack/vue-query';
-import { useThakhinTable } from '~/composables/thakhin-table';
 import {
-  THAKHIN_ACTIONS_COLUMN,
-  THAKHIN_TABLE_UI,
-  thakhinSortableHeader,
-} from '~/utils/thakhin-table';
+  ADMIN_ACTIONS_COLUMN,
+  ADMIN_TABLE_UI,
+  sortableHeader,
+} from '~/features/admin/utils/admin-table';
+import type { OnboardingInvitationSummary } from '~~/shared/contracts/onboarding';
 
-type InvitationRow = {
-  id: string;
-  email: string;
-  status: string;
-  freeMonths: number;
-  expirationMinutes: number;
-  expiresAt: string;
-  acceptedAt: string | null;
-  resendCount: number;
-  lastSentAt: string | null;
-  createdAt: string;
-  organizationName: string;
-  cardFirstName: string;
-  cardLastName: string | null;
-  planName: string;
-  link: string;
-};
-
-type OptionsResponse = {
-  cards: { id: string; label: string; subtitle: string }[];
-  plans: { code: string; name: string }[];
-};
+type InvitationRow = OnboardingInvitationSummary;
 
 const toast = useToast();
-const queryClient = useQueryClient();
+const invalidateAdmin = useInvalidateAdmin();
 const isCreateOpen = ref(false);
 const isCreating = ref(false);
 const isSendingById = ref<Record<string, boolean>>({});
@@ -51,17 +29,16 @@ const createState = reactive({
   sendNow: false,
 });
 
-const { data: invitationsData, isLoading: pending } = useQuery({
-  queryKey: QUERY_KEYS.invitations,
-  queryFn: () => $fetch<InvitationRow[]>('/api/onboarding-invitation'),
-});
-const { data: optionsData } = useQuery({
-  queryKey: QUERY_KEYS.invitationOptions,
-  queryFn: () => $fetch<OptionsResponse>('/api/onboarding-invitation/options'),
-});
+const { data: invitationsData, isLoading: pending } =
+  useOnboardingInvitationsQuery();
+// Only cards not yet linked to an account can be handed out.
+const { data: unclaimedCards } = useAdminCardsQuery({ claimed: false });
+const { data: plans } = useSubscriptionPlansQuery();
 
 const rows = computed(() => invitationsData.value || []);
-const statusFilter = ref<'all' | 'pending' | 'accepted' | 'cancelled'>('pending');
+const statusFilter = ref<'all' | 'pending' | 'accepted' | 'cancelled'>(
+  'pending'
+);
 
 const statusFilterItems = [
   { label: 'All statuses', value: 'all' },
@@ -83,22 +60,24 @@ const {
   paginationTotal,
   resetPage,
   onPageChange,
-} = useThakhinTable(() => filteredRows.value.length, {
+} = useAdminTable(() => filteredRows.value.length, {
   defaultSort: [{ id: 'expiresAt', desc: true }],
 });
 
 watch(statusFilter, resetPage);
 const cardItems = computed(() =>
-  (optionsData.value?.cards || []).map((item) => ({
-    label: item.subtitle ? `${item.label} - ${item.subtitle}` : item.label,
-    value: item.id,
-  }))
+  (unclaimedCards.value ?? []).map((card) => {
+    const label = `${card.firstName} ${card.lastName || ''}`.trim();
+    return {
+      label: card.position ? `${label} - ${card.position}` : label,
+      value: card.id,
+    };
+  })
 );
 const planItems = computed(() =>
-  (optionsData.value?.plans || []).map((item) => ({
-    label: item.name,
-    value: item.code,
-  }))
+  (plans.value ?? [])
+    .filter((plan) => plan.isActive)
+    .map((plan) => ({ label: plan.name, value: plan.code }))
 );
 
 function formatDate(value?: string | null) {
@@ -112,14 +91,15 @@ function getStatusColor(status: string) {
   return 'warning';
 }
 
+function openCreate() {
+  isCreateOpen.value = true;
+}
+
 async function onCreateInvitation() {
   isCreating.value = true;
   try {
-    await $fetch('/api/onboarding-invitation', {
-      method: 'POST',
-      body: createState,
-    });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations });
+    await adminApi.createOnboardingInvitation({ ...createState });
+    await invalidateAdmin();
     isCreateOpen.value = false;
     createState.email = '';
     createState.organizationName = '';
@@ -136,10 +116,7 @@ async function onCreateInvitation() {
   } catch (error: any) {
     toast.add({
       title: 'Create failed',
-      description:
-        error?.data?.statusMessage ||
-        error?.statusMessage ||
-        'Please try again.',
+      description: apiErrorMessage(error),
       color: 'error',
     });
   } finally {
@@ -150,10 +127,8 @@ async function onCreateInvitation() {
 async function onSendInvitation(row: InvitationRow) {
   isSendingById.value = { ...isSendingById.value, [row.id]: true };
   try {
-    await $fetch(`/api/onboarding-invitation/${row.id}/send`, {
-      method: 'POST',
-    });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations });
+    await adminApi.sendOnboardingInvitation(row.id);
+    await invalidateAdmin();
     toast.add({
       title: row.resendCount > 0 ? 'Invitation resent' : 'Invitation sent',
       description: `Email sent to ${row.email}.`,
@@ -162,10 +137,7 @@ async function onSendInvitation(row: InvitationRow) {
   } catch (error: any) {
     toast.add({
       title: 'Send failed',
-      description:
-        error?.data?.statusMessage ||
-        error?.statusMessage ||
-        'Please try again.',
+      description: apiErrorMessage(error),
       color: 'error',
     });
   } finally {
@@ -175,15 +147,12 @@ async function onSendInvitation(row: InvitationRow) {
 
 async function onCancelInvitation(row: InvitationRow) {
   try {
-    await $fetch(`/api/onboarding-invitation/${row.id}/cancel`, {
-      method: 'POST',
-    });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.invitations });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminCards });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminOverview });
+    await adminApi.cancelOnboardingInvitation(row.id);
+    await invalidateAdmin();
     toast.add({
       title: 'Invitation cancelled',
-      description: 'The card was returned and the temporary organization was removed.',
+      description:
+        'The card was returned and the temporary organization was removed.',
       color: 'success',
     });
   } catch (error: any) {
@@ -235,23 +204,23 @@ function getActionItems(row: InvitationRow): DropdownMenuItem[][] {
 }
 
 const columns: TableColumn<InvitationRow>[] = [
-  { accessorKey: 'email', header: thakhinSortableHeader('EMAIL') },
+  { accessorKey: 'email', header: sortableHeader('EMAIL') },
   {
     accessorKey: 'organizationName',
-    header: thakhinSortableHeader('ORGANIZATION'),
+    header: sortableHeader('ORGANIZATION'),
   },
   {
     id: 'cardName',
-    header: thakhinSortableHeader('CARD'),
+    header: sortableHeader('CARD'),
     accessorFn: (row) =>
       `${row.cardFirstName} ${row.cardLastName || ''}`.trim(),
   },
-  { accessorKey: 'planName', header: thakhinSortableHeader('PLAN') },
-  { accessorKey: 'freeMonths', header: thakhinSortableHeader('FREE MONTHS') },
-  { accessorKey: 'expiresAt', header: thakhinSortableHeader('EXPIRES AT') },
-  { accessorKey: 'status', header: thakhinSortableHeader('STATUS') },
-  { accessorKey: 'lastSentAt', header: thakhinSortableHeader('LAST SENT') },
-  THAKHIN_ACTIONS_COLUMN,
+  { accessorKey: 'planName', header: sortableHeader('PLAN') },
+  { accessorKey: 'freeMonths', header: sortableHeader('FREE MONTHS') },
+  { accessorKey: 'expiresAt', header: sortableHeader('EXPIRES AT') },
+  { accessorKey: 'status', header: sortableHeader('STATUS') },
+  { accessorKey: 'lastSentAt', header: sortableHeader('LAST SENT') },
+  ADMIN_ACTIONS_COLUMN,
 ];
 
 /** Matches thakhin cards slideover + `app/components/form/manual-contact.vue` */
@@ -272,7 +241,7 @@ const selectUi = {
 
 <template>
   <div class="flex flex-col gap-6">
-    <ThakhinPageHeader
+    <AdminPageHeader
       title="Invitations"
       description="Create, send, and cancel card onboarding invitations. Cancelling a pending invite returns the card and removes the empty organization."
     >
@@ -282,11 +251,11 @@ const selectUi = {
         icon="i-lucide-plus"
         color="neutral"
         variant="outline"
-        @click="isCreateOpen = true"
+        @click="openCreate"
       />
-    </ThakhinPageHeader>
+    </AdminPageHeader>
 
-    <ThakhinTableFrame
+    <AdminTableFrame
       :page="pagination.pageIndex + 1"
       :total="paginationTotal"
       :items-per-page="pagination.pageSize"
@@ -318,7 +287,7 @@ const selectUi = {
         :loading="pending"
         :pagination-options="paginationOptions"
         :get-row-id="(row) => row.id"
-        :ui="THAKHIN_TABLE_UI"
+        :ui="ADMIN_TABLE_UI"
         class="w-full min-w-[56rem]"
       >
         <template #email-cell="{ row }">
@@ -330,10 +299,14 @@ const selectUi = {
           }}
         </template>
         <template #expiresAt-cell="{ row }">
-          <span class="text-white/55">{{ formatDate(row.original.expiresAt) }}</span>
+          <span class="text-white/55">{{
+            formatDate(row.original.expiresAt)
+          }}</span>
         </template>
         <template #lastSentAt-cell="{ row }">
-          <span class="text-white/55">{{ formatDate(row.original.lastSentAt) }}</span>
+          <span class="text-white/55">{{
+            formatDate(row.original.lastSentAt)
+          }}</span>
         </template>
         <template #status-cell="{ row }">
           <UBadge :color="getStatusColor(row.original.status)" variant="subtle">
@@ -341,10 +314,10 @@ const selectUi = {
           </UBadge>
         </template>
         <template #actions-cell="{ row }">
-          <ThakhinRowMenu :items="getActionItems(row.original)" />
+          <AdminRowMenu :items="getActionItems(row.original)" />
         </template>
       </UTable>
-    </ThakhinTableFrame>
+    </AdminTableFrame>
 
     <USlideover
       v-model:open="isCreateOpen"

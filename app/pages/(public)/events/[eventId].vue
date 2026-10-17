@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PublicEventDTO } from '~~/shared/types/event';
+import type { PublicEventDTO } from '~~/shared/contracts/event';
 import { registrationBlockReason } from '~~/shared/utils/event-datetime';
 import { parseEventOnboardingStep } from '~~/shared/utils/event-onboarding';
 import {
@@ -177,7 +177,7 @@ function onCancelOnboarding() {
         </p>
       </div>
 
-      <CommunityEventOnboardingMingalarbar
+      <EventOnboardingMingalarbar
         v-else-if="onboardingStep === 'mingalarbar' && !registrationBlock"
         class="min-h-0 flex-1"
         :organizer-name="event.organizer?.name || 'this community'"
@@ -185,7 +185,7 @@ function onCancelOnboarding() {
         @cancel="onCancelOnboarding"
       />
 
-      <CommunityEventRegisterFlow
+      <EventRegisterFlow
         v-else
         class="min-h-0 flex-1"
         variant="page"

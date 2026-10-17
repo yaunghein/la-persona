@@ -36,6 +36,8 @@ export type UserOrganization = {
 
 export type CommunityMemberStatus = 'active' | 'pending';
 
+export type CommunityMembersTab = 'all' | 'active' | 'pending';
+
 /** A roster row: an active member, or a pending email invitation. */
 export type CommunityMember = {
   id: string;
@@ -233,7 +235,9 @@ export const CreateOrganizationRequest = z.object({
   ownerUserId: z.string().trim().min(1).optional(),
 });
 
-export type CreateOrganizationRequest = z.infer<typeof CreateOrganizationRequest>;
+export type CreateOrganizationRequest = z.infer<
+  typeof CreateOrganizationRequest
+>;
 
 const optionalAsset = StoredImageReference.optional();
 const optionalRichText = richText.optional();
@@ -267,7 +271,9 @@ export const UpdateOrganizationRequest = z.object({
   applyToMemberCards: z.boolean().optional(),
 });
 
-export type UpdateOrganizationRequest = z.infer<typeof UpdateOrganizationRequest>;
+export type UpdateOrganizationRequest = z.infer<
+  typeof UpdateOrganizationRequest
+>;
 
 export type AdminOrganizationSummary = {
   id: string;

@@ -1,6 +1,6 @@
 import { findEmailQrBackgroundByCardSlug } from '~~/server/features/organization/community-setting.repository';
 import { env } from '~~/env';
-import { renderQrTicketPng } from '~~/server/utils/qr-ticket-image';
+import { renderQrTicketPng } from '~~/server/lib/qr-ticket-renderer';
 import { enrichLog } from '~~/server/utils/wide-event';
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/i;

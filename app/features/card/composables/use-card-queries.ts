@@ -141,9 +141,12 @@ export function useCardUpdateRequestsQuery(
   return useQuery({
     queryKey: computed(() => cardQueryKeys.updateRequests(toValue(query))),
     queryFn: () =>
-      $fetch<Page<CardUpdateRequestForReview>>('/api/admin/card-update-requests', {
-        query: toValue(query),
-      }),
+      $fetch<Page<CardUpdateRequestForReview>>(
+        '/api/admin/card-update-requests',
+        {
+          query: toValue(query),
+        }
+      ),
   });
 }
 
@@ -161,6 +164,10 @@ export function useReviewCardRequestMutation(
         body: { status },
       }),
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: cardQueryKeys.all }),
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: cardQueryKeys.all }),
+        // Review queues and counters on the Thakhin overview.
+        queryClient.invalidateQueries({ queryKey: ['admin'] }),
+      ]),
   });
 }

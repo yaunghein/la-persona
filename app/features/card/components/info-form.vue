@@ -13,7 +13,7 @@ import {
   resolveSocialLinksForSubmission,
   type SocialFormLink,
 } from '~~/shared/utils/social-links';
-import { applyCardToSpline } from '~/utils/spline-card';
+import { applyCardToSpline } from '~/features/card/utils/spline-card';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
 
 const route = useRoute();
@@ -662,7 +662,7 @@ onBeforeUnmount(() => {
           name="phone"
           class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
         >
-          <FormPhoneField
+          <UiPhoneField
             v-model="state.phone"
             v-model:country-code="state.phoneCountryCode"
             name="phone"

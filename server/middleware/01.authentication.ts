@@ -2,7 +2,7 @@ import type { H3Event } from 'h3';
 import { auth } from '~~/server/auth';
 import { insertDailyActivity } from '~~/server/features/analytics/user-activity.repository';
 import type { Principal } from '~~/server/utils/authorization';
-import { yangonDay } from '~~/server/utils/yangon';
+import { yangonDay } from '~~/server/lib/yangon-time';
 
 const DAILY_ACTIVITY_COOKIE = 'lp_active_day';
 const SKIPPED_PATH_PREFIXES = ['/_nuxt', '/_ipx', '/__nuxt', '/api/auth/'];

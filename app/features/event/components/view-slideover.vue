@@ -1,0 +1,249 @@
+<script setup lang="ts">
+import type { EventListItemDTO } from '~~/shared/contracts/event';
+import {
+  formatEventTimeLabel,
+  formatEventWeekdayDateLabel,
+  registrationBlockReason,
+} from '~~/shared/utils/event-datetime';
+import { eventGalleryImages } from '~~/shared/utils/event-media';
+import { communityCardPath } from '~~/shared/utils/routes';
+
+const props = defineProps<{
+  event?: EventListItemDTO | null;
+  organizerCardSlug?: string | null;
+}>();
+
+const open = defineModel<boolean>('open', { default: false });
+
+const emit = defineEmits<{
+  register: [event: EventListItemDTO];
+  viewOrganizer: [event: EventListItemDTO];
+}>();
+
+const galleryImages = computed(() => {
+  if (!props.event) return [];
+  return eventGalleryImages(props.event.coverUrl, props.event.photoUrls);
+});
+
+const details = computed(() => {
+  if (!props.event) return [];
+
+  return [
+    {
+      label: 'Date',
+      value: formatEventWeekdayDateLabel(props.event.startsAt),
+    },
+    {
+      label: 'Time',
+      value: `${formatEventTimeLabel(props.event.startsAt)} – ${formatEventTimeLabel(props.event.endsAt)}`,
+    },
+    {
+      label: 'Location',
+      value: props.event.location,
+      href: props.event.mapUrl || undefined,
+    },
+  ];
+});
+
+function registrationBlock(event: EventListItemDTO) {
+  return registrationBlockReason({
+    startsAt: event.startsAt,
+    endsAt: event.endsAt,
+    registrationMode: event.registrationMode,
+    capacity: event.capacity,
+    registeredCount: event.registeredCount,
+  });
+}
+
+function closedLabel(event: EventListItemDTO) {
+  if (event.viewerRegistrationStatus === 'pending') return 'Pending';
+  if (event.viewerRegistrationStatus === 'checked_in') return 'Checked in';
+  if (event.viewerRegistrationStatus === 'registered') return 'Registered';
+
+  const block = registrationBlock(event);
+  if (block === 'past') return 'Ended';
+  if (block === 'invite_only') return 'Invite only';
+  if (block === 'full') return 'Full';
+  return 'Closed';
+}
+
+const {
+  isEnabled: isGoogleCalendarEnabled,
+  addingEventId,
+  addToGoogleCalendar,
+} = useGoogleCalendar();
+const canAddToGoogleCalendar = computed(() => {
+  const event = props.event;
+  if (!event || !isGoogleCalendarEnabled.value) return false;
+  const confirmed =
+    event.viewerRegistrationStatus === 'registered' ||
+    event.viewerRegistrationStatus === 'checked_in';
+  return confirmed && new Date(event.endsAt).getTime() > Date.now();
+});
+
+const organizerCardUrl = computed(() =>
+  props.organizerCardSlug ? communityCardPath(props.organizerCardSlug) : ''
+);
+
+function onRegister() {
+  if (!props.event) return;
+  emit('register', props.event);
+}
+
+function onViewOrganizer() {
+  if (!props.event) return;
+  emit('viewOrganizer', props.event);
+}
+</script>
+
+<template>
+  <USlideover
+    v-model:open="open"
+    side="right"
+    inset
+    title="Event Details"
+    close-icon="i-material-symbols:close-small"
+    unmount-on-hide
+    :ui="{
+      content: 'bg-[#171717] sm:max-w-120 divide-y-0',
+      header: 'border-b-2 border-[#232323] px-6 py-6',
+      title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+      body: 'p-6',
+      footer: 'p-6 justify-end! border-t-0',
+    }"
+  >
+    <template v-if="event" #body>
+      <div class="flex flex-col gap-8">
+        <div
+          class="relative aspect-[1/0.75] w-full overflow-hidden rounded-lg bg-[#232323]"
+        >
+          <UCarousel
+            v-if="galleryImages.length > 1"
+            v-slot="{ item }"
+            loop
+            dots
+            align="start"
+            :items="galleryImages"
+            class="size-full"
+            :ui="{
+              viewport: 'size-full',
+              container: 'ms-0 h-full items-stretch',
+              item: 'relative h-full min-h-0 basis-full overflow-hidden ps-0',
+              dots: 'absolute inset-x-0 bottom-3 z-10 flex items-center justify-center gap-2',
+              dot: 'size-2 rounded-full bg-white/40 data-[state=active]:bg-white',
+            }"
+          >
+            <NuxtImg
+              :src="item"
+              :alt="event.title"
+              width="480"
+              class="absolute inset-0 size-full object-cover"
+            />
+          </UCarousel>
+          <NuxtImg
+            v-else-if="galleryImages[0]"
+            :src="galleryImages[0]"
+            :alt="event.title"
+            width="480"
+            class="size-full object-cover"
+          />
+        </div>
+
+        <div class="flex flex-col gap-4">
+          <h2
+            class="text-xl font-medium leading-[1.35] tracking-[0.125rem] uppercase text-white"
+          >
+            {{ event.title }}
+          </h2>
+          <UiRichText
+            v-if="event.description"
+            :content="event.description"
+            class="text-sm font-normal leading-normal text-[#8b8b8b]"
+          />
+        </div>
+
+        <div class="flex flex-col divide-y divide-[#2a2a2a]">
+          <div
+            v-for="item in details"
+            :key="item.label"
+            class="flex items-start justify-between gap-4 px-4 py-3"
+          >
+            <span class="shrink-0 text-sm font-normal text-[#8b8b8b]">
+              {{ item.label }}
+            </span>
+            <div class="flex min-w-0 flex-col items-end gap-1">
+              <span class="text-right text-sm font-bold text-white">
+                {{ item.value }}
+              </span>
+              <UButton
+                v-if="item.href"
+                :to="item.href"
+                target="_blank"
+                external
+                rel="noopener noreferrer"
+                variant="link"
+                color="neutral"
+                size="sm"
+                trailing-icon="i-lucide-external-link"
+                label="View on Google Map"
+                class="p-0 text-[#8b8b8b] hover:text-white"
+              />
+            </div>
+          </div>
+        </div>
+
+        <UButton
+          v-if="canAddToGoogleCalendar"
+          label="Add to Google Calendar"
+          :avatar="{
+            src: '/images/google-calendar-icon.svg',
+            alt: '',
+          }"
+          :ui="{ leadingAvatar: 'rounded-none bg-transparent' }"
+          color="neutral"
+          block
+          :loading="addingEventId === event.id"
+          class="h-11 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+          @click="addToGoogleCalendar(event.id)"
+        />
+      </div>
+    </template>
+
+    <template v-if="event" #footer>
+      <div class="flex items-center justify-end gap-2">
+        <UButton
+          v-if="organizerCardUrl"
+          label="See Organizer"
+          color="neutral"
+          :href="organizerCardUrl"
+          target="_blank"
+          class="h-9 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+        />
+        <UButton
+          v-else
+          label="See Organizer"
+          color="neutral"
+          class="h-9 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+          @click="onViewOrganizer"
+        />
+        <UButton
+          v-if="
+            event.viewerRegistrationStatus === 'none' &&
+            registrationBlock(event) === null
+          "
+          label="Register"
+          color="neutral"
+          class="h-9 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+          @click="onRegister"
+        />
+        <UButton
+          v-else
+          :label="closedLabel(event)"
+          color="neutral"
+          disabled
+          class="h-9 cursor-not-allowed rounded-full bg-[#232323] px-5 text-sm font-medium text-[#8b8b8b]"
+        />
+      </div>
+    </template>
+  </USlideover>
+</template>

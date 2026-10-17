@@ -6,7 +6,7 @@ import { phoneWallpaperModels } from '~~/shared/constants/phone-wallpaper-models
 import {
   renderQrCanvas,
   renderWallpaperCanvas as renderWallpaperImage,
-} from '~/utils/wallpaper-image';
+} from '~/features/card/utils/wallpaper-image';
 
 const route = useRoute();
 const toast = useToast();
@@ -45,7 +45,9 @@ const selectedModelConfig = computed(
     phoneModels[0]!
 );
 
-const wallpaperAssetUrl = computed(() => resolveObjectStorageUrl(card.value?.wallpaperUrl));
+const wallpaperAssetUrl = computed(() =>
+  resolveObjectStorageUrl(card.value?.wallpaperUrl)
+);
 const wallpaperProxyUrl = computed(() => {
   if (!wallpaperAssetUrl.value) return '';
   return imageProxyUrl(wallpaperAssetUrl.value);
@@ -54,9 +56,7 @@ const publicCardUrl = computed(() => {
   const cardSlug = card.value?.slug;
   if (!cardSlug) return '';
 
-  const origin =
-    env.BASE_URL ||
-    (process.client ? window.location.origin : '');
+  const origin = env.BASE_URL || (process.client ? window.location.origin : '');
   return `${origin}/c/${cardSlug}`;
 });
 const qrCodeOptions = computed(() => ({
@@ -442,8 +442,7 @@ async function downloadQr() {
     v-model:open="isWallpaperPreviewModalOpen"
     title="Wallpaper Preview"
     :ui="{
-      content:
-        'sm:max-w-[560px] rounded-lg bg-[#171717] max-h-[90vh]',
+      content: 'sm:max-w-[560px] rounded-lg bg-[#171717] max-h-[90vh]',
       title: 'text-sm font-medium uppercase tracking-widest text-white',
       body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"

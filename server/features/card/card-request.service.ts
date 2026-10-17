@@ -16,9 +16,9 @@ import {
   listCardRequestsForReview,
   rejectLinkedPayments,
 } from '~~/server/features/card/card-request.repository';
-import { getPersonalOrganizationByUserId } from '~~/server/services/auth';
-import { splitName } from '~~/server/services/card';
-import { restoreSubscriptionsAfterRejection } from '~~/server/services/subscription';
+import { findPersonalOrganization } from '~~/server/features/auth/account.service';
+import { splitPersonName } from '~~/shared/utils/person-name';
+import { restoreSubscriptionsAfterRejection } from '~~/server/features/billing/subscription.repository';
 import type {
   CardRequestForReview,
   CardRequestReceipt,
@@ -52,7 +52,7 @@ async function requireActivePlan(planCode: string) {
 }
 
 function cardFromRequestedDetails(details: RequestedCardDetails) {
-  const { firstName, lastName } = splitName(details.name);
+  const { firstName, lastName } = splitPersonName(details.name);
   const phone = resolvedPhoneFields(details.phone, details.phoneCountryCode);
   return {
     firstName,
@@ -95,11 +95,22 @@ export async function submitCardRequest(params: {
   const now = new Date();
   const term = { startAt: now, endAt: addYears(now, 1) };
 
-  let design: { splineUrl: string | null; cardBackUrl: string | null; wallpaperUrl: string | null } | null = null;
+  let design: {
+    splineUrl: string | null;
+    cardBackUrl: string | null;
+    wallpaperUrl: string | null;
+  } | null = null;
   let planCode = NEW_DESIGN_PLAN_CODE;
   if (request.type === 'existing_design') {
-    const source = await findDesignSourceCard(request.sourceCardId, organizationId);
-    if (!source) throw badRequest('Selected card design is invalid.', 'invalid_design_source');
+    const source = await findDesignSourceCard(
+      request.sourceCardId,
+      organizationId
+    );
+    if (!source)
+      throw badRequest(
+        'Selected card design is invalid.',
+        'invalid_design_source'
+      );
     design = {
       splineUrl: source.card.splineUrl,
       cardBackUrl: source.card.cardBackUrl,
@@ -116,7 +127,8 @@ export async function submitCardRequest(params: {
     card: {
       ...cardFromRequestedDetails(request.card),
       position:
-        request.card.position || (request.type === 'existing_design' ? 'Professional' : ''),
+        request.card.position ||
+        (request.type === 'existing_design' ? 'Professional' : ''),
       ...design,
       organizationId,
       userId: requester.userId,
@@ -163,17 +175,26 @@ export async function reviewCardRequest(
   const request = await findCardRequest(requestId);
   if (!request) throw notFound('Card request');
   if (request.status !== 'pending') {
-    throw conflict(`Only pending requests can be ${status}.`, 'card_request_decided');
+    throw conflict(
+      `Only pending requests can be ${status}.`,
+      'card_request_decided'
+    );
   }
   if (status === 'approved' && !request.paymentReceiptUrl?.trim()) {
-    throw conflict('Cannot approve a request without a payment receipt.', 'receipt_missing');
+    throw conflict(
+      'Cannot approve a request without a payment receipt.',
+      'receipt_missing'
+    );
   }
 
   const now = new Date();
   const paymentIds = await runInTransaction(async (tx) => {
     const decided = await decidePendingCardRequest(tx, requestId, status);
     if (!decided) {
-      throw conflict(`Only pending requests can be ${status}.`, 'card_request_decided');
+      throw conflict(
+        `Only pending requests can be ${status}.`,
+        'card_request_decided'
+      );
     }
 
     if (status === 'declined') {
@@ -186,9 +207,12 @@ export async function reviewCardRequest(
     if (approved.length || request.type !== 'new_design') return approved;
 
     // Requests from before cards were created at submission time.
-    const personalOrganization = await getPersonalOrganizationByUserId(request.userId);
+    const personalOrganization = await findPersonalOrganization(request.userId);
     if (!personalOrganization) {
-      throw conflict('Request owner has no personal organization.', 'no_personal_organization');
+      throw conflict(
+        'Request owner has no personal organization.',
+        'no_personal_organization'
+      );
     }
     const snapshot = request.cardData || {};
     await insertApprovedCardForLegacyRequest(tx, {

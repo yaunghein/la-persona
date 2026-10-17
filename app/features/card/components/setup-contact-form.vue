@@ -189,7 +189,7 @@ function onSubmit() {
       </UFormField>
 
       <UFormField label="Phone Number" name="phone">
-        <FormPhoneField
+        <UiPhoneField
           v-model="state.phone"
           v-model:country-code="state.phoneCountryCode"
           name="phone"

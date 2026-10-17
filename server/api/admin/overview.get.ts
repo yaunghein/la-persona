@@ -1,7 +1,6 @@
-import { requireAdminSession } from '~~/server/utils/admin-permissions';
-import { getAdminOverview } from '~~/server/services/admin-overview';
+import { getAdminOverview } from '~~/server/features/admin/overview.repository';
 
-export default defineEventHandler(async (event) => {
-  await requireAdminSession(event);
+export default defineEventHandler((event) => {
+  authorizePlatformAccess(event, 'insight:read');
   return getAdminOverview();
 });

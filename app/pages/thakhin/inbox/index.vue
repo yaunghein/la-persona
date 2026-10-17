@@ -1,32 +1,24 @@
 <script setup lang="ts">
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
-import { useQuery, useQueryClient } from '@tanstack/vue-query';
-import { useThakhinTable } from '~/composables/thakhin-table';
 import {
-  THAKHIN_ACTIONS_COLUMN,
-  THAKHIN_TABLE_UI,
-  thakhinSortableHeader,
-} from '~/utils/thakhin-table';
-import { FEEDBACK_KIND_LABELS, type FeedbackKind } from '~~/shared/types/feedback';
+  ADMIN_ACTIONS_COLUMN,
+  ADMIN_TABLE_UI,
+  sortableHeader,
+} from '~/features/admin/utils/admin-table';
+import {
+  FEEDBACK_KIND_LABELS,
+  type FeedbackForReview,
+  type FeedbackKind,
+} from '~~/shared/contracts/feedback';
 
 definePageMeta({
   layout: 'thakhin',
 });
 
-type FeedbackRow = {
-  id: string;
-  kind: FeedbackKind;
-  message: string;
-  createdAt: string;
-  userId: string;
-  userName: string;
-  userEmail: string;
-  organizationId: string;
-  organizationName: string;
-};
+type FeedbackRow = FeedbackForReview;
 
 const toast = useToast();
-const queryClient = useQueryClient();
+const invalidateAdmin = useInvalidateAdmin();
 const route = useRoute();
 const kind = ref<FeedbackKind | 'all'>('all');
 const selected = ref<FeedbackRow | null>(null);
@@ -44,13 +36,7 @@ const tabs = [
   { label: FEEDBACK_KIND_LABELS.feature_request, value: 'feature_request' },
 ] as const;
 
-const { data, isLoading } = useQuery({
-  queryKey: computed(() => [...QUERY_KEYS.adminFeedback, kind.value]),
-  queryFn: () =>
-    $fetch<FeedbackRow[]>('/api/admin/feedback', {
-      query: kind.value === 'all' ? {} : { kind: kind.value },
-    }),
-});
+const { data, isLoading } = useAdminFeedbackQuery(kind);
 
 const rows = computed(() => data.value || []);
 const {
@@ -61,18 +47,18 @@ const {
   paginationTotal,
   resetPage,
   onPageChange,
-} = useThakhinTable(() => rows.value.length);
+} = useAdminTable(() => rows.value.length);
 
 watch(kind, resetPage);
 
 const columns: TableColumn<FeedbackRow>[] = [
-  { accessorKey: 'kind', header: thakhinSortableHeader('KIND') },
-  { accessorKey: 'userName', header: thakhinSortableHeader('FROM') },
-  { accessorKey: 'userEmail', header: thakhinSortableHeader('EMAIL') },
-  { accessorKey: 'organizationName', header: thakhinSortableHeader('ORGANIZATION') },
-  { accessorKey: 'message', header: thakhinSortableHeader('MESSAGE') },
-  { accessorKey: 'createdAt', header: thakhinSortableHeader('CREATED') },
-  THAKHIN_ACTIONS_COLUMN,
+  { accessorKey: 'kind', header: sortableHeader('KIND') },
+  { accessorKey: 'userName', header: sortableHeader('FROM') },
+  { accessorKey: 'userEmail', header: sortableHeader('EMAIL') },
+  { accessorKey: 'organizationName', header: sortableHeader('ORGANIZATION') },
+  { accessorKey: 'message', header: sortableHeader('MESSAGE') },
+  { accessorKey: 'createdAt', header: sortableHeader('CREATED') },
+  ADMIN_ACTIONS_COLUMN,
 ];
 
 function onSelect(_event: Event, row: { original: FeedbackRow }) {
@@ -87,14 +73,26 @@ function kindLabel(kind: string) {
   return FEEDBACK_KIND_LABELS[kind as FeedbackKind] || kind;
 }
 
+function selectKind(value: FeedbackKind | 'all') {
+  kind.value = value;
+}
+
+function askDeleteSelected() {
+  if (!selected.value) return;
+  messageToDelete.value = selected.value;
+  isDeleteOpen.value = true;
+}
+
+function closeDelete() {
+  isDeleteOpen.value = false;
+}
+
 async function onConfirmDelete() {
   if (!messageToDelete.value) return;
   isDeleting.value = true;
   try {
-    await $fetch(`/api/admin/feedback/${messageToDelete.value.id}`, {
-      method: 'DELETE',
-    });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminFeedback });
+    await adminApi.deleteFeedback(messageToDelete.value.id);
+    await invalidateAdmin();
     toast.add({ title: 'Message deleted', color: 'success' });
     if (selected.value?.id === messageToDelete.value.id) selected.value = null;
     isDeleteOpen.value = false;
@@ -143,12 +141,12 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col gap-6">
-    <ThakhinPageHeader
+    <AdminPageHeader
       title="Inbox"
       description="Feedback, bug reports, and feature requests. Open the person or organization, or delete the message."
     />
 
-    <ThakhinTableFrame
+    <AdminTableFrame
       :page="pagination.pageIndex + 1"
       :total="paginationTotal"
       :items-per-page="pagination.pageSize"
@@ -170,7 +168,7 @@ onMounted(() => {
             :label="tab.label"
             :color="kind === tab.value ? 'primary' : 'neutral'"
             :variant="kind === tab.value ? 'soft' : 'ghost'"
-            @click="kind = tab.value"
+            @click="selectKind(tab.value)"
           />
         </div>
       </template>
@@ -185,7 +183,7 @@ onMounted(() => {
         :loading="isLoading"
         :pagination-options="paginationOptions"
         :get-row-id="(row) => row.id"
-        :ui="THAKHIN_TABLE_UI"
+        :ui="ADMIN_TABLE_UI"
         class="w-full"
         @select="onSelect"
       >
@@ -195,19 +193,25 @@ onMounted(() => {
           </UBadge>
         </template>
         <template #userName-cell="{ row }">
-          <span class="font-medium text-white">{{ row.original.userName }}</span>
+          <span class="font-medium text-white">{{
+            row.original.userName
+          }}</span>
         </template>
         <template #message-cell="{ row }">
-          <span class="line-clamp-2 max-w-md text-white/70">{{ row.original.message }}</span>
+          <span class="line-clamp-2 max-w-md text-white/70">{{
+            row.original.message
+          }}</span>
         </template>
         <template #createdAt-cell="{ row }">
-          <span class="text-white/55">{{ new Date(row.original.createdAt).toLocaleString() }}</span>
+          <span class="text-white/55">{{
+            new Date(row.original.createdAt).toLocaleString()
+          }}</span>
         </template>
         <template #actions-cell="{ row }">
-          <ThakhinRowMenu :items="rowMenu(row.original)" />
+          <AdminRowMenu :items="rowMenu(row.original)" />
         </template>
       </UTable>
-    </ThakhinTableFrame>
+    </AdminTableFrame>
 
     <USlideover
       v-model:open="detailOpen"
@@ -238,13 +242,7 @@ onMounted(() => {
             size="sm"
             color="error"
             variant="outline"
-            @click="
-              () => {
-                if (!selected) return;
-                messageToDelete.value = selected;
-                isDeleteOpen.value = true;
-              }
-            "
+            @click="askDeleteSelected"
           />
         </div>
       </template>
@@ -260,8 +258,8 @@ onMounted(() => {
       <template #body>
         <p class="text-sm text-white/70">
           This removes the message from
-          <span class="text-white">{{ messageToDelete?.userEmail }}</span>.
-          The person and organization stay.
+          <span class="text-white">{{ messageToDelete?.userEmail }}</span
+          >. The person and organization stay.
         </p>
       </template>
       <template #footer>
@@ -270,7 +268,7 @@ onMounted(() => {
           color="neutral"
           variant="ghost"
           :disabled="isDeleting"
-          @click="isDeleteOpen = false"
+          @click="closeDelete"
         />
         <UButton
           label="Delete"

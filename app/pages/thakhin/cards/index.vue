@@ -4,43 +4,21 @@ definePageMeta({
 });
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
-import { useQuery, useQueryClient } from '@tanstack/vue-query';
 import { getThakhinCardPlanAssetDefaults } from '~~/shared/constants/thakhin-card-plan-assets';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
-import { useThakhinTable } from '~/composables/thakhin-table';
 import {
-  THAKHIN_ACTIONS_COLUMN,
-  THAKHIN_TABLE_UI,
-  thakhinSortableHeader,
-} from '~/utils/thakhin-table';
+  ADMIN_ACTIONS_COLUMN,
+  ADMIN_TABLE_UI,
+  sortableHeader,
+} from '~/features/admin/utils/admin-table';
+import type {
+  AdminCardDetail,
+  AdminCardSummary,
+  CreateAdminCardRequest,
+  UpdateAdminCardRequest,
+} from '~~/shared/contracts/card';
 
-type CardRow = {
-  id: string;
-  slug: string;
-  firstName: string;
-  lastName: string | null;
-  position: string;
-  company: string | null;
-  phone: string | null;
-  phoneCountryCode: string | null;
-  email: string | null;
-  website: string | null;
-  splineUrl: string | null;
-  avatarUrl: string | null;
-  wallpaperUrl: string | null;
-  cardBackUrl: string | null;
-  organizationId: string;
-  organizationName: string;
-  organizationSlug: string;
-  organizationType: 'personal' | 'community';
-  userId: string | null;
-  linkedUserEmail: string | null;
-  createdAt: string;
-  updatedAt: string;
-  subscriptionStatus: string | null;
-  subscriptionPlanCode: string | null;
-  subscriptionEndAt: string | null;
-};
+type CardRow = AdminCardSummary;
 
 type SubscriptionFilter =
   | 'all'
@@ -50,10 +28,8 @@ type SubscriptionFilter =
   | 'expired'
   | 'community';
 
-type OrgOption = { id: string; name: string; slug: string };
-
 const toast = useToast();
-const queryClient = useQueryClient();
+const invalidateAdmin = useInvalidateAdmin();
 
 const isFormOpen = ref(false);
 const editingId = ref<string | null>(null);
@@ -118,21 +94,9 @@ function fillForm(row: CardRow) {
   form.cardBackUrl = row.cardBackUrl || '';
 }
 
-const { data: cardsData, isLoading: pending } = useQuery({
-  queryKey: QUERY_KEYS.adminCards,
-  queryFn: () => $fetch<CardRow[]>('/api/cards/admin'),
-});
-const { data: orgOptions } = useQuery({
-  queryKey: QUERY_KEYS.adminCardOptions,
-  queryFn: () => $fetch<OrgOption[]>('/api/cards/admin/options'),
-});
-const { data: onboardingOptions } = useQuery({
-  queryKey: QUERY_KEYS.invitationOptions,
-  queryFn: () =>
-    $fetch<{
-      plans: { code: string; name: string }[];
-    }>('/api/onboarding-invitation/options'),
-});
+const { data: cardsData, isLoading: pending } = useAdminCardsQuery();
+const { data: orgOptions } = useAdminOrganizationsQuery();
+const { data: plans } = useSubscriptionPlansQuery();
 
 const rows = computed(() => cardsData.value || []);
 const claimFilter = ref<'all' | 'linked' | 'unclaimed'>('all');
@@ -146,14 +110,15 @@ const claimFilterItems = [
   { label: 'Unclaimed', value: 'unclaimed' },
 ];
 
-const subscriptionFilterItems: { label: string; value: SubscriptionFilter }[] = [
-  { label: 'All subscriptions', value: 'all' },
-  { label: 'Trial', value: 'trial' },
-  { label: 'Active', value: 'active' },
-  { label: 'Pending', value: 'pending_approval' },
-  { label: 'Expired', value: 'expired' },
-  { label: 'Community', value: 'community' },
-];
+const subscriptionFilterItems: { label: string; value: SubscriptionFilter }[] =
+  [
+    { label: 'All subscriptions', value: 'all' },
+    { label: 'Trial', value: 'trial' },
+    { label: 'Active', value: 'active' },
+    { label: 'Pending', value: 'pending_approval' },
+    { label: 'Expired', value: 'expired' },
+    { label: 'Community', value: 'community' },
+  ];
 
 const SUBSCRIPTION_BADGES: Record<
   string,
@@ -218,14 +183,15 @@ const {
   paginationTotal,
   resetPage,
   onPageChange,
-} = useThakhinTable(() => filteredRows.value.length);
+} = useAdminTable(() => filteredRows.value.length);
 
 watch([claimFilter, orgFilter, subscriptionFilter], resetPage);
 const orgSelectItems = computed(() =>
   (orgOptions.value || []).map((o) => ({ label: o.name, value: o.id }))
 );
 const planSelectItems = computed(() =>
-  (onboardingOptions.value?.plans ?? [])
+  (plans.value ?? [])
+    .filter((plan) => plan.isActive)
     .filter((p) => p.code === 'friend-family')
     .map((p) => ({
       label: p.name,
@@ -296,7 +262,7 @@ const slideTitle = computed(() =>
 async function onSubmitForm() {
   isSaving.value = true;
   try {
-    const body: Record<string, unknown> = {
+    const body: UpdateAdminCardRequest = {
       firstName: form.firstName.trim(),
       lastName: form.lastName.trim() || null,
       position: form.position.trim(),
@@ -311,7 +277,7 @@ async function onSubmitForm() {
     };
 
     if (!editingId.value) {
-      await $fetch('/api/cards/admin', { method: 'POST', body });
+      await adminApi.createCard(body as CreateAdminCardRequest);
       toast.add({
         title: 'Card created',
         description: 'Unclaimed card is ready for onboarding invitation.',
@@ -319,17 +285,14 @@ async function onSubmitForm() {
       });
     } else {
       body.organizationId = form.organizationId;
-      await $fetch(`/api/cards/admin/${editingId.value}`, {
-        method: 'PATCH',
-        body,
-      });
+      await adminApi.updateCard(editingId.value, body);
       toast.add({
         title: 'Card updated',
         color: 'success',
       });
     }
 
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminCards });
+    await invalidateAdmin();
     isFormOpen.value = false;
     editingId.value = null;
     resetForm();
@@ -351,10 +314,8 @@ async function onConfirmDelete() {
   if (!cardToDelete.value) return;
   isDeleting.value = true;
   try {
-    await $fetch(`/api/cards/admin/${cardToDelete.value.id}`, {
-      method: 'DELETE',
-    });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminCards });
+    await adminApi.deleteCard(cardToDelete.value.id);
+    await invalidateAdmin();
     toast.add({
       title: 'Card deleted',
       description: `"${displayName(cardToDelete.value)}" was removed.`,
@@ -398,53 +359,44 @@ function getActionItems(row: CardRow): DropdownMenuItem[][] {
   ];
 }
 
-const cardDetail = ref<{
-  slug: string;
-  firstName: string;
-  lastName: string | null;
-  organizationName: string;
-  linkedUserEmail: string | null;
-  subscriptionStatus: string | null;
-  subscriptionPlanCode: string | null;
-  pendingInvitation: { email: string; expiresAt: string } | null;
-} | null>(null);
+const cardDetail = ref<AdminCardDetail | null>(null);
 const cardOpen = ref(false);
 
 async function openCard(row: CardRow) {
   cardOpen.value = true;
-  cardDetail.value = await $fetch(`/api/cards/admin/${row.id}`);
+  cardDetail.value = await adminApi.getCard(row.id);
 }
 
 const columns: TableColumn<CardRow>[] = [
   {
     id: 'displayName',
-    header: thakhinSortableHeader('NAME'),
+    header: sortableHeader('NAME'),
     accessorFn: (row) => displayName(row),
   },
-  { accessorKey: 'slug', header: thakhinSortableHeader('SLUG') },
+  { accessorKey: 'slug', header: sortableHeader('SLUG') },
   {
     accessorKey: 'organizationName',
-    header: thakhinSortableHeader('ORGANIZATION'),
+    header: sortableHeader('ORGANIZATION'),
   },
-  { accessorKey: 'position', header: thakhinSortableHeader('ROLE') },
+  { accessorKey: 'position', header: sortableHeader('ROLE') },
   {
     id: 'claimStatus',
-    header: thakhinSortableHeader('USER'),
+    header: sortableHeader('USER'),
     accessorFn: (row) =>
       row.userId ? `Linked ${row.linkedUserEmail || ''}`.trim() : 'Unclaimed',
   },
   {
     id: 'subscription',
-    header: thakhinSortableHeader('SUBSCRIPTION'),
+    header: sortableHeader('SUBSCRIPTION'),
     accessorFn: (row) => subscriptionBadge(row).label,
   },
   {
     accessorKey: 'subscriptionEndAt',
-    header: thakhinSortableHeader('EXPIRES'),
+    header: sortableHeader('EXPIRES'),
   },
-  { accessorKey: 'email', header: thakhinSortableHeader('CARD EMAIL') },
-  { accessorKey: 'createdAt', header: thakhinSortableHeader('CREATED') },
-  THAKHIN_ACTIONS_COLUMN,
+  { accessorKey: 'email', header: sortableHeader('CARD EMAIL') },
+  { accessorKey: 'createdAt', header: sortableHeader('CREATED') },
+  ADMIN_ACTIONS_COLUMN,
 ];
 
 /** Matches `app/components/form/manual-contact.vue` / `update-card-info.vue` */
@@ -465,7 +417,7 @@ const selectUi = {
 
 <template>
   <div class="flex flex-col gap-6">
-    <ThakhinPageHeader
+    <AdminPageHeader
       title="Cards"
       description="Issue and correct cards. Deleting a card also removes its subscription, contact exchanges, and analytics."
     >
@@ -477,9 +429,9 @@ const selectUi = {
         variant="outline"
         @click="openCreate"
       />
-    </ThakhinPageHeader>
+    </AdminPageHeader>
 
-    <ThakhinTableFrame
+    <AdminTableFrame
       :page="pagination.pageIndex + 1"
       :total="paginationTotal"
       :items-per-page="pagination.pageSize"
@@ -523,7 +475,7 @@ const selectUi = {
         :loading="pending"
         :pagination-options="paginationOptions"
         :get-row-id="(row) => row.id"
-        :ui="THAKHIN_TABLE_UI"
+        :ui="ADMIN_TABLE_UI"
         class="w-full min-w-5xl"
         @select="(_event, row) => openCard(row.original)"
       >
@@ -547,7 +499,10 @@ const selectUi = {
           </p>
         </template>
         <template #subscription-cell="{ row }">
-          <UBadge :color="subscriptionBadge(row.original).color" variant="subtle">
+          <UBadge
+            :color="subscriptionBadge(row.original).color"
+            variant="subtle"
+          >
             {{ subscriptionBadge(row.original).label }}
           </UBadge>
           <p
@@ -571,13 +526,15 @@ const selectUi = {
           <span v-else class="text-white/30">—</span>
         </template>
         <template #createdAt-cell="{ row }">
-          <span class="text-white/55">{{ formatDate(row.original.createdAt) }}</span>
+          <span class="text-white/55">{{
+            formatDate(row.original.createdAt)
+          }}</span>
         </template>
         <template #actions-cell="{ row }">
-          <ThakhinRowMenu :items="getActionItems(row.original)" />
+          <AdminRowMenu :items="getActionItems(row.original)" />
         </template>
       </UTable>
-    </ThakhinTableFrame>
+    </AdminTableFrame>
 
     <USlideover
       v-model:open="isFormOpen"
@@ -661,7 +618,7 @@ const selectUi = {
               />
             </UFormField>
             <UFormField label="Phone" :class="formFieldClass">
-              <FormPhoneField
+              <UiPhoneField
                 v-model="form.phone"
                 v-model:country-code="form.phoneCountryCode"
                 name="phone"
@@ -780,7 +737,8 @@ const selectUi = {
           <span class="font-medium text-white">
             "{{ cardToDelete ? displayName(cardToDelete) : '' }}"
           </span>
-          and related subscription, contact exchanges, and analytics on this card will be removed.
+          and related subscription, contact exchanges, and analytics on this
+          card will be removed.
         </p>
       </template>
       <template #footer>
@@ -804,10 +762,16 @@ const selectUi = {
       </template>
     </UModal>
 
-    <USlideover v-model:open="cardOpen" title="Card" :ui="{ content: 'bg-[#171717]' }">
+    <USlideover
+      v-model:open="cardOpen"
+      title="Card"
+      :ui="{ content: 'bg-[#171717]' }"
+    >
       <template #body>
         <div v-if="cardDetail" class="space-y-2 text-sm text-white/80">
-          <p class="text-white">{{ cardDetail.firstName }} {{ cardDetail.lastName }}</p>
+          <p class="text-white">
+            {{ cardDetail.firstName }} {{ cardDetail.lastName }}
+          </p>
           <p>{{ cardDetail.organizationName }}</p>
           <p>{{ cardDetail.linkedUserEmail || 'Unclaimed' }}</p>
           <p>

@@ -13,6 +13,7 @@ import type {
   SubscriptionPlanSummary,
 } from '~~/shared/contracts/billing';
 import type { Collection, Page } from '~~/shared/contracts/collection';
+import { adminQueryKeys } from '~/features/admin/composables/use-admin-queries';
 import { cardQueryKeys } from '~/features/card/composables/use-card-queries';
 
 export const billingQueryKeys = {
@@ -67,12 +68,18 @@ export function useCardPaymentQuoteQuery(
 ) {
   return useQuery({
     queryKey: computed(() =>
-      billingQueryKeys.paymentQuote(toValue(cardSlug), toValue(kind) ?? 'renewal')
+      billingQueryKeys.paymentQuote(
+        toValue(cardSlug),
+        toValue(kind) ?? 'renewal'
+      )
     ),
     queryFn: () =>
-      $fetch<CardPaymentQuote>(`/api/cards/${toValue(cardSlug)}/payment-quote`, {
-        query: { kind: toValue(kind) },
-      }),
+      $fetch<CardPaymentQuote>(
+        `/api/cards/${toValue(cardSlug)}/payment-quote`,
+        {
+          query: { kind: toValue(kind) },
+        }
+      ),
     enabled: () => !!toValue(cardSlug) && !!toValue(kind),
   });
 }
@@ -100,7 +107,9 @@ export function useBillingHistoryQuery(
   organizationSlug: MaybeRefOrGetter<string>
 ) {
   return useQuery({
-    queryKey: computed(() => billingQueryKeys.history(toValue(organizationSlug))),
+    queryKey: computed(() =>
+      billingQueryKeys.history(toValue(organizationSlug))
+    ),
     queryFn: () =>
       $fetch<Collection<BillingHistoryEntry>>(
         `/api/organizations/${toValue(organizationSlug)}/payments`
@@ -133,11 +142,14 @@ export function useReviewPaymentMutation() {
       paymentId: string;
       decision: ReviewPaymentRequest;
     }) =>
-      $fetch(`/api/admin/payments/${paymentId}`, {
+      $fetch<unknown>(`/api/admin/payments/${paymentId}` as string, {
         method: 'PATCH',
         body: decision,
       }),
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: billingQueryKeys.all }),
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: billingQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: adminQueryKeys.all }),
+      ]),
   });
 }

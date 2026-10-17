@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useQuery } from '@tanstack/vue-query';
 import { Line } from 'vue-chartjs';
 import {
   Chart as ChartJS,
@@ -11,7 +10,6 @@ import {
   PointElement,
   CategoryScale,
 } from 'chart.js';
-import type { AdminOverview } from '~~/shared/types/admin-overview';
 
 ChartJS.register(
   Title,
@@ -27,10 +25,7 @@ definePageMeta({
   layout: 'thakhin',
 });
 
-const { data, isLoading } = useQuery({
-  queryKey: QUERY_KEYS.adminOverview,
-  queryFn: () => $fetch<AdminOverview>('/api/admin/overview'),
-});
+const { data, isLoading } = useAdminOverviewQuery();
 
 const chartOptions = {
   responsive: true,
@@ -63,7 +58,9 @@ function signed(current: number, previous: number) {
 }
 
 const activeChart = computed(() => ({
-  labels: (data.value?.series.dailyActive || []).map((point) => point.day.slice(5)),
+  labels: (data.value?.series.dailyActive || []).map((point) =>
+    point.day.slice(5)
+  ),
   datasets: [
     {
       label: 'Daily active users',
@@ -76,7 +73,9 @@ const activeChart = computed(() => ({
 }));
 
 const analyticsChart = computed(() => ({
-  labels: (data.value?.series.analytics || []).map((point) => point.day.slice(5)),
+  labels: (data.value?.series.analytics || []).map((point) =>
+    point.day.slice(5)
+  ),
   datasets: [
     {
       label: 'Views',
@@ -96,11 +95,15 @@ const analyticsChart = computed(() => ({
 }));
 
 const revenueChart = computed(() => ({
-  labels: (data.value?.series.revenue || []).map((point) => point.week.slice(5)),
+  labels: (data.value?.series.revenue || []).map((point) =>
+    point.week.slice(5)
+  ),
   datasets: [
     {
       label: 'Approved revenue',
-      data: (data.value?.series.revenue || []).map((point) => point.amountMinor),
+      data: (data.value?.series.revenue || []).map(
+        (point) => point.amountMinor
+      ),
       borderColor: '#d6b25e',
       backgroundColor: '#d6b25e',
       tension: 0.3,
@@ -167,7 +170,7 @@ const census = computed(() => {
 
 <template>
   <div class="flex flex-col gap-8">
-    <ThakhinPageHeader
+    <AdminPageHeader
       title="Dashboard"
       description="Platform size, what needs a decision, and how this month compares with the last."
     />
@@ -225,7 +228,9 @@ const census = computed(() => {
             <p class="mt-2 text-2xl font-medium text-white">
               {{ data.queues.standalonePayments.count }}
             </p>
-            <p class="mt-1 text-sm text-white/60">Submitted, not tied to a request</p>
+            <p class="mt-1 text-sm text-white/60">
+              Submitted, not tied to a request
+            </p>
           </NuxtLink>
           <NuxtLink
             :to="`${ROUTES.THAKHIN.REQUESTS}?tab=updates`"
@@ -249,19 +254,25 @@ const census = computed(() => {
             <p class="mt-2 text-2xl font-medium text-white">
               {{ data.queues.expiringInvitations.count }}
             </p>
-            <p class="mt-1 text-sm text-white/60">Pending and due within 48 hours</p>
+            <p class="mt-1 text-sm text-white/60">
+              Pending and due within 48 hours
+            </p>
           </NuxtLink>
         </div>
       </div>
 
       <div class="grid gap-3 lg:grid-cols-3">
         <div class="rounded-lg border border-[#2a2a2a] bg-[#171717] p-4">
-          <p class="text-xs uppercase tracking-[1.4px] text-white/50">Revenue</p>
+          <p class="text-xs uppercase tracking-[1.4px] text-white/50">
+            Revenue
+          </p>
           <p class="mt-2 text-2xl font-medium text-white">
             {{ money(data.month.revenue.current) }}
           </p>
           <p class="mt-1 text-sm text-white/60">
-            {{ signed(data.month.revenue.current, data.month.revenue.previous) }}
+            {{
+              signed(data.month.revenue.current, data.month.revenue.previous)
+            }}
           </p>
         </div>
         <div class="rounded-lg border border-[#2a2a2a] bg-[#171717] p-4">
@@ -276,12 +287,16 @@ const census = computed(() => {
           </p>
         </div>
         <div class="rounded-lg border border-[#2a2a2a] bg-[#171717] p-4">
-          <p class="text-xs uppercase tracking-[1.4px] text-white/50">Invitations</p>
+          <p class="text-xs uppercase tracking-[1.4px] text-white/50">
+            Invitations
+          </p>
           <p class="mt-2 text-2xl font-medium text-white">
             {{ data.month.invitations.accepted }} /
             {{ data.month.invitations.sent }}
           </p>
-          <p class="mt-1 text-sm text-white/60">Accepted of those sent this month</p>
+          <p class="mt-1 text-sm text-white/60">
+            Accepted of those sent this month
+          </p>
         </div>
       </div>
 

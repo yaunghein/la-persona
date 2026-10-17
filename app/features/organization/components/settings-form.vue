@@ -99,7 +99,8 @@ function takeImageFile(event: Event, label: string) {
 function onCoverFileChange(event: Event) {
   const file = takeImageFile(event, 'Cover');
   if (!file) return;
-  if (localCoverPreviewUrl.value) URL.revokeObjectURL(localCoverPreviewUrl.value);
+  if (localCoverPreviewUrl.value)
+    URL.revokeObjectURL(localCoverPreviewUrl.value);
   selectedCoverFile.value = file;
   localCoverPreviewUrl.value = URL.createObjectURL(file);
 }
@@ -185,7 +186,8 @@ async function onUpdate() {
 
 onUnmounted(() => {
   if (localLogoPreviewUrl.value) URL.revokeObjectURL(localLogoPreviewUrl.value);
-  if (localCoverPreviewUrl.value) URL.revokeObjectURL(localCoverPreviewUrl.value);
+  if (localCoverPreviewUrl.value)
+    URL.revokeObjectURL(localCoverPreviewUrl.value);
 });
 </script>
 
@@ -306,7 +308,7 @@ onUnmounted(() => {
         </UFormField>
 
         <UFormField label="Description" :class="formFieldClass">
-          <CommunityRichTextEditor
+          <UiRichTextEditor
             :model-value="form.description"
             placeholder="Describe your community"
             @update:model-value="patch('description', $event)"
@@ -314,7 +316,7 @@ onUnmounted(() => {
         </UFormField>
 
         <UFormField label="Community Guidelines" :class="formFieldClass">
-          <CommunityRichTextEditor
+          <UiRichTextEditor
             :model-value="form.guidelines"
             placeholder="Add community guidelines"
             @update:model-value="patch('guidelines', $event)"
@@ -322,13 +324,12 @@ onUnmounted(() => {
         </UFormField>
 
         <UFormField label="Why Should People Join" :class="formFieldClass">
-          <CommunityRichTextEditor
+          <UiRichTextEditor
             :model-value="form.whyJoin"
             placeholder="Tell people why they should join"
             @update:model-value="patch('whyJoin', $event)"
           />
         </UFormField>
-
       </section>
 
       <div

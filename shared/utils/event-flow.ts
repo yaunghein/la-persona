@@ -1,4 +1,4 @@
-import type { ViewerRegistrationStatus } from '~~/shared/types/event';
+import type { ViewerRegistrationStatus } from '~~/shared/contracts/event';
 import { ROUTES } from '~~/shared/utils/routes';
 
 export const COMMUNITY_SETUP_STEPS = [
@@ -25,13 +25,15 @@ export function isCommunityCardComplete(card: {
 }) {
   return Boolean(
     String(card.firstName || '').trim() &&
-      String(card.position || '').trim() &&
-      String(card.phone || '').trim() &&
-      String(card.email || '').trim()
+    String(card.position || '').trim() &&
+    String(card.phone || '').trim() &&
+    String(card.email || '').trim()
   );
 }
 
-export function parseCommunitySetupStep(value: unknown): CommunitySetupStep | null {
+export function parseCommunitySetupStep(
+  value: unknown
+): CommunitySetupStep | null {
   const step = Array.isArray(value) ? value[0] : value;
   if (typeof step !== 'string') return null;
   return (COMMUNITY_SETUP_STEPS as readonly string[]).includes(step)

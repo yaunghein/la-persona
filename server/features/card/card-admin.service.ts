@@ -12,7 +12,7 @@ import {
   deleteCardWithPendingRequests,
   updateCardById,
 } from '~~/server/features/card/card.repository';
-import { ensureCardTrialSubscription } from '~~/server/services/subscription';
+import { ensureCardTrialSubscription } from '~~/server/features/billing/subscription.repository';
 import type {
   AdminCardDetail,
   AdminCardSummary,
@@ -59,8 +59,10 @@ function toAdminCardSummary(row: AdminCardRow): AdminCardSummary {
       : null,
     subscriptionPlanCode: subscription?.planCode ?? null,
     subscriptionEndAt:
-      (subscription?.isTrial ? subscription.trialEndAt : subscription?.currentPeriodEndAt)?.toISOString() ??
-      null,
+      (subscription?.isTrial
+        ? subscription.trialEndAt
+        : subscription?.currentPeriodEndAt
+      )?.toISOString() ?? null,
   };
 }
 
@@ -70,7 +72,9 @@ export async function listCardsForAdmin(filter: {
   return { items: (await listAdminCards(filter)).map(toAdminCardSummary) };
 }
 
-export async function describeCardForAdmin(cardId: string): Promise<AdminCardDetail> {
+export async function describeCardForAdmin(
+  cardId: string
+): Promise<AdminCardDetail> {
   const row = await findAdminCard(cardId);
   if (!row) throw notFound('Card');
   const invitation = await findPendingOnboardingInvitationForCard(cardId);
@@ -90,7 +94,8 @@ async function assertOrganizationExists(organizationId: string) {
 
 /** Unclaimed card, later handed to someone through an onboarding invitation. */
 export async function createCardForAdmin(request: CreateAdminCardRequest) {
-  const organizationId = request.organizationId || env.PLACEHOLDER_ORGANIZATION_ID;
+  const organizationId =
+    request.organizationId || env.PLACEHOLDER_ORGANIZATION_ID;
   await assertOrganizationExists(organizationId);
 
   const firstName = request.firstName?.trim() || 'Card';
@@ -117,10 +122,14 @@ export async function createCardForAdmin(request: CreateAdminCardRequest) {
   return describeCardForAdmin(created.id);
 }
 
-export async function updateCardForAdmin(cardId: string, changes: UpdateAdminCardRequest) {
+export async function updateCardForAdmin(
+  cardId: string,
+  changes: UpdateAdminCardRequest
+) {
   const existing = await findAdminCard(cardId);
   if (!existing) throw notFound('Card');
-  if (changes.organizationId) await assertOrganizationExists(changes.organizationId);
+  if (changes.organizationId)
+    await assertOrganizationExists(changes.organizationId);
 
   const values = Object.fromEntries(
     Object.entries(changes).filter(([, value]) => value !== undefined)

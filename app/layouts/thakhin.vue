@@ -1,27 +1,15 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui';
-import { useQuery } from '@tanstack/vue-query';
 import { refDebounced } from '@vueuse/core';
-import type { AdminOverview, AdminSearchResult } from '~~/shared/types/admin-overview';
 
 const route = useRoute();
 const open = ref(false);
 const searchTerm = ref('');
 const debouncedSearch = refDebounced(searchTerm, 200);
 
-const { data: overview } = useQuery({
-  queryKey: QUERY_KEYS.adminOverview,
-  queryFn: () => $fetch<AdminOverview>('/api/admin/overview'),
-});
-
-const { data: searchResults, isFetching: searchLoading } = useQuery({
-  queryKey: computed(() => ['admin-search', debouncedSearch.value]),
-  queryFn: () =>
-    $fetch<AdminSearchResult>(
-      `/api/admin/search?q=${encodeURIComponent(debouncedSearch.value)}`
-    ),
-  enabled: computed(() => debouncedSearch.value.trim().length >= 2),
-});
+const { data: overview } = useAdminOverviewQuery();
+const { data: searchResults, isFetching: searchLoading } =
+  useAdminSearchQuery(debouncedSearch);
 
 function close() {
   open.value = false;
@@ -181,7 +169,7 @@ const searchGroups = computed(() => {
             to="/thakhin"
             class="w-44 aspect-[1/0.11]"
           >
-            <SvgLogo />
+            <IconLogoMark />
           </NuxtLink>
           <NuxtLink v-else to="/thakhin" class="w-10 aspect-square">
             <IconLogoShort />
@@ -201,7 +189,7 @@ const searchGroups = computed(() => {
       </template>
 
       <template #footer="{ collapsed }">
-        <UserMenu :collapsed="collapsed" />
+        <LayoutUserMenu :collapsed="collapsed" />
       </template>
     </UDashboardSidebar>
 

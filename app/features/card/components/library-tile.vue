@@ -65,7 +65,7 @@ function onBadgeClick() {
         size="sm"
         @click="onBadgeClick"
       >
-        <OverflowMarquee v-if="isCommunity" :text="cardBadgeLabel(card)" />
+        <UiOverflowMarquee v-if="isCommunity" :text="cardBadgeLabel(card)" />
         <template v-else>{{ cardBadgeLabel(card) }}</template>
       </UBadge>
     </div>

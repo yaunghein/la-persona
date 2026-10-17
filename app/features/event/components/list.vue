@@ -1,0 +1,364 @@
+<script setup lang="ts">
+import type { TabsItem } from '@nuxt/ui';
+import type {
+  CommunityEvent,
+  CommunityEventsData,
+} from '~~/shared/contracts/event';
+import { registrationBlockReason } from '~~/shared/utils/event-datetime';
+
+const props = defineProps<{
+  data: CommunityEventsData;
+  canManage?: boolean;
+}>();
+
+const emit = defineEmits<{
+  create: [];
+  edit: [event: CommunityEvent];
+  share: [event: CommunityEvent];
+  view: [event: CommunityEvent];
+  register: [event: CommunityEvent];
+}>();
+
+type EventsTab = 'upcoming' | 'past' | 'registered';
+
+const searchQuery = ref('');
+const activeTab = ref<EventsTab>('upcoming');
+const page = ref(1);
+const itemsPerPage = 6;
+const isInfoOpen = ref(false);
+
+function isRegisteredEvent(event: CommunityEvent) {
+  return event.viewerRegistrationStatus !== 'none';
+}
+
+const tabCounts = computed(() => {
+  const events = props.data.events;
+  return {
+    upcoming: events.filter((event) => event.status === 'upcoming').length,
+    past: events.filter((event) => event.status === 'past').length,
+    registered: events.filter((event) => isRegisteredEvent(event)).length,
+  };
+});
+
+const tabItems = computed<TabsItem[]>(() => [
+  { label: `Upcoming`, value: 'upcoming' },
+  { label: `Past`, value: 'past' },
+  {
+    label: `Registered`,
+    value: 'registered',
+  },
+]);
+// const tabItems = computed<TabsItem[]>(() => [
+//   { label: `Upcoming Events (${tabCounts.value.upcoming})`, value: 'upcoming' },
+//   { label: `Past Events (${tabCounts.value.past})`, value: 'past' },
+//   {
+//     label: `Registered Events (${tabCounts.value.registered})`,
+//     value: 'registered',
+//   },
+// ]);
+
+const selectedTab = computed({
+  get: () => activeTab.value,
+  set: (value: string | number) => {
+    activeTab.value = String(value) as EventsTab;
+  },
+});
+
+const filteredEvents = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase();
+
+  return props.data.events.filter((event) => {
+    const matchesTab =
+      activeTab.value === 'registered'
+        ? isRegisteredEvent(event)
+        : event.status === activeTab.value;
+
+    if (!matchesTab) {
+      return false;
+    }
+
+    if (!query) return true;
+
+    return (
+      event.title.toLowerCase().includes(query) ||
+      event.location.toLowerCase().includes(query) ||
+      event.dateLabel.toLowerCase().includes(query)
+    );
+  });
+});
+
+const total = computed(() => filteredEvents.value.length);
+const pagedEvents = computed(() => {
+  const start = (page.value - 1) * itemsPerPage;
+  return filteredEvents.value.slice(start, start + itemsPerPage);
+});
+
+watch([searchQuery, activeTab], () => {
+  page.value = 1;
+});
+
+watch(filteredEvents, () => {
+  const maxPage = Math.max(1, Math.ceil(total.value / itemsPerPage));
+  if (page.value > maxPage) page.value = maxPage;
+});
+
+function openInfo() {
+  isInfoOpen.value = true;
+}
+
+function closeInfo() {
+  isInfoOpen.value = false;
+}
+
+function onView(event: CommunityEvent) {
+  emit('view', event);
+}
+
+function onRegister(event: CommunityEvent) {
+  emit('register', event);
+}
+
+function registrationBlock(event: CommunityEvent) {
+  if (event.status === 'past') return 'past' as const;
+  return registrationBlockReason({
+    startsAt: event.startsAt,
+    endsAt: event.endsAt,
+    registrationMode: event.registrationMode,
+    capacity: event.capacity,
+    registeredCount: event.registeredCount,
+  });
+}
+
+function canRegister(event: CommunityEvent) {
+  return (
+    event.viewerRegistrationStatus === 'none' &&
+    registrationBlock(event) === null
+  );
+}
+
+function unavailableLabel(event: CommunityEvent) {
+  if (event.viewerRegistrationStatus === 'pending') return 'Pending';
+  if (event.viewerRegistrationStatus === 'registered') return 'Registered';
+  if (event.viewerRegistrationStatus === 'checked_in') return 'Checked in';
+
+  const block = registrationBlock(event);
+  if (block === 'past') return 'Ended';
+  if (block === 'invite_only') return 'Invite only';
+  if (block === 'closed') return 'Closed';
+  if (block === 'full') return 'Full';
+  return 'Register';
+}
+</script>
+
+<template>
+  <div class="flex flex-col">
+    <div class="flex flex-col gap-8 pt-2 sm:pt-0">
+      <div
+        class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div class="flex items-center gap-3">
+          <h1
+            class="text-xl font-normal leading-tight tracking-widest uppercase text-white sm:text-2xl"
+          >
+            {{ data.title }}
+          </h1>
+          <UButton
+            icon="i-material-symbols:info-outline"
+            color="neutral"
+            variant="ghost"
+            class="size-5 cursor-pointer p-0 text-white hover:bg-transparent"
+            aria-label="Open events information"
+            @click="openInfo"
+          />
+        </div>
+
+        <UButton
+          v-if="canManage"
+          label="Create Event"
+          leading-icon="i-material-symbols:add"
+          color="neutral"
+          class="h-9 w-fit cursor-pointer rounded-full bg-white py-2 pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+          @click="emit('create')"
+        />
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <UInput
+          v-model="searchQuery"
+          :placeholder="data.searchPlaceholder"
+          trailing-icon="i-lucide-search"
+          color="neutral"
+          variant="soft"
+          class="w-full flex-1"
+          :ui="{
+            base: 'h-10 rounded-full border-0 bg-[#232323] px-5 text-sm font-medium text-white ring-0 placeholder:text-[#8b8b8b] focus-visible:ring-0',
+            trailing: 'pe-4',
+            trailingIcon: 'size-4 text-[#8b8b8b]',
+          }"
+        />
+
+        <UTabs
+          v-model="selectedTab"
+          :items="tabItems"
+          :content="false"
+          color="neutral"
+          variant="pill"
+          :ui="{
+            root: 'w-full sm:w-fit',
+            list: 'bg-[#171717] w-full sm:w-fit rounded-lg p-1',
+            indicator: 'bg-[#232323]',
+            trigger:
+              'data-[state=active]:text-white data-[state=inactive]:text-[#8b8b8b] rounded-md px-4 py-2.5 grow-0 text-center sm:text-left w-full sm:w-fit',
+          }"
+        />
+      </div>
+    </div>
+
+    <div
+      class="grid flex-1 grid-cols-1 items-start gap-6 py-8 pb-10 sm:grid-cols-2 xl:grid-cols-3"
+    >
+      <article
+        v-for="event in pagedEvents"
+        :key="event.id"
+        class="flex aspect-[1/0.9] w-full cursor-pointer flex-col overflow-hidden rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+        tabindex="0"
+        @click="onView(event)"
+        @keydown.enter.prevent="onView(event)"
+        @keydown.space.prevent="onView(event)"
+      >
+        <div class="relative min-h-0 flex-1 overflow-hidden">
+          <NuxtImg
+            :src="event.imageUrl"
+            :alt="event.title"
+            width="640"
+            class="size-full object-cover"
+          />
+          <span
+            class="absolute top-1.5 right-1.5 rounded-md bg-dark px-2.5 py-1.5 text-[0.625rem] font-medium tracking-wider text-white uppercase"
+          >
+            {{ event.status === 'upcoming' ? 'Upcoming' : 'Past' }}
+          </span>
+        </div>
+
+        <div
+          class="flex shrink-0 justify-between gap-4 bg-[#171717] px-5 pt-5 pb-6"
+        >
+          <div class="flex min-w-0 flex-col gap-1">
+            <h2 class="line-clamp-1 text-base leading-5 text-white">
+              {{ event.title }}
+            </h2>
+            <p
+              class="flex items-center gap-x-2 text-xs leading-5 text-[#8b8b8b]"
+            >
+              <span class="whitespace-nowrap">{{ event.dateLabel }}</span>
+              <span>•</span>
+              <span class="line-clamp-1">{{ event.location }}</span>
+            </p>
+          </div>
+
+          <div v-if="!canManage" class="flex shrink-0 items-center justify-end">
+            <UButton
+              v-if="canRegister(event)"
+              label="Register"
+              color="neutral"
+              class="h-8 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+              @click.stop="onRegister(event)"
+            />
+            <span v-else class="text-sm text-[#8b8b8b]">
+              {{ unavailableLabel(event) }}
+            </span>
+          </div>
+        </div>
+      </article>
+
+      <BillingPremiumCardCta v-if="pagedEvents.length" />
+
+      <div
+        v-if="!pagedEvents.length"
+        class="col-span-full flex items-center justify-center py-20 text-sm text-[#8b8b8b]"
+      >
+        {{
+          searchQuery.trim()
+            ? 'No events match your search.'
+            : activeTab === 'registered'
+              ? "You haven't registered for any events yet."
+              : 'No events yet.'
+        }}
+      </div>
+    </div>
+
+    <div class="mt-auto flex items-center justify-end pt-0 pb-10">
+      <UPagination
+        v-model:page="page"
+        :total="total"
+        :items-per-page="itemsPerPage"
+        show-controls
+        show-edges
+        color="neutral"
+        variant="outline"
+      />
+    </div>
+  </div>
+
+  <UModal
+    v-model:open="isInfoOpen"
+    title="What are events?"
+    :ui="{
+      content: 'sm:max-w-120 rounded-lg bg-[#171717]',
+      title: 'text-sm font-medium uppercase tracking-widest text-white',
+      body: 'px-5 py-4 sm:px-6 sm:py-5',
+    }"
+  >
+    <template #body>
+      <div class="space-y-5 sm:space-y-6">
+        <div class="space-y-2">
+          <h3
+            class="text-lg font-medium leading-tight tracking-widest uppercase text-white sm:text-xl"
+          >
+            Host community events
+          </h3>
+          <p class="text-sm leading-relaxed text-[#8b8b8b]">
+            Create events, manage registration, and keep your community coming
+            back.
+          </p>
+        </div>
+
+        <div class="space-y-0">
+          <div
+            v-for="(item, index) in data.infoItems"
+            :key="item.title"
+            class="py-3 sm:py-3.5"
+            :class="
+              index < data.infoItems.length - 1
+                ? 'border-b border-[#2a2a2a]'
+                : ''
+            "
+          >
+            <div class="flex items-start gap-3">
+              <UIcon
+                :name="item.icon"
+                class="mt-0.5 size-4.5 shrink-0 text-white sm:size-5"
+              />
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-white">{{ item.title }}</p>
+                <p class="mt-1.5 text-sm leading-relaxed text-[#8b8b8b]">
+                  {{ item.description }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end">
+          <UButton
+            size="md"
+            label="Understood"
+            color="neutral"
+            class="h-10 justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+            @click="closeInfo"
+          />
+        </div>
+      </div>
+    </template>
+  </UModal>
+</template>

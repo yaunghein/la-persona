@@ -35,9 +35,11 @@ watch(
     inviteLookupStarted.value = true;
     isResolvingInvite.value = true;
     try {
-      const pending = await $fetch<{ id: string } | null>(
-        '/api/onboarding-invitation/pending'
+      const { items } = await $fetch<{ items: { id: string }[] }>(
+        '/api/me/onboarding-invitations',
+        { query: { status: 'pending' } }
       );
+      const pending = items[0];
       if (pending?.id) {
         pendingInvitationId.value = pending.id;
         hasRouted.value = true;

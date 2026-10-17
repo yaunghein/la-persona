@@ -7,7 +7,7 @@ import {
   listUsers,
   updateUserName,
 } from '~~/server/features/auth/user-admin.repository';
-import { deletePersonalOrganizationsForUser } from '~~/server/services/auth';
+import { deletePersonalOrganizationsForUser } from '~~/server/features/auth/account.service';
 import type {
   AdminUserDetail,
   AdminUserSummary,
@@ -15,7 +15,10 @@ import type {
   UpdateUserRequest,
 } from '~~/shared/contracts/account';
 import type { Collection } from '~~/shared/contracts/collection';
-import { ORGANIZATION_TYPES, type OrganizationType } from '~~/shared/utils/constants';
+import {
+  ORGANIZATION_TYPES,
+  type OrganizationType,
+} from '~~/shared/utils/constants';
 
 export async function listAccounts(): Promise<Collection<AdminUserSummary>> {
   const rows = await listUsers();
@@ -33,7 +36,9 @@ export async function listAccounts(): Promise<Collection<AdminUserSummary>> {
   };
 }
 
-export async function describeAccount(userId: string): Promise<AdminUserDetail> {
+export async function describeAccount(
+  userId: string
+): Promise<AdminUserDetail> {
   const account = await findUser(userId);
   if (!account) throw notFound('User');
   const footprint = await findUserFootprint(userId);
@@ -43,6 +48,7 @@ export async function describeAccount(userId: string): Promise<AdminUserDetail> 
   }));
   return {
     ...account,
+    label: account.name ? `${account.name} (${account.email})` : account.email,
     banned: Boolean(account.banned),
     createdAt: account.createdAt.toISOString(),
     memberships,
@@ -60,13 +66,21 @@ export async function describeAccount(userId: string): Promise<AdminUserDetail> 
 
 function isDuplicateEmailError(error: unknown) {
   const body = (error as { body?: { message?: unknown } } | undefined)?.body;
-  const message = String(body?.message ?? (error instanceof Error ? error.message : ''));
+  const message = String(
+    body?.message ?? (error instanceof Error ? error.message : '')
+  );
   return /already exists/i.test(message);
 }
 
-export async function createAccount(event: H3Event, request: CreateUserRequest) {
+export async function createAccount(
+  event: H3Event,
+  request: CreateUserRequest
+) {
   try {
-    const created = await auth.api.createUser({ body: request, headers: event.headers });
+    const created = await auth.api.createUser({
+      body: request,
+      headers: event.headers,
+    });
     return {
       id: created.user.id,
       name: created.user.name,
@@ -94,7 +108,10 @@ export async function updateAccount(
     userId === actorUserId &&
     (changes.role !== undefined || changes.banned !== undefined)
   ) {
-    throw forbidden('You cannot change your own role or ban state.', 'self_change');
+    throw forbidden(
+      'You cannot change your own role or ban state.',
+      'self_change'
+    );
   }
 
   const existing = await findUser(userId);
@@ -106,10 +123,16 @@ export async function updateAccount(
     changed.push('name');
   }
   if (changes.role !== undefined && changes.role !== existing.role) {
-    await auth.api.setRole({ body: { userId, role: changes.role }, headers: event.headers });
+    await auth.api.setRole({
+      body: { userId, role: changes.role },
+      headers: event.headers,
+    });
     changed.push('role');
   }
-  if (changes.banned !== undefined && changes.banned !== Boolean(existing.banned)) {
+  if (
+    changes.banned !== undefined &&
+    changes.banned !== Boolean(existing.banned)
+  ) {
     if (changes.banned) {
       await auth.api.banUser({ body: { userId }, headers: event.headers });
     } else {
@@ -133,9 +156,14 @@ export async function deleteAccount(
   if (!existing) throw notFound('User');
 
   const footprint = await findUserFootprint(params.userId);
-  const deletedOrganizationIds = await deletePersonalOrganizationsForUser(params.userId);
+  const deletedOrganizationIds = await deletePersonalOrganizationsForUser(
+    params.userId
+  );
   // removeUser also deletes the user's sessions.
-  await auth.api.removeUser({ body: { userId: params.userId }, headers: event.headers });
+  await auth.api.removeUser({
+    body: { userId: params.userId },
+    headers: event.headers,
+  });
 
   return {
     account: existing,

@@ -13,7 +13,7 @@ import {
   resolveSocialLinksForSubmission,
   type SocialFormLink,
 } from '~~/shared/utils/social-links';
-import type { PrefilledContactLinks } from '~~/app/composables/contact-link-prefill';
+import type { PrefilledContactLinks } from '~/features/card/composables/use-contact-link-prefill';
 
 type RequestCardFormState = {
   type: 'new_design' | 'existing_design';
@@ -385,7 +385,8 @@ async function requestCard(formData: RequestCardFormState) {
       : { type: 'new_design', card, receiptUrl },
     {
       onSuccess: () => {
-        if (receiptPreviewUrl.value) URL.revokeObjectURL(receiptPreviewUrl.value);
+        if (receiptPreviewUrl.value)
+          URL.revokeObjectURL(receiptPreviewUrl.value);
         receiptPreviewUrl.value = null;
         receiptFile.value = null;
         resetForm();
@@ -695,7 +696,7 @@ function onFormError(event: FormErrorEvent) {
         class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
         @focusout="prefillContactLink('Phone')"
       >
-          <FormPhoneField
+        <UiPhoneField
           v-model="state.phone"
           v-model:country-code="state.phoneCountryCode"
           name="phone"

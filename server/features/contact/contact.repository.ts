@@ -1,4 +1,13 @@
-import { and, count, desc, eq, ilike, inArray, or, type SQL } from 'drizzle-orm';
+import {
+  and,
+  count,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  or,
+  type SQL,
+} from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { db } from '~~/server/db';
 import {
@@ -113,7 +122,9 @@ export async function listContacts(scope: ContactScope, filter: ContactFilter) {
   return { rows, total: totals?.total ?? 0 };
 }
 
-export type ContactRow = Awaited<ReturnType<typeof listContacts>>['rows'][number];
+export type ContactRow = Awaited<
+  ReturnType<typeof listContacts>
+>['rows'][number];
 
 /** The contact with the card that owns it, for authorization. */
 export async function findContactOwnership(contactId: string) {
@@ -138,7 +149,10 @@ export async function deleteContact(contactId: string) {
 export async function insertContact(
   values: typeof contactExchange.$inferInsert
 ) {
-  const [inserted] = await db.insert(contactExchange).values(values).returning();
+  const [inserted] = await db
+    .insert(contactExchange)
+    .values(values)
+    .returning();
   if (!inserted) throw new Error('Contact insert returned no row.');
   return inserted;
 }
@@ -205,4 +219,19 @@ export async function insertLegacyContactExchange(
     .returning({ id: contactExchangeBeforePlatform.id });
   if (!inserted) throw new Error('Legacy contact insert returned no row.');
   return inserted;
+}
+
+/** Contacts per card, for roster "connections" counts. */
+export async function countContactsByCardIds(cardIds: string[]) {
+  if (!cardIds.length) return new Map<string, number>();
+  const rows = await db
+    .select({ cardId: contactExchange.cardId, value: count() })
+    .from(contactExchange)
+    .where(inArray(contactExchange.cardId, cardIds))
+    .groupBy(contactExchange.cardId);
+  return new Map(
+    rows.flatMap((row) =>
+      row.cardId ? [[row.cardId, Number(row.value)] as const] : []
+    )
+  );
 }

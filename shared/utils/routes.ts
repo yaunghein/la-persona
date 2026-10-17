@@ -1,3 +1,4 @@
+import { env } from '~~/env';
 const PLATFORM_ROOT = '/platform';
 const THAKHIN_ROOT = '/thakhin';
 const INVITE_ROOT = '/invite';
@@ -64,7 +65,7 @@ export function isProtectedInvitePath(path: string) {
 export function parsePlatformEventDetailPath(path: string) {
   const match = path.match(/^\/platform\/([^/]+)\/events\/([^/]+)\/?$/);
   if (!match) return null;
-  return { orgSlug: match[1], eventId: match[2] };
+  return { orgSlug: match[1]!, eventId: match[2]! };
 }
 
 export function isCommunitySetupBootstrapPath(path: string) {
@@ -74,8 +75,7 @@ export function isCommunitySetupBootstrapPath(path: string) {
 }
 
 export function publicEventAbsoluteUrl(eventId: string) {
-  if (!import.meta.client) return ROUTES.EVENTS.PUBLIC(eventId);
-  return `${window.location.origin}${ROUTES.EVENTS.PUBLIC(eventId)}`;
+  return `${env.BASE_URL.replace(/\/$/, '')}${ROUTES.EVENTS.PUBLIC(eventId)}`;
 }
 
 export function communityCardPath(cardSlug: string) {

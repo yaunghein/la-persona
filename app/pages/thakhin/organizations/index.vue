@@ -4,65 +4,27 @@ definePageMeta({
 });
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
-import { useQuery, useQueryClient } from '@tanstack/vue-query';
 import {
   ORGANIZATION_TYPES,
   ORGANIZATION_TYPE_LABELS,
   type OrganizationType,
 } from '~~/shared/utils/constants';
 import { communityCardPath } from '~~/shared/utils/routes';
-import { useThakhinTable } from '~/composables/thakhin-table';
 import {
-  THAKHIN_ACTIONS_COLUMN,
-  THAKHIN_TABLE_UI,
-  thakhinSortableHeader,
-} from '~/utils/thakhin-table';
+  ADMIN_ACTIONS_COLUMN,
+  ADMIN_TABLE_UI,
+  sortableHeader,
+} from '~/features/admin/utils/admin-table';
+import type {
+  AdminOrganizationDetail,
+  AdminOrganizationSummary,
+} from '~~/shared/contracts/organization';
 
-type OrgRow = {
-  id: string;
-  name: string;
-  slug: string;
-  logo: string | null;
-  metadata: unknown;
-  type: OrganizationType;
-  createdAt: string;
-  memberCount: number;
-  cardCount: number;
-};
-
-type OrgCommunity = {
-  description: string;
-  guidelines: string;
-  whyJoin: string;
-  logoUrl: string;
-  coverImageUrl: string;
-  splineUrl: string;
-  wallpaperUrl: string;
-  cardBackUrl: string;
-  emailQrBackgroundUrl: string;
-  emailContactExchangeUrl: string;
-  emailAfterEventUrl: string;
-};
-
-type OrgDetail = {
-  id: string;
-  name: string;
-  slug: string;
-  type: OrganizationType;
-  createdAt: string;
-  members: { id: string; role: string; userName: string; userEmail: string }[];
-  cards: {
-    id: string;
-    slug: string;
-    firstName: string;
-    lastName: string | null;
-    userId: string | null;
-  }[];
-  community: OrgCommunity | null;
-};
+type OrgRow = AdminOrganizationSummary;
+type OrgDetail = AdminOrganizationDetail;
 
 const toast = useToast();
-const queryClient = useQueryClient();
+const invalidateAdmin = useInvalidateAdmin();
 const route = useRoute();
 
 const isEditOpen = ref(false);
@@ -109,23 +71,8 @@ const typeItems = [
   },
 ];
 
-type UserOption = {
-  id: string;
-  name: string;
-  email: string;
-  label: string;
-  avatar?: { src: string };
-};
-
-const { data: orgsData, isLoading: pending } = useQuery({
-  queryKey: QUERY_KEYS.adminOrganizations,
-  queryFn: () => $fetch<OrgRow[]>('/api/organizations/admin'),
-});
-
-const { data: usersData, isLoading: usersPending } = useQuery({
-  queryKey: QUERY_KEYS.adminUsers,
-  queryFn: () => $fetch<UserOption[]>('/api/users/admin'),
-});
+const { data: orgsData, isLoading: pending } = useAdminOrganizationsQuery();
+const { data: usersData, isLoading: usersPending } = useAdminUsersQuery();
 
 const userItems = computed(() => usersData.value || []);
 
@@ -147,7 +94,7 @@ const {
   paginationTotal,
   resetPage,
   onPageChange,
-} = useThakhinTable(() => filteredRows.value.length);
+} = useAdminTable(() => filteredRows.value.length);
 
 watch(typeFilter, resetPage);
 
@@ -175,9 +122,7 @@ async function openEdit(row: OrgRow) {
 
   if (row.type !== ORGANIZATION_TYPES.COMMUNITY) return;
 
-  const detail = await $fetch<{
-    community: OrgCommunity | null;
-  }>(`/api/organizations/admin/${row.id}`);
+  const detail = await adminApi.getOrganization(row.id);
   if (editingRow.value?.id !== row.id || !detail.community) return;
   editForm.description = detail.community.description;
   editForm.guidelines = detail.community.guidelines;
@@ -224,38 +169,27 @@ async function onSaveEdit() {
 
   isSaving.value = true;
   try {
-    const saved = await $fetch<{ cardsUpdated?: number }>(
-      `/api/organizations/admin/${editingRow.value.id}`,
-      {
-        method: 'PATCH',
-        body: {
-          name,
-          slug,
-          ...(editingRow.value.type === ORGANIZATION_TYPES.COMMUNITY
-            ? {
-                description: editForm.description,
-                guidelines: editForm.guidelines,
-                whyJoin: editForm.whyJoin,
-                logoUrl: editForm.logoUrl,
-                coverImageUrl: editForm.coverImageUrl,
-                splineUrl: editForm.splineUrl,
-                wallpaperUrl: editForm.wallpaperUrl,
-                cardBackUrl: editForm.cardBackUrl,
-                emailQrBackgroundUrl: editForm.emailQrBackgroundUrl,
-                emailContactExchangeUrl: editForm.emailContactExchangeUrl,
-                emailAfterEventUrl: editForm.emailAfterEventUrl,
-                applyToMemberCards: editForm.applyToMemberCards,
-              }
-            : {}),
-        },
-      }
-    );
-    await queryClient.invalidateQueries({
-      queryKey: QUERY_KEYS.adminOrganizations,
+    const saved = await adminApi.updateOrganization(editingRow.value.id, {
+      name,
+      slug,
+      ...(editingRow.value.type === ORGANIZATION_TYPES.COMMUNITY
+        ? {
+            description: editForm.description,
+            guidelines: editForm.guidelines,
+            whyJoin: editForm.whyJoin,
+            logoUrl: editForm.logoUrl,
+            coverImageUrl: editForm.coverImageUrl,
+            splineUrl: editForm.splineUrl,
+            wallpaperUrl: editForm.wallpaperUrl,
+            cardBackUrl: editForm.cardBackUrl,
+            emailQrBackgroundUrl: editForm.emailQrBackgroundUrl,
+            emailContactExchangeUrl: editForm.emailContactExchangeUrl,
+            emailAfterEventUrl: editForm.emailAfterEventUrl,
+            applyToMemberCards: editForm.applyToMemberCards,
+          }
+        : {}),
     });
-    if ((saved.cardsUpdated || 0) > 0) {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminCards });
-    }
+    await invalidateAdmin();
     const cardsUpdated = saved.cardsUpdated || 0;
     toast.add({
       title: 'Organization updated',
@@ -269,17 +203,12 @@ async function onSaveEdit() {
     const editedId = editingRow.value.id;
     closeEdit();
     if (orgOpen.value && orgDetail.value?.id === editedId) {
-      orgDetail.value = await $fetch<OrgDetail>(
-        `/api/organizations/admin/${editedId}`
-      );
+      orgDetail.value = await adminApi.getOrganization(editedId);
     }
   } catch (error: any) {
     toast.add({
       title: 'Update failed',
-      description:
-        error?.data?.statusMessage ||
-        error?.statusMessage ||
-        'Please try again.',
+      description: apiErrorMessage(error),
       color: 'error',
     });
   } finally {
@@ -300,18 +229,13 @@ async function onCreate() {
 
   isCreating.value = true;
   try {
-    await $fetch('/api/organizations/admin', {
-      method: 'POST',
-      body: {
-        name,
-        type: createForm.type,
-        slug: createForm.slug.trim() || undefined,
-        ownerUserId: createForm.ownerUserId || undefined,
-      },
+    await adminApi.createOrganization({
+      name,
+      type: createForm.type,
+      slug: createForm.slug.trim() || undefined,
+      ownerUserId: createForm.ownerUserId || undefined,
     });
-    await queryClient.invalidateQueries({
-      queryKey: QUERY_KEYS.adminOrganizations,
-    });
+    await invalidateAdmin();
     toast.add({
       title: 'Organization created',
       color: 'success',
@@ -320,10 +244,7 @@ async function onCreate() {
   } catch (error: any) {
     toast.add({
       title: 'Create failed',
-      description:
-        error?.data?.statusMessage ||
-        error?.statusMessage ||
-        'Please try again.',
+      description: apiErrorMessage(error),
       color: 'error',
     });
   } finally {
@@ -363,9 +284,7 @@ async function openOrg(row: OrgRow) {
   orgLoading.value = true;
   orgDetail.value = null;
   try {
-    orgDetail.value = await $fetch<OrgDetail>(
-      `/api/organizations/admin/${row.id}`
-    );
+    orgDetail.value = await adminApi.getOrganization(row.id);
   } catch (error: any) {
     orgOpen.value = false;
     toast.add({
@@ -387,7 +306,6 @@ function detailAsRow(): OrgRow | null {
       name: detail.name,
       slug: detail.slug,
       logo: detail.community?.logoUrl || null,
-      metadata: null,
       type: detail.type,
       createdAt: detail.createdAt,
       memberCount: detail.members.length,
@@ -426,7 +344,10 @@ const brandRows = computed(() => {
     { label: 'Logo', value: community.logoUrl },
     { label: 'Cover', value: community.coverImageUrl },
     { label: 'Email QR background', value: community.emailQrBackgroundUrl },
-    { label: 'Email contact exchange', value: community.emailContactExchangeUrl },
+    {
+      label: 'Email contact exchange',
+      value: community.emailContactExchangeUrl,
+    },
     { label: 'Email after event', value: community.emailAfterEventUrl },
   ];
 });
@@ -466,13 +387,8 @@ async function onConfirmDelete() {
   if (!orgToDelete.value || orgToDelete.value.cardCount > 0) return;
   isDeleting.value = true;
   try {
-    await $fetch(`/api/organizations/admin/${orgToDelete.value.id}`, {
-      method: 'DELETE',
-    });
-    await queryClient.invalidateQueries({
-      queryKey: QUERY_KEYS.adminOrganizations,
-    });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminOverview });
+    await adminApi.deleteOrganization(orgToDelete.value.id);
+    await invalidateAdmin();
     toast.add({
       title: 'Organization deleted',
       description: `${orgToDelete.value.name} was removed. Member accounts were kept.`,
@@ -497,13 +413,13 @@ function typeBadgeColor(type: OrganizationType) {
 }
 
 const columns: TableColumn<OrgRow>[] = [
-  { accessorKey: 'name', header: thakhinSortableHeader('NAME') },
-  { accessorKey: 'slug', header: thakhinSortableHeader('SLUG') },
-  { accessorKey: 'memberCount', header: thakhinSortableHeader('MEMBERS') },
-  { accessorKey: 'cardCount', header: thakhinSortableHeader('CARDS') },
-  { accessorKey: 'type', header: thakhinSortableHeader('TYPE') },
-  { accessorKey: 'createdAt', header: thakhinSortableHeader('CREATED') },
-  THAKHIN_ACTIONS_COLUMN,
+  { accessorKey: 'name', header: sortableHeader('NAME') },
+  { accessorKey: 'slug', header: sortableHeader('SLUG') },
+  { accessorKey: 'memberCount', header: sortableHeader('MEMBERS') },
+  { accessorKey: 'cardCount', header: sortableHeader('CARDS') },
+  { accessorKey: 'type', header: sortableHeader('TYPE') },
+  { accessorKey: 'createdAt', header: sortableHeader('CREATED') },
+  ADMIN_ACTIONS_COLUMN,
 ];
 
 const formFieldClass =
@@ -532,7 +448,7 @@ const selectMenuUi = {
 
 <template>
   <div class="flex flex-col gap-6">
-    <ThakhinPageHeader
+    <AdminPageHeader
       title="Organizations"
       description="Create a personal or community organization, correct its name, slug, and community settings, or delete one that has no cards and no payments."
     >
@@ -544,9 +460,9 @@ const selectMenuUi = {
         variant="outline"
         @click="openCreate"
       />
-    </ThakhinPageHeader>
+    </AdminPageHeader>
 
-    <ThakhinTableFrame
+    <AdminTableFrame
       :page="pagination.pageIndex + 1"
       :total="paginationTotal"
       :items-per-page="pagination.pageSize"
@@ -578,7 +494,7 @@ const selectMenuUi = {
         :loading="pending"
         :pagination-options="paginationOptions"
         :get-row-id="(row) => row.id"
-        :ui="THAKHIN_TABLE_UI"
+        :ui="ADMIN_TABLE_UI"
         class="w-full"
         @select="(_event, row) => openOrg(row.original)"
       >
@@ -586,7 +502,9 @@ const selectMenuUi = {
           <span class="font-medium text-white">{{ row.original.name }}</span>
         </template>
         <template #slug-cell="{ row }">
-          <span class="font-mono text-xs text-white/55">{{ row.original.slug }}</span>
+          <span class="font-mono text-xs text-white/55">{{
+            row.original.slug
+          }}</span>
         </template>
         <template #memberCount-cell="{ row }">
           {{ row.original.memberCount }}
@@ -600,13 +518,15 @@ const selectMenuUi = {
           </UBadge>
         </template>
         <template #createdAt-cell="{ row }">
-          <span class="text-white/55">{{ formatDate(row.original.createdAt) }}</span>
+          <span class="text-white/55">{{
+            formatDate(row.original.createdAt)
+          }}</span>
         </template>
         <template #actions-cell="{ row }">
-          <ThakhinRowMenu :items="getActionItems(row.original)" />
+          <AdminRowMenu :items="getActionItems(row.original)" />
         </template>
       </UTable>
-    </ThakhinTableFrame>
+    </AdminTableFrame>
 
     <USlideover
       v-model:open="isCreateOpen"
@@ -778,7 +698,9 @@ const selectMenuUi = {
                   :ui="inputUi"
                 />
               </UFormField>
-              <div class="rounded-lg border border-white/10 bg-white/[0.03] p-4">
+              <div
+                class="rounded-lg border border-white/10 bg-white/[0.03] p-4"
+              >
                 <UCheckbox
                   v-model="editForm.applyToMemberCards"
                   label="Update existing member cards"
@@ -794,24 +716,26 @@ const selectMenuUi = {
                 v-if="editingRow"
                 class="flex flex-col gap-6 border-y border-[#232323] py-6"
               >
-                <p class="text-sm font-medium tracking-[1.4px] text-white uppercase">
+                <p
+                  class="text-sm font-medium tracking-[1.4px] text-white uppercase"
+                >
                   Email images
                 </p>
-                <ThakhinImageUploadField
+                <AdminImageUploadField
                   v-model="editForm.emailQrBackgroundUrl"
                   :organization-id="editingRow.id"
                   label="QR ticket background"
                   hint="Use the ticket template layout (952 × 936). The QR is placed by position, so the white ticket must stay in the same spot."
                   empty-text="Not set: emails use the default ticket background."
                 />
-                <ThakhinImageUploadField
+                <AdminImageUploadField
                   v-model="editForm.emailContactExchangeUrl"
                   :organization-id="editingRow.id"
                   label="Contact exchange (reminder email)"
                   hint="Two phones exchanging cards, 952 px wide."
                   empty-text="Not set: the reminder email hides this image."
                 />
-                <ThakhinImageUploadField
+                <AdminImageUploadField
                   v-model="editForm.emailAfterEventUrl"
                   :organization-id="editingRow.id"
                   label="Community card uses (after-event email)"
@@ -820,19 +744,19 @@ const selectMenuUi = {
                 />
               </div>
               <UFormField label="Description" :class="formFieldClass">
-                <CommunityRichTextEditor
+                <UiRichTextEditor
                   v-model="editForm.description"
                   placeholder="Describe the community"
                 />
               </UFormField>
               <UFormField label="Guidelines" :class="formFieldClass">
-                <CommunityRichTextEditor
+                <UiRichTextEditor
                   v-model="editForm.guidelines"
                   placeholder="Community guidelines"
                 />
               </UFormField>
               <UFormField label="Why join" :class="formFieldClass">
-                <CommunityRichTextEditor
+                <UiRichTextEditor
                   v-model="editForm.whyJoin"
                   placeholder="Why people should join"
                 />
@@ -916,13 +840,19 @@ const selectMenuUi = {
           </div>
 
           <section v-if="orgDetail.community" class="space-y-3">
-            <h3 class="text-xs font-medium tracking-wide text-white/45 uppercase">
+            <h3
+              class="text-xs font-medium tracking-wide text-white/45 uppercase"
+            >
               Brand
             </h3>
-            <dl class="divide-y divide-white/10 overflow-hidden rounded-lg border border-white/10">
+            <dl
+              class="divide-y divide-white/10 overflow-hidden rounded-lg border border-white/10"
+            >
               <div v-for="row in brandRows" :key="row.label" class="px-4 py-3">
                 <dt class="text-xs text-white/45">{{ row.label }}</dt>
-                <dd class="mt-1 break-all font-mono text-xs leading-relaxed text-white/85">
+                <dd
+                  class="mt-1 break-all font-mono text-xs leading-relaxed text-white/85"
+                >
                   {{ row.value || '—' }}
                 </dd>
               </div>
@@ -931,33 +861,53 @@ const selectMenuUi = {
 
           <section v-if="copyRows.length" class="space-y-4">
             <div v-for="row in copyRows" :key="row.label">
-              <h3 class="text-xs font-medium tracking-wide text-white/45 uppercase">
+              <h3
+                class="text-xs font-medium tracking-wide text-white/45 uppercase"
+              >
                 {{ row.label }}
               </h3>
-              <p class="mt-2 line-clamp-4 text-sm leading-relaxed text-white/75">
+              <p
+                class="mt-2 line-clamp-4 text-sm leading-relaxed text-white/75"
+              >
                 {{ row.value }}
               </p>
             </div>
           </section>
 
           <section class="space-y-3">
-            <h3 class="text-xs font-medium tracking-wide text-white/45 uppercase">
+            <h3
+              class="text-xs font-medium tracking-wide text-white/45 uppercase"
+            >
               Members
             </h3>
-            <p v-if="orgDetail.members.length === 0" class="text-sm text-white/45">
+            <p
+              v-if="orgDetail.members.length === 0"
+              class="text-sm text-white/45"
+            >
               No members.
             </p>
-            <ul v-else class="divide-y divide-white/10 overflow-hidden rounded-lg border border-white/10">
+            <ul
+              v-else
+              class="divide-y divide-white/10 overflow-hidden rounded-lg border border-white/10"
+            >
               <li
                 v-for="member in orgDetail.members"
                 :key="member.id"
                 class="flex items-center justify-between gap-3 px-4 py-3"
               >
                 <div class="min-w-0">
-                  <p class="truncate text-sm text-white">{{ member.userName }}</p>
-                  <p class="truncate text-xs text-white/45">{{ member.userEmail }}</p>
+                  <p class="truncate text-sm text-white">
+                    {{ member.userName }}
+                  </p>
+                  <p class="truncate text-xs text-white/45">
+                    {{ member.userEmail }}
+                  </p>
                 </div>
-                <UBadge color="neutral" variant="subtle" class="shrink-0 capitalize">
+                <UBadge
+                  color="neutral"
+                  variant="subtle"
+                  class="shrink-0 capitalize"
+                >
                   {{ member.role }}
                 </UBadge>
               </li>
@@ -965,13 +915,21 @@ const selectMenuUi = {
           </section>
 
           <section class="space-y-3">
-            <h3 class="text-xs font-medium tracking-wide text-white/45 uppercase">
+            <h3
+              class="text-xs font-medium tracking-wide text-white/45 uppercase"
+            >
               Cards
             </h3>
-            <p v-if="orgDetail.cards.length === 0" class="text-sm text-white/45">
+            <p
+              v-if="orgDetail.cards.length === 0"
+              class="text-sm text-white/45"
+            >
               No cards.
             </p>
-            <ul v-else class="divide-y divide-white/10 overflow-hidden rounded-lg border border-white/10">
+            <ul
+              v-else
+              class="divide-y divide-white/10 overflow-hidden rounded-lg border border-white/10"
+            >
               <li
                 v-for="item in orgDetail.cards"
                 :key="item.id"
@@ -979,9 +937,15 @@ const selectMenuUi = {
               >
                 <div class="min-w-0">
                   <p class="truncate text-sm text-white">
-                    {{ [item.firstName, item.lastName].filter(Boolean).join(' ') || item.slug }}
+                    {{
+                      [item.firstName, item.lastName]
+                        .filter(Boolean)
+                        .join(' ') || item.slug
+                    }}
                   </p>
-                  <p class="truncate font-mono text-xs text-white/45">/c/{{ item.slug }}</p>
+                  <p class="truncate font-mono text-xs text-white/45">
+                    /c/{{ item.slug }}
+                  </p>
                 </div>
                 <div class="flex shrink-0 items-center gap-2">
                   <UBadge v-if="!item.userId" color="warning" variant="subtle">
@@ -1032,19 +996,25 @@ const selectMenuUi = {
           <p v-if="(orgToDelete?.cardCount || 0) > 0">
             <span class="font-medium text-white">{{ orgToDelete?.name }}</span>
             still has {{ orgToDelete?.cardCount }}
-            {{ orgToDelete?.cardCount === 1 ? 'card' : 'cards' }}.
-            Delete or move those cards first. Deleting the organization would
-            remove them.
+            {{ orgToDelete?.cardCount === 1 ? 'card' : 'cards' }}. Delete or
+            move those cards first. Deleting the organization would remove them.
           </p>
           <template v-else-if="orgToDelete">
             <p>
-              <span class="font-medium text-white">{{ orgToDelete?.name }}</span>
+              <span class="font-medium text-white">{{
+                orgToDelete?.name
+              }}</span>
               will be removed.
               {{ orgToDelete?.memberCount || 0 }}
-              {{ orgToDelete?.memberCount === 1 ? 'member stays' : 'members stay' }}
+              {{
+                orgToDelete?.memberCount === 1 ? 'member stays' : 'members stay'
+              }}
               as accounts and leave this organization.
             </p>
-            <p>Payment history blocks deletion. The placeholder organization cannot be deleted.</p>
+            <p>
+              Payment history blocks deletion. The placeholder organization
+              cannot be deleted.
+            </p>
           </template>
         </div>
       </template>

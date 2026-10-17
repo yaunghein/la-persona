@@ -5,7 +5,7 @@ import { Application } from '@splinetool/runtime';
 import type { ConcreteComponent } from 'vue';
 import { SOCIAL_MEDIA_LINK_LABELS } from '~~/shared/constants/card-link-options';
 import { downloadFile } from '~/utils/share-or-download';
-import { applyCombinedCardToSpline } from '~/utils/spline-card';
+import { applyCombinedCardToSpline } from '~/features/card/utils/spline-card';
 import { vcfPhoneLines } from '~~/shared/utils/phone';
 
 const route = useRoute();
@@ -311,9 +311,7 @@ function resolveCardAvatarUrl(avatarUrl: string | null | undefined) {
 async function getPhotoForVcf() {
   const avatarUrl = resolveCardAvatarUrl(card.value?.avatarUrl);
   const candidateUrls = [
-    avatarUrl
-      ? imageProxyUrl(avatarUrl)
-      : null,
+    avatarUrl ? imageProxyUrl(avatarUrl) : null,
     avatarUrl,
     '/images/reveal-image.webp',
   ].filter(Boolean) as string[];
@@ -541,7 +539,7 @@ async function onSaveContact() {
                 class="h-[2.8rem] w-full appearance-none border border-[#494949] bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
-            <PhoneInput split-country />
+            <ContactPhoneInput split-country />
             <label
               class="flex flex-col gap-3 text-xs font-light tracking-[0.1rem]"
             >
@@ -652,7 +650,7 @@ async function onSaveContact() {
           </button>
 
           <div v-if="shouldShowPoweredByLaPersona" class="mt-2 w-full">
-            <PoweredByLaPersona />
+            <UiPoweredByLaPersona />
           </div>
         </div>
       </div>
@@ -760,7 +758,7 @@ async function onSaveContact() {
             transitionDelay: `${((card?.socials?.length ?? 0) + 1) * 100}ms`,
           }"
         >
-          <PoweredByLaPersona />
+          <UiPoweredByLaPersona />
         </div>
       </div>
     </div>

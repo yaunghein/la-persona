@@ -160,8 +160,8 @@ onMounted(async () => {
   });
 });
 
-import type { FeedbackKind } from '~~/shared/types/feedback';
-import { FEEDBACK_KIND_LABELS } from '~~/shared/types/feedback';
+import type { FeedbackKind } from '~~/shared/contracts/feedback';
+import { FEEDBACK_KIND_LABELS } from '~~/shared/contracts/feedback';
 
 const isFeedbackSlideoverOpen = ref(false);
 const feedbackKind = ref<FeedbackKind>('feedback');
@@ -238,7 +238,7 @@ const currentPageLabel = computed(() => {
             "
           />
 
-          <PlatformCommunityNav
+          <LayoutCommunityNav
             :orgs="communityOrgs"
             :collapsed="collapsed"
             @select="closeSidebar"
@@ -246,7 +246,7 @@ const currentPageLabel = computed(() => {
         </div>
 
         <div class="mt-auto">
-          <HelpFeedbackMenu
+          <LayoutHelpFeedbackMenu
             :collapsed="collapsed"
             @open-feedback="openFeedbackSlideover"
           />
@@ -255,7 +255,7 @@ const currentPageLabel = computed(() => {
 
       <template #footer="{ collapsed }">
         <div class="w-full space-y-1">
-          <UserMenu :collapsed="collapsed" />
+          <LayoutUserMenu :collapsed="collapsed" />
         </div>
       </template>
     </UDashboardSidebar>
@@ -291,7 +291,7 @@ const currentPageLabel = computed(() => {
       }"
     >
       <template #body>
-        <FormFeedbackSubmission
+        <FeedbackSubmissionForm
           :kind="feedbackKind"
           @close="isFeedbackSlideoverOpen = false"
         />

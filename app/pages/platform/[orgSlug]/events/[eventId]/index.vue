@@ -1,19 +1,10 @@
 <script setup lang="ts">
-definePageMeta({
-  layout: 'platform',
-});
-
-import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
-import { QUERY_KEYS } from '~/utils/query-keys';
 import type {
   CommunityEventDetailData,
   CommunityEventDetailTab,
   EventAttendee,
-} from '~~/shared/types/community-event-detail';
-import type {
   EventBroadcastKind,
-  EventDetailDTO,
-} from '~~/shared/types/event';
+} from '~~/shared/contracts/event';
 import { publicEventAbsoluteUrl } from '~~/shared/utils/routes';
 import {
   eventPhase,
@@ -21,12 +12,14 @@ import {
   formatEventDateValue,
   registrationBlockReason,
 } from '~~/shared/utils/event-datetime';
-import { timezoneOffsetQuery } from '~~/shared/utils/datetime';
+
+definePageMeta({
+  layout: 'platform',
+});
 
 const toast = useToast();
-const queryClient = useQueryClient();
 const route = useRoute();
-const { organizationSlug, withOrganizationQuery } = useOrganizationSlug();
+const { organizationSlug } = useOrganizationSlug();
 const eventId = computed(() => String(route.params.eventId || ''));
 const { data: userOrgs } = useUserOrganizations();
 const canManage = computed(() =>
@@ -44,58 +37,27 @@ const selectedAttendee = ref<EventAttendee | null>(null);
 const isBroadcastOpen = ref(false);
 const broadcastKind = ref<EventBroadcastKind>('reminder');
 
-const { data: event, isLoading } = useQuery<EventDetailDTO>({
-  queryKey: computed(() => [
-    ...QUERY_KEYS.event,
-    organizationSlug.value,
-    eventId.value,
-  ]),
-  queryFn: () =>
-    $fetch(`/api/events/${eventId.value}`, {
-      query: { ...withOrganizationQuery(), ...timezoneOffsetQuery() },
-    }),
-  enabled: () => !!eventId.value && !!organizationSlug.value,
-});
+const {
+  data: event,
+  isLoading,
+  refetch: refetchEvent,
+} = useEventQuery(eventId);
+const { data: attendees, refetch: refetchAttendees } =
+  useEventAttendeesQuery(eventId);
+const { mutate: approveRegistration } = useApproveRegistrationMutation();
 
-const { data: attendeesData, refetch: refetchAttendees } = useQuery<{
-  attendees: EventAttendee[];
-}>({
-  queryKey: computed(() => [
-    ...QUERY_KEYS.eventAttendees,
-    organizationSlug.value,
-    eventId.value,
-  ]),
-  queryFn: () =>
-    $fetch(`/api/events/${eventId.value}/attendees`, {
-      query: withOrganizationQuery(),
-    }),
-  enabled: () => !!eventId.value && !!organizationSlug.value,
-});
-
-const { mutate: approveAttendee } = useMutation({
-  mutationFn: (attendee: EventAttendee) =>
-    $fetch(`/api/events/${eventId.value}/attendees/${attendee.id}/approve`, {
-      method: 'POST',
-      query: withOrganizationQuery(),
-    }),
-  onSuccess: async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({
-        queryKey: [...QUERY_KEYS.event, organizationSlug.value, eventId.value],
+function approveAttendee(attendee: EventAttendee) {
+  approveRegistration(attendee.id, {
+    onSuccess: () =>
+      toast.add({ title: 'Registration approved', color: 'success' }),
+    onError: (error) =>
+      toast.add({
+        title: 'Could not approve',
+        description: apiErrorMessage(error),
+        color: 'error',
       }),
-      refetchAttendees(),
-    ]);
-    toast.add({ title: 'Registration approved', color: 'success' });
-  },
-  onError: (error: { data?: { statusMessage?: string }; message?: string }) => {
-    toast.add({
-      title: 'Could not approve',
-      description:
-        error.data?.statusMessage || error.message || 'Please try again.',
-      color: 'error',
-    });
-  },
-});
+  });
+}
 
 const eventDetail = computed<CommunityEventDetailData | null>(() => {
   if (!event.value) return null;
@@ -120,7 +82,7 @@ const eventDetail = computed<CommunityEventDetailData | null>(() => {
       newMembersJoined: event.value.overview.newMembersJoined,
       registrationTrend: event.value.overview.registrationTrend,
     },
-    attendees: attendeesData.value?.attendees ?? [],
+    attendees: attendees.value ?? [],
     settings: {
       title: event.value.title,
       date: formatEventDateValue(event.value.startsAt),
@@ -194,8 +156,7 @@ async function onShare() {
 }
 
 const broadcastRecipientCount = computed(() => {
-  const attendees = attendeesData.value?.attendees ?? [];
-  return attendees.filter((attendee) =>
+  return (attendees.value ?? []).filter((attendee) =>
     broadcastKind.value === 'reminder'
       ? attendee.status !== 'pending'
       : attendee.status === 'checked_in'
@@ -213,48 +174,39 @@ function onSendEmail(kind: EventBroadcastKind) {
   isBroadcastOpen.value = true;
 }
 
-const { mutate: sendBroadcast, isPending: isSendingBroadcast } = useMutation({
-  mutationFn: (kind: EventBroadcastKind) =>
-    $fetch<{ recipientCount: number; skipped: number }>(
-      `/api/events/${eventId.value}/broadcast-email`,
-      {
-        method: 'POST',
-        query: withOrganizationQuery(),
-        body: { kind },
-      }
-    ),
-  onSuccess: async (result) => {
-    isBroadcastOpen.value = false;
-    await queryClient.invalidateQueries({
-      queryKey: [...QUERY_KEYS.event, organizationSlug.value, eventId.value],
-    });
-    toast.add({
-      title: 'Emails on the way',
-      description:
-        `Sending to ${result.recipientCount} ${result.recipientCount === 1 ? 'attendee' : 'attendees'}.` +
-        (result.skipped > 0
-          ? ` ${result.skipped} without a community card were skipped (no QR ticket).`
-          : ''),
-      color: 'success',
-    });
-  },
-  onError: (error: { data?: { statusMessage?: string }; message?: string }) => {
-    toast.add({
-      title: 'Could not send emails',
-      description:
-        error.data?.statusMessage || error.message || 'Please try again.',
-      color: 'error',
-    });
-  },
-});
+const { mutate: broadcastEmail, isPending: isSendingBroadcast } =
+  useBroadcastEventEmailMutation(eventId);
+
+function sendBroadcast(kind: EventBroadcastKind) {
+  broadcastEmail(kind, {
+    onSuccess: async (result) => {
+      isBroadcastOpen.value = false;
+      await refetchEvent();
+      toast.add({
+        title: 'Emails on the way',
+        description:
+          `Sending to ${result.recipientCount} ${result.recipientCount === 1 ? 'attendee' : 'attendees'}.` +
+          (result.skipped > 0
+            ? ` ${result.skipped} without a community card were skipped (no QR ticket).`
+            : ''),
+        color: 'success',
+      });
+    },
+    onError: (error) =>
+      toast.add({
+        title: 'Could not send emails',
+        description: apiErrorMessage(error),
+        color: 'error',
+      }),
+  });
+}
+
+function reloadEvent() {
+  refetchEvent();
+}
 
 async function onCheckedIn() {
-  await Promise.all([
-    queryClient.invalidateQueries({
-      queryKey: [...QUERY_KEYS.event, organizationSlug.value, eventId.value],
-    }),
-    refetchAttendees(),
-  ]);
+  await Promise.all([refetchEvent(), refetchAttendees()]);
 }
 </script>
 
@@ -281,7 +233,7 @@ async function onCheckedIn() {
     />
   </div>
 
-  <CommunityEventDetailShell
+  <EventDetailShell
     v-else
     :title="eventDetail.title"
     :status="eventDetail.status"
@@ -294,12 +246,12 @@ async function onCheckedIn() {
     @send-email="onSendEmail"
     @update:active-tab="activeTab = $event"
   >
-    <CommunityEventOverview
+    <EventOverview
       v-if="activeTab === 'overview'"
       :data="eventDetail.overview"
     />
 
-    <CommunityEventAttendees
+    <EventAttendees
       v-else-if="activeTab === 'attendees'"
       :attendees="eventDetail.attendees"
       :allow-approve="canManage && phase !== 'past'"
@@ -307,7 +259,7 @@ async function onCheckedIn() {
       @approve="approveAttendee"
     />
 
-    <CommunityEventCheckIn
+    <EventCheckIn
       v-else-if="activeTab === 'check-in'"
       :attendees="eventDetail.attendees"
       :check-in-phase="phase"
@@ -316,15 +268,15 @@ async function onCheckedIn() {
       @open-walk-in="onOpenWalkIn"
       @select="onSelectAttendee"
     />
-  </CommunityEventDetailShell>
+  </EventDetailShell>
 
-  <CommunityEventAttendeeProfileSlideover
+  <EventAttendeeProfileSlideover
     :key="selectedAttendee?.id ?? 'attendee-profile'"
     v-model:open="isProfileOpen"
     :attendee="selectedAttendee"
   />
 
-  <CommunityEventCheckInScanner
+  <EventCheckInScanner
     v-if="eventDetail"
     v-model:open="isScannerOpen"
     :event-id="eventId"
@@ -332,7 +284,7 @@ async function onCheckedIn() {
     @checked-in="onCheckedIn"
   />
 
-  <CommunityEventBroadcastEmailModal
+  <EventBroadcastEmailModal
     v-if="canManage"
     v-model:open="isBroadcastOpen"
     :kind="broadcastKind"
@@ -342,21 +294,16 @@ async function onCheckedIn() {
     @confirm="sendBroadcast(broadcastKind)"
   />
 
-  <CommunityEventWalkInRegistrationSlideover
+  <EventWalkInRegistrationSlideover
     v-model:open="isWalkInOpen"
     :walk-in-url="walkInUrl"
   />
 
-  <CommunityCreateEventSlideover
+  <EventCreateSlideover
     v-if="event && canManage"
     v-model:open="isEditOpen"
     :event="event"
     @deleted="goBack"
-    @updated="
-      () =>
-        queryClient.invalidateQueries({
-          queryKey: [...QUERY_KEYS.event, organizationSlug, eventId],
-        })
-    "
+    @updated="reloadEvent"
   />
 </template>

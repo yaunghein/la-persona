@@ -4,47 +4,24 @@ definePageMeta({
 });
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
-import { useQuery, useQueryClient } from '@tanstack/vue-query';
-import { useThakhinTable } from '~/composables/thakhin-table';
 import {
-  THAKHIN_ACTIONS_COLUMN,
-  THAKHIN_TABLE_UI,
-  thakhinSortableHeader,
-} from '~/utils/thakhin-table';
+  ADMIN_ACTIONS_COLUMN,
+  ADMIN_TABLE_UI,
+  sortableHeader,
+} from '~/features/admin/utils/admin-table';
+import type {
+  AdminUserDetail,
+  AdminUserSummary,
+} from '~~/shared/contracts/account';
 
-type UserRow = {
-  id: string;
-  name: string;
-  email: string;
-  role: string | null;
-  banned: boolean;
-  createdAt: string;
-  label: string;
-};
-
-type UserDetail = UserRow & {
-  memberships: {
-    id: string;
-    role: string;
-    organizationId: string;
-    organizationName: string;
-    organizationType: string;
-  }[];
-  cards: { id: string; slug: string; firstName: string; lastName: string | null }[];
-  deletion: {
-    personalOrganizations: { id: string; name: string; cardCount: number }[];
-    communityMemberships: { organizationId: string; organizationName: string }[];
-  };
-};
+type UserRow = AdminUserSummary;
+type UserDetail = AdminUserDetail;
 
 const toast = useToast();
-const queryClient = useQueryClient();
+const invalidateAdmin = useInvalidateAdmin();
 const { data: session } = await authClient.useSession(useFetch);
 
-const { data: usersData, isLoading: pending } = useQuery({
-  queryKey: QUERY_KEYS.adminUsers,
-  queryFn: () => $fetch<UserRow[]>('/api/users/admin'),
-});
+const { data: usersData, isLoading: pending } = useAdminUsersQuery();
 
 const rows = computed(() => usersData.value || []);
 const roleFilter = ref<'all' | 'admin' | 'user'>('all');
@@ -95,7 +72,7 @@ const {
   paginationTotal,
   resetPage,
   onPageChange,
-} = useThakhinTable(() => filteredRows.value.length);
+} = useAdminTable(() => filteredRows.value.length);
 
 watch(roleFilter, resetPage);
 
@@ -105,6 +82,10 @@ const roleFilterItems = [
   { label: 'User', value: 'user' },
 ];
 
+function closeCreate() {
+  isCreateOpen.value = false;
+}
+
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
 }
@@ -112,7 +93,7 @@ function formatDate(value: string) {
 async function openDetail(row: UserRow) {
   detailOpen.value = true;
   detail.value = null;
-  detail.value = await $fetch<UserDetail>(`/api/users/admin/${row.id}`);
+  detail.value = await adminApi.getUser(row.id);
   editName.value = detail.value.name;
   editRole.value = detail.value.role === 'admin' ? 'admin' : 'user';
 }
@@ -121,7 +102,7 @@ async function openDelete(row: UserRow) {
   userToDelete.value = row;
   deletePreview.value = null;
   isDeleteOpen.value = true;
-  const full = await $fetch<UserDetail>(`/api/users/admin/${row.id}`);
+  const full = await adminApi.getUser(row.id);
   deletePreview.value = full.deletion;
 }
 
@@ -136,11 +117,8 @@ async function onConfirmDelete() {
 
   isDeleting.value = true;
   try {
-    await $fetch(`/api/users/admin/${userToDelete.value.id}`, {
-      method: 'DELETE',
-    });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminUsers });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminOverview });
+    await adminApi.deleteUser(userToDelete.value.id);
+    await invalidateAdmin();
     toast.add({
       title: 'User deleted',
       description: `${userToDelete.value.email} and their personal workspace were removed.`,
@@ -204,8 +182,8 @@ async function patchUser(
 ) {
   isSaving.value = true;
   try {
-    await $fetch(`/api/users/admin/${row.id}`, { method: 'PATCH', body });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminUsers });
+    await adminApi.updateUser(row.id, body);
+    await invalidateAdmin();
     toast.add({ title: 'User updated', color: 'success' });
     if (detail.value?.id === row.id) await openDetail(row);
   } catch (error: any) {
@@ -219,8 +197,8 @@ async function patchUser(
   }
 }
 
-const isSelfDetail = computed(
-  () => Boolean(detail.value && session.value?.user?.id === detail.value.id)
+const isSelfDetail = computed(() =>
+  Boolean(detail.value && session.value?.user?.id === detail.value.id)
 );
 
 async function saveDetail() {
@@ -263,23 +241,17 @@ async function onCreate() {
 
   isCreating.value = true;
   try {
-    await $fetch('/api/users/admin', {
-      method: 'POST',
-      body: {
-        name: createForm.name.trim(),
-        email: createForm.email.trim(),
-        password: createForm.password,
-        role: createForm.role,
-      },
+    await adminApi.createUser({
+      name: createForm.name.trim(),
+      email: createForm.email.trim(),
+      password: createForm.password,
+      role: createForm.role,
     });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminUsers });
-    await queryClient.invalidateQueries({
-      queryKey: QUERY_KEYS.adminOrganizations,
-    });
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminOverview });
+    await invalidateAdmin();
     toast.add({
       title: 'Person created',
-      description: 'They can sign in with that email and password. A personal organization was created for them.',
+      description:
+        'They can sign in with that email and password. A personal organization was created for them.',
       color: 'success',
     });
     isCreateOpen.value = false;
@@ -295,22 +267,22 @@ async function onCreate() {
 }
 
 const columns: TableColumn<UserRow>[] = [
-  { accessorKey: 'name', header: thakhinSortableHeader('NAME') },
-  { accessorKey: 'email', header: thakhinSortableHeader('EMAIL') },
+  { accessorKey: 'name', header: sortableHeader('NAME') },
+  { accessorKey: 'email', header: sortableHeader('EMAIL') },
   {
     accessorKey: 'role',
-    header: thakhinSortableHeader('ROLE'),
+    header: sortableHeader('ROLE'),
     accessorFn: (row) => row.role || 'user',
   },
-  { accessorKey: 'banned', header: thakhinSortableHeader('BANNED') },
-  { accessorKey: 'createdAt', header: thakhinSortableHeader('CREATED') },
-  THAKHIN_ACTIONS_COLUMN,
+  { accessorKey: 'banned', header: sortableHeader('BANNED') },
+  { accessorKey: 'createdAt', header: sortableHeader('CREATED') },
+  ADMIN_ACTIONS_COLUMN,
 ];
 </script>
 
 <template>
   <div class="flex flex-col gap-6">
-    <ThakhinPageHeader
+    <AdminPageHeader
       title="People"
       description="Create an account, correct a name or role, ban, or delete. Deleting a person also removes their personal organization."
     >
@@ -322,9 +294,9 @@ const columns: TableColumn<UserRow>[] = [
         variant="outline"
         @click="openCreate"
       />
-    </ThakhinPageHeader>
+    </AdminPageHeader>
 
-    <ThakhinTableFrame
+    <AdminTableFrame
       :page="pagination.pageIndex + 1"
       :total="paginationTotal"
       :items-per-page="pagination.pageSize"
@@ -356,7 +328,7 @@ const columns: TableColumn<UserRow>[] = [
         :loading="pending"
         :pagination-options="paginationOptions"
         :get-row-id="(row) => row.id"
-        :ui="THAKHIN_TABLE_UI"
+        :ui="ADMIN_TABLE_UI"
         class="w-full"
         @select="(_event, row) => openDetail(row.original)"
       >
@@ -383,13 +355,15 @@ const columns: TableColumn<UserRow>[] = [
           </UBadge>
         </template>
         <template #createdAt-cell="{ row }">
-          <span class="text-white/55">{{ formatDate(row.original.createdAt) }}</span>
+          <span class="text-white/55">{{
+            formatDate(row.original.createdAt)
+          }}</span>
         </template>
         <template #actions-cell="{ row }">
-          <ThakhinRowMenu :items="getActionItems(row.original)" />
+          <AdminRowMenu :items="getActionItems(row.original)" />
         </template>
       </UTable>
-    </ThakhinTableFrame>
+    </AdminTableFrame>
 
     <UModal
       v-model:open="isDeleteOpen"
@@ -413,7 +387,9 @@ const columns: TableColumn<UserRow>[] = [
             will be removed.
           </p>
           <div v-if="deletePreview">
-            <p class="text-white">Personal organizations that will be deleted</p>
+            <p class="text-white">
+              Personal organizations that will be deleted
+            </p>
             <p v-if="deletePreview.personalOrganizations.length === 0">None.</p>
             <ul v-else class="list-disc pl-5">
               <li
@@ -424,7 +400,9 @@ const columns: TableColumn<UserRow>[] = [
               </li>
             </ul>
             <p class="mt-3 text-white">Community memberships that will drop</p>
-            <p v-if="deletePreview.communityMemberships.length === 0">None. Those organizations stay.</p>
+            <p v-if="deletePreview.communityMemberships.length === 0">
+              None. Those organizations stay.
+            </p>
             <ul v-else class="list-disc pl-5">
               <li
                 v-for="org in deletePreview.communityMemberships"
@@ -509,7 +487,8 @@ const columns: TableColumn<UserRow>[] = [
             <p class="text-white">Organizations</p>
             <p v-if="detail.memberships.length === 0">None.</p>
             <p v-for="org in detail.memberships" :key="org.id">
-              {{ org.organizationName }} · {{ org.organizationType }} · {{ org.role }}
+              {{ org.organizationName }} · {{ org.organizationType }} ·
+              {{ org.role }}
             </p>
           </div>
           <div>
@@ -531,7 +510,11 @@ const columns: TableColumn<UserRow>[] = [
       <template #body>
         <div class="space-y-4">
           <UFormField label="Name" required>
-            <UInput v-model="createForm.name" class="w-full" placeholder="Full name" />
+            <UInput
+              v-model="createForm.name"
+              class="w-full"
+              placeholder="Full name"
+            />
           </UFormField>
           <UFormField label="Email" required>
             <UInput
@@ -564,7 +547,7 @@ const columns: TableColumn<UserRow>[] = [
               label="Cancel"
               color="neutral"
               variant="ghost"
-              @click="isCreateOpen = false"
+              @click="closeCreate"
             />
             <UButton
               label="Create"

@@ -5,10 +5,10 @@ import type {
   CardUpdateRequestForReview,
 } from '~~/shared/contracts/card';
 import {
-  THAKHIN_ACTIONS_COLUMN,
-  THAKHIN_TABLE_UI,
-  thakhinSortableHeader,
-} from '~/utils/thakhin-table';
+  ADMIN_ACTIONS_COLUMN,
+  ADMIN_TABLE_UI,
+  sortableHeader,
+} from '~/features/admin/utils/admin-table';
 
 definePageMeta({
   layout: 'thakhin',
@@ -23,19 +23,21 @@ const route = useRoute();
 const { data, isLoading: pending } = useCardRequestsQuery();
 const rows = computed(() => data.value?.items ?? []);
 const { mutateAsync: reviewCardRequest } = useReviewCardRequestMutation();
-const { mutateAsync: reviewCardUpdateRequest } =
-  useReviewCardRequestMutation('card-update-requests');
+const { mutateAsync: reviewCardUpdateRequest } = useReviewCardRequestMutation(
+  'card-update-requests'
+);
 
 const filterName = ref('');
 const filterEmail = ref('');
 const filterType = ref<'all' | 'new_design' | 'existing_design'>('all');
-const filterStatus = ref<'all' | 'pending' | 'approved' | 'declined'>('pending');
+const filterStatus = ref<'all' | 'pending' | 'approved' | 'declined'>(
+  'pending'
+);
 const tab = ref<'design' | 'updates'>(
   route.query.tab === 'updates' ? 'updates' : 'design'
 );
 const selectedRequest = ref<CardRequestRow | null>(null);
 const requestOpen = ref(false);
-
 
 const filteredRows = computed(() => {
   return rows.value.filter((row) => {
@@ -68,9 +70,13 @@ const {
   paginationTotal,
   resetPage,
   onPageChange,
-} = useThakhinTable(() => filteredRows.value.length);
+} = useAdminTable(() => filteredRows.value.length);
 
 watch([filterName, filterEmail, filterType, filterStatus], resetPage);
+
+function showTab(value: 'design' | 'updates') {
+  tab.value = value;
+}
 
 function typeLabel(type: CardRequestRow['type']) {
   return type === 'existing_design' ? 'Existing Design' : 'New Design';
@@ -83,7 +89,9 @@ const updateRows = computed(() =>
     updateStatus.value === 'all' ? true : row.status === updateStatus.value
   )
 );
-const updateStatus = ref<'all' | 'pending' | 'approved' | 'declined'>('pending');
+const updateStatus = ref<'all' | 'pending' | 'approved' | 'declined'>(
+  'pending'
+);
 const selectedUpdate = ref<UpdateRow | null>(null);
 const updateOpen = ref(false);
 
@@ -94,7 +102,7 @@ const {
   paginationOptions: updatePaginationOptions,
   paginationTotal: updatePaginationTotal,
   onPageChange: onUpdatePageChange,
-} = useThakhinTable(() => updateRows.value.length);
+} = useAdminTable(() => updateRows.value.length);
 
 async function decideUpdate(row: UpdateRow, decision: 'approve' | 'decline') {
   try {
@@ -116,16 +124,16 @@ async function decideUpdate(row: UpdateRow, decision: 'approve' | 'decline') {
 }
 
 const updateColumns: TableColumn<UpdateRow>[] = [
-  { accessorKey: 'requesterEmail', header: thakhinSortableHeader('EMAIL') },
+  { accessorKey: 'requesterEmail', header: sortableHeader('EMAIL') },
   {
     id: 'cardSlug',
     accessorFn: (row) => row.card.slug,
-    header: thakhinSortableHeader('CARD'),
+    header: sortableHeader('CARD'),
   },
-  { accessorKey: 'status', header: thakhinSortableHeader('STATUS') },
-  { accessorKey: 'note', header: thakhinSortableHeader('NOTE') },
-  { accessorKey: 'createdAt', header: thakhinSortableHeader('CREATED') },
-  THAKHIN_ACTIONS_COLUMN,
+  { accessorKey: 'status', header: sortableHeader('STATUS') },
+  { accessorKey: 'note', header: sortableHeader('NOTE') },
+  { accessorKey: 'createdAt', header: sortableHeader('CREATED') },
+  ADMIN_ACTIONS_COLUMN,
 ];
 
 function updateActions(row: UpdateRow): DropdownMenuItem[][] {
@@ -225,17 +233,17 @@ function getActionItems(row: CardRequestRow): DropdownMenuItem[][] {
 }
 
 const columns: TableColumn<CardRequestRow>[] = [
-  { accessorKey: 'id', header: thakhinSortableHeader('REQUEST ID') },
+  { accessorKey: 'id', header: sortableHeader('REQUEST ID') },
   {
     accessorKey: 'requesterName',
-    header: thakhinSortableHeader('REQUESTER'),
+    header: sortableHeader('REQUESTER'),
   },
-  { accessorKey: 'requesterEmail', header: thakhinSortableHeader('EMAIL') },
-  { accessorKey: 'type', header: thakhinSortableHeader('TYPE') },
+  { accessorKey: 'requesterEmail', header: sortableHeader('EMAIL') },
+  { accessorKey: 'type', header: sortableHeader('TYPE') },
   {
     accessorKey: 'cardData.name',
     id: 'cardName',
-    header: thakhinSortableHeader('CARD NAME'),
+    header: sortableHeader('CARD NAME'),
     accessorFn: (row) => row.cardData?.name || '',
   },
   {
@@ -244,15 +252,15 @@ const columns: TableColumn<CardRequestRow>[] = [
     enableSorting: false,
     enableGlobalFilter: false,
   },
-  { accessorKey: 'status', header: thakhinSortableHeader('STATUS') },
-  { accessorKey: 'createdAt', header: thakhinSortableHeader('CREATED AT') },
-  THAKHIN_ACTIONS_COLUMN,
+  { accessorKey: 'status', header: sortableHeader('STATUS') },
+  { accessorKey: 'createdAt', header: sortableHeader('CREATED AT') },
+  ADMIN_ACTIONS_COLUMN,
 ];
 </script>
 
 <template>
   <div class="flex flex-col gap-6">
-    <ThakhinPageHeader
+    <AdminPageHeader
       title="Requests"
       description="Approve or decline design requests and card updates. Declining a design request also rejects its submitted payment."
     />
@@ -263,19 +271,19 @@ const columns: TableColumn<CardRequestRow>[] = [
         size="sm"
         :color="tab === 'design' ? 'primary' : 'neutral'"
         :variant="tab === 'design' ? 'solid' : 'ghost'"
-        @click="tab = 'design'"
+        @click="showTab('design')"
       />
       <UButton
         label="Updates"
         size="sm"
         :color="tab === 'updates' ? 'primary' : 'neutral'"
         :variant="tab === 'updates' ? 'solid' : 'ghost'"
-        @click="tab = 'updates'"
+        @click="showTab('updates')"
       />
     </div>
 
     <template v-if="tab === 'design'">
-      <ThakhinTableFrame
+      <AdminTableFrame
         :page="pagination.pageIndex + 1"
         :total="paginationTotal"
         :items-per-page="pagination.pageSize"
@@ -334,9 +342,14 @@ const columns: TableColumn<CardRequestRow>[] = [
           :loading="pending"
           :pagination-options="paginationOptions"
           :get-row-id="(row) => row.id"
-          :ui="THAKHIN_TABLE_UI"
+          :ui="ADMIN_TABLE_UI"
           class="w-full min-w-[48rem]"
-          @select="(_event, row) => { selectedRequest = row.original; requestOpen = true }"
+          @select="
+            (_event, row) => {
+              selectedRequest = row.original;
+              requestOpen = true;
+            }
+          "
         >
           <template #requesterName-cell="{ row }">
             <span class="font-medium text-white">
@@ -369,16 +382,18 @@ const columns: TableColumn<CardRequestRow>[] = [
             </UBadge>
           </template>
           <template #createdAt-cell="{ row }">
-            <span class="text-white/55">{{ formatDate(row.original.createdAt) }}</span>
+            <span class="text-white/55">{{
+              formatDate(row.original.createdAt)
+            }}</span>
           </template>
           <template #actions-cell="{ row }">
-            <ThakhinRowMenu :items="getActionItems(row.original)" />
+            <AdminRowMenu :items="getActionItems(row.original)" />
           </template>
         </UTable>
-      </ThakhinTableFrame>
+      </AdminTableFrame>
     </template>
 
-    <ThakhinTableFrame
+    <AdminTableFrame
       v-else
       :page="updatePagination.pageIndex + 1"
       :total="updatePaginationTotal"
@@ -407,28 +422,53 @@ const columns: TableColumn<CardRequestRow>[] = [
         :columns="updateColumns"
         :loading="updatesLoading"
         :pagination-options="updatePaginationOptions"
-        :ui="THAKHIN_TABLE_UI"
+        :ui="ADMIN_TABLE_UI"
         class="w-full"
-        @select="(_event, row) => { selectedUpdate = row.original; updateOpen = true }"
+        @select="
+          (_event, row) => {
+            selectedUpdate = row.original;
+            updateOpen = true;
+          }
+        "
       >
         <template #createdAt-cell="{ row }">
-          <span class="text-white/55">{{ formatDate(row.original.createdAt) }}</span>
+          <span class="text-white/55">{{
+            formatDate(row.original.createdAt)
+          }}</span>
         </template>
         <template #actions-cell="{ row }">
-          <ThakhinRowMenu :items="updateActions(row.original)" />
+          <AdminRowMenu :items="updateActions(row.original)" />
         </template>
       </UTable>
-    </ThakhinTableFrame>
+    </AdminTableFrame>
 
-    <USlideover v-model:open="requestOpen" title="Design request" :ui="{ content: 'bg-[#171717]' }">
+    <USlideover
+      v-model:open="requestOpen"
+      title="Design request"
+      :ui="{ content: 'bg-[#171717]' }"
+    >
       <template #body>
         <div v-if="selectedRequest" class="space-y-2 text-sm text-white/80">
-          <p class="text-white">{{ selectedRequest.cardData?.name || 'Untitled' }}</p>
-          <p>{{ selectedRequest.requesterName }} · {{ selectedRequest.requesterEmail }}</p>
-          <p>{{ selectedRequest.cardData?.position }} · {{ selectedRequest.cardData?.company }}</p>
-          <p>{{ selectedRequest.cardData?.phone }} · {{ selectedRequest.cardData?.email }}</p>
+          <p class="text-white">
+            {{ selectedRequest.cardData?.name || 'Untitled' }}
+          </p>
+          <p>
+            {{ selectedRequest.requesterName }} ·
+            {{ selectedRequest.requesterEmail }}
+          </p>
+          <p>
+            {{ selectedRequest.cardData?.position }} ·
+            {{ selectedRequest.cardData?.company }}
+          </p>
+          <p>
+            {{ selectedRequest.cardData?.phone }} ·
+            {{ selectedRequest.cardData?.email }}
+          </p>
           <p>{{ selectedRequest.cardData?.website }}</p>
-          <p>Payment {{ selectedRequest.paymentId || 'none' }} · {{ selectedRequest.paymentStatus || 'n/a' }}</p>
+          <p>
+            Payment {{ selectedRequest.paymentId || 'none' }} ·
+            {{ selectedRequest.paymentStatus || 'n/a' }}
+          </p>
           <UButton
             v-if="selectedRequest.paymentReceiptUrl"
             label="View receipt"
@@ -440,16 +480,40 @@ const columns: TableColumn<CardRequestRow>[] = [
       </template>
     </USlideover>
 
-    <USlideover v-model:open="updateOpen" title="Card update" :ui="{ content: 'bg-[#171717]' }">
+    <USlideover
+      v-model:open="updateOpen"
+      title="Card update"
+      :ui="{ content: 'bg-[#171717]' }"
+    >
       <template #body>
         <div v-if="selectedUpdate" class="space-y-2 text-sm text-white/80">
-          <p class="text-white">{{ selectedUpdate.card.firstName }} {{ selectedUpdate.card.lastName }}</p>
+          <p class="text-white">
+            {{ selectedUpdate.card.firstName }}
+            {{ selectedUpdate.card.lastName }}
+          </p>
           <p>Requested by {{ selectedUpdate.requesterEmail }}</p>
-          <p>Name: {{ selectedUpdate.card.firstName }} {{ selectedUpdate.card.lastName }} → {{ selectedUpdate.requested.firstName }} {{ selectedUpdate.requested.lastName }}</p>
-          <p>Position: {{ selectedUpdate.card.position }} → {{ selectedUpdate.requested.position }}</p>
-          <p>Phone: {{ selectedUpdate.card.phone }} → {{ selectedUpdate.requested.phone }}</p>
-          <p>Email: {{ selectedUpdate.card.email }} → {{ selectedUpdate.requested.email }}</p>
-          <p>Website: {{ selectedUpdate.card.website }} → {{ selectedUpdate.requested.website }}</p>
+          <p>
+            Name: {{ selectedUpdate.card.firstName }}
+            {{ selectedUpdate.card.lastName }} →
+            {{ selectedUpdate.requested.firstName }}
+            {{ selectedUpdate.requested.lastName }}
+          </p>
+          <p>
+            Position: {{ selectedUpdate.card.position }} →
+            {{ selectedUpdate.requested.position }}
+          </p>
+          <p>
+            Phone: {{ selectedUpdate.card.phone }} →
+            {{ selectedUpdate.requested.phone }}
+          </p>
+          <p>
+            Email: {{ selectedUpdate.card.email }} →
+            {{ selectedUpdate.requested.email }}
+          </p>
+          <p>
+            Website: {{ selectedUpdate.card.website }} →
+            {{ selectedUpdate.requested.website }}
+          </p>
           <p v-if="selectedUpdate.note">Note: {{ selectedUpdate.note }}</p>
         </div>
       </template>

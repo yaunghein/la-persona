@@ -24,7 +24,9 @@ export const UpdateUserRequest = z
   })
   .refine(
     (value) =>
-      value.name !== undefined || value.role !== undefined || value.banned !== undefined,
+      value.name !== undefined ||
+      value.role !== undefined ||
+      value.banned !== undefined,
     { message: 'Change at least one of name, role or banned.', path: ['name'] }
   );
 
@@ -45,6 +47,7 @@ export type AdminUserDetail = {
   id: string;
   name: string;
   email: string;
+  label: string;
   role: string | null;
   banned: boolean;
   createdAt: string;

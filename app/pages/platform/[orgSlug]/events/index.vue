@@ -1,18 +1,16 @@
 <script setup lang="ts">
-definePageMeta({
-  layout: 'platform',
-});
-
-import { useQuery } from '@tanstack/vue-query';
-import { QUERY_KEYS } from '~/utils/query-keys';
-import type { EventListItemDTO } from '~~/shared/types/event';
+import type { EventListItemDTO } from '~~/shared/contracts/event';
 import {
   toCommunityEvent,
   type CommunityEvent,
   type CommunityEventsData,
-} from '~~/shared/types/community-events';
+} from '~~/shared/contracts/event';
 import { publicEventAbsoluteUrl, ROUTES } from '~~/shared/utils/routes';
 import { GOOGLE_CALENDAR_QUERY_KEY } from '~~/shared/constants/google-calendar';
+
+definePageMeta({
+  layout: 'platform',
+});
 
 const toast = useToast();
 const route = useRoute();
@@ -74,16 +72,7 @@ const ownerInfoItems = [
   },
 ];
 
-const { data, isLoading, refetch } = useQuery<{
-  events: EventListItemDTO[];
-  organizerCardSlug: string | null;
-}>({
-  queryKey: computed(() => [...QUERY_KEYS.events, orgSlug.value]),
-  queryFn: () =>
-    $fetch('/api/events', {
-      query: { organizationSlug: orgSlug.value },
-    }),
-});
+const { data, isLoading, refetch } = useOrganizationEventsQuery(orgSlug);
 
 const eventsListData = computed<CommunityEventsData>(() => ({
   title: canManageEvents.value ? 'Events in Your Community' : 'Events',
@@ -94,7 +83,7 @@ const eventsListData = computed<CommunityEventsData>(() => ({
     { label: 'Past', value: 'past' },
   ],
   infoItems: canManageEvents.value ? ownerInfoItems : memberInfoItems,
-  events: (data.value?.events ?? []).map(toCommunityEvent),
+  events: (data.value?.items ?? []).map(toCommunityEvent),
 }));
 
 function onCreate() {
@@ -103,7 +92,7 @@ function onCreate() {
 
 function onEdit(event: CommunityEvent) {
   editingEvent.value =
-    data.value?.events.find((item) => item.id === event.id) ?? null;
+    data.value?.items.find((item) => item.id === event.id) ?? null;
   isEditOpen.value = true;
 }
 
@@ -134,7 +123,7 @@ function onView(event: CommunityEvent) {
 watch(
   [
     eventQueryId,
-    () => data.value?.events,
+    () => data.value?.items,
     canOpenEventDetail,
     () => userOrgs.value,
   ],
@@ -156,7 +145,7 @@ watch(
 
     if (!data.value) return;
 
-    const match = data.value.events.find((item) => item.id === id) ?? null;
+    const match = data.value.items.find((item) => item.id === id) ?? null;
     if (!match) {
       viewingEvent.value = null;
       isViewOpen.value = false;
@@ -232,7 +221,7 @@ const organizer = computed(() =>
 );
 
 function findEventById(id: string) {
-  return data.value?.events.find((item) => item.id === id) ?? null;
+  return data.value?.items.find((item) => item.id === id) ?? null;
 }
 
 function onRegister(event: { id: string }) {
@@ -264,7 +253,7 @@ function onViewOrganizer() {
       </div>
     </div>
 
-    <CommunityEventsList
+    <EventList
       v-else
       :data="eventsListData"
       :can-manage="canManageEvents"
@@ -276,26 +265,26 @@ function onViewOrganizer() {
     />
   </div>
 
-  <CommunityCreateEventSlideover
+  <EventCreateSlideover
     v-if="canManageEvents"
     v-model:open="isCreateOpen"
     @created="() => refetch()"
   />
-  <CommunityCreateEventSlideover
+  <EventCreateSlideover
     v-if="canManageEvents"
     v-model:open="isEditOpen"
     :event="editingEvent"
     @updated="() => refetch()"
     @deleted="() => refetch()"
   />
-  <CommunityEventViewSlideover
+  <EventViewSlideover
     v-model:open="isViewOpen"
     :event="viewingEvent"
     :organizer-card-slug="data?.organizerCardSlug"
     @register="onRegister"
     @view-organizer="onViewOrganizer"
   />
-  <CommunityEventRegisterSlideover
+  <EventRegisterSlideover
     v-model:open="isRegisterOpen"
     :event="registeringEvent"
     :organizer="organizer"

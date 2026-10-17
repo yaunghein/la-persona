@@ -117,7 +117,7 @@ async function onSubmit(event: FormSubmitEvent<CreateManualContactRequest>) {
         class="[&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
         :class="layout === 'wide' ? '[&_label]:mb-3' : '[&_label]:mb-1'"
       >
-        <FormPhoneField
+        <UiPhoneField
           v-model="state.phone"
           v-model:country-code="state.phoneCountryCode"
           name="phone"

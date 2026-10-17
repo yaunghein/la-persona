@@ -13,10 +13,10 @@ import {
   platformRoles,
 } from '~~/shared/permissions/platform';
 import {
-  setupDefaultOrganization,
-  getPersonalOrganizationByUserId,
-  getAnyOrganizationByUserId,
-} from '~~/server/services/auth';
+  findAnyOrganization,
+  findPersonalOrganization,
+  provisionPersonalOrganization,
+} from '~~/server/features/auth/account.service';
 import { sendEmail } from '~~/server/lib/mailer';
 import { ROUTES } from '~~/shared/utils/routes';
 
@@ -124,7 +124,9 @@ export const auth = betterAuth({
             ? `You're invited to volunteer with ${invitedOrg.name} on LA PERSONA`
             : `You're invited to join ${invitedOrg.name} on LA PERSONA`,
           html: await renderEmailComponent(
-            isVolunteer ? 'CommunityVolunteerInvitation' : 'CommunityInvitation',
+            isVolunteer
+              ? 'CommunityVolunteerInvitation'
+              : 'CommunityInvitation',
             {
               inviterName: inviter.user.name || 'A community organizer',
               organizationName: invitedOrg.name,
@@ -151,7 +153,7 @@ export const auth = betterAuth({
           };
         },
         after: async (user) => {
-          await setupDefaultOrganization(user);
+          await provisionPersonalOrganization(user);
         },
       },
     },
@@ -159,8 +161,8 @@ export const auth = betterAuth({
       create: {
         before: async (session) => {
           const organization =
-            (await getPersonalOrganizationByUserId(session.userId)) ||
-            (await getAnyOrganizationByUserId(session.userId));
+            (await findPersonalOrganization(session.userId)) ||
+            (await findAnyOrganization(session.userId));
           return {
             data: {
               ...session,

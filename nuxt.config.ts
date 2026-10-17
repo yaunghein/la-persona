@@ -28,6 +28,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: [
     '@arkenv/nuxt/module',
+    '~~/modules/arkenv-process-env',
     '@nuxt/ui',
     'nuxt-email-renderer',
     '@vueuse/nuxt',
@@ -171,6 +172,19 @@ export default defineNuxtConfig({
     // Rendered on the server so shared join links get the community preview.
     '/invite/community/join/**': { ssr: true },
     '/thakhin/**': { ssr: false },
+    // Anonymous writes that send email or store data: tight per-IP budgets.
+    '/api/public/cards/*/contact-exchanges': {
+      security: { rateLimiter: { tokensPerInterval: 10, interval: 300000 } },
+    },
+    '/api/public/legacy-cards/*/contact-exchanges': {
+      security: { rateLimiter: { tokensPerInterval: 10, interval: 300000 } },
+    },
+    '/api/public/leads': {
+      security: { rateLimiter: { tokensPerInterval: 5, interval: 300000 } },
+    },
+    '/api/auth/sign-in/**': {
+      security: { rateLimiter: { tokensPerInterval: 10, interval: 300000 } },
+    },
     // Pages can request many images; keep them out of the shared request budget.
     '/_ipx/**': {
       security: {

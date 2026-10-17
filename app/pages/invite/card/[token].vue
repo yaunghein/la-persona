@@ -1,24 +1,8 @@
 <script setup lang="ts">
 import { useQuery, useQueryClient } from '@tanstack/vue-query';
-import { QUERY_KEYS } from '~/utils/query-keys';
+import type { OnboardingInvitationPreview } from '~~/shared/contracts/onboarding';
 
-type InvitationDetails = {
-  id: string;
-  email: string;
-  status: string;
-  freeMonths: number;
-  expiresAt: string;
-  acceptedAt: string | null;
-  organizationName: string;
-  organizationSlug: string;
-  cardSlug: string;
-  cardFirstName: string;
-  cardLastName: string | null;
-  planName: string;
-  isExpired: boolean;
-  canAccept: boolean;
-  isEmailMatched: boolean | null;
-};
+type InvitationDetails = OnboardingInvitationPreview;
 
 type AcceptResult = {
   organizationSlug: string;
@@ -41,7 +25,7 @@ const {
   queryKey: ['onboarding-invitation', invitationId],
   queryFn: () =>
     $fetch<InvitationDetails>(
-      `/api/onboarding-invitation/${invitationId.value}`
+      `/api/onboarding-invitations/${invitationId.value}` as string
     ),
   enabled: () => !!invitationId.value,
 });
@@ -52,11 +36,13 @@ async function onAccept() {
   isAccepting.value = true;
   try {
     const accepted = await $fetch<AcceptResult>(
-      `/api/onboarding-invitation/${invitationId.value}/accept`,
-      { method: 'POST' }
+      `/api/onboarding-invitations/${invitationId.value}` as string,
+      { method: 'PATCH', body: { status: 'accepted' } }
     );
     hasAccepted.value = true;
-    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.organizations });
+    await queryClient.invalidateQueries({
+      queryKey: organizationQueryKeys.all,
+    });
     await refresh();
     toast.add({
       title: 'Invitation accepted',
@@ -111,9 +97,10 @@ const noticeColor = computed(() => {
 });
 
 const errorMessage = computed(() => {
-  const acceptError = error.value as
-    | { data?: { statusMessage?: string }; message?: string }
-    | null;
+  const acceptError = error.value as {
+    data?: { statusMessage?: string };
+    message?: string;
+  } | null;
   return (
     acceptError?.data?.statusMessage ||
     acceptError?.message ||
