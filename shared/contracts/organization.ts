@@ -217,3 +217,86 @@ export type CommunityMembersData = {
   infoItems: { icon: string; title: string; description: string }[];
   members: CommunityMember[];
 };
+
+// ── Back office (Thakhin) ───────────────────────────────────────────────────
+
+export const AdminOrganizationRouteParams = z.object({
+  organizationId: z.string().trim().min(1),
+});
+
+const ORGANIZATION_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+export const CreateOrganizationRequest = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(120),
+  type: z.enum(['personal', 'community']),
+  slug: z.string().trim().max(200).optional(),
+  ownerUserId: z.string().trim().min(1).optional(),
+});
+
+export type CreateOrganizationRequest = z.infer<typeof CreateOrganizationRequest>;
+
+const optionalAsset = StoredImageReference.optional();
+const optionalRichText = richText.optional();
+
+export const UpdateOrganizationRequest = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(120),
+  slug: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(1, 'Slug is required')
+    .max(200)
+    .regex(
+      ORGANIZATION_SLUG_PATTERN,
+      'Slug must be lowercase letters, numbers, and hyphens only (e.g. acme-corp)'
+    ),
+  description: optionalRichText,
+  guidelines: optionalRichText,
+  whyJoin: optionalRichText,
+  logoUrl: optionalAsset,
+  coverImageUrl: optionalAsset,
+  splineUrl: z
+    .union([z.literal(''), z.url({ protocol: /^https$/ }).max(2048)])
+    .optional(),
+  wallpaperUrl: optionalAsset,
+  cardBackUrl: optionalAsset,
+  emailQrBackgroundUrl: optionalAsset,
+  emailContactExchangeUrl: optionalAsset,
+  emailAfterEventUrl: optionalAsset,
+  /** Re-brand every member card with the community design. */
+  applyToMemberCards: z.boolean().optional(),
+});
+
+export type UpdateOrganizationRequest = z.infer<typeof UpdateOrganizationRequest>;
+
+export type AdminOrganizationSummary = {
+  id: string;
+  name: string;
+  slug: string;
+  logo: string | null;
+  type: OrganizationType;
+  createdAt: string;
+  memberCount: number;
+  cardCount: number;
+};
+
+export type AdminOrganizationDetail = Omit<
+  AdminOrganizationSummary,
+  'memberCount' | 'cardCount'
+> & {
+  members: {
+    id: string;
+    role: string;
+    userId: string;
+    userName: string;
+    userEmail: string;
+  }[];
+  cards: {
+    id: string;
+    slug: string;
+    firstName: string;
+    lastName: string | null;
+    userId: string | null;
+  }[];
+  community: CommunitySettings | null;
+};

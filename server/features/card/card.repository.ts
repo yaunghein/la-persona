@@ -188,7 +188,8 @@ const PENDING_REQUEST_NOTE = /^(?:Existing|New) design request \((?<requestId>[^
  */
 export async function deleteCardWithPendingRequests(
   cardId: string,
-  holderUserId: string
+  /** Only withdraw this user's requests; omit when Thakhin deletes the card. */
+  holderUserId?: string
 ) {
   await db.transaction(async (tx) => {
     const pendingNotes = await tx
@@ -220,7 +221,7 @@ export async function deleteCardWithPendingRequests(
         .where(
           and(
             inArray(cardRequest.id, requestIds),
-            eq(cardRequest.userId, holderUserId),
+            holderUserId ? eq(cardRequest.userId, holderUserId) : undefined,
             eq(cardRequest.status, 'pending')
           )
         );

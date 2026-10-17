@@ -4,7 +4,7 @@ import { eq, and, inArray } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { organization, member } from '~~/server/db/schema';
 // import { insertDefaultCard } from '~~/server/services/card';
-import { getPendingOnboardingInvitationByEmail } from '~~/server/services/onboarding-invitation';
+import { getPendingOnboardingInvitationByEmail } from '~~/server/features/onboarding/onboarding-invitation.service';
 import { env } from '~~/env';
 import type { User } from 'better-auth';
 import {

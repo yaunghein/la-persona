@@ -281,3 +281,103 @@ export type CardUpdateRequestForReview = {
   requesterName: string;
   requesterEmail: string;
 };
+
+// ── Back office (Thakhin) ───────────────────────────────────────────────────
+
+export const AdminCardRouteParams = z.object({
+  cardId: z.string().trim().min(1),
+});
+
+export const ListAdminCardsQuery = z.object({
+  /** `false`: cards not yet linked to an account (onboarding candidates). */
+  claimed: z
+    .enum(['true', 'false'])
+    .transform((value) => value === 'true')
+    .optional(),
+});
+
+const optionalHttpsUrl = z
+  .union([z.literal(''), z.url({ protocol: /^https?$/ }).max(2048)])
+  .nullish()
+  .transform((value) => (value === undefined ? undefined : value || null));
+
+/** S3 object key (path), not a URL. */
+const optionalObjectKey = (label: string) =>
+  z
+    .string()
+    .trim()
+    .max(1024)
+    .refine((value) => !/^[a-z][a-z\d+.-]*:/i.test(value), {
+      message: `${label} must be an S3 object key (path), not a URL`,
+    })
+    .nullish()
+    .transform((value) => (value === undefined ? undefined : value || null));
+
+const adminCardFields = {
+  lastName: optionalText(80),
+  company: optionalText(200),
+  phone: optionalText(40),
+  phoneCountryCode: optionalText(4),
+  email: z
+    .union([z.literal(''), z.email().max(254)])
+    .nullish()
+    .transform((value) => value || null),
+  website: WebsiteUrl.nullish(),
+  splineUrl: optionalHttpsUrl,
+  avatarUrl: optionalHttpsUrl,
+  wallpaperUrl: optionalObjectKey('Wallpaper'),
+  cardBackUrl: optionalObjectKey('Card back'),
+};
+
+/** Thakhin creates an unclaimed card (defaults to the placeholder organization). */
+export const CreateAdminCardRequest = z.object({
+  organizationId: z.string().trim().min(1).optional(),
+  firstName: z.string().trim().max(80).nullish(),
+  position: z.string().trim().max(200).nullish(),
+  ...adminCardFields,
+});
+
+export type CreateAdminCardRequest = z.infer<typeof CreateAdminCardRequest>;
+
+export const UpdateAdminCardRequest = z
+  .object({
+    organizationId: z.string().trim().min(1),
+    firstName: z.string().trim().min(1).max(80),
+    position: z.string().trim().min(1).max(200),
+    ...adminCardFields,
+  })
+  .partial();
+
+export type UpdateAdminCardRequest = z.infer<typeof UpdateAdminCardRequest>;
+
+export type AdminCardSummary = {
+  id: string;
+  slug: string;
+  firstName: string;
+  lastName: string | null;
+  position: string;
+  company: string | null;
+  phone: string | null;
+  phoneCountryCode: string | null;
+  email: string | null;
+  website: string | null;
+  splineUrl: string | null;
+  avatarUrl: string | null;
+  wallpaperUrl: string | null;
+  cardBackUrl: string | null;
+  organizationId: string;
+  organizationName: string;
+  organizationSlug: string;
+  organizationType: OrganizationType | null;
+  userId: string | null;
+  linkedUserEmail: string | null;
+  createdAt: string;
+  updatedAt: string;
+  subscriptionStatus: SubscriptionStatus | null;
+  subscriptionPlanCode: string | null;
+  subscriptionEndAt: string | null;
+};
+
+export type AdminCardDetail = AdminCardSummary & {
+  pendingInvitation: { id: string; email: string; expiresAt: string } | null;
+};
