@@ -101,10 +101,7 @@ const eventImageUrlSchema = z
   .min(1, 'Image is required')
   .refine(
     (url) =>
-      isAllowedEventImageUrl(url, {
-        bucket: process.env.AWS_BUCKET_NAME ?? '',
-        region: process.env.AWS_REGION ?? '',
-      }),
+      isAllowedEventImageUrl(url),
     { message: 'Invalid image URL' }
   );
 

@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import type { H3Event } from 'h3';
 import { auth } from '~~/server/auth';
-import { env } from '~~/server/utils/env';
+import { env } from '~~/env';
 import type { SelectEvent } from '~~/shared/types/event';
 import { GOOGLE_CALENDAR_SCOPE } from '~~/shared/constants/google-calendar';
 import { ROUTES } from '~~/shared/utils/routes';

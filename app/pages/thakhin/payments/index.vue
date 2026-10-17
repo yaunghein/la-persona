@@ -41,7 +41,6 @@ type PaymentRow = {
 };
 
 const toast = useToast();
-const runtimeConfig = useRuntimeConfig();
 const queryClient = useQueryClient();
 
 const { data, isLoading: pending } = useQuery({
@@ -57,15 +56,6 @@ const filterLink = ref<'all' | 'linked' | 'standalone'>('all');
 const selectedPayment = ref<PaymentRow | null>(null);
 const paymentOpen = ref(false);
 
-function getS3Url(path?: string | null) {
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
-
-  const bucket = runtimeConfig.public.awsBucketName;
-  const region = runtimeConfig.public.awsRegion;
-  const normalizedPath = path.replace(/^\/+/, '');
-  return `https://${bucket}.s3.${region}.amazonaws.com/${normalizedPath}`;
-}
 
 const filteredRows = computed(() => {
   return rows.value.filter((row) => {
@@ -318,7 +308,7 @@ const columns: TableColumn<PaymentRow>[] = [
             color="neutral"
             variant="link"
             class="px-0"
-            :to="getS3Url(row.original.receiptUrl)"
+            :to="resolveObjectStorageUrl(row.original.receiptUrl)"
             target="_blank"
           />
           <span v-else class="text-white/35">—</span>

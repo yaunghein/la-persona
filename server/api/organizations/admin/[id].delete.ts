@@ -8,7 +8,7 @@ import {
   user,
 } from '~~/server/db/schema';
 import { requireAdminSession } from '~~/server/utils/admin-permissions';
-import { env } from '~~/server/utils/env';
+import { env } from '~~/env';
 import { enrichLog } from '~~/server/utils/wide-event';
 
 export default defineEventHandler(async (event) => {

@@ -1,5 +1,5 @@
 import { sendEmail } from '~~/server/utils/email';
-import { env } from '~~/server/utils/env';
+import { env } from '~~/env';
 import {
   emailErrorLabel,
   type EmailSendResult,

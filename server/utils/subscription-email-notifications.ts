@@ -1,5 +1,5 @@
 import { sendEmail } from '~~/server/utils/email';
-import { env, getAdminNotificationEmails } from '~~/server/utils/env';
+import { env } from '~~/env';
 import {
   emailErrorLabel,
   type EmailSendResult,
@@ -63,7 +63,7 @@ export async function notifySubscriptionSubmissionEmails(params: {
     results.push(failure(userTemplate, [payer], error));
   }
 
-  const teamRecipients = getAdminNotificationEmails();
+  const teamRecipients = [...env.ADMIN_EMAILS];
   if (teamRecipients.length > 0) {
     const teamTemplate = 'submission_received_team';
     try {

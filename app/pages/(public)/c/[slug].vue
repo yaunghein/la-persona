@@ -7,7 +7,6 @@ import { applyCombinedCardToSpline } from '~/utils/spline-card';
 import { vcfPhoneLines } from '~~/shared/utils/phone';
 
 const { trackEvent } = useAnalytics();
-const runtimeConfig = useRuntimeConfig();
 const route = useRoute();
 const { normalizeCardLinkValue } = useUrlNormalization();
 
@@ -27,10 +26,7 @@ function getS3Url(path?: string | null) {
   if (!path) return '';
   if (path.startsWith('http')) return path;
 
-  const bucket = runtimeConfig.public.awsBucketName;
-  const region = runtimeConfig.public.awsRegion;
-  if (!bucket || !region) return '';
-  return `https://${bucket}.s3.${region}.amazonaws.com/${path}`;
+  return resolveObjectStorageUrl(path);
 }
 
 const cardFullName = computed(() =>
@@ -344,11 +340,7 @@ function resolveCardAvatarUrl(avatarUrl: string | null | undefined) {
     return raw;
   }
 
-  const bucket = runtimeConfig.public.awsBucketName;
-  const region = runtimeConfig.public.awsRegion;
-  if (!bucket || !region) return raw;
-
-  return `https://${bucket}.s3.${region}.amazonaws.com/${raw}`;
+  return resolveObjectStorageUrl(raw);
 }
 
 async function getPhotoForVcf() {

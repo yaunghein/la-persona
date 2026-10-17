@@ -2,7 +2,7 @@ import { betterAuth } from 'better-auth';
 import { magicLink, admin, organization } from 'better-auth/plugins';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '../db';
-import { env } from '../utils/env';
+import { env } from '~~/env';
 import {
   organizationAccessControl,
   organizationRoles,

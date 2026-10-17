@@ -23,7 +23,6 @@ const route = useRoute();
 const queryClient = useQueryClient();
 const slug = computed(() => String(route.params.slug || ''));
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
-const runtimeConfig = useRuntimeConfig();
 const toast = useToast();
 const {
   normalizeUrlWithHttps,
@@ -188,9 +187,7 @@ const displayAvatar = computed(() => {
   if (!state.avatarUrl) return null;
   if (state.avatarUrl.startsWith('http')) return state.avatarUrl;
 
-  const bucket = runtimeConfig.public.awsBucketName;
-  const region = runtimeConfig.public.awsRegion;
-  return `https://${bucket}.s3.${region}.amazonaws.com/${state.avatarUrl}`;
+  return resolveObjectStorageUrl(state.avatarUrl);
 });
 
 function onFileChange(e: Event) {

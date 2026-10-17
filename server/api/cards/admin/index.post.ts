@@ -6,7 +6,7 @@ import { card, organization } from '~~/server/db/schema';
 import { slugify } from '~~/shared/utils/slugify';
 import { ensureCardTrialSubscription } from '~~/server/services/subscription';
 import { requireAdminSession } from '~~/server/utils/admin-permissions';
-import { env } from '~~/server/utils/env';
+import { env } from '~~/env';
 import {
   optionalHttpUrl,
   optionalS3ObjectKey,

@@ -13,7 +13,7 @@ import {
   session,
 } from '~~/server/db/schema';
 import { sendEmail } from '~~/server/utils/email';
-import { env } from '~~/server/utils/env';
+import { env } from '~~/env';
 import { slugify } from '~~/shared/utils/slugify';
 import { ROUTES } from '~~/shared/utils/routes';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';

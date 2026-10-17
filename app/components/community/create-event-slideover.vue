@@ -45,7 +45,6 @@ const emit = defineEmits<{
 const { organizationSlug, withOrganizationQuery } = useOrganizationSlug();
 const queryClient = useQueryClient();
 const toast = useToast();
-const runtimeConfig = useRuntimeConfig();
 
 function buildEventFormSchema(allowPast: boolean) {
   return z
@@ -219,16 +218,6 @@ function revokePreview(item: DraftEventMedia | null) {
   }
 }
 
-function resolveMediaUrl(fileKey: string) {
-  const bucket = runtimeConfig.public.awsBucketName;
-  const region = runtimeConfig.public.awsRegion;
-  const encodedKey = fileKey
-    .split('/')
-    .map((segment) => encodeURIComponent(segment))
-    .join('/');
-  return `https://${bucket}.s3.${region}.amazonaws.com/${encodedKey}`;
-}
-
 async function uploadImage(file: File) {
   const compressed = await imageCompression(file, {
     maxSizeMB: 1.5,
@@ -257,7 +246,7 @@ async function uploadImage(file: File) {
     throw new Error('Upload failed');
   }
 
-  return resolveMediaUrl(fileKey);
+  return resolveObjectStorageUrl(fileKey);
 }
 
 async function storedImageUrl(item: DraftEventMedia) {

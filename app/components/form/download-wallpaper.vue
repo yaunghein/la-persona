@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { env } from '~~/env';
 import { useQuery } from '@tanstack/vue-query';
 import { useQRCode } from '@vueuse/integrations/useQRCode';
 import { refDebounced, useStorage } from '@vueuse/core';
@@ -9,7 +10,6 @@ import {
 } from '~/utils/wallpaper-image';
 
 const route = useRoute();
-const runtimeConfig = useRuntimeConfig();
 const toast = useToast();
 const slug = computed(() => route.params.slug as string);
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
@@ -57,9 +57,7 @@ function getS3Url(path?: string | null) {
   if (!path) return '';
   if (path.startsWith('http')) return path;
 
-  const bucket = runtimeConfig.public.awsBucketName;
-  const region = runtimeConfig.public.awsRegion;
-  return `https://${bucket}.s3.${region}.amazonaws.com/${path}`;
+  return resolveObjectStorageUrl(path);
 }
 
 const wallpaperAssetUrl = computed(() => getS3Url(card.value?.wallpaperUrl));
@@ -72,7 +70,7 @@ const publicCardUrl = computed(() => {
   if (!cardSlug) return '';
 
   const origin =
-    runtimeConfig.public.baseUrl ||
+    env.BASE_URL ||
     (process.client ? window.location.origin : '');
   return `${origin}/c/${cardSlug}`;
 });

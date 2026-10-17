@@ -14,7 +14,6 @@ const emit = defineEmits<{
 }>();
 
 const toast = useToast();
-const runtimeConfig = useRuntimeConfig();
 const { organizationSlug } = useOrganizationSlug();
 const isInfoOpen = ref(false);
 const isUploadingImage = ref(false);
@@ -33,9 +32,7 @@ function resolveMediaUrl(value: string) {
     return value;
   }
 
-  const bucket = runtimeConfig.public.awsBucketName;
-  const region = runtimeConfig.public.awsRegion;
-  return `https://${bucket}.s3.${region}.amazonaws.com/${value}`;
+  return resolveObjectStorageUrl(value);
 }
 
 const displayLogo = computed(() => {

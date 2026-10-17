@@ -2,7 +2,7 @@ import { nanoid } from 'nanoid';
 import { and, eq, isNull, ne } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { card } from '~~/server/db/schema';
-import { env } from '~~/server/utils/env';
+import { env } from '~~/env';
 import { ensureCardTrialSubscription } from '~~/server/services/subscription';
 import type { UpdateCard } from '~~/shared/types';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';

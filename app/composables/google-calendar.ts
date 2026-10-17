@@ -1,3 +1,4 @@
+import { env } from '~~/env';
 import type { AddToGoogleCalendarResult } from '~~/shared/types/event';
 import {
   GOOGLE_CALENDAR_QUERY_KEY,
@@ -14,7 +15,6 @@ const CONSENT_ERROR_MESSAGES: Record<string, string> = {
 
 /** Pass `orgSlug` on pages without an `[orgSlug]` route param (public event page). */
 export function useGoogleCalendar(orgSlug?: MaybeRefOrGetter<string>) {
-  const config = useRuntimeConfig();
   const toast = useToast();
   const { organizationSlug: routeOrgSlug } = useOrganizationSlug();
   const organizationSlug = computed(
@@ -26,7 +26,7 @@ export function useGoogleCalendar(orgSlug?: MaybeRefOrGetter<string>) {
   );
 
   const isEnabled = computed(() =>
-    Boolean(config.public.googleCalendarEnabled)
+    env.GOOGLE_CALENDAR_ENABLED
   );
 
   function returnUrl(eventId: string, state: 'add' | 'error') {

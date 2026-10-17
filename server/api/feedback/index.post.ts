@@ -3,7 +3,7 @@ import { db } from '~~/server/db';
 import { feedbackSubmission, organization } from '~~/server/db/schema';
 import { notifyFeedbackSubmissionEmail } from '~~/server/utils/feedback-email-notifications';
 import { handleApiError } from '~~/server/utils/errors';
-import { getAdminNotificationEmails } from '~~/server/utils/env';
+import { env } from '~~/env';
 import {
   emailErrorLabel,
   enrichLog,
@@ -53,7 +53,7 @@ export default defineEventHandler(async (event) => {
           where: eq(organization.id, organizationId),
           columns: { name: true },
         });
-        const recipients = getAdminNotificationEmails();
+        const recipients = [...env.ADMIN_EMAILS];
         if (recipients.length > 0) {
           enrichLog(event, {
             email: {

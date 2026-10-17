@@ -1,5 +1,5 @@
 import { Resend } from 'resend';
-import { env } from '~~/server/utils/env';
+import { env } from '~~/env';
 
 const resend = new Resend(env.RESEND_API_KEY);
 const FROM = 'La Persona <welcome@contact.la-persona.com>';

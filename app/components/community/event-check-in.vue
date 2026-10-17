@@ -15,7 +15,6 @@ const emit = defineEmits<{
 }>();
 
 const toast = useToast();
-const runtimeConfig = useRuntimeConfig();
 const searchQuery = ref('');
 
 const hasQuery = computed(() => searchQuery.value.trim().length > 0);
@@ -54,11 +53,7 @@ function displayAvatar(attendee: EventAttendee) {
     return raw;
   }
 
-  const bucket = runtimeConfig.public.awsBucketName;
-  const region = runtimeConfig.public.awsRegion;
-  if (!bucket || !region) return raw;
-
-  return `https://${bucket}.s3.${region}.amazonaws.com/${raw}`;
+  return resolveObjectStorageUrl(raw);
 }
 
 function checkIn(attendee: EventAttendee) {

@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid';
 import { db } from '../../db';
 import { card, communitySetting } from '../schema';
 import type { InsertCommunitySetting } from '~~/shared/types/community-settings';
-import { env } from '~~/server/utils/env';
+import { env } from '~~/env';
 
 function communityBrandDefaults() {
   return {

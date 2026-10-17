@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { env } from '~~/server/utils/env';
+import { env } from '~~/env';
 import { enrichLog } from '~~/server/utils/wide-event';
 
 const CONSENT_TEXT =

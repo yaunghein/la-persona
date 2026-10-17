@@ -1,3 +1,4 @@
+import { env } from '~~/env';
 import type { MaybeRefOrGetter } from 'vue';
 
 const SITE_NAME = 'LA PERSONA';
@@ -39,7 +40,7 @@ export function truncateSeoText(value: string, max = 160) {
 }
 
 export function useSiteOrigin() {
-  const baseUrl = String(useRuntimeConfig().public.baseUrl || '');
+  const baseUrl = env.BASE_URL;
   return (baseUrl || useRequestURL().origin).replace(/\/$/, '');
 }
 

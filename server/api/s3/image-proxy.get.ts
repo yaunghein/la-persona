@@ -1,4 +1,4 @@
-import { env } from '~~/server/utils/env';
+import { env } from '~~/env';
 
 export default defineEventHandler(async (event) => {
   const { url } = getQuery(event);

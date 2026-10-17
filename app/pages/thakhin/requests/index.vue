@@ -36,7 +36,6 @@ type CardRequestRow = {
 
 const toast = useToast();
 const route = useRoute();
-const runtimeConfig = useRuntimeConfig();
 const queryClient = useQueryClient();
 
 const { data, isLoading: pending } = useQuery({
@@ -56,15 +55,6 @@ const tab = ref<'design' | 'updates'>(
 const selectedRequest = ref<CardRequestRow | null>(null);
 const requestOpen = ref(false);
 
-function getS3Url(path?: string | null) {
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
-
-  const bucket = runtimeConfig.public.awsBucketName;
-  const region = runtimeConfig.public.awsRegion;
-  const normalizedPath = path.replace(/^\/+/, '');
-  return `https://${bucket}.s3.${region}.amazonaws.com/${normalizedPath}`;
-}
 
 const filteredRows = computed(() => {
   return rows.value.filter((row) => {
@@ -416,7 +406,7 @@ const columns: TableColumn<CardRequestRow>[] = [
               color="neutral"
               variant="link"
               class="px-0"
-              :to="getS3Url(row.original.paymentReceiptUrl)"
+              :to="resolveObjectStorageUrl(row.original.paymentReceiptUrl)"
               target="_blank"
             />
             <span v-else class="text-white/35">—</span>
@@ -491,7 +481,7 @@ const columns: TableColumn<CardRequestRow>[] = [
             v-if="selectedRequest.paymentReceiptUrl"
             label="View receipt"
             variant="link"
-            :to="getS3Url(selectedRequest.paymentReceiptUrl)"
+            :to="resolveObjectStorageUrl(selectedRequest.paymentReceiptUrl)"
             target="_blank"
           />
         </div>

@@ -3,7 +3,7 @@ import {
   type FeedbackKind,
 } from '~~/shared/types/feedback';
 import { sendEmail } from '~~/server/utils/email';
-import { getAdminNotificationEmails } from '~~/server/utils/env';
+import { env } from '~~/env';
 import {
   emailErrorLabel,
   type EmailSendResult,
@@ -16,7 +16,7 @@ export async function notifyFeedbackSubmissionEmail(params: {
   submitterEmail: string;
   organizationName: string;
 }): Promise<EmailSendResult[]> {
-  const recipients = getAdminNotificationEmails();
+  const recipients = [...env.ADMIN_EMAILS];
   if (!recipients.length) return [];
 
   const kindLabel = FEEDBACK_KIND_LABELS[params.kind];

@@ -1,5 +1,5 @@
 import { findEmailQrBackgroundByCardSlug } from '~~/server/db/queries/community-setting';
-import { env } from '~~/server/utils/env';
+import { env } from '~~/env';
 import { renderQrTicketPng } from '~~/server/utils/qr-ticket-image';
 import { enrichLog } from '~~/server/utils/wide-event';
 

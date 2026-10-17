@@ -12,7 +12,6 @@ const props = defineProps<{
 const url = defineModel<string>({ required: true });
 
 const toast = useToast();
-const runtimeConfig = useRuntimeConfig();
 const fileInput = useTemplateRef<HTMLInputElement>('fileInput');
 const uploading = ref(false);
 
@@ -21,9 +20,7 @@ const previewUrl = computed(() => {
   if (url.value.startsWith('http') || url.value.startsWith('/')) {
     return url.value;
   }
-  const bucket = runtimeConfig.public.awsBucketName;
-  const region = runtimeConfig.public.awsRegion;
-  return `https://${bucket}.s3.${region}.amazonaws.com/${url.value}`;
+  return resolveObjectStorageUrl(url.value);
 });
 
 async function onFileChange(event: Event) {
@@ -63,9 +60,7 @@ async function onFileChange(event: Event) {
     });
     if (!response.ok) throw new Error('Upload failed');
 
-    const bucket = runtimeConfig.public.awsBucketName;
-    const region = runtimeConfig.public.awsRegion;
-    url.value = `https://${bucket}.s3.${region}.amazonaws.com/${fileKey}`;
+    url.value = resolveObjectStorageUrl(fileKey);
   } catch (error: any) {
     toast.add({
       title: 'Upload failed',

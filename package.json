@@ -9,14 +9,17 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "format": "prettier . --write",
+    "typecheck": "nuxt typecheck",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "db:reset": "npx tsx server/scripts/reset.ts",
-    "db:seed": "npx tsx server/scripts/seed.ts",
-    "db:backfill-subscriptions": "npx tsx server/scripts/backfill-subscriptions.ts"
+    "db:reset": "bun server/scripts/reset.ts",
+    "db:seed": "bun server/scripts/seed.ts",
+    "db:backfill-subscriptions": "bun server/scripts/backfill-subscriptions.ts"
   },
   "dependencies": {
+    "@arkenv/core": "^1.0.0-rc.4",
+    "@arkenv/nuxt": "^1.0.0-rc.5",
     "@aws-sdk/client-s3": "^3.975.0",
     "@aws-sdk/s3-request-presigner": "^3.975.0",
     "@nuxt/image": "^2.1.0",
@@ -24,6 +27,7 @@
     "@splinetool/runtime": "^1.12.39",
     "@tanstack/vue-query": "^5.92.9",
     "@vueuse/nuxt": "14.1.0",
+    "arktype": "^2.2.8",
     "barcode-detector": "^3.2.2",
     "baseline-browser-mapping": "^2.10.37",
     "better-auth": "^1.4.9",
@@ -63,6 +67,7 @@
     "drizzle-kit": "^0.31.8",
     "pino-pretty": "^13.2.0",
     "prettier": "^3.7.4",
-    "tsx": "^4.21.0"
+    "typescript": "^5.9",
+    "vue-tsc": "^3.3.13"
   }
 }

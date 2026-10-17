@@ -1,4 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+// Build-time values only. Runtime env is validated and read through `~~/env` (ArkEnv).
 // Crawlers need an absolute og:image. Pages override it via usePageSeo.
 const DEFAULT_OG_IMAGE = `${(process.env.BASE_URL || '').replace(/\/$/, '')}/og.png`;
 
@@ -6,6 +7,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   modules: [
+    '@arkenv/nuxt/module',
     '@nuxt/ui',
     'nuxt-email-renderer',
     '@vueuse/nuxt',
@@ -65,8 +67,6 @@ export default defineNuxtConfig({
           'https://prod.spline.design',
           'https://www.googletagmanager.com',
           'https://www.google-analytics.com/',
-          'https://la-persona-staging.s3.ap-southeast-2.amazonaws.com',
-          'https://la-persona-prod.s3.ap-southeast-2.amazonaws.com',
         ],
         'connect-src': [
           "'self'",
@@ -94,16 +94,6 @@ export default defineNuxtConfig({
         '@nuxt/ui > prosemirror-view',
         '@nuxt/ui > prosemirror-gapcursor',
       ],
-    },
-  },
-  runtimeConfig: {
-    public: {
-      awsRegion: process.env.AWS_REGION,
-      awsBucketName: process.env.AWS_BUCKET_NAME,
-      baseUrl: process.env.BASE_URL,
-      // Calendar scope is unverified by Google; keep off in production until approved.
-      googleCalendarEnabled:
-        process.env.NUXT_PUBLIC_GOOGLE_CALENDAR_ENABLED === 'true',
     },
   },
   gtag: {

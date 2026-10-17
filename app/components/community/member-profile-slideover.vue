@@ -35,7 +35,6 @@ function onChangeRole(role: CommunityInviteRole) {
 
 const open = defineModel<boolean>('open', { default: false });
 const toast = useToast();
-const runtimeConfig = useRuntimeConfig();
 
 const displayAvatar = computed(() => {
   const raw = String(props.member?.avatarUrl || '').trim();
@@ -49,11 +48,7 @@ const displayAvatar = computed(() => {
     return raw;
   }
 
-  const bucket = runtimeConfig.public.awsBucketName;
-  const region = runtimeConfig.public.awsRegion;
-  if (!bucket || !region) return raw;
-
-  return `https://${bucket}.s3.${region}.amazonaws.com/${raw}`;
+  return resolveObjectStorageUrl(raw);
 });
 
 const membershipStatusLabel = computed(() =>

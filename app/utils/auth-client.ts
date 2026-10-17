@@ -1,3 +1,4 @@
+import { env } from '~~/env';
 import { createAuthClient } from 'better-auth/vue';
 import {
   magicLinkClient,
@@ -73,7 +74,7 @@ export const signInWithSocial = async (
 
 // Signing in to register for an event is the one place calendar access is asked up front.
 function googleSignInScopes() {
-  if (!useRuntimeConfig().public.googleCalendarEnabled) return undefined;
+  if (!env.GOOGLE_CALENDAR_ENABLED) return undefined;
   if (!isCommunitySetupBootstrapPath(getAuthRedirectTo())) return undefined;
   return [GOOGLE_CALENDAR_SCOPE];
 }

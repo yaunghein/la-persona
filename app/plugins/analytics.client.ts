@@ -1,3 +1,4 @@
+import { env } from '~~/env';
 export default defineNuxtPlugin(async () => {
   const { gtag } = useGtag();
   const { data: session } = await authClient.useSession(useFetch);
@@ -6,7 +7,7 @@ export default defineNuxtPlugin(async () => {
     session,
     (newSession) => {
       if (newSession?.user) {
-        gtag('config', useRuntimeConfig().public.gtagId as string, {
+        gtag('config', env.GTAG_ID, {
           user_id: newSession.user.id,
         });
       }

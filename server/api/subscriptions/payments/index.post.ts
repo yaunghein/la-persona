@@ -14,7 +14,7 @@ import {
   hasOrganizationPermission,
   requireOrganizationSession,
 } from '~~/server/utils/organization-permissions';
-import { env, getAdminNotificationEmails } from '~~/server/utils/env';
+import { env } from '~~/env';
 import { notifySubscriptionSubmissionEmails } from '~~/server/utils/subscription-email-notifications';
 import { enrichLog, trackEmailSends } from '~~/server/utils/wide-event';
 
@@ -394,7 +394,7 @@ export default defineEventHandler(async (event) => {
     enrichLog(event, {
       email: {
         attempted: true,
-        to: [payerEmail, ...getAdminNotificationEmails()],
+        to: [payerEmail, ...[...env.ADMIN_EMAILS]],
       },
     });
     trackEmailSends(

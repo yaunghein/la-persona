@@ -13,7 +13,7 @@ import { splitName } from '~~/server/services/card';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
 import { derivePlanCodeFromSource } from '~~/shared/utils/subscription';
 import { notifySubscriptionSubmissionEmails } from '~~/server/utils/subscription-email-notifications';
-import { env, getAdminNotificationEmails } from '~~/server/utils/env';
+import { env } from '~~/env';
 import { requireOrganizationSession } from '~~/server/utils/organization-permissions';
 import type { H3Event } from 'h3';
 import {
@@ -62,7 +62,7 @@ function fireCardRequestSubmittedEmails(
   enrichLog(event, {
     email: {
       attempted: true,
-      to: [email, ...getAdminNotificationEmails()],
+      to: [email, ...[...env.ADMIN_EMAILS]],
     },
   });
   trackEmailSends(

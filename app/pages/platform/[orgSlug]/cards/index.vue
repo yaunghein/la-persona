@@ -10,7 +10,6 @@ useSeoMeta({ ...getSeoTitle('Cards - LA PERSONA') });
 
 const route = useRoute();
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
-const runtimeConfig = useRuntimeConfig();
 const toast = useToast();
 const isInfoOpen = ref(false);
 const { data: session } = await authClient.useSession(useFetch);
@@ -74,9 +73,7 @@ const getS3Url = (path?: string | null) => {
   if (!path) return '';
   if (path.startsWith('http')) return path;
 
-  const bucket = runtimeConfig.public.awsBucketName;
-  const region = runtimeConfig.public.awsRegion;
-  return `https://${bucket}.s3.${region}.amazonaws.com/${path}`;
+  return resolveObjectStorageUrl(path);
 };
 
 function openPendingInfo(cardName: string) {

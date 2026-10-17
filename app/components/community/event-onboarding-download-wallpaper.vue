@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { env } from '~~/env';
 import { Application } from '@splinetool/runtime';
 import { closestPhoneWallpaperModel } from '~~/shared/constants/phone-wallpaper-models';
 import { applyCommunityCardToSpline } from '~/utils/spline-card';
@@ -34,7 +35,6 @@ const emit = defineEmits<{
 }>();
 
 const toast = useToast();
-const runtimeConfig = useRuntimeConfig();
 const downloading = ref(false);
 const canvasEl = ref<HTMLCanvasElement | null>(null);
 const splineLoading = ref(false);
@@ -105,16 +105,14 @@ function wallpaperAssetUrl(path?: string | null) {
   if (!path) return '';
   if (path.startsWith('http')) return path;
 
-  const bucket = runtimeConfig.public.awsBucketName;
-  const region = runtimeConfig.public.awsRegion;
-  return `https://${bucket}.s3.${region}.amazonaws.com/${path}`;
+  return resolveObjectStorageUrl(path);
 }
 
 function publicCardUrl() {
   const cardSlug = props.cardSlug?.trim();
   if (!cardSlug) return '';
   const origin =
-    runtimeConfig.public.baseUrl ||
+    env.BASE_URL ||
     (import.meta.client ? window.location.origin : '');
   return `${origin}/c/${cardSlug}`;
 }

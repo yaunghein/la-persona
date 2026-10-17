@@ -1,3 +1,5 @@
+import { isObjectStorageUrl } from '~~/shared/utils/object-storage';
+
 export const EVENT_PLACEHOLDER_URLS = [
   '/images/event-placeholder-1.jpg',
   '/images/event-placeholder-2.jpg',
@@ -36,32 +38,10 @@ export function eventGalleryImages(
   return cover ? [cover, ...extras] : extras;
 }
 
-export function isAllowedEventImageUrl(
-  url: string,
-  host: { bucket: string; region: string }
-) {
+export function isAllowedEventImageUrl(url: string) {
   const value = url.trim();
   if ((EVENT_PLACEHOLDER_URLS as readonly string[]).includes(value)) {
     return true;
   }
-
-  let parsed: URL;
-  try {
-    parsed = new URL(value);
-  } catch {
-    return false;
-  }
-
-  if (parsed.protocol !== 'https:') return false;
-
-  const bucket = host.bucket.trim();
-  const region = host.region.trim();
-  if (!bucket || !region) return false;
-
-  const allowedHosts = new Set([
-    `${bucket}.s3.${region}.amazonaws.com`,
-    `${bucket}.s3.amazonaws.com`,
-  ]);
-
-  return allowedHosts.has(parsed.host);
+  return isObjectStorageUrl(value);
 }

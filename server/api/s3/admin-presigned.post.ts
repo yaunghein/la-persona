@@ -2,7 +2,7 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { z } from 'zod';
 import { requireAdminSession } from '~~/server/utils/admin-permissions';
-import { env } from '~~/server/utils/env';
+import { env } from '~~/env';
 import { enrichLog } from '~~/server/utils/wide-event';
 
 const bodySchema = z.object({

@@ -1,7 +1,7 @@
 import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { subscriptionPlan } from '~~/server/db/schema';
-import { env } from '~~/server/utils/env';
+import { env } from '~~/env';
 import { requireOrganizationSession } from '~~/server/utils/organization-permissions';
 
 const REQUIRED_PLAN_CODES = ['standard', 'premium'] as const;

@@ -9,7 +9,7 @@ import {
   organization,
   user,
 } from '~~/server/db/schema';
-import { env } from '~~/server/utils/env';
+import { env } from '~~/env';
 import { slugify } from '~~/shared/utils/slugify';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 import { splitName } from '~~/server/services/card';

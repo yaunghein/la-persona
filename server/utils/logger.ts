@@ -1,14 +1,15 @@
 import { createRequire } from 'node:module';
 import pino from 'pino';
+import { env } from '~~/env';
 
 const require = createRequire(import.meta.url);
 
 const options: pino.LoggerOptions = {
-  level: process.env.LOG_LEVEL || 'info',
+  level: env.LOG_LEVEL,
   timestamp: pino.stdTimeFunctions.isoTime,
   base: {
     service: 'la-persona',
-    env: process.env.NODE_ENV || 'development',
+    env: env.NODE_ENV,
   },
   redact: {
     paths: [
@@ -28,7 +29,7 @@ const options: pino.LoggerOptions = {
 };
 
 function createLogger() {
-  if (process.env.NODE_ENV === 'production') {
+  if (env.NODE_ENV === 'production') {
     return pino(options);
   }
 

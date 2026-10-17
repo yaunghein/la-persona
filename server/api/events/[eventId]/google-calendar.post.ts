@@ -1,3 +1,4 @@
+import { env } from '~~/env';
 import { findEventByIdAndOrganizationId } from '~~/server/db/queries/event';
 import { findRegistrationByEventAndUser } from '~~/server/db/queries/event-registration';
 import {
@@ -17,7 +18,7 @@ import type { AddToGoogleCalendarResult } from '~~/shared/types/event';
 
 export default defineEventHandler(
   async (event): Promise<AddToGoogleCalendarResult | undefined> => {
-    if (!useRuntimeConfig(event).public.googleCalendarEnabled) {
+    if (!env.GOOGLE_CALENDAR_ENABLED) {
       throw createError({ statusCode: 404, statusMessage: 'Not found' });
     }
 

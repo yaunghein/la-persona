@@ -34,7 +34,6 @@ const emit = defineEmits<{ close: []; submitted: [] }>();
 
 const { organizationSlug, withOrganizationQuery } = useOrganizationSlug();
 const toast = useToast();
-const runtimeConfig = useRuntimeConfig();
 const {
   normalizeUrlWithHttps,
   normalizeLinkValuesWithHttps,
@@ -198,9 +197,7 @@ function getS3Url(path?: string | null) {
   if (!path) return '';
   if (path.startsWith('http')) return path;
 
-  const bucket = runtimeConfig.public.awsBucketName;
-  const region = runtimeConfig.public.awsRegion;
-  return `https://${bucket}.s3.${region}.amazonaws.com/${path}`;
+  return resolveObjectStorageUrl(path);
 }
 
 function resetSocialDraft() {
