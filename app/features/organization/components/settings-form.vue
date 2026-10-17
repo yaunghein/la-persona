@@ -252,7 +252,7 @@ onUnmounted(() => {
                 label="Upload Photo"
                 leading-icon="i-lucide-upload"
                 color="neutral"
-                class="h-9 cursor-pointer rounded-full bg-[#232323] py-2 pr-6 pl-4 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+                class="h-10 cursor-pointer rounded-full bg-[#232323] pr-6 pl-4 text-sm font-medium text-white hover:bg-[#2a2a2a]"
                 @click="triggerFilePicker('community-cover-input')"
               />
             </div>
@@ -291,7 +291,7 @@ onUnmounted(() => {
               label="Upload Photo"
               leading-icon="i-lucide-upload"
               color="neutral"
-              class="h-9 cursor-pointer rounded-full bg-[#232323] py-2 pr-6 pl-4 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+              class="h-10 cursor-pointer rounded-full bg-[#232323] pr-6 pl-4 text-sm font-medium text-white hover:bg-[#2a2a2a]"
               @click="triggerFilePicker('community-logo-input')"
             />
           </div>
@@ -340,7 +340,7 @@ onUnmounted(() => {
           leading-icon="i-lucide-trash-2"
           color="neutral"
           variant="ghost"
-          class="h-9 cursor-pointer justify-center rounded-full py-2 pr-6 pl-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          class="h-10 cursor-pointer justify-center rounded-full pr-6 pl-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
           @click="emit('delete')"
         />
         <UButton
@@ -348,7 +348,7 @@ onUnmounted(() => {
           leading-icon="i-material-symbols:fitbit-check-small"
           color="neutral"
           :loading="saving || isUploadingImage"
-          class="h-9 cursor-pointer justify-center rounded-full bg-white py-2 pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer justify-center rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
           :ui="{
             leadingIcon: 'size-6',
           }"
@@ -384,7 +384,7 @@ onUnmounted(() => {
           <UButton
             label="Understood"
             color="neutral"
-            class="h-10 rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+            class="h-10 text-sm rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
             @click="closeInfo"
           />
         </div>

@@ -362,13 +362,13 @@ onBeforeUnmount(() => {
             "
             color="neutral"
             disabled
-            class="h-13 w-full justify-center rounded-full bg-[#232323] px-2.5 text-sm font-bold text-[#8b8b8b] disabled:opacity-100"
+            class="h-10 w-full justify-center rounded-full bg-[#232323] px-2.5 text-sm font-bold text-[#8b8b8b] disabled:opacity-100"
           />
           <UButton
             v-else-if="step === 'confirm'"
             color="neutral"
             block
-            class="h-13 cursor-pointer rounded-full bg-white px-2.5 hover:bg-white/90"
+            class="h-10 text-sm cursor-pointer rounded-full bg-white px-2.5 hover:bg-white/90"
             :ui="{
               base: 'flex-col gap-1',
               label:
@@ -391,7 +391,7 @@ onBeforeUnmount(() => {
             label="Registering..."
             color="neutral"
             disabled
-            class="h-13 w-full justify-center rounded-full bg-[#232323] px-2.5 text-sm font-bold text-[#8b8b8b] disabled:opacity-100"
+            class="h-10 w-full justify-center rounded-full bg-[#232323] px-2.5 text-sm font-bold text-[#8b8b8b] disabled:opacity-100"
           />
           <a
             v-if="!isPage && organizerCardUrl"
@@ -419,7 +419,7 @@ onBeforeUnmount(() => {
             :ui="{ leadingAvatar: 'rounded-none bg-transparent' }"
             color="neutral"
             :loading="addingEventId === event.id"
-            class="h-13 w-full cursor-pointer justify-center rounded-full bg-white px-2.5 text-sm font-bold text-dark hover:bg-white/90"
+            class="h-10 w-full cursor-pointer justify-center rounded-full bg-white px-2.5 text-sm font-bold text-dark hover:bg-white/90"
             @click="addToGoogleCalendar(event.id)"
           />
         </div>

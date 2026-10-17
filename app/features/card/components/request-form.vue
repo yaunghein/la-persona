@@ -552,8 +552,7 @@ function onFormError(event: FormErrorEvent) {
       </div>
       <UButton
         label="Back to Dashboard"
-        class="rounded-full font-semibold px-8 cursor-pointer"
-        size="xl"
+        class="h-10 text-sm rounded-full font-semibold px-8 cursor-pointer"
         @click="emit('close')"
       />
     </div>
@@ -910,7 +909,7 @@ function onFormError(event: FormErrorEvent) {
         label="Send Request"
         :loading="isLoading || isUploadingReceipt"
         icon="i-material-symbols:keyboard-double-arrow-right"
-        class="h-10 rounded-full bg-white px-5 text-dark hover:bg-white/90"
+        class="h-10 text-sm rounded-full bg-white px-5 text-dark hover:bg-white/90"
       />
     </div>
   </UForm>
@@ -982,14 +981,14 @@ function onFormError(event: FormErrorEvent) {
             label="Cancel"
             color="neutral"
             variant="ghost"
-            class="h-10 rounded-full px-5 font-semibold text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+            class="h-10 text-sm rounded-full px-5 font-semibold text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
             @click="closeSocialSlideover"
           />
           <UButton
             type="button"
             :label="socialEditorMode === 'create' ? 'Add Link' : 'Save Link'"
             icon="i-lucide-check"
-            class="h-10 rounded-full bg-[#232323] px-5 font-semibold text-white hover:bg-[#2a2a2a]"
+            class="h-10 text-sm rounded-full bg-[#232323] px-5 font-semibold text-white hover:bg-[#2a2a2a]"
             @click="saveSocialDraft"
           />
         </div>
@@ -1015,19 +1014,17 @@ function onFormError(event: FormErrorEvent) {
     <template #footer>
       <UButton
         type="button"
-        size="xl"
         label="Cancel"
         color="neutral"
         variant="ghost"
-        class="rounded-full px-5"
+        class="h-10 text-sm rounded-full px-5"
         @click="closeDeleteSocialConfirm"
       />
       <UButton
         type="button"
-        size="xl"
         label="Delete"
         color="error"
-        class="rounded-full px-6 font-medium"
+        class="h-10 text-sm rounded-full px-6 font-medium"
         @click="confirmRemoveLink"
       />
     </template>

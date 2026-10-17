@@ -96,7 +96,7 @@ function checkIn(attendee: EventAttendee) {
           block
           :disabled="checkInPhase !== 'live'"
           :ui="{ trailingIcon: 'size-5' }"
-          class="h-10 w-full min-w-0 cursor-pointer justify-between rounded-full bg-white py-2 pr-5 pl-5 text-sm font-medium text-dark hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-[#232323] disabled:text-[#8b8b8b] disabled:opacity-100 sm:flex-1"
+          class="h-10 w-full min-w-0 cursor-pointer justify-between rounded-full bg-white pr-5 pl-5 text-sm font-medium text-dark hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-[#232323] disabled:text-[#8b8b8b] disabled:opacity-100 sm:flex-1"
           @click="emit('open-scanner')"
         />
         <p
@@ -133,7 +133,7 @@ function checkIn(attendee: EventAttendee) {
         v-if="canWalkIn"
         label="Register as walk-in"
         color="neutral"
-        class="h-9 cursor-pointer justify-center rounded-full bg-white px-5 py-2 text-sm font-medium text-dark hover:bg-white/90"
+        class="h-10 cursor-pointer justify-center rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
         @click="emit('open-walk-in')"
       />
     </div>
@@ -167,7 +167,7 @@ function checkIn(attendee: EventAttendee) {
             label="Check-in"
             color="neutral"
             :disabled="checkInPhase !== 'live'"
-            class="h-9 cursor-pointer justify-center rounded-full bg-white px-6 py-2 text-sm font-medium text-dark hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-[#232323] disabled:text-[#8b8b8b] disabled:opacity-100"
+            class="h-10 cursor-pointer justify-center rounded-full bg-white px-6 text-sm font-medium text-dark hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-[#232323] disabled:text-[#8b8b8b] disabled:opacity-100"
             @click="checkIn(attendee)"
           />
           <span v-else class="text-sm font-medium text-[#8b8b8b]">
@@ -203,7 +203,7 @@ function checkIn(attendee: EventAttendee) {
         v-if="canWalkIn"
         label="Register as walk-in"
         color="neutral"
-        class="h-9 cursor-pointer justify-center rounded-full bg-white px-5 py-2 text-sm font-medium text-dark hover:bg-white/90"
+        class="h-10 cursor-pointer justify-center rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
         @click="emit('open-walk-in')"
       />
     </div>

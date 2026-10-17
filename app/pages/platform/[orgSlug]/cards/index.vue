@@ -90,7 +90,7 @@ async function confirmDelete() {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6 pb-20 sm:pb-0">
     <div
       class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
     >
@@ -115,7 +115,7 @@ async function confirmDelete() {
         label="Request New Card"
         leading-icon="i-lucide-plus"
         color="neutral"
-        class="self-start sm:self-auto h-10 cursor-pointer flex items-center justify-center rounded-full border-2 border-[#232323] bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
+        class="fixed bottom-6 left-1/2 z-10 -translate-x-1/2 shadow-lg sm:static sm:translate-x-0 sm:shadow-none h-10 text-sm cursor-pointer flex items-center justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
         @click="openRequestForm"
       />
     </div>

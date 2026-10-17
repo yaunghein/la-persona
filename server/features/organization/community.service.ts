@@ -307,7 +307,6 @@ export async function describeJoinLink(
   const setting = await ensureCommunitySetting(organizationId);
   return {
     url: setting ? joinLinkUrl(setting.inviteToken) : '',
-    expiresAt: setting?.inviteTokenExpiresAt?.toISOString() ?? null,
   };
 }
 
@@ -319,17 +318,13 @@ export async function issueNewJoinLink(
   if (!setting) throw notFound('Community');
   return {
     url: joinLinkUrl(setting.inviteToken),
-    expiresAt: setting.inviteTokenExpiresAt?.toISOString() ?? null,
   };
 }
 
-/** The community behind a live join link; expired or unknown tokens are not found. */
+/** The community behind a join link; unknown or replaced tokens are not found. */
 async function resolveJoinLink(token: string) {
   const setting = await findCommunitySettingByInviteToken(token);
-  const isExpired =
-    !setting?.inviteTokenExpiresAt ||
-    setting.inviteTokenExpiresAt.getTime() < Date.now();
-  if (!setting || isExpired) throw notFound('Invite link');
+  if (!setting) throw notFound('Invite link');
 
   const organization = await findOrganizationById(setting.organizationId);
   if (!organization || organization.type !== ORGANIZATION_TYPES.COMMUNITY) {

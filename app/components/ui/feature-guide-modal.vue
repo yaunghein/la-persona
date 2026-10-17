@@ -66,10 +66,9 @@ function close() {
 
         <div class="flex justify-end">
           <UButton
-            size="md"
             label="Understood"
             color="neutral"
-            class="h-10 justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+            class="h-10 text-sm justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
             @click="close"
           />
         </div>

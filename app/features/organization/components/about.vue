@@ -169,14 +169,14 @@ const logoSrc = computed(() =>
             leading-icon="i-lucide-log-out"
             color="neutral"
             variant="ghost"
-            class="h-9 cursor-pointer justify-center rounded-full py-2 pr-6 pl-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+            class="h-10 cursor-pointer justify-center rounded-full pr-6 pl-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
             @click="emit('quit')"
           />
           <UButton
             label="View Organizer"
             leading-icon="i-lucide-eye"
             color="neutral"
-            class="h-9 cursor-pointer justify-center rounded-full bg-white py-2 pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+            class="h-10 cursor-pointer justify-center rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
             @click="emit('viewOrganizer')"
           />
         </div>
@@ -209,7 +209,7 @@ const logoSrc = computed(() =>
           <UButton
             label="Understood"
             color="neutral"
-            class="h-10 rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+            class="h-10 text-sm rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
             @click="
               () => {
                 isInfoOpen = false;

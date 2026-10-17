@@ -588,7 +588,7 @@ onBeforeUnmount(() => {
               icon="i-lucide-upload"
               color="neutral"
               variant="soft"
-              class="rounded-full bg-[#232323] px-4 text-white hover:bg-[#2a2a2a]"
+              class="h-10 text-sm rounded-full bg-[#232323] px-4 text-white hover:bg-[#2a2a2a]"
               @click="triggerFilePicker"
             />
             <!-- <span
@@ -765,14 +765,14 @@ onBeforeUnmount(() => {
           color="neutral"
           variant="ghost"
           icon="i-lucide-eye"
-          class="mr-3 h-10 rounded-full px-4 text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          class="mr-3 h-10 text-sm rounded-full px-4 text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
           @click="openPreviewModal"
         >
           Preview Your Card
         </UButton>
         <UButton
           type="submit"
-          class="h-10 rounded-full bg-[#232323] px-6 text-white hover:bg-[#2a2a2a] disabled:bg-white/20 active:bg-[#2a2a2a] cursor-pointer"
+          class="h-10 text-sm rounded-full bg-[#232323] px-6 text-white hover:bg-[#2a2a2a] disabled:bg-white/20 active:bg-[#2a2a2a] cursor-pointer"
           icon="i-lucide-square-pen"
           :loading="isSaving"
         >
@@ -849,18 +849,17 @@ onBeforeUnmount(() => {
         <div class="flex justify-end gap-3 pt-2">
           <UButton
             type="button"
-            size="xl"
             label="Cancel"
             color="neutral"
             variant="ghost"
-            class="rounded-full px-4 text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+            class="h-10 text-sm rounded-full px-4 text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
             @click="closeSocialSlideover"
           />
           <UButton
             type="button"
             :label="socialEditorMode === 'create' ? 'Add Link' : 'Save Link'"
             icon="i-lucide-check"
-            class="h-10 rounded-full bg-[#232323] px-5 text-white hover:bg-[#2a2a2a]"
+            class="h-10 text-sm rounded-full bg-[#232323] px-5 text-white hover:bg-[#2a2a2a]"
             @click="saveSocialDraft"
           />
         </div>
@@ -886,19 +885,17 @@ onBeforeUnmount(() => {
     <template #footer>
       <UButton
         type="button"
-        size="xl"
         label="Cancel"
         color="neutral"
         variant="ghost"
-        class="rounded-full px-5"
+        class="h-10 text-sm rounded-full px-5"
         @click="closeDeleteSocialConfirm"
       />
       <UButton
         type="button"
-        size="xl"
         label="Delete"
         color="error"
-        class="rounded-full px-6 font-medium"
+        class="h-10 text-sm rounded-full px-6 font-medium"
         @click="confirmRemoveLink"
       />
     </template>

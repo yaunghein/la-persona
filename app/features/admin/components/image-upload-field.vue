@@ -93,7 +93,7 @@ async function onFileChange(event: Event) {
         leading-icon="i-lucide-upload"
         color="neutral"
         :loading="uploading"
-        class="h-9 cursor-pointer rounded-full bg-[#232323] py-2 pr-6 pl-4 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+        class="h-10 cursor-pointer rounded-full bg-[#232323] pr-6 pl-4 text-sm font-medium text-white hover:bg-[#2a2a2a]"
         @click="fileInput?.click()"
       />
       <UButton
@@ -101,7 +101,7 @@ async function onFileChange(event: Event) {
         label="Remove"
         color="neutral"
         variant="ghost"
-        class="h-9 cursor-pointer rounded-full px-4 text-sm text-white/70 hover:bg-[#232323]"
+        class="h-10 cursor-pointer rounded-full px-4 text-sm text-white/70 hover:bg-[#232323]"
         @click="
           () => {
             url = '';

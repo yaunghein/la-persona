@@ -161,7 +161,7 @@ async function confirmPayment() {
             color="neutral"
             :loading="isBusy"
             :disabled="!receiptFile || !quote"
-            class="h-10 rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90 disabled:opacity-60"
+            class="h-10 text-sm rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90 disabled:opacity-60"
             @click="confirmPayment"
           />
         </div>

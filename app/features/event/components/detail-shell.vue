@@ -84,7 +84,7 @@ const selectedTab = computed({
             leading-icon="i-lucide-pencil"
             color="neutral"
             :ui="{ leadingIcon: 'size-4' }"
-            class="h-10 cursor-pointer rounded-full bg-white py-2 pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+            class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
             @click="emit('edit')"
           />
           <UButton

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { CommunityInviteRole } from '~~/shared/permissions/organization';
 
-import { format } from 'date-fns';
 
 const props = defineProps<{
   organizationSlug: string;
@@ -17,11 +16,6 @@ const { mutateAsync: inviteMember, isPending: isSending } =
   useInviteMemberMutation(() => props.organizationSlug);
 
 const inviteLink = computed(() => joinLink.value?.url ?? '');
-const inviteLinkExpiry = computed(() =>
-  joinLink.value?.expiresAt
-    ? format(new Date(joinLink.value.expiresAt), 'd MMM yyyy')
-    : null
-);
 const emailInput = ref('');
 const roleInput = ref<CommunityInviteRole>('member');
 const roleOptions: { label: string; value: CommunityInviteRole }[] = [
@@ -156,9 +150,7 @@ function downloadQr() {
           <div class="space-y-3">
             <h3 class="text-sm font-medium text-white">Invite with Link</h3>
             <p class="text-sm leading-5.25 text-[#8b8b8b]">
-              Anyone with this link can join<template v-if="inviteLinkExpiry">
-                until {{ inviteLinkExpiry }}</template
-              >.
+              Anyone with this link can join.
             </p>
           </div>
           <div
@@ -229,13 +221,12 @@ function downloadQr() {
 
           <div class="flex justify-end">
             <UButton
-              size="xl"
               label="Send Invitations"
               icon="i-lucide-send"
               color="neutral"
               :loading="isSending"
               :ui="{ leadingIcon: 'size-5' }"
-              class="rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
+              class="h-10 text-sm rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
               @click="sendInvitations"
             />
           </div>
@@ -270,10 +261,9 @@ function downloadQr() {
               />
             </div>
             <UButton
-              size="xl"
               label="Download QR"
               color="neutral"
-              class="rounded-full bg-[#232323] px-6 font-medium text-white hover:bg-[#2a2a2a]"
+              class="h-10 text-sm rounded-full bg-[#232323] px-6 font-medium text-white hover:bg-[#2a2a2a]"
               @click="downloadQr"
             />
           </div>

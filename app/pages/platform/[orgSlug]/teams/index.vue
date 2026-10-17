@@ -103,10 +103,10 @@ const onContactClick = () => {
           </div>
 
           <!-- <div class="flex justify-end">
-            <UButton size="xl"
+            <UButton
               label="Contact Us For Early Access"
               color="neutral"
-              class="cursor-pointer rounded-full bg-white px-6 text-dark hover:bg-white/90"
+              class="cursor-pointer h-10 text-sm rounded-full bg-white px-6 text-dark hover:bg-white/90"
               @click="onContactClick"
             />
           </div> -->

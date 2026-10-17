@@ -202,7 +202,7 @@ watch(total, (count) => {
 <template>
   <div
     class="flex flex-col gap-5 sm:gap-8"
-    :class="!hasContacts && 'min-h-[calc(100dvh-7rem)]'"
+    :class="hasContacts ? 'pb-20 sm:pb-0' : 'min-h-[calc(100dvh-7rem)]'"
   >
     <div
       class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:pb-0"
@@ -245,14 +245,14 @@ watch(total, (count) => {
       </div>
 
       <div
-        class="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap"
+        class="contents w-full flex-wrap items-center gap-2 sm:flex sm:w-auto sm:flex-nowrap"
       >
         <UButton
           v-if="hasContacts"
           label="Create New Contact"
           leading-icon="i-material-symbols-add"
           color="neutral"
-          class="flex h-10 cursor-pointer items-center justify-center rounded-full border-2 border-[#232323] bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
+          class="fixed bottom-6 left-1/2 z-10 -translate-x-1/2 shadow-lg sm:static sm:translate-x-0 sm:shadow-none flex h-10 text-sm cursor-pointer items-center justify-center rounded-full border-2 border-[#232323] bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
           @click="openCreateContact"
         />
         <UButton
@@ -335,7 +335,7 @@ watch(total, (count) => {
         label="Create New Contact"
         leading-icon="i-material-symbols-add"
         color="neutral"
-        class="mt-2 h-10 rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+        class="mt-2 h-10 text-sm rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
         @click="openCreateContact"
       />
     </div>

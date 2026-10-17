@@ -121,7 +121,7 @@ const activeTab = computed({
       label="Back to Cards"
       icon="i-lucide-arrow-left"
       color="neutral"
-      class="mt-2 h-10 rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+      class="mt-2 h-10 text-sm rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
       :to="`/platform/${orgSlug}/cards`"
     />
   </div>
@@ -175,7 +175,7 @@ const activeTab = computed({
         :label="upgradeButtonLabel"
         icon="i-lucide-chevrons-up"
         color="neutral"
-        class="self-start h-10 rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+        class="self-start h-10 text-sm rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
         @click="openPremiumUpgrade"
       />
     </div>

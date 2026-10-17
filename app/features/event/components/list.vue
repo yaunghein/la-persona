@@ -151,8 +151,8 @@ function unavailableLabel(event: CommunityEvent) {
 </script>
 
 <template>
-  <div class="flex flex-col">
-    <div class="flex flex-col gap-8 pt-2 sm:pt-0">
+  <div class="flex flex-col" :class="canManage && 'pb-20 sm:pb-0'">
+    <div class="flex flex-col gap-5 pt-2 sm:gap-8 sm:pt-0">
       <div
         class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
       >
@@ -177,12 +177,12 @@ function unavailableLabel(event: CommunityEvent) {
           label="Create Event"
           leading-icon="i-material-symbols:add"
           color="neutral"
-          class="h-9 w-fit cursor-pointer rounded-full bg-white py-2 pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="fixed bottom-6 left-1/2 z-10 -translate-x-1/2 shadow-lg sm:static sm:translate-x-0 sm:shadow-none h-10 w-fit cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
           @click="emit('create')"
         />
       </div>
 
-      <div class="flex flex-col gap-6">
+      <div class="flex flex-col gap-4 sm:gap-6">
         <UInput
           v-model="searchQuery"
           :placeholder="data.searchPlaceholder"
@@ -215,7 +215,7 @@ function unavailableLabel(event: CommunityEvent) {
     </div>
 
     <div
-      class="grid flex-1 grid-cols-1 items-start gap-6 py-8 pb-10 sm:grid-cols-2 xl:grid-cols-3"
+      class="grid flex-1 grid-cols-1 items-start gap-6 pt-5 pb-10 sm:grid-cols-2 sm:pt-8 xl:grid-cols-3"
     >
       <article
         v-for="event in pagedEvents"
@@ -261,7 +261,7 @@ function unavailableLabel(event: CommunityEvent) {
               v-if="canRegister(event)"
               label="Register"
               color="neutral"
-              class="h-8 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+              class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
               @click.stop="onRegister(event)"
             />
             <span v-else class="text-sm text-[#8b8b8b]">
@@ -351,10 +351,9 @@ function unavailableLabel(event: CommunityEvent) {
 
         <div class="flex justify-end">
           <UButton
-            size="md"
             label="Understood"
             color="neutral"
-            class="h-10 justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+            class="h-10 text-sm justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
             @click="closeInfo"
           />
         </div>

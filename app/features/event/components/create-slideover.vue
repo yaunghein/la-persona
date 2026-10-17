@@ -626,8 +626,7 @@ async function copyEventLink() {
           </div>
           <UButton
             label="Copy Event Link"
-            class="cursor-pointer rounded-full px-5 font-semibold"
-            size="md"
+            class="cursor-pointer h-10 text-sm rounded-full px-5 font-semibold"
             @click="copyEventLink"
           />
         </div>
@@ -671,7 +670,7 @@ async function copyEventLink() {
                 :label="cover ? 'Upload New Photo' : 'Upload Cover Photo'"
                 leading-icon="i-lucide-upload"
                 color="neutral"
-                class="h-9 cursor-pointer rounded-full bg-[#232323] py-2 pr-6 pl-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+                class="h-10 cursor-pointer rounded-full bg-[#232323] pr-6 pl-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
                 @click="triggerCoverUpload"
               />
             </div>
@@ -702,7 +701,7 @@ async function copyEventLink() {
                 label="Upload Up to 4 Photos"
                 leading-icon="i-lucide-upload"
                 color="neutral"
-                class="h-9 cursor-pointer rounded-full bg-[#232323] py-2 pr-6 pl-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+                class="h-10 cursor-pointer rounded-full bg-[#232323] pr-6 pl-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
                 @click="triggerPhotosUpload"
               />
             </div>
@@ -743,7 +742,7 @@ async function copyEventLink() {
               <UButton
                 label="Add Photos"
                 color="neutral"
-                class="h-9 cursor-pointer rounded-full bg-[#232323] px-6 py-2 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+                class="h-10 cursor-pointer rounded-full bg-[#232323] px-6 text-sm font-medium text-white hover:bg-[#2a2a2a]"
                 @click="triggerPhotosUpload"
               />
             </div>
@@ -892,13 +891,13 @@ async function copyEventLink() {
               <UButton
                 label="Remove Limit"
                 color="neutral"
-                class="h-9 cursor-pointer rounded-full bg-transparent px-5 text-sm font-medium text-white hover:bg-white/10! active:hover:bg-white/20!"
+                class="h-10 cursor-pointer rounded-full bg-transparent px-5 text-sm font-medium text-white hover:bg-white/10! active:hover:bg-white/20!"
                 @click="removeCapacityLimit"
               />
               <UButton
                 label="Set Limit"
                 color="neutral"
-                class="h-9 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+                class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
                 @click="setCapacityLimit"
               />
             </div>
@@ -925,7 +924,7 @@ async function copyEventLink() {
           color="neutral"
           variant="ghost"
           :disabled="isSubmitting"
-          class="h-9 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
           @click="discardChanges"
         />
         <UButton
@@ -933,7 +932,7 @@ async function copyEventLink() {
           leading-icon="i-material-symbols:fitbit-check-small"
           color="neutral"
           :loading="isCreating || isUpdating"
-          class="h-9 cursor-pointer rounded-full bg-white py-2 pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
           @click="submitFromFooter"
         />
       </div>
@@ -961,19 +960,17 @@ async function copyEventLink() {
     </template>
     <template #footer>
       <UButton
-        size="xl"
         label="Cancel"
         color="neutral"
         variant="ghost"
-        class="rounded-full px-5"
+        class="h-10 text-sm rounded-full px-5"
         :disabled="isDeleting"
         @click="closeDeleteConfirm"
       />
       <UButton
-        size="xl"
         label="Delete"
         color="error"
-        class="rounded-full px-6 font-medium"
+        class="h-10 text-sm rounded-full px-6 font-medium"
         :loading="isDeleting"
         @click="deleteEvent()"
       />

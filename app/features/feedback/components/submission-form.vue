@@ -137,8 +137,7 @@ function clearServerError() {
       </div>
       <UButton
         label="Back to Dashboard"
-        class="rounded-full font-semibold px-8 cursor-pointer"
-        size="xl"
+        class="h-10 text-sm rounded-full font-semibold px-8 cursor-pointer"
         @click="emit('close')"
       />
     </div>
@@ -169,9 +168,8 @@ function clearServerError() {
         </p>
       </div>
       <UButton
-        size="xl"
         label="Back"
-        class="rounded-full bg-white px-6 text-dark hover:bg-white/90 cursor-pointer"
+        class="h-10 text-sm rounded-full bg-white px-6 text-dark hover:bg-white/90 cursor-pointer"
         @click="clearServerError"
       />
     </div>
@@ -216,7 +214,7 @@ function clearServerError() {
         :label="submitLabelByKind[state.kind]"
         :loading="isSubmitting"
         icon="i-lucide-check"
-        class="h-10 rounded-full bg-white px-5 text-dark hover:bg-white/90 cursor-pointer"
+        class="h-10 text-sm rounded-full bg-white px-5 text-dark hover:bg-white/90 cursor-pointer"
       />
     </div>
   </UForm>

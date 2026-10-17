@@ -70,7 +70,7 @@ const showCameraRetry = computed(
 );
 
 const closeActionButtonClass =
-  'h-13 w-full cursor-pointer justify-center rounded-full bg-[#232323] px-6 text-sm font-bold text-white hover:bg-[#2a2a2a]';
+  'h-10 w-full cursor-pointer justify-center rounded-full bg-[#232323] px-6 text-sm font-bold text-white hover:bg-[#2a2a2a]';
 
 const primaryActionButtonClass =
   'h-10 w-full cursor-pointer justify-center rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90';
@@ -662,14 +662,14 @@ onBeforeUnmount(() => {
         <UButton
           label="Check-in"
           color="neutral"
-          class="h-9 w-full cursor-pointer justify-center rounded-full bg-white py-2 pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 w-full cursor-pointer justify-center rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
           @click="confirmCheckIn"
         />
         <UButton
           label="Cancel"
           color="neutral"
           variant="ghost"
-          class="h-9 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
           @click="resumeScanning"
         />
       </div>
@@ -678,7 +678,7 @@ onBeforeUnmount(() => {
         <UButton
           label="Got it"
           color="neutral"
-          class="h-9 cursor-pointer justify-center rounded-full bg-[#232323] py-2 pr-6 pl-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+          class="h-10 cursor-pointer justify-center rounded-full bg-[#232323] pr-6 pl-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
           @click="resumeScanning"
         />
       </div>

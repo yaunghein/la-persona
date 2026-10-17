@@ -44,7 +44,7 @@ const emit = defineEmits<{
         <UButton
           label="Try again"
           color="neutral"
-          class="rounded-full bg-white px-5 font-medium text-dark"
+          class="h-10 text-sm rounded-full bg-white px-5 font-medium text-dark"
           @click="emit('retry')"
         />
       </div>

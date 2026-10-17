@@ -416,19 +416,17 @@ const columns: TableColumn<UserRow>[] = [
       </template>
       <template #footer>
         <UButton
-          size="xl"
           label="Cancel"
           color="neutral"
           variant="ghost"
-          class="rounded-full px-5 text-white hover:bg-[#232323]"
+          class="h-10 text-sm rounded-full px-5 text-white hover:bg-[#232323]"
           :disabled="isDeleting"
           @click="closeDelete"
         />
         <UButton
-          size="xl"
           label="Delete"
           color="error"
-          class="rounded-full px-6 font-medium"
+          class="h-10 text-sm rounded-full px-6 font-medium"
           :loading="isDeleting"
           @click="onConfirmDelete"
         />

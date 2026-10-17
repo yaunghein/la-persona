@@ -36,19 +36,17 @@ function close() {
     </template>
     <template #footer>
       <UButton
-        size="xl"
         label="Cancel"
         color="neutral"
         variant="ghost"
-        class="rounded-full px-5"
+        class="h-10 text-sm rounded-full px-5"
         :disabled="pending"
         @click="close"
       />
       <UButton
-        size="xl"
         :label="confirmLabel"
         color="error"
-        class="rounded-full px-6 font-medium"
+        class="h-10 text-sm rounded-full px-6 font-medium"
         :loading="pending"
         @click="$emit('confirm')"
       />

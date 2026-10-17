@@ -694,11 +694,10 @@ const selectUi = {
             class="mt-6 flex justify-end gap-2 border-t border-[#232323] pt-6"
           >
             <UButton
-              size="xl"
               label="Cancel"
               color="neutral"
               variant="ghost"
-              class="rounded-full px-5 text-white hover:bg-[#232323]"
+              class="h-10 text-sm rounded-full px-5 text-white hover:bg-[#232323]"
               @click="
                 () => {
                   isFormOpen = false;
@@ -707,11 +706,10 @@ const selectUi = {
               "
             />
             <UButton
-              size="xl"
               :label="editingId ? 'Save changes' : 'Create card'"
               color="neutral"
               :loading="isSaving"
-              class="rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
+              class="h-10 text-sm rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
               @click="onSubmitForm"
             />
           </div>
@@ -743,20 +741,18 @@ const selectUi = {
       </template>
       <template #footer>
         <UButton
-          size="xl"
           label="Cancel"
           color="neutral"
           variant="ghost"
-          class="rounded-full px-5 text-white hover:bg-[#232323]"
+          class="h-10 text-sm rounded-full px-5 text-white hover:bg-[#232323]"
           :disabled="isDeleting"
           @click="closeDelete"
         />
         <UButton
-          size="xl"
           label="Delete"
           color="error"
           :loading="isDeleting"
-          class="rounded-full px-6 font-medium"
+          class="h-10 text-sm rounded-full px-6 font-medium"
           @click="onConfirmDelete"
         />
       </template>

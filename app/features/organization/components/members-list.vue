@@ -197,7 +197,7 @@ function closeInfo() {
 </script>
 
 <template>
-  <div class="flex flex-col">
+  <div class="flex flex-col pb-20 sm:pb-0">
     <div class="flex flex-col gap-8 pt-2 sm:pt-0">
       <div
         class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
@@ -218,18 +218,20 @@ function closeInfo() {
           />
         </div>
 
-        <div class="flex items-center gap-2">
+        <div
+          class="fixed bottom-6 left-1/2 z-10 -translate-x-1/2 sm:static sm:translate-x-0 flex items-center gap-2"
+        >
           <UButton
             label="Invite Member"
             leading-icon="i-material-symbols:add"
             color="neutral"
-            class="h-9 cursor-pointer rounded-full bg-white py-2 pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+            class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark shadow-lg hover:bg-white/90 sm:shadow-none"
             @click="emit('invite')"
           />
           <UButton
             icon="i-material-symbols:download-sharp"
             color="neutral"
-            class="h-9 cursor-pointer rounded-full bg-[#232323] px-5 py-2 text-white hover:bg-[#2a2a2a]"
+            class="h-10 cursor-pointer rounded-full bg-[#232323] px-5 text-white shadow-lg hover:bg-[#2a2a2a] sm:shadow-none"
             aria-label="Export members"
             @click="emit('export')"
           />
@@ -397,10 +399,9 @@ function closeInfo() {
 
         <div class="flex justify-end">
           <UButton
-            size="md"
             label="Understood"
             color="neutral"
-            class="h-10 justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+            class="h-10 text-sm justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
             @click="closeInfo"
           />
         </div>

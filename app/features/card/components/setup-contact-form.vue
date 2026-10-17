@@ -224,7 +224,7 @@ function onSubmit() {
       <div class="md:col-span-2 flex justify-end pt-4">
         <UButton
           type="submit"
-          class="h-10 rounded-full px-5 font-semibold"
+          class="h-10 text-sm rounded-full px-5 font-semibold"
           icon="material-symbols:keyboard-double-arrow-right"
           :loading="isSubmitting"
         >

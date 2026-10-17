@@ -17,7 +17,6 @@ export const communitySetting = pgTable(
       .notNull()
       .$defaultFn(() => nanoid()),
     /** Join links expire; managers rotate the token to issue a fresh link. */
-    inviteTokenExpiresAt: timestamp(),
     splineUrl: text().default('').notNull(),
     wallpaperUrl: text().default('').notNull(),
     cardBackUrl: text().default('').notNull(),

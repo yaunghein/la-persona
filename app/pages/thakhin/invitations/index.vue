@@ -419,11 +419,10 @@ const selectUi = {
             class="mt-6 flex justify-end gap-2 border-t border-[#232323] pt-6"
           >
             <UButton
-              size="xl"
               label="Cancel"
               color="neutral"
               variant="ghost"
-              class="rounded-full px-5 text-white hover:bg-[#232323]"
+              class="h-10 text-sm rounded-full px-5 text-white hover:bg-[#232323]"
               @click="
                 () => {
                   isCreateOpen = false;
@@ -431,11 +430,10 @@ const selectUi = {
               "
             />
             <UButton
-              size="xl"
               label="Create Invitation"
               color="neutral"
               :loading="isCreating"
-              class="rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
+              class="h-10 text-sm rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
               @click="onCreateInvitation"
             />
           </div>

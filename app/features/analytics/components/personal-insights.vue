@@ -290,7 +290,7 @@ function openInfo() {
     </div>
     <USkeleton class="h-80 w-full rounded-lg" />
   </div>
-  <div v-else class="space-y-4">
+  <div v-else class="space-y-4 pb-20 sm:pb-0">
     <div
       class="flex flex-col sm:flex-row gap-3 sm:gap-0 items-center justify-between"
     >
@@ -311,15 +311,17 @@ function openInfo() {
         />
       </div>
 
-      <div class="flex w-full items-center gap-2 sm:w-auto">
+      <div
+        class="fixed bottom-6 left-1/2 z-10 -translate-x-1/2 sm:static sm:translate-x-0 flex items-center gap-2"
+      >
         <USelectMenu
           v-model="selectedPeriod"
           value-key="value"
           :items="periodOptions"
           :search-input="false"
-          class="min-w-0 flex-1 sm:w-40 sm:flex-none"
+          class="w-32 sm:w-40"
           :ui="{
-            base: 'h-10 rounded-lg border-none bg-[#171717] px-4 text-white',
+            base: 'h-10 rounded-lg border-none bg-[#171717] px-4 text-white shadow-lg sm:shadow-none',
             content: 'bg-[#171717] border border-[#2a2a2a]',
             item: 'text-white data-[highlighted]:bg-[#232323]',
             value: 'text-white',
@@ -335,9 +337,9 @@ function openInfo() {
             icon: 'i-lucide-search',
           }"
           :filter-fields="['label']"
-          class="min-w-0 flex-1 sm:w-56 sm:flex-none"
+          class="w-44 sm:w-56"
           :ui="{
-            base: 'h-10 rounded-lg border-none bg-[#171717] px-4 text-white',
+            base: 'h-10 rounded-lg border-none bg-[#171717] px-4 text-white shadow-lg sm:shadow-none',
             content: 'bg-[#171717] border border-[#2a2a2a]',
             item: 'text-white data-[highlighted]:bg-[#232323]',
             value: 'text-white',

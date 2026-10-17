@@ -168,20 +168,18 @@ function onSubmit(event: FormSubmitEvent<UpdateCardRequest>) {
 
       <div class="md:col-span-2 flex justify-end gap-3 pt-2">
         <UButton
-          size="xl"
           :to="previewUrl"
           target="_blank"
           color="neutral"
           variant="ghost"
           icon="i-lucide-eye"
-          class="rounded-full px-4 text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          class="h-10 text-sm rounded-full px-4 text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
         >
           Preview Your Card
         </UButton>
         <UButton
-          size="xl"
           type="submit"
-          class="rounded-full bg-[#232323] px-4 text-white hover:bg-[#2a2a2a] disabled:bg-white/20 active:bg-[#2a2a2a] cursor-pointer"
+          class="h-10 text-sm rounded-full bg-[#232323] px-4 text-white hover:bg-[#2a2a2a] disabled:bg-white/20 active:bg-[#2a2a2a] cursor-pointer"
           icon="i-lucide-square-pen"
           :loading="isSubmitting"
         >

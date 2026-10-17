@@ -111,7 +111,7 @@ function onDelete() {
     <UButton
       label="Try again"
       color="neutral"
-      class="h-9 rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+      class="h-10 rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
       @click="retry"
     />
   </div>

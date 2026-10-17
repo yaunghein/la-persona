@@ -104,7 +104,7 @@ const columns: TableColumn<CommunityEventPerformance>[] = [
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="space-y-4 pb-20 sm:pb-0">
     <div
       class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
     >
@@ -126,16 +126,16 @@ const columns: TableColumn<CommunityEventPerformance>[] = [
       </div>
 
       <div
-        class="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center"
+        class="fixed bottom-6 left-1/2 z-10 -translate-x-1/2 sm:static sm:translate-x-0 flex items-center gap-2"
       >
         <USelectMenu
           v-model="selectedPeriod"
           value-key="value"
           :items="data.periodOptions"
           :search-input="false"
-          class="w-auto min-w-36 sm:w-40"
+          class="w-36 sm:w-40"
           :ui="{
-            base: 'h-10 rounded-lg border-none bg-[#171717] px-4 text-white',
+            base: 'h-10 rounded-lg border-none bg-[#171717] px-4 text-white shadow-lg sm:shadow-none',
             content: 'bg-[#171717] border border-[#2a2a2a]',
             item: 'text-white data-[highlighted]:bg-[#232323]',
             value: 'text-white',
@@ -261,10 +261,9 @@ const columns: TableColumn<CommunityEventPerformance>[] = [
 
         <div class="flex justify-end">
           <UButton
-            size="md"
             label="Understood"
             color="neutral"
-            class="h-10 justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+            class="h-10 text-sm justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
             @click="closeInfo"
           />
         </div>

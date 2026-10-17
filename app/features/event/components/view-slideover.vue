@@ -203,7 +203,7 @@ function onViewOrganizer() {
           color="neutral"
           block
           :loading="addingEventId === event.id"
-          class="h-11 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+          class="h-10 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
           @click="addToGoogleCalendar(event.id)"
         />
       </div>
@@ -217,13 +217,13 @@ function onViewOrganizer() {
           color="neutral"
           :href="organizerCardUrl"
           target="_blank"
-          class="h-9 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+          class="h-10 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
         />
         <UButton
           v-else
           label="See Organizer"
           color="neutral"
-          class="h-9 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+          class="h-10 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
           @click="onViewOrganizer"
         />
         <UButton
@@ -233,7 +233,7 @@ function onViewOrganizer() {
           "
           label="Register"
           color="neutral"
-          class="h-9 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
           @click="onRegister"
         />
         <UButton
@@ -241,7 +241,7 @@ function onViewOrganizer() {
           :label="closedLabel(event)"
           color="neutral"
           disabled
-          class="h-9 cursor-not-allowed rounded-full bg-[#232323] px-5 text-sm font-medium text-[#8b8b8b]"
+          class="h-10 cursor-not-allowed rounded-full bg-[#232323] px-5 text-sm font-medium text-[#8b8b8b]"
         />
       </div>
     </template>

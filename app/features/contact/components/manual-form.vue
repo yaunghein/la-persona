@@ -144,11 +144,10 @@ async function onSubmit(event: FormSubmitEvent<CreateManualContactRequest>) {
 
     <div class="mb-3 flex justify-end gap-2 sm:mb-0">
       <UButton
-        size="xl"
         type="submit"
         :loading="isPending"
         color="neutral"
-        class="w-full rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90 sm:w-auto"
+        class="w-full h-10 text-sm rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90 sm:w-auto"
       >
         <template #leading>
           <UIcon name="i-lucide-plus" class="size-4" />

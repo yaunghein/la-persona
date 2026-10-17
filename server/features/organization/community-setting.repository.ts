@@ -51,19 +51,11 @@ export const findCommunitySettingByInviteToken = async (token: string) => {
   return row;
 };
 
-export const JOIN_LINK_LIFETIME_DAYS = 30;
-
-export function joinLinkExpiry(from = new Date()) {
-  return new Date(
-    from.getTime() + JOIN_LINK_LIFETIME_DAYS * 24 * 60 * 60 * 1000
-  );
-}
-
 /** Replaces the join token; links shared before stop working immediately. */
 export const rotateInviteToken = async (organizationId: string) => {
   const [updated] = await db
     .update(communitySetting)
-    .set({ inviteToken: nanoid(), inviteTokenExpiresAt: joinLinkExpiry() })
+    .set({ inviteToken: nanoid() })
     .where(eq(communitySetting.organizationId, organizationId))
     .returning();
 
@@ -139,7 +131,6 @@ export const upsertCommunitySettingByOrganizationId = async (
   return insertCommunitySetting({
     organizationId,
     inviteToken: nanoid(),
-    inviteTokenExpiresAt: joinLinkExpiry(),
     description: values.description,
     guidelines: values.guidelines,
     whyJoin: values.whyJoin,
@@ -179,7 +170,6 @@ export const ensureCommunitySetting = async (organizationId: string) => {
   return insertCommunitySetting({
     organizationId,
     inviteToken: nanoid(),
-    inviteTokenExpiresAt: joinLinkExpiry(),
     description: '',
     guidelines: '',
     whyJoin: '',

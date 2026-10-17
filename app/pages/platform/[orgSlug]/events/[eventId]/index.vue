@@ -228,7 +228,7 @@ async function onCheckedIn() {
       label="Back to Events"
       leading-icon="i-lucide-chevron-left"
       color="neutral"
-      class="h-9 cursor-pointer rounded-full bg-[#232323] py-2 pr-6 pl-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+      class="h-10 cursor-pointer rounded-full bg-[#232323] pr-6 pl-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
       @click="goBack"
     />
   </div>

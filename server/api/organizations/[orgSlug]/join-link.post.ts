@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
   );
   const joinLink = await issueNewJoinLink(organization.id);
   enrichLog(event, {
-    join_link: { rotated: true, expires_at: joinLink.expiresAt },
+    join_link: { rotated: true },
   });
   return respondCreated(
     event,

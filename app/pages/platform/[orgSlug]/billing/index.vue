@@ -336,13 +336,12 @@ function getStatusLabel(status: string) {
         <div class="mb-4 hidden">
           <UDropdownMenu :items="sortMenuItems">
             <UButton
-              size="xl"
               :label="`Date: ${sortLabel}`"
               icon="i-lucide-calendar-days"
               trailing-icon="i-lucide-chevron-down"
               color="neutral"
               variant="ghost"
-              class="h-9 rounded-full border border-[#232323] bg-[#171717] px-4 text-muted hover:bg-[#232323]"
+              class="h-10 text-sm rounded-full border border-[#232323] bg-[#171717] px-4 text-muted hover:bg-[#232323]"
             />
           </UDropdownMenu>
         </div>

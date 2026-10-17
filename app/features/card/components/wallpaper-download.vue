@@ -391,7 +391,7 @@ async function downloadQr() {
           <UButton
             label="Download Wallpaper"
             icon="i-lucide-download"
-            class="h-10 cursor-pointer rounded-full px-5"
+            class="h-10 text-sm cursor-pointer rounded-full px-5"
             variant="soft"
             :loading="isGeneratingWallpaper"
             @click="downloadWallpaper"
@@ -429,7 +429,7 @@ async function downloadQr() {
             variant="soft"
             label="Download QR"
             icon="i-lucide-download"
-            class="h-10 cursor-pointer rounded-full px-5"
+            class="h-10 text-sm cursor-pointer rounded-full px-5"
             :loading="isGeneratingQr"
             @click="downloadQr"
           />
@@ -477,10 +477,9 @@ async function downloadQr() {
       </div>
       <!-- <div class="mt-5 flex justify-center border-t border-[#2a2a2a] pt-5">
         <UButton
-          size="md"
           label="Close"
           color="neutral"
-          class="h-10 min-w-44 justify-center rounded-full bg-white px-8 font-medium text-dark hover:bg-white/90"
+          class="h-10 text-sm min-w-44 justify-center rounded-full bg-white px-8 font-medium text-dark hover:bg-white/90"
           @click="isWallpaperPreviewModalOpen = false"
         />
       </div> -->

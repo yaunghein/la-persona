@@ -163,7 +163,7 @@ function onViewPersona() {
           :to="personaCardUrl"
           :target="personaCardUrl ? '_blank' : undefined"
           :ui="{ leadingIcon: 'size-5' }"
-          class="h-9 cursor-pointer justify-center rounded-full bg-white py-2 pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer justify-center rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
           @click="onViewPersona"
         />
       </div>

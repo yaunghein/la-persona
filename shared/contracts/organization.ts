@@ -115,7 +115,6 @@ export type CommunityInvitationPreview = CommunityInviteStats & {
 
 export type JoinLink = {
   url: string;
-  expiresAt: string | null;
 };
 
 /** What anyone holding a join link can see, signed in or not. */

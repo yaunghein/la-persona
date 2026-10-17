@@ -68,7 +68,7 @@ const lastSentLabel = computed(() =>
             label="Cancel"
             color="neutral"
             variant="ghost"
-            class="h-10 cursor-pointer rounded-full px-5 text-white hover:bg-[#232323]"
+            class="h-10 text-sm cursor-pointer rounded-full px-5 text-white hover:bg-[#232323]"
             @click="
               () => {
                 open = false;
@@ -81,7 +81,7 @@ const lastSentLabel = computed(() =>
             color="neutral"
             :loading="sending"
             :disabled="recipientCount === 0"
-            class="h-10 cursor-pointer rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
+            class="h-10 text-sm cursor-pointer rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
             @click="emit('confirm')"
           />
         </div>

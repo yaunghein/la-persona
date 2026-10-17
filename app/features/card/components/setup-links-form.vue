@@ -373,7 +373,7 @@ watch(isSocialSlideoverOpen, (open) => {
       <div class="flex justify-end pt-2 gap-4">
         <UButton
           type="button"
-          class="h-10 rounded-full px-5 font-semibold"
+          class="h-10 text-sm rounded-full px-5 font-semibold"
           variant="ghost"
           @click="emit('back')"
         >
@@ -381,7 +381,7 @@ watch(isSocialSlideoverOpen, (open) => {
         </UButton>
         <UButton
           type="submit"
-          class="h-10 rounded-full px-5 font-semibold"
+          class="h-10 text-sm rounded-full px-5 font-semibold"
           color="primary"
           icon="material-symbols:fitbit-check-small"
           :loading="isSubmitting"
@@ -460,13 +460,13 @@ watch(isSocialSlideoverOpen, (open) => {
             type="button"
             label="Cancel"
             variant="ghost"
-            class="h-10 rounded-full px-5 font-semibold"
+            class="h-10 text-sm rounded-full px-5 font-semibold"
             @click="closeSocialSlideover"
           />
           <UButton
             type="button"
             :label="socialEditorMode === 'create' ? 'Add Link' : 'Save Link'"
-            class="h-10 rounded-full px-5 font-semibold"
+            class="h-10 text-sm rounded-full px-5 font-semibold"
             color="primary"
             icon="i-lucide-check"
             @click="saveSocialDraft"
@@ -494,14 +494,14 @@ watch(isSocialSlideoverOpen, (open) => {
         type="button"
         label="Cancel"
         variant="ghost"
-        class="rounded-full px-5"
+        class="h-10 text-sm rounded-full px-5"
         @click="closeDeleteSocialConfirm"
       />
       <UButton
         type="button"
         label="Delete"
         color="error"
-        class="rounded-full px-6 font-medium"
+        class="h-10 text-sm rounded-full px-6 font-medium"
         @click="confirmRemoveLink"
       />
     </template>

@@ -228,7 +228,7 @@ function onViewPersona() {
           leading-icon="i-lucide-x"
           color="neutral"
           :ui="{ leadingIcon: 'size-4' }"
-          class="h-9 cursor-pointer justify-center rounded-full bg-[#232323] py-2 pr-6 pl-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+          class="h-10 cursor-pointer justify-center rounded-full bg-[#232323] pr-6 pl-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
           @click="onReject"
         />
       </div>
@@ -237,7 +237,7 @@ function onViewPersona() {
           label="Remove"
           color="neutral"
           variant="ghost"
-          class="h-9 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
           @click="onRemove"
         />
         <UButton
@@ -247,7 +247,7 @@ function onViewPersona() {
           :to="personaCardUrl"
           :target="personaCardUrl ? '_blank' : undefined"
           :ui="{ leadingIcon: 'size-4' }"
-          class="h-9 cursor-pointer justify-center rounded-full bg-white py-2 pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer justify-center rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
           @click="onViewPersona"
         />
       </div>

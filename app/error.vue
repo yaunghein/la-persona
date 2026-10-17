@@ -69,9 +69,8 @@ async function goHome() {
         </p>
 
         <UButton
-          size="xl"
           color="neutral"
-          class="mt-10 h-11 rounded-full bg-white px-8 font-medium text-dark hover:bg-white/90"
+          class="mt-10 h-10 text-sm rounded-full bg-white px-8 font-medium text-dark hover:bg-white/90"
           @click="goHome"
         >
           Back to home
