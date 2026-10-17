@@ -20,6 +20,7 @@ import {
 } from '~~/shared/utils/event-datetime';
 import {
   EVENT_IMAGE_MAX_BYTES,
+  EVENT_IMAGE_TYPES,
   EVENT_MAX_EXTRA_PHOTOS,
   toRemoteEventMediaItem,
   type EventMediaItem,
@@ -274,7 +275,7 @@ async function uploadedImageUrls() {
 }
 
 function isAllowedImage(file: File) {
-  const typeOk = file.type === 'image/jpeg' || file.type === 'image/png';
+  const typeOk = EVENT_IMAGE_TYPES.includes(file.type);
   const sizeOk = file.size <= EVENT_IMAGE_MAX_BYTES;
   return typeOk && sizeOk;
 }
@@ -372,8 +373,9 @@ function onCoverChange(event: Event) {
   if (!isAllowedImage(file)) {
     toast.add({
       title: 'Invalid cover photo',
-      description: 'Use a JPEG or PNG up to 5 MB.',
+      description: 'Use a JPEG, PNG or WebP up to 5 MB.',
       color: 'warning',
+      duration: 10000,
     });
     return;
   }
@@ -394,8 +396,9 @@ function onPhotosChange(event: Event) {
     if (!isAllowedImage(file)) {
       toast.add({
         title: 'Invalid photo skipped',
-        description: `${file.name} must be a JPEG or PNG up to 5 MB.`,
+        description: `${file.name} must be a JPEG, PNG or WebP up to 5 MB.`,
         color: 'warning',
+        duration: 10000,
       });
       continue;
     }
@@ -432,6 +435,7 @@ function setCapacityLimit() {
       title: 'Invalid capacity',
       description: 'Enter a whole number greater than 0.',
       color: 'warning',
+      duration: 10000,
     });
     return;
   }
@@ -481,6 +485,7 @@ const { mutate: createEvent, isPending: isCreating } = useMutation({
         error?.message ||
         'Please try again.',
       color: 'error',
+      duration: 10000,
     });
   },
 });
@@ -520,6 +525,7 @@ const { mutate: updateEvent, isPending: isUpdating } = useMutation({
         error?.message ||
         'Please try again.',
       color: 'error',
+      duration: 10000,
     });
   },
 });
@@ -556,6 +562,7 @@ const { mutate: deleteEvent, isPending: isDeleting } = useMutation({
         error?.statusMessage ||
         'Please try again.',
       color: 'error',
+      duration: 10000,
     });
   },
 });
@@ -577,6 +584,7 @@ function submitFromFooter() {
         parsed.error.issues[0]?.message ||
         'Fix the highlighted fields and try again.',
       color: 'warning',
+      duration: 10000,
     });
     return;
   }
@@ -592,6 +600,7 @@ function submitForm(payload: FormState) {
         ? 'Keep or upload a cover photo before updating the event.'
         : 'Upload a cover photo before creating the event.',
       color: 'warning',
+      duration: 10000,
     });
     return;
   }
@@ -613,6 +622,7 @@ function onFormError(event: FormErrorEvent) {
     title: 'Please check your form',
     description: 'Fix the highlighted fields and try again.',
     color: 'warning',
+    duration: 10000,
   });
 }
 
@@ -629,6 +639,7 @@ async function copyEventLink() {
       title: 'Copy failed',
       description: 'Could not copy event link.',
       color: 'error',
+      duration: 10000,
     });
   }
 }
@@ -687,7 +698,7 @@ async function copyEventLink() {
           <div class="space-y-2">
             <p class="text-sm text-white">Cover Photo</p>
             <p class="text-sm text-[#8b8b8b]">
-              Suggested ratio 4:3. Max Size 5 MB. JPEG or PNG.
+              Suggested ratio 4:3. Max Size 5 MB. JPEG, PNG or WebP.
             </p>
           </div>
 
@@ -720,7 +731,7 @@ async function copyEventLink() {
             <input
               ref="coverInputRef"
               type="file"
-              accept="image/jpeg,image/png"
+              accept="image/jpeg,image/png,image/webp"
               class="hidden"
               @change="onCoverChange"
             />
@@ -731,7 +742,7 @@ async function copyEventLink() {
           <div class="space-y-2">
             <p class="text-sm text-white">Add Event Photos</p>
             <p class="text-sm text-[#8b8b8b]">
-              Suggested ratio 4:3. Max Size 5 MB for Each. JPEGs or PNGs.
+              Suggested ratio 4:3. Max Size 5 MB for Each. JPEGs, PNGs or WebPs.
             </p>
           </div>
 
@@ -794,7 +805,7 @@ async function copyEventLink() {
           <input
             ref="photosInputRef"
             type="file"
-            accept="image/jpeg,image/png"
+            accept="image/jpeg,image/png,image/webp"
             multiple
             class="hidden"
             @change="onPhotosChange"

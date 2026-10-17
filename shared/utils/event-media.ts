@@ -6,6 +6,7 @@ export const EVENT_PLACEHOLDER_URLS = [
 
 export const EVENT_MAX_EXTRA_PHOTOS = 4;
 export const EVENT_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+export const EVENT_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 export type EventMediaSource = 'local' | 'remote';
 

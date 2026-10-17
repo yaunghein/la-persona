@@ -45,9 +45,6 @@ usePageSeo({
   imageAlt: () => event.value?.title,
 });
 
-const showHowToUse = ref(false);
-const justRegistered = ref(String(route.query.registered || '') === '1');
-
 const orgSlug = computed(() => event.value?.organizer?.slug || '');
 
 const viewer = computed<EventFlowViewer>(() => {
@@ -128,7 +125,6 @@ function onRegister() {
   if (registrationBlock.value) return;
 
   if (canRegister.value) {
-    justRegistered.value = true;
     refresh();
     return;
   }
@@ -156,15 +152,6 @@ function onCreateAccount() {
 
 function onCancelOnboarding() {
   return navigateTo(ROUTES.EVENTS.PUBLIC(eventId.value));
-}
-
-function onHowToUse() {
-  showHowToUse.value = true;
-}
-
-function onFlowDone() {
-  if (!orgSlug.value) return;
-  return navigateTo(`${ROUTES.PLATFORM.ROOT}/${orgSlug.value}/cards`);
 }
 </script>
 
@@ -198,12 +185,6 @@ function onFlowDone() {
         @cancel="onCancelOnboarding"
       />
 
-      <CommunityEventOnboardingHowToUse
-        v-else-if="showHowToUse"
-        class="min-h-0 flex-1"
-        @done="onFlowDone"
-      />
-
       <CommunityEventRegisterFlow
         v-else
         class="min-h-0 flex-1"
@@ -213,11 +194,8 @@ function onFlowDone() {
         :organization-slug="orgSlug"
         :can-register="canRegister"
         :viewer-registration-status="viewer.viewerRegistrationStatus"
-        :how-to-use="justRegistered"
         @register="onRegister"
         @view-organizer="onViewOrganizer"
-        @completed="onFlowDone"
-        @how-to-use="onHowToUse"
       />
     </div>
   </div>

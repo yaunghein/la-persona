@@ -128,7 +128,9 @@ export default defineNuxtConfig({
     },
     compressPublicAssets: true,
     // Email artwork the server draws on (QR ticket); dir is relative to server/.
-    serverAssets: [{ baseName: 'email-images', dir: '../public/images/emails' }],
+    serverAssets: [
+      { baseName: 'email-images', dir: '../public/images/emails' },
+    ],
     externals: {
       external: ['pino', 'pino-pretty'],
     },

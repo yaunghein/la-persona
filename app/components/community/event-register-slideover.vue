@@ -40,7 +40,6 @@ const slideoverTitle = computed(() =>
         :event="event"
         :organizer="organizer"
         @step-change="step = $event"
-        @completed="open = false"
         @view-organizer="emit('viewOrganizer', $event)"
       />
     </template>

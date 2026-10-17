@@ -23,13 +23,11 @@ const props = withDefaults(
     organizationSlug?: string;
     canRegister?: boolean;
     viewerRegistrationStatus?: ViewerRegistrationStatus;
-    howToUse?: boolean;
   }>(),
   {
     variant: 'slideover',
     canRegister: true,
     viewerRegistrationStatus: 'none',
-    howToUse: false,
   }
 );
 
@@ -69,9 +67,7 @@ const organizerCardUrl = computed(() =>
 const emit = defineEmits<{
   viewOrganizer: [event: EventDTO];
   register: [event: EventDTO];
-  completed: [];
   stepChange: [step: RegisterStep];
-  howToUse: [];
 }>();
 
 type RegisterStep = 'confirm' | 'registering' | 'success';
@@ -154,11 +150,6 @@ function clearRegisteringTimer() {
   registeringTimer = null;
 }
 
-function resetStep() {
-  clearRegisteringTimer();
-  step.value = 'confirm';
-}
-
 async function startRegister() {
   if (step.value !== 'confirm' || registrationBlock.value) return;
 
@@ -198,15 +189,6 @@ async function startRegister() {
 
 function onViewOrganizer() {
   emit('viewOrganizer', props.event);
-}
-
-function onGotIt() {
-  if (isPage.value && props.howToUse) {
-    emit('howToUse');
-    return;
-  }
-  emit('completed');
-  if (!isPage.value) resetStep();
 }
 
 watch(
@@ -410,7 +392,7 @@ onBeforeUnmount(() => {
               Register
             </span>
             <span
-              v-if="spotsLabel && !isPage"
+              v-if="spotsLabel"
               class="text-[0.6875rem] font-semibold tracking-[0.55px] text-[#ff3113]"
             >
               {{ spotsLabel }}
@@ -445,19 +427,12 @@ onBeforeUnmount(() => {
           <UButton
             v-if="canAddToGoogleCalendar"
             label="Add to Google Calendar"
-            icon="i-simple-icons-googlecalendar"
+            :avatar="{ src: '/images/google-calendar-icon.svg', alt: '' }"
+            :ui="{ leadingAvatar: 'rounded-none bg-transparent' }"
             color="neutral"
             :loading="addingEventId === event.id"
             class="h-13 w-full cursor-pointer justify-center rounded-full bg-white px-2.5 text-sm font-bold text-dark hover:bg-white/90"
             @click="addToGoogleCalendar(event.id)"
-          />
-          <UButton
-            :label="
-              howToUse ? 'Learn How to Use Community Card' : 'Explore Platform'
-            "
-            color="neutral"
-            class="h-13 w-full cursor-pointer justify-center rounded-full bg-[#232323] px-2.5 text-sm font-bold text-white hover:bg-[#2a2a2a]"
-            @click="onGotIt"
           />
         </div>
         <PoweredByLaPersona v-if="isPage" />

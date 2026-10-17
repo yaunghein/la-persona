@@ -105,7 +105,7 @@ function onViewOrganizer() {
     close-icon="i-material-symbols:close-small"
     unmount-on-hide
     :ui="{
-      content: 'bg-[#171717] sm:max-w-[480px] divide-y-0',
+      content: 'bg-[#171717] sm:max-w-120 divide-y-0',
       header: 'border-b-2 border-[#232323] px-6 py-6',
       title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
       body: 'p-6',
@@ -195,7 +195,11 @@ function onViewOrganizer() {
         <UButton
           v-if="canAddToGoogleCalendar"
           label="Add to Google Calendar"
-          icon="i-simple-icons-googlecalendar"
+          :avatar="{
+            src: '/images/google-calendar-icon.svg',
+            alt: '',
+          }"
+          :ui="{ leadingAvatar: 'rounded-none bg-transparent' }"
           color="neutral"
           block
           :loading="addingEventId === event.id"
