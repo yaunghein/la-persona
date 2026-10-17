@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { CommunityInviteRole } from '~~/shared/permissions/organization';
 
-
 const props = defineProps<{
   organizationSlug: string;
 }>();
@@ -10,8 +9,6 @@ const open = defineModel<boolean>('open', { default: false });
 
 const toast = useToast();
 const { data: joinLink } = useJoinLinkQuery(() => props.organizationSlug);
-const { mutateAsync: rotateJoinLink, isPending: isRotating } =
-  useRotateJoinLinkMutation(() => props.organizationSlug);
 const { mutateAsync: inviteMember, isPending: isSending } =
   useInviteMemberMutation(() => props.organizationSlug);
 
@@ -98,23 +95,6 @@ async function sendInvitations() {
   }
 }
 
-async function regenerateInviteLink() {
-  try {
-    await rotateJoinLink();
-    toast.add({
-      title: 'New link created',
-      description: 'The previous invite link no longer works.',
-      color: 'success',
-    });
-  } catch (error) {
-    toast.add({
-      title: 'Could not create a new link',
-      description: apiErrorMessage(error, 'Try again.'),
-      color: 'error',
-    });
-  }
-}
-
 function downloadQr() {
   if (!qrDataUrl.value) {
     toast.add({
@@ -166,16 +146,6 @@ function downloadQr() {
               @click="copyInviteLink"
             />
           </div>
-          <UButton
-            label="Create new link"
-            icon="i-lucide-refresh-cw"
-            color="neutral"
-            variant="link"
-            size="sm"
-            class="self-start px-0 text-[#8b8b8b] hover:text-white"
-            :loading="isRotating"
-            @click="regenerateInviteLink"
-          />
         </section>
 
         <div class="h-px w-full bg-[#232323]" />

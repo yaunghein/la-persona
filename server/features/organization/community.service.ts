@@ -27,7 +27,6 @@ import {
 import {
   ensureCommunitySetting,
   findCommunitySettingByInviteToken,
-  rotateInviteToken,
   upsertCommunitySettingByOrganizationId,
 } from '~~/server/features/organization/community-setting.repository';
 import { sanitizeRichText } from '~~/server/lib/html-sanitizer';
@@ -307,17 +306,6 @@ export async function describeJoinLink(
   const setting = await ensureCommunitySetting(organizationId);
   return {
     url: setting ? joinLinkUrl(setting.inviteToken) : '',
-  };
-}
-
-export async function issueNewJoinLink(
-  organizationId: string
-): Promise<JoinLink> {
-  await ensureCommunitySetting(organizationId);
-  const setting = await rotateInviteToken(organizationId);
-  if (!setting) throw notFound('Community');
-  return {
-    url: joinLinkUrl(setting.inviteToken),
   };
 }
 

@@ -46,27 +46,6 @@ export function useJoinLinkQuery(organizationSlug: MaybeRefOrGetter<string>) {
   });
 }
 
-/** Issues a new join link; previously shared links stop working. */
-export function useRotateJoinLinkMutation(
-  organizationSlug: MaybeRefOrGetter<string>
-) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: () =>
-      $fetch<JoinLink>(
-        organizationUrl(toValue(organizationSlug), 'join-link'),
-        {
-          method: 'POST',
-        }
-      ),
-    onSuccess: (joinLink) =>
-      queryClient.setQueryData(
-        organizationQueryKeys.joinLink(toValue(organizationSlug)),
-        joinLink
-      ),
-  });
-}
-
 function useInvalidateRoster(organizationSlug: MaybeRefOrGetter<string>) {
   const queryClient = useQueryClient();
   return () =>

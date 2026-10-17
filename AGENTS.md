@@ -77,7 +77,7 @@ server/
 ## Naming
 
 - **Files:** kebab-case. Server modules carry a role suffix (`event.service.ts`). Client composable files start with `use-`.
-- **Functions** are named for intent, in domain language: `submitCardRequest`, `approvePayment`, `checkInAttendee`, `rotateJoinLink`.
+- **Functions** are named for intent, in domain language: `submitCardRequest`, `approvePayment`, `checkInAttendee`, `inviteMember`.
   - No `handle*`, `process*`, `do*`, `manage*` or `get*Data`.
   - No abbreviations except id, url and dto.
 - **Repository reads**
@@ -172,7 +172,7 @@ The model is fail-closed:
   - The image proxy only streams our bucket's images, with `nosniff`.
 - **Email:** content and recipients are built on the server. Never accept a recipient, subject or HTML from the client.
 - **Rate limits:** public write routes and sign-in have per-IP limits in `nuxt.config.ts` `routeRules`. Add one for every new anonymous write.
-- **Join links** are permanent by design and add people as `member`. A manager can replace a leaked link with `POST /api/organizations/{orgSlug}/join-link`.
+- **Join links** are permanent by design (one token per community, never rotated or expired) and add people as `member`.
 - **Owners:** only an owner can remove or demote an owner. Owner cannot be granted through the API.
 - **Bans and user deletes** revoke sessions.
 - **CSP:** do not add S3 or other content hosts to `script-src`.

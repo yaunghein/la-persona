@@ -51,17 +51,6 @@ export const findCommunitySettingByInviteToken = async (token: string) => {
   return row;
 };
 
-/** Replaces the join token; links shared before stop working immediately. */
-export const rotateInviteToken = async (organizationId: string) => {
-  const [updated] = await db
-    .update(communitySetting)
-    .set({ inviteToken: nanoid() })
-    .where(eq(communitySetting.organizationId, organizationId))
-    .returning();
-
-  return updated;
-};
-
 export const insertCommunitySetting = async (
   values: InsertCommunitySetting
 ) => {
