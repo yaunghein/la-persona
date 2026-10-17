@@ -82,12 +82,15 @@ async function onSubmit(event: FormSubmitEvent<CreateManualContactRequest>) {
     });
   }
 }
+
+defineExpose({ isPending });
 </script>
 
 <template>
   <UForm
     :schema="CreateManualContactRequest"
     :state="state"
+    id="manual-contact-form"
     class="space-y-8"
     @submit="onSubmit"
   >
@@ -142,18 +145,15 @@ async function onSubmit(event: FormSubmitEvent<CreateManualContactRequest>) {
       </UFormField>
     </div>
 
-    <div class="mb-3 flex justify-end gap-2 sm:mb-0">
+    <div v-if="layout === 'wide'" class="flex justify-end">
       <UButton
         type="submit"
+        label="Create New Contact"
+        leading-icon="i-lucide-plus"
         :loading="isPending"
         color="neutral"
-        class="w-full h-10 text-sm rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90 sm:w-auto"
-      >
-        <template #leading>
-          <UIcon name="i-lucide-plus" class="size-4" />
-        </template>
-        Create New Contact
-      </UButton>
+        class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+      />
     </div>
   </UForm>
 </template>

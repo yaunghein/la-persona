@@ -95,6 +95,7 @@ const total = computed(() => contactPage.value?.total ?? 0);
 const hasContacts = computed(() => total.value > 0);
 
 const isCreateOpen = ref(false);
+const manualContactForm = useTemplateRef('manualContactForm');
 const contactToDelete = ref<ContactSummary | null>(null);
 const isDeleteOpen = computed({
   get: () => contactToDelete.value !== null,
@@ -250,7 +251,7 @@ watch(total, (count) => {
         <UButton
           v-if="hasContacts"
           label="Create New Contact"
-          leading-icon="i-material-symbols-add"
+          leading-icon="i-lucide-plus"
           color="neutral"
           class="fixed bottom-6 left-1/2 z-10 -translate-x-1/2 shadow-lg sm:static sm:translate-x-0 sm:shadow-none flex h-10 text-sm cursor-pointer items-center justify-center rounded-full border-2 border-[#232323] bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
           @click="openCreateContact"
@@ -302,8 +303,21 @@ watch(total, (count) => {
     >
       <template #body>
         <ContactManualForm
+          ref="manualContactForm"
           :organization-slug="orgSlug"
           @created="closeCreateContact"
+        />
+      </template>
+
+      <template #footer>
+        <UButton
+          type="submit"
+          form="manual-contact-form"
+          label="Create New Contact"
+          leading-icon="i-lucide-plus"
+          color="neutral"
+          :loading="manualContactForm?.isPending"
+          class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
         />
       </template>
     </USlideover>
@@ -333,7 +347,7 @@ watch(total, (count) => {
       </p>
       <UButton
         label="Create New Contact"
-        leading-icon="i-material-symbols-add"
+        leading-icon="i-lucide-plus"
         color="neutral"
         class="mt-2 h-10 text-sm rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
         @click="openCreateContact"

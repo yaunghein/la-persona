@@ -164,6 +164,7 @@ import type { FeedbackKind } from '~~/shared/contracts/feedback';
 import { FEEDBACK_KIND_LABELS } from '~~/shared/contracts/feedback';
 
 const isFeedbackSlideoverOpen = ref(false);
+const feedbackForm = useTemplateRef('feedbackForm');
 const feedbackKind = ref<FeedbackKind>('feedback');
 
 function openFeedbackSlideover(kind: FeedbackKind) {
@@ -292,8 +293,21 @@ const currentPageLabel = computed(() => {
     >
       <template #body>
         <FeedbackSubmissionForm
+          ref="feedbackForm"
           :kind="feedbackKind"
           @close="isFeedbackSlideoverOpen = false"
+        />
+      </template>
+
+      <template v-if="feedbackForm?.isEditing" #footer>
+        <UButton
+          type="submit"
+          form="feedback-form"
+          :label="feedbackForm.submitLabel"
+          leading-icon="i-lucide-check"
+          color="neutral"
+          :loading="feedbackForm.isSubmitting"
+          class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
         />
       </template>
     </USlideover>

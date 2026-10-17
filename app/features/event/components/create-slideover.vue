@@ -604,7 +604,6 @@ async function copyEventLink() {
       header: 'border-b-2 border-[#232323] px-6 py-6',
       title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
       body: 'px-6',
-      footer: 'p-6 justify-end!',
     }"
   >
     <template #body>
@@ -907,15 +906,15 @@ async function copyEventLink() {
     </template>
 
     <template v-if="!success" #footer>
-      <div class="flex w-full items-center justify-end gap-4">
+      <div class="flex w-full items-center justify-end gap-2">
         <UButton
           v-if="isEdit"
           icon="i-lucide-trash-2"
           aria-label="Delete event"
-          color="neutral"
-          variant="ghost"
+          color="error"
+          variant="soft"
           :disabled="isSubmitting"
-          class="mr-auto size-9 shrink-0 cursor-pointer justify-center rounded-full text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          class="mr-auto size-10 shrink-0 cursor-pointer justify-center rounded-full"
           @click="openDeleteConfirm"
         />
         <UButton
@@ -929,7 +928,7 @@ async function copyEventLink() {
         />
         <UButton
           :label="isEdit ? 'Update Changes' : 'Create an Event'"
-          leading-icon="i-material-symbols:fitbit-check-small"
+          leading-icon="i-lucide-check"
           color="neutral"
           :loading="isCreating || isUpdating"
           class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"

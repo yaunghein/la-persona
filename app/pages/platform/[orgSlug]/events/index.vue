@@ -280,9 +280,7 @@ function onViewOrganizer() {
   <EventViewSlideover
     v-model:open="isViewOpen"
     :event="viewingEvent"
-    :organizer-card-slug="data?.organizerCardSlug"
     @register="onRegister"
-    @view-organizer="onViewOrganizer"
   />
   <EventRegisterSlideover
     v-model:open="isRegisterOpen"

@@ -175,7 +175,7 @@ function unavailableLabel(event: CommunityEvent) {
         <UButton
           v-if="canManage"
           label="Create Event"
-          leading-icon="i-material-symbols:add"
+          leading-icon="i-lucide-plus"
           color="neutral"
           class="fixed bottom-6 left-1/2 z-10 -translate-x-1/2 shadow-lg sm:static sm:translate-x-0 sm:shadow-none h-10 w-fit cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
           @click="emit('create')"
@@ -264,9 +264,13 @@ function unavailableLabel(event: CommunityEvent) {
               class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
               @click.stop="onRegister(event)"
             />
-            <span v-else class="text-sm text-[#8b8b8b]">
-              {{ unavailableLabel(event) }}
-            </span>
+            <UButton
+              v-else
+              :label="unavailableLabel(event)"
+              color="neutral"
+              disabled
+              class="pointer-events-none h-10 rounded-full bg-white/10 px-5 text-sm font-medium text-white/50 disabled:bg-white/10 disabled:opacity-100"
+            />
           </div>
         </div>
       </article>

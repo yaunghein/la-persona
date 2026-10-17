@@ -58,7 +58,7 @@ onUnmounted(() => {
         >
           <canvas
             ref="canvasEl"
-            class="absolute inset-0 size-full"
+            class="pointer-events-none absolute inset-0 size-full"
             aria-hidden="true"
           />
         </div>

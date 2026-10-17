@@ -588,26 +588,24 @@ const selectMenuUi = {
               />
             </UFormField>
           </div>
-
-          <div
-            class="mt-6 flex justify-end gap-2 border-t border-[#232323] pt-6"
-          >
-            <UButton
-              label="Cancel"
-              color="neutral"
-              variant="ghost"
-              class="h-10 text-sm rounded-full px-5 text-white hover:bg-[#232323]"
-              @click="closeCreate"
-            />
-            <UButton
-              label="Create"
-              color="neutral"
-              :loading="isCreating"
-              class="h-10 text-sm rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
-              @click="onCreate"
-            />
-          </div>
         </div>
+      </template>
+
+      <template #footer>
+        <UButton
+          label="Cancel"
+          color="neutral"
+          variant="ghost"
+          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          @click="closeCreate"
+        />
+        <UButton
+          label="Create"
+          color="neutral"
+          :loading="isCreating"
+          class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+          @click="onCreate"
+        />
       </template>
     </USlideover>
 
@@ -761,26 +759,24 @@ const selectMenuUi = {
               </UFormField>
             </template>
           </div>
-
-          <div
-            class="mt-6 flex justify-end gap-2 border-t border-[#232323] pt-6"
-          >
-            <UButton
-              label="Cancel"
-              color="neutral"
-              variant="ghost"
-              class="h-10 text-sm rounded-full px-5 text-white hover:bg-[#232323]"
-              @click="closeEdit"
-            />
-            <UButton
-              label="Save"
-              color="neutral"
-              :loading="isSaving"
-              class="h-10 text-sm rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
-              @click="onSaveEdit"
-            />
-          </div>
         </div>
+      </template>
+
+      <template #footer>
+        <UButton
+          label="Cancel"
+          color="neutral"
+          variant="ghost"
+          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          @click="closeEdit"
+        />
+        <UButton
+          label="Save"
+          color="neutral"
+          :loading="isSaving"
+          class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+          @click="onSaveEdit"
+        />
       </template>
     </USlideover>
 
@@ -794,7 +790,6 @@ const selectMenuUi = {
         header: 'border-b-2 border-[#232323] px-6 py-6',
         title: 'truncate text-lg font-medium text-white',
         body: 'px-6',
-        footer: 'border-t border-[#232323] px-6 py-4',
       }"
     >
       <template #body>
@@ -963,20 +958,21 @@ const selectMenuUi = {
         </div>
       </template>
       <template v-if="orgDetail" #footer>
-        <div class="flex justify-end gap-2">
-          <UButton
-            label="Delete"
-            color="error"
-            variant="ghost"
-            @click="openDeleteFromDetail"
-          />
-          <UButton
-            label="Edit"
-            color="neutral"
-            class="h-10 text-sm rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
-            @click="openEditFromDetail"
-          />
-        </div>
+        <UButton
+          label="Delete"
+          leading-icon="i-lucide-trash-2"
+          color="error"
+          variant="soft"
+          class="mr-auto h-10 cursor-pointer rounded-full px-5 text-sm font-medium"
+          @click="openDeleteFromDetail"
+        />
+        <UButton
+          label="Edit"
+          leading-icon="i-lucide-pencil"
+          color="neutral"
+          class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+          @click="openEditFromDetail"
+        />
       </template>
     </USlideover>
 

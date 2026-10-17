@@ -99,9 +99,9 @@ async function onFileChange(event: Event) {
       <UButton
         v-if="url"
         label="Remove"
-        color="neutral"
-        variant="ghost"
-        class="h-10 cursor-pointer rounded-full px-4 text-sm text-white/70 hover:bg-[#232323]"
+        color="error"
+        variant="soft"
+        class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium"
         @click="
           () => {
             url = '';

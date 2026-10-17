@@ -225,7 +225,7 @@ function onSubmit() {
         <UButton
           type="submit"
           class="h-10 text-sm rounded-full px-5 font-semibold"
-          icon="material-symbols:keyboard-double-arrow-right"
+          icon="i-lucide-chevrons-right"
           :loading="isSubmitting"
         >
           Continue

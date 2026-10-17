@@ -223,28 +223,32 @@ onMounted(() => {
           <p class="whitespace-pre-wrap text-white">{{ selected.message }}</p>
           <p>{{ selected.userName }} · {{ selected.userEmail }}</p>
           <p>{{ selected.organizationName }}</p>
-          <div class="flex gap-2">
-            <UButton
-              :to="`${ROUTES.THAKHIN.USERS}?focus=${selected.userId}`"
-              label="Open person"
-              color="neutral"
-              variant="outline"
-            />
-            <UButton
-              :to="`${ROUTES.THAKHIN.ORGANIZATIONS}?focus=${selected.organizationId}`"
-              label="Open organization"
-              color="neutral"
-              variant="outline"
-            />
-          </div>
+        </div>
+      </template>
+
+      <template #footer>
+        <template v-if="selected">
           <UButton
             label="Delete"
-            size="sm"
+            leading-icon="i-lucide-trash-2"
             color="error"
-            variant="outline"
+            variant="soft"
+            class="mr-auto h-10 cursor-pointer rounded-full px-5 text-sm font-medium"
             @click="askDeleteSelected"
           />
-        </div>
+          <UButton
+            :to="`${ROUTES.THAKHIN.USERS}?focus=${selected.userId}`"
+            label="Open person"
+            color="neutral"
+            class="h-10 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+          />
+          <UButton
+            :to="`${ROUTES.THAKHIN.ORGANIZATIONS}?focus=${selected.organizationId}`"
+            label="Open organization"
+            color="neutral"
+            class="h-10 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+          />
+        </template>
       </template>
     </USlideover>
 

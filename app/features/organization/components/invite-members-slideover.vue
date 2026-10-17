@@ -22,10 +22,10 @@ const roleOptions: { label: string; value: CommunityInviteRole }[] = [
 const qrDataUrl = ref('');
 
 const formFieldClass =
-  '[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white';
+  '[&_label]:mb-1.5 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white';
 
 const inputUi = {
-  base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+  base: 'h-11 rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
 };
 
 watch(
@@ -125,16 +125,16 @@ function downloadQr() {
     }"
   >
     <template #body>
-      <div class="flex flex-col gap-8 py-2">
+      <div class="flex flex-col gap-6">
         <section class="flex flex-col gap-3">
-          <div class="space-y-3">
+          <div class="space-y-1">
             <h3 class="text-sm font-medium text-white">Invite with Link</h3>
-            <p class="text-sm leading-5.25 text-[#8b8b8b]">
+            <p class="text-sm text-[#8b8b8b]">
               Anyone with this link can join.
             </p>
           </div>
           <div
-            class="flex h-11.75 items-center justify-between gap-3 rounded-[4px] border border-[#2a2a2a] bg-[#232323] px-4"
+            class="flex h-11 items-center justify-between gap-3 rounded-[4px] border border-[#2a2a2a] bg-[#232323] pr-1 pl-4"
           >
             <p class="truncate text-sm text-white">{{ inviteLink }}</p>
             <UButton
@@ -150,53 +150,47 @@ function downloadQr() {
 
         <div class="h-px w-full bg-[#232323]" />
 
-        <section class="flex flex-col gap-8">
-          <div class="space-y-3">
+        <section class="flex flex-col gap-4">
+          <div class="space-y-1">
             <h3 class="text-sm font-medium text-white">Invite by Email</h3>
-            <p class="text-sm leading-5.25 text-[#8b8b8b]">
-              Invite people to your community by sending an invite to their
-              emails.
-            </p>
+            <p class="text-sm text-[#8b8b8b]">Send an invite to their email.</p>
           </div>
 
-          <UFormField label="Email Invitation" :class="formFieldClass">
+          <UFormField label="Email" :class="formFieldClass">
             <UInput
               v-model="emailInput"
               type="email"
               placeholder="example@company.com"
               class="w-full"
-              size="xl"
               :ui="inputUi"
             />
           </UFormField>
 
           <UFormField
             label="Role"
-            :description="
+            :help="
               roleInput === 'volunteer'
                 ? 'Volunteers can view events, attendees, and run check-in, but cannot create or edit events.'
                 : 'Members can browse events and register.'
             "
             :class="formFieldClass"
-            :ui="{ description: 'mb-3 text-sm text-[#8b8b8b]' }"
+            :ui="{ help: 'mt-1.5 text-xs text-[#8b8b8b]' }"
           >
             <USelect
               v-model="roleInput"
               :items="roleOptions"
               class="w-full"
-              size="xl"
               :ui="inputUi"
             />
           </UFormField>
 
           <div class="flex justify-end">
             <UButton
-              label="Send Invitations"
-              icon="i-lucide-send"
+              label="Send Invitation"
+              leading-icon="i-lucide-send"
               color="neutral"
               :loading="isSending"
-              :ui="{ leadingIcon: 'size-5' }"
-              class="h-10 text-sm rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
+              class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
               @click="sendInvitations"
             />
           </div>
@@ -204,36 +198,35 @@ function downloadQr() {
 
         <div class="h-px w-full bg-[#232323]" />
 
-        <section class="flex flex-col gap-8">
-          <div class="space-y-3">
+        <section class="flex flex-col gap-4">
+          <div class="space-y-1">
             <h3 class="text-sm font-medium text-white">Community QR Code</h3>
-            <p class="text-sm leading-normal text-[#8b8b8b]">
-              Perfect for networking events, conferences, and workshops. Display
-              this QR code on presentation slides, registration desks, or
-              printed materials.
+            <p class="text-sm text-[#8b8b8b]">
+              Show it on slides, registration desks, or printed materials.
             </p>
           </div>
 
-          <div class="flex flex-col items-center gap-6">
+          <div class="flex flex-col items-center gap-4">
             <div
-              class="flex size-50 items-center justify-center rounded-xl border border-[#232323] bg-dark p-2"
+              class="flex size-44 items-center justify-center rounded-xl border border-[#232323] bg-dark p-2"
             >
               <img
                 v-if="qrDataUrl"
                 :src="qrDataUrl"
                 alt="Community invite QR code"
-                class="size-46 rounded-[4px]"
+                class="size-40 rounded-[4px]"
               />
               <UIcon
                 v-else
                 name="i-lucide-qr-code"
-                class="size-16 text-[#8b8b8b]"
+                class="size-14 text-[#8b8b8b]"
               />
             </div>
             <UButton
               label="Download QR"
+              leading-icon="i-lucide-download"
               color="neutral"
-              class="h-10 text-sm rounded-full bg-[#232323] px-6 font-medium text-white hover:bg-[#2a2a2a]"
+              class="h-10 cursor-pointer rounded-full bg-[#232323] pr-6 pl-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
               @click="downloadQr"
             />
           </div>

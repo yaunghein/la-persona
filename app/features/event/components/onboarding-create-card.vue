@@ -433,7 +433,7 @@ watch(
                       icon="i-lucide-trash-2"
                       color="error"
                       variant="ghost"
-                      class="text-[#8b8b8b] hover:bg-[#171717]"
+                      class="hover:bg-error/10"
                       :aria-label="`Remove ${resolveSocialLabel(link)}`"
                       @click="requestRemoveLink(index)"
                     />
@@ -488,7 +488,11 @@ watch(
     }"
   >
     <template #body>
-      <form class="space-y-6" @submit.prevent="saveSocialDraft">
+      <form
+        id="social-link-form"
+        class="space-y-6"
+        @submit.prevent="saveSocialDraft"
+      >
         <UFormField
           label="Link Type"
           name="socialDraft.label"
@@ -539,24 +543,26 @@ watch(
             }"
           />
         </UFormField>
-
-        <div class="flex justify-end gap-3 pt-2">
-          <UButton
-            type="button"
-            label="Cancel"
-            color="neutral"
-            variant="ghost"
-            class="h-10 text-sm rounded-full px-4 text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
-            @click="closeSocialSlideover"
-          />
-          <UButton
-            type="submit"
-            :label="socialEditorMode === 'create' ? 'Add Link' : 'Save Link'"
-            icon="i-lucide-check"
-            class="h-10 text-sm rounded-full bg-[#232323] px-5 text-white hover:bg-[#2a2a2a]"
-          />
-        </div>
       </form>
+    </template>
+
+    <template #footer>
+      <UButton
+        type="button"
+        label="Cancel"
+        color="neutral"
+        variant="ghost"
+        class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+        @click="closeSocialSlideover"
+      />
+      <UButton
+        type="submit"
+        form="social-link-form"
+        :label="socialEditorMode === 'create' ? 'Add Link' : 'Save Link'"
+        leading-icon="i-lucide-check"
+        color="neutral"
+        class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+      />
     </template>
   </USlideover>
 

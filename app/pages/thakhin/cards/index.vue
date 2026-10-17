@@ -689,31 +689,29 @@ const selectUi = {
             onboarding invitation (which creates the customer org and moves the
             card). User stays unlinked until the recipient accepts.
           </p>
-
-          <div
-            class="mt-6 flex justify-end gap-2 border-t border-[#232323] pt-6"
-          >
-            <UButton
-              label="Cancel"
-              color="neutral"
-              variant="ghost"
-              class="h-10 text-sm rounded-full px-5 text-white hover:bg-[#232323]"
-              @click="
-                () => {
-                  isFormOpen = false;
-                  // resetForm();
-                }
-              "
-            />
-            <UButton
-              :label="editingId ? 'Save changes' : 'Create card'"
-              color="neutral"
-              :loading="isSaving"
-              class="h-10 text-sm rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
-              @click="onSubmitForm"
-            />
-          </div>
         </div>
+      </template>
+
+      <template #footer>
+        <UButton
+          label="Cancel"
+          color="neutral"
+          variant="ghost"
+          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          @click="
+            () => {
+              isFormOpen = false;
+              // resetForm();
+            }
+          "
+        />
+        <UButton
+          :label="editingId ? 'Save changes' : 'Create card'"
+          color="neutral"
+          :loading="isSaving"
+          class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+          @click="onSubmitForm"
+        />
       </template>
     </USlideover>
 
@@ -777,13 +775,19 @@ const selectUi = {
           <p v-if="cardDetail.pendingInvitation">
             Pending invitation to {{ cardDetail.pendingInvitation.email }}
           </p>
-          <UButton
-            label="Public card"
-            variant="link"
-            :to="`/c/${cardDetail.slug}`"
-            target="_blank"
-          />
         </div>
+      </template>
+
+      <template #footer>
+        <UButton
+          v-if="cardDetail"
+          label="Public card"
+          leading-icon="i-lucide-external-link"
+          color="neutral"
+          :to="`/c/${cardDetail.slug}`"
+          target="_blank"
+          class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+        />
       </template>
     </USlideover>
   </div>

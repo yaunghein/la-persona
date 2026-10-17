@@ -42,6 +42,7 @@ const { mutateAsync: deleteCard, isPending: isDeleting } =
   useDeleteCardMutation();
 
 const isRequestOpen = ref(false);
+const requestForm = useTemplateRef('requestForm');
 const pendingCardName = ref<string | null>(null);
 const isPendingInfoOpen = computed({
   get: () => pendingCardName.value !== null,
@@ -133,7 +134,19 @@ async function confirmDelete() {
       }"
     >
       <template #body>
-        <CardRequestForm @close="closeRequestForm" />
+        <CardRequestForm ref="requestForm" @close="closeRequestForm" />
+      </template>
+
+      <template v-if="!requestForm?.success" #footer>
+        <UButton
+          type="submit"
+          form="card-request-form"
+          label="Send Request"
+          leading-icon="i-lucide-send"
+          color="neutral"
+          :loading="requestForm?.isSubmitting"
+          class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+        />
       </template>
     </USlideover>
 

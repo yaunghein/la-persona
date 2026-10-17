@@ -116,6 +116,12 @@ function onFormError(event: FormErrorEvent) {
 function clearServerError() {
   serverErrorMessage.value = null;
 }
+
+defineExpose({
+  isSubmitting,
+  isEditing: computed(() => !success.value && !serverErrorMessage.value),
+  submitLabel: computed(() => submitLabelByKind[state.kind]),
+});
 </script>
 
 <template>
@@ -177,11 +183,12 @@ function clearServerError() {
 
   <UForm
     v-else
+    id="feedback-form"
     :state="state"
     :schema="CreateFeedbackRequest"
     @submit="onSubmit"
     @error="onFormError"
-    class="space-y-4 pb-6 h-full flex flex-col"
+    class="space-y-4"
   >
     <!-- <div class="space-y-4">
       <h1 class="text-[20px] font-medium uppercase tracking-widest text-white">
@@ -207,15 +214,5 @@ function clearServerError() {
         }"
       />
     </UFormField>
-
-    <div class="flex justify-end pt-2">
-      <UButton
-        type="submit"
-        :label="submitLabelByKind[state.kind]"
-        :loading="isSubmitting"
-        icon="i-lucide-check"
-        class="h-10 text-sm rounded-full bg-white px-5 text-dark hover:bg-white/90 cursor-pointer"
-      />
-    </div>
   </UForm>
 </template>

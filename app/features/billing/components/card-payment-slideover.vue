@@ -153,19 +153,19 @@ async function confirmPayment() {
         </div>
 
         <CardNeedHelp />
-
-        <div class="flex justify-end">
-          <UButton
-            label="Confirm Payment"
-            icon="i-lucide-check"
-            color="neutral"
-            :loading="isBusy"
-            :disabled="!receiptFile || !quote"
-            class="h-10 text-sm rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90 disabled:opacity-60"
-            @click="confirmPayment"
-          />
-        </div>
       </div>
+    </template>
+
+    <template #footer>
+      <UButton
+        label="Confirm Payment"
+        leading-icon="i-lucide-check"
+        color="neutral"
+        :loading="isBusy"
+        :disabled="!receiptFile || !quote"
+        class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90 disabled:opacity-60"
+        @click="confirmPayment"
+      />
     </template>
   </USlideover>
 </template>

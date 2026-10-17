@@ -90,15 +90,19 @@ function downloadQr() {
                 class="size-16 text-[#8b8b8b]"
               />
             </div>
-            <UButton
-              label="Download QR"
-              color="neutral"
-              class="h-10 cursor-pointer justify-center rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
-              @click="downloadQr"
-            />
           </div>
         </section>
       </div>
+    </template>
+
+    <template #footer>
+      <UButton
+        label="Download QR"
+        leading-icon="i-lucide-download"
+        color="neutral"
+        class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+        @click="downloadQr"
+      />
     </template>
   </USlideover>
 </template>

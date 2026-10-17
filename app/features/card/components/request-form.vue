@@ -352,6 +352,11 @@ function toRequestedCard(formData: RequestCardFormState) {
 
 const isUploadingReceipt = ref(false);
 
+defineExpose({
+  success,
+  isSubmitting: computed(() => isLoading.value || isUploadingReceipt.value),
+});
+
 async function requestCard(formData: RequestCardFormState) {
   if (!receiptFile.value) return;
   isUploadingReceipt.value = true;
@@ -559,11 +564,12 @@ function onFormError(event: FormErrorEvent) {
   </div>
   <UForm
     v-else
+    id="card-request-form"
     :state="state"
     :validate="validate"
     @submit="onSubmit"
     @error="onFormError"
-    class="space-y-8 pb-6"
+    class="space-y-8"
   >
     <!-- <div class="space-y-4">
       <h1 class="text-[20px] font-medium uppercase tracking-widest text-white">
@@ -792,7 +798,7 @@ function onFormError(event: FormErrorEvent) {
               icon="i-lucide-trash-2"
               color="error"
               variant="ghost"
-              class="text-[#8b8b8b] hover:bg-[#171717]"
+              class="hover:bg-error/10"
               @click="requestRemoveLink(index)"
             />
           </div>
@@ -902,16 +908,6 @@ function onFormError(event: FormErrorEvent) {
     </div>
 
     <CardNeedHelp />
-
-    <div class="flex items-center justify-end pt-2">
-      <UButton
-        type="submit"
-        label="Send Request"
-        :loading="isLoading || isUploadingReceipt"
-        icon="i-material-symbols:keyboard-double-arrow-right"
-        class="h-10 text-sm rounded-full bg-white px-5 text-dark hover:bg-white/90"
-      />
-    </div>
   </UForm>
 
   <USlideover
@@ -974,25 +970,26 @@ function onFormError(event: FormErrorEvent) {
             }"
           />
         </UFormField>
-
-        <div class="flex justify-end gap-3 pt-2">
-          <UButton
-            type="button"
-            label="Cancel"
-            color="neutral"
-            variant="ghost"
-            class="h-10 text-sm rounded-full px-5 font-semibold text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
-            @click="closeSocialSlideover"
-          />
-          <UButton
-            type="button"
-            :label="socialEditorMode === 'create' ? 'Add Link' : 'Save Link'"
-            icon="i-lucide-check"
-            class="h-10 text-sm rounded-full bg-[#232323] px-5 font-semibold text-white hover:bg-[#2a2a2a]"
-            @click="saveSocialDraft"
-          />
-        </div>
       </div>
+    </template>
+
+    <template #footer>
+      <UButton
+        type="button"
+        label="Cancel"
+        color="neutral"
+        variant="ghost"
+        class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+        @click="closeSocialSlideover"
+      />
+      <UButton
+        type="button"
+        :label="socialEditorMode === 'create' ? 'Add Link' : 'Save Link'"
+        leading-icon="i-lucide-check"
+        color="neutral"
+        class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+        @click="saveSocialDraft"
+      />
     </template>
   </USlideover>
 

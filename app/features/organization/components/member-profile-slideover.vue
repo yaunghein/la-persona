@@ -118,7 +118,6 @@ function onViewPersona() {
       header: 'border-b-2 border-[#232323] px-6 py-6',
       title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
       body: 'px-6',
-      footer: 'border-t border-[#232323] px-6 py-6 justify-end',
     }"
   >
     <template v-if="member" #body>
@@ -222,7 +221,7 @@ function onViewPersona() {
     </template>
 
     <template v-if="member" #footer>
-      <div v-if="isPending" class="flex items-center justify-end gap-2.5">
+      <div v-if="isPending" class="flex items-center justify-end gap-2">
         <UButton
           label="Cancel"
           leading-icon="i-lucide-x"
@@ -232,12 +231,13 @@ function onViewPersona() {
           @click="onReject"
         />
       </div>
-      <div v-else class="flex items-center justify-end gap-4">
+      <div v-else class="flex items-center justify-end gap-2">
         <UButton
           label="Remove"
-          color="neutral"
-          variant="ghost"
-          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          leading-icon="i-lucide-user-minus"
+          color="error"
+          variant="soft"
+          class="h-10 cursor-pointer justify-center rounded-full pr-6 pl-5 text-sm font-medium"
           @click="onRemove"
         />
         <UButton

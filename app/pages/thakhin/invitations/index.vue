@@ -414,30 +414,28 @@ const selectUi = {
               />
             </div>
           </div>
-
-          <div
-            class="mt-6 flex justify-end gap-2 border-t border-[#232323] pt-6"
-          >
-            <UButton
-              label="Cancel"
-              color="neutral"
-              variant="ghost"
-              class="h-10 text-sm rounded-full px-5 text-white hover:bg-[#232323]"
-              @click="
-                () => {
-                  isCreateOpen = false;
-                }
-              "
-            />
-            <UButton
-              label="Create Invitation"
-              color="neutral"
-              :loading="isCreating"
-              class="h-10 text-sm rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
-              @click="onCreateInvitation"
-            />
-          </div>
         </div>
+      </template>
+
+      <template #footer>
+        <UButton
+          label="Cancel"
+          color="neutral"
+          variant="ghost"
+          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          @click="
+            () => {
+              isCreateOpen = false;
+            }
+          "
+        />
+        <UButton
+          label="Create Invitation"
+          color="neutral"
+          :loading="isCreating"
+          class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+          @click="onCreateInvitation"
+        />
       </template>
     </USlideover>
   </div>

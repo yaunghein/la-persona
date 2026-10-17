@@ -213,15 +213,6 @@ onUnmounted(() => {
       class="flex w-full flex-col gap-8 rounded-lg bg-[#171717] p-6 pb-10 sm:p-8 sm:pb-12"
     >
       <section class="flex flex-col gap-8">
-        <div class="space-y-4">
-          <h2
-            class="text-xl font-medium tracking-[0.125rem] uppercase text-white"
-          >
-            General
-          </h2>
-          <p class="text-sm text-[#8b8b8b]">Basic organization information.</p>
-        </div>
-
         <div class="flex flex-col gap-3">
           <p class="text-sm font-medium text-white">Cover Image</p>
           <div
@@ -252,7 +243,8 @@ onUnmounted(() => {
                 label="Upload Photo"
                 leading-icon="i-lucide-upload"
                 color="neutral"
-                class="h-10 cursor-pointer rounded-full bg-[#232323] pr-6 pl-4 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+                size="sm"
+                class="h-8 cursor-pointer rounded-full bg-[#232323]/90 pr-4 pl-3 text-xs font-medium text-white hover:bg-[#2a2a2a]"
                 @click="triggerFilePicker('community-cover-input')"
               />
             </div>
@@ -263,7 +255,7 @@ onUnmounted(() => {
           <p class="text-sm font-medium text-white">Organization Logo</p>
           <div class="flex flex-wrap items-center gap-4">
             <div
-              class="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#232323]"
+              class="flex size-16 shrink-0 sm:size-24 items-center justify-center overflow-hidden rounded-full bg-[#232323]"
             >
               <img
                 v-if="localLogoPreviewUrl"
@@ -291,7 +283,8 @@ onUnmounted(() => {
               label="Upload Photo"
               leading-icon="i-lucide-upload"
               color="neutral"
-              class="h-10 cursor-pointer rounded-full bg-[#232323] pr-6 pl-4 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+              size="sm"
+              class="h-8 cursor-pointer rounded-full bg-[#232323] pr-4 pl-3 text-xs font-medium text-white hover:bg-[#2a2a2a]"
               @click="triggerFilePicker('community-logo-input')"
             />
           </div>
@@ -338,20 +331,17 @@ onUnmounted(() => {
         <UButton
           label="Delete Community"
           leading-icon="i-lucide-trash-2"
-          color="neutral"
-          variant="ghost"
-          class="h-10 cursor-pointer justify-center rounded-full pr-6 pl-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          color="error"
+          variant="soft"
+          class="h-10 cursor-pointer justify-center rounded-full pr-6 pl-5 text-sm font-medium sm:mr-auto"
           @click="emit('delete')"
         />
         <UButton
           label="Update Changes"
-          leading-icon="i-material-symbols:fitbit-check-small"
+          leading-icon="i-lucide-check"
           color="neutral"
           :loading="saving || isUploadingImage"
           class="h-10 cursor-pointer justify-center rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
-          :ui="{
-            leadingIcon: 'size-6',
-          }"
           @click="onUpdate"
         />
       </div>

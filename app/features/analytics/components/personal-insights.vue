@@ -312,14 +312,14 @@ function openInfo() {
       </div>
 
       <div
-        class="fixed bottom-6 left-1/2 z-10 -translate-x-1/2 sm:static sm:translate-x-0 flex items-center gap-2"
+        class="fixed inset-x-4 bottom-6 z-10 flex items-center gap-2 sm:static"
       >
         <USelectMenu
           v-model="selectedPeriod"
           value-key="value"
           :items="periodOptions"
           :search-input="false"
-          class="w-32 sm:w-40"
+          class="w-32 shrink-0 sm:w-40"
           :ui="{
             base: 'h-10 rounded-lg border-none bg-[#171717] px-4 text-white shadow-lg sm:shadow-none',
             content: 'bg-[#171717] border border-[#2a2a2a]',
@@ -337,10 +337,12 @@ function openInfo() {
             icon: 'i-lucide-search',
           }"
           :filter-fields="['label']"
-          class="w-44 sm:w-56"
+          :content="{ align: 'end', collisionPadding: 16 }"
+          class="min-w-0 flex-1 sm:w-56 sm:flex-none"
           :ui="{
             base: 'h-10 rounded-lg border-none bg-[#171717] px-4 text-white shadow-lg sm:shadow-none',
-            content: 'bg-[#171717] border border-[#2a2a2a]',
+            content:
+              'w-[calc(100vw-2rem)] bg-[#171717] border border-[#2a2a2a] sm:w-96',
             item: 'text-white data-[highlighted]:bg-[#232323]',
             value: 'text-white',
           }"

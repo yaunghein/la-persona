@@ -751,7 +751,7 @@ onBeforeUnmount(() => {
                 icon="i-lucide-trash-2"
                 color="error"
                 variant="ghost"
-                class="text-[#8b8b8b] hover:bg-[#171717]"
+                class="hover:bg-error/10"
                 @click="requestRemoveLink(index)"
               />
             </div>
@@ -845,25 +845,26 @@ onBeforeUnmount(() => {
             }"
           />
         </UFormField>
-
-        <div class="flex justify-end gap-3 pt-2">
-          <UButton
-            type="button"
-            label="Cancel"
-            color="neutral"
-            variant="ghost"
-            class="h-10 text-sm rounded-full px-4 text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
-            @click="closeSocialSlideover"
-          />
-          <UButton
-            type="button"
-            :label="socialEditorMode === 'create' ? 'Add Link' : 'Save Link'"
-            icon="i-lucide-check"
-            class="h-10 text-sm rounded-full bg-[#232323] px-5 text-white hover:bg-[#2a2a2a]"
-            @click="saveSocialDraft"
-          />
-        </div>
       </div>
+    </template>
+
+    <template #footer>
+      <UButton
+        type="button"
+        label="Cancel"
+        color="neutral"
+        variant="ghost"
+        class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+        @click="closeSocialSlideover"
+      />
+      <UButton
+        type="button"
+        :label="socialEditorMode === 'create' ? 'Add Link' : 'Save Link'"
+        leading-icon="i-lucide-check"
+        color="neutral"
+        class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+        @click="saveSocialDraft"
+      />
     </template>
   </USlideover>
 

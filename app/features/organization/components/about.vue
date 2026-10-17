@@ -63,7 +63,7 @@ const logoSrc = computed(() =>
 
     <div class="flex w-full flex-col">
       <div
-        class="relative aspect-[1/0.25] w-full overflow-hidden rounded-t-lg bg-[#232323]"
+        class="relative flex aspect-[1/0.25] w-full items-center justify-center overflow-hidden rounded-t-lg bg-[#232323]"
       >
         <NuxtImg
           v-if="coverSrc"
@@ -72,14 +72,20 @@ const logoSrc = computed(() =>
           width="1024"
           class="size-full object-cover"
         />
+        <UIcon
+          v-else
+          name="i-lucide-image"
+          class="size-6 text-[#8b8b8b] sm:size-8"
+          aria-hidden="true"
+        />
       </div>
 
       <div
         class="flex flex-col gap-8 rounded-b-lg bg-[#171717] px-5 py-8 sm:px-8"
       >
-        <div class="flex items-center gap-5 sm:gap-6">
+        <div class="flex items-start gap-4 sm:gap-6">
           <div
-            class="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#232323]"
+            class="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#232323] sm:size-20"
           >
             <NuxtImg
               :src="logoSrc"
@@ -89,9 +95,9 @@ const logoSrc = computed(() =>
               class="size-full object-cover"
             />
           </div>
-          <div class="flex min-w-0 flex-col gap-3">
+          <div class="flex min-w-0 flex-col gap-2">
             <h2
-              class="text-2xl font-normal leading-[1.1] tracking-[0.15rem] uppercase text-white sm:text-[1.75rem] sm:tracking-[0.175rem]"
+              class="text-lg font-normal leading-tight tracking-widest uppercase text-white sm:text-2xl"
             >
               {{ data.name }}
             </h2>
@@ -109,7 +115,7 @@ const logoSrc = computed(() =>
 
         <section class="flex flex-col gap-4">
           <h3
-            class="text-xl font-medium leading-[1.35] tracking-[0.125rem] uppercase text-white"
+            class="text-sm font-medium leading-snug tracking-widest uppercase text-white sm:text-base"
           >
             About
           </h3>
@@ -128,7 +134,7 @@ const logoSrc = computed(() =>
         <div class="grid grid-cols-1 items-start gap-8 sm:grid-cols-2">
           <section class="flex flex-col gap-4">
             <h3
-              class="text-xl font-medium leading-[1.35] tracking-[0.125rem] uppercase text-white"
+              class="text-sm font-medium leading-snug tracking-widest uppercase text-white sm:text-base"
             >
               Community Guidelines
             </h3>
@@ -144,7 +150,7 @@ const logoSrc = computed(() =>
 
           <section class="flex flex-col gap-4">
             <h3
-              class="text-xl font-medium leading-[1.35] tracking-[0.125rem] uppercase text-white"
+              class="text-sm font-medium leading-snug tracking-widest uppercase text-white sm:text-base"
             >
               People join {{ data.name }} to
             </h3>
@@ -167,9 +173,9 @@ const logoSrc = computed(() =>
           <UButton
             label="Quit Community"
             leading-icon="i-lucide-log-out"
-            color="neutral"
-            variant="ghost"
-            class="h-10 cursor-pointer justify-center rounded-full pr-6 pl-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+            color="error"
+            variant="soft"
+            class="h-10 cursor-pointer justify-center rounded-full pr-6 pl-5 text-sm font-medium sm:mr-auto"
             @click="emit('quit')"
           />
           <UButton
@@ -188,7 +194,7 @@ const logoSrc = computed(() =>
     v-model:open="isInfoOpen"
     title="About this community"
     :ui="{
-      content: 'sm:max-w-[480px] rounded-lg bg-[#171717]',
+      content: 'sm:max-w-120 rounded-lg bg-[#171717]',
       title: 'text-sm font-medium uppercase tracking-widest text-white',
       body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"

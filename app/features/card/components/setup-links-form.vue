@@ -362,7 +362,7 @@ watch(isSocialSlideoverOpen, (open) => {
                 icon="i-lucide-trash-2"
                 color="error"
                 variant="ghost"
-                class="text-muted hover:bg-white/5"
+                class="hover:bg-error/10"
                 @click="requestRemoveLink(index)"
               />
             </div>
@@ -383,7 +383,7 @@ watch(isSocialSlideoverOpen, (open) => {
           type="submit"
           class="h-10 text-sm rounded-full px-5 font-semibold"
           color="primary"
-          icon="material-symbols:fitbit-check-small"
+          icon="i-lucide-check"
           :loading="isSubmitting"
           :disabled="isCardPending"
         >
@@ -454,25 +454,26 @@ watch(isSocialSlideoverOpen, (open) => {
             size="xl"
           />
         </UFormField>
-
-        <div class="flex justify-end pt-2 gap-4">
-          <UButton
-            type="button"
-            label="Cancel"
-            variant="ghost"
-            class="h-10 text-sm rounded-full px-5 font-semibold"
-            @click="closeSocialSlideover"
-          />
-          <UButton
-            type="button"
-            :label="socialEditorMode === 'create' ? 'Add Link' : 'Save Link'"
-            class="h-10 text-sm rounded-full px-5 font-semibold"
-            color="primary"
-            icon="i-lucide-check"
-            @click="saveSocialDraft"
-          />
-        </div>
       </div>
+    </template>
+
+    <template #footer>
+      <UButton
+        type="button"
+        label="Cancel"
+        color="neutral"
+        variant="ghost"
+        class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+        @click="closeSocialSlideover"
+      />
+      <UButton
+        type="button"
+        :label="socialEditorMode === 'create' ? 'Add Link' : 'Save Link'"
+        leading-icon="i-lucide-check"
+        color="neutral"
+        class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+        @click="saveSocialDraft"
+      />
     </template>
   </USlideover>
 

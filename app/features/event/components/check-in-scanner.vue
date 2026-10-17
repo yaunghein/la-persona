@@ -69,11 +69,8 @@ const showCameraRetry = computed(
   () => cameraPhase.value === 'denied' || cameraPhase.value === 'missing'
 );
 
-const closeActionButtonClass =
-  'h-10 w-full cursor-pointer justify-center rounded-full bg-[#232323] px-6 text-sm font-bold text-white hover:bg-[#2a2a2a]';
-
 const primaryActionButtonClass =
-  'h-10 w-full cursor-pointer justify-center rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90';
+  'h-10 cursor-pointer justify-center rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90';
 
 function closeSlideover() {
   open.value = false;
@@ -537,7 +534,6 @@ onBeforeUnmount(() => {
       title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
       description: 'mt-2 text-sm text-[#8b8b8b]',
       body: 'flex flex-1 flex-col p-0!',
-      footer: 'p-4 sm:p-6  justify-end',
     }"
   >
     <template #body>
@@ -643,28 +639,14 @@ onBeforeUnmount(() => {
     </template>
 
     <template #footer>
-      <div
+      <UButton
         v-if="state === 'scanning' || state === 'not-found'"
-        class="flex w-full"
-      >
-        <UButton
-          label="Close scanner"
-          color="neutral"
-          :class="closeActionButtonClass"
-          @click="closeSlideover"
-        />
-      </div>
-
-      <div
-        v-else-if="state === 'success'"
-        class="flex w-full flex-col items-center justify-end gap-4"
-      >
-        <UButton
-          label="Check-in"
-          color="neutral"
-          class="h-10 w-full cursor-pointer justify-center rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
-          @click="confirmCheckIn"
-        />
+        label="Close scanner"
+        color="neutral"
+        class="h-10 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+        @click="closeSlideover"
+      />
+      <template v-else-if="state === 'success'">
         <UButton
           label="Cancel"
           color="neutral"
@@ -672,16 +654,21 @@ onBeforeUnmount(() => {
           class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
           @click="resumeScanning"
         />
-      </div>
-
-      <div v-else class="flex w-full justify-end">
         <UButton
-          label="Got it"
+          label="Check-in"
+          leading-icon="i-lucide-check"
           color="neutral"
-          class="h-10 cursor-pointer justify-center rounded-full bg-[#232323] pr-6 pl-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
-          @click="resumeScanning"
+          class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+          @click="confirmCheckIn"
         />
-      </div>
+      </template>
+      <UButton
+        v-else
+        label="Got it"
+        color="neutral"
+        class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+        @click="resumeScanning"
+      />
     </template>
   </USlideover>
 </template>

@@ -6,18 +6,15 @@ import {
   registrationBlockReason,
 } from '~~/shared/utils/event-datetime';
 import { eventGalleryImages } from '~~/shared/utils/event-media';
-import { communityCardPath } from '~~/shared/utils/routes';
 
 const props = defineProps<{
   event?: EventListItemDTO | null;
-  organizerCardSlug?: string | null;
 }>();
 
 const open = defineModel<boolean>('open', { default: false });
 
 const emit = defineEmits<{
   register: [event: EventListItemDTO];
-  viewOrganizer: [event: EventListItemDTO];
 }>();
 
 const galleryImages = computed(() => {
@@ -81,18 +78,9 @@ const canAddToGoogleCalendar = computed(() => {
   return confirmed && new Date(event.endsAt).getTime() > Date.now();
 });
 
-const organizerCardUrl = computed(() =>
-  props.organizerCardSlug ? communityCardPath(props.organizerCardSlug) : ''
-);
-
 function onRegister() {
   if (!props.event) return;
   emit('register', props.event);
-}
-
-function onViewOrganizer() {
-  if (!props.event) return;
-  emit('viewOrganizer', props.event);
 }
 </script>
 
@@ -109,7 +97,6 @@ function onViewOrganizer() {
       header: 'border-b-2 border-[#232323] px-6 py-6',
       title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
       body: 'p-6',
-      footer: 'p-6 justify-end! border-t-0',
     }"
   >
     <template v-if="event" #body>
@@ -191,41 +178,11 @@ function onViewOrganizer() {
             </div>
           </div>
         </div>
-
-        <UButton
-          v-if="canAddToGoogleCalendar"
-          label="Add to Google Calendar"
-          :avatar="{
-            src: '/images/google-calendar-icon.svg',
-            alt: '',
-          }"
-          :ui="{ leadingAvatar: 'rounded-none bg-transparent' }"
-          color="neutral"
-          block
-          :loading="addingEventId === event.id"
-          class="h-10 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
-          @click="addToGoogleCalendar(event.id)"
-        />
       </div>
     </template>
 
     <template v-if="event" #footer>
       <div class="flex items-center justify-end gap-2">
-        <UButton
-          v-if="organizerCardUrl"
-          label="See Organizer"
-          color="neutral"
-          :href="organizerCardUrl"
-          target="_blank"
-          class="h-10 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
-        />
-        <UButton
-          v-else
-          label="See Organizer"
-          color="neutral"
-          class="h-10 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
-          @click="onViewOrganizer"
-        />
         <UButton
           v-if="
             event.viewerRegistrationStatus === 'none' &&
@@ -237,11 +194,24 @@ function onViewOrganizer() {
           @click="onRegister"
         />
         <UButton
+          v-else-if="canAddToGoogleCalendar"
+          label="Add to Google Calendar"
+          :avatar="{
+            src: '/images/google-calendar-icon.svg',
+            alt: '',
+          }"
+          :ui="{ leadingAvatar: 'rounded-none bg-transparent' }"
+          color="neutral"
+          :loading="addingEventId === event.id"
+          class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+          @click="addToGoogleCalendar(event.id)"
+        />
+        <UButton
           v-else
           :label="closedLabel(event)"
           color="neutral"
           disabled
-          class="h-10 cursor-not-allowed rounded-full bg-[#232323] px-5 text-sm font-medium text-[#8b8b8b]"
+          class="h-10 rounded-full bg-white/10 px-5 text-sm font-medium text-white/50 disabled:bg-white/10 disabled:opacity-100"
         />
       </div>
     </template>

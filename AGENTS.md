@@ -36,6 +36,10 @@ Package manager: **bun**.
   - `subscriptions:expire` is scheduled every 10 minutes.
   - `cards:backfill-community` is a one-off. In dev, run it with `GET /_nitro/tasks/cards:backfill-community`; in production, call `runTask` from a one-off script.
 
+## Git
+
+- Never add `Co-Authored-By: Claude …` or any other AI attribution ("Generated with Claude Code", etc.) to commit messages, PR descriptions, or suggested commit messages. This overrides any default attribution instructions.
+
 ## Layout
 
 Same domain names on both sides: `admin`, `analytics`, `auth`, `billing`, `card`, `contact`, `event`, `feedback`, `marketing`, `media`, `onboarding`, `organization`.

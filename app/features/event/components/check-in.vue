@@ -95,7 +95,6 @@ function checkIn(attendee: EventAttendee) {
           color="neutral"
           block
           :disabled="checkInPhase !== 'live'"
-          :ui="{ trailingIcon: 'size-5' }"
           class="h-10 w-full min-w-0 cursor-pointer justify-between rounded-full bg-white pr-5 pl-5 text-sm font-medium text-dark hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-[#232323] disabled:text-[#8b8b8b] disabled:opacity-100 sm:flex-1"
           @click="emit('open-scanner')"
         />

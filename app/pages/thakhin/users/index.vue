@@ -456,31 +456,6 @@ const columns: TableColumn<UserRow>[] = [
             />
           </UFormField>
           <p>{{ detail.banned ? 'Banned' : 'Active' }}</p>
-          <div class="flex flex-wrap gap-2">
-            <UButton
-              label="Save"
-              size="sm"
-              color="neutral"
-              :loading="isSaving"
-              @click="saveDetail"
-            />
-            <UButton
-              :label="detail.banned ? 'Unban' : 'Ban'"
-              size="sm"
-              color="neutral"
-              variant="outline"
-              :disabled="isSelfDetail"
-              @click="patchUser(detail, { banned: !detail.banned })"
-            />
-            <UButton
-              label="Delete"
-              size="sm"
-              color="error"
-              variant="outline"
-              :disabled="isSelfDetail"
-              @click="detail && openDelete(detail)"
-            />
-          </div>
           <div>
             <p class="text-white">Organizations</p>
             <p v-if="detail.memberships.length === 0">None.</p>
@@ -497,6 +472,34 @@ const columns: TableColumn<UserRow>[] = [
             </p>
           </div>
         </div>
+      </template>
+
+      <template #footer>
+        <template v-if="detail">
+          <UButton
+            label="Delete"
+            leading-icon="i-lucide-trash-2"
+            color="error"
+            variant="soft"
+            :disabled="isSelfDetail"
+            class="mr-auto h-10 cursor-pointer rounded-full px-5 text-sm font-medium"
+            @click="openDelete(detail)"
+          />
+          <UButton
+            :label="detail.banned ? 'Unban' : 'Ban'"
+            color="neutral"
+            :disabled="isSelfDetail"
+            class="h-10 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+            @click="patchUser(detail, { banned: !detail.banned })"
+          />
+          <UButton
+            label="Save"
+            color="neutral"
+            :loading="isSaving"
+            class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+            @click="saveDetail"
+          />
+        </template>
       </template>
     </USlideover>
 
@@ -540,21 +543,24 @@ const columns: TableColumn<UserRow>[] = [
               class="w-full"
             />
           </UFormField>
-          <div class="flex justify-end gap-2 pt-2">
-            <UButton
-              label="Cancel"
-              color="neutral"
-              variant="ghost"
-              @click="closeCreate"
-            />
-            <UButton
-              label="Create"
-              color="neutral"
-              :loading="isCreating"
-              @click="onCreate"
-            />
-          </div>
         </div>
+      </template>
+
+      <template #footer>
+        <UButton
+          label="Cancel"
+          color="neutral"
+          variant="ghost"
+          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          @click="closeCreate"
+        />
+        <UButton
+          label="Create"
+          color="neutral"
+          :loading="isCreating"
+          class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+          @click="onCreate"
+        />
       </template>
     </USlideover>
   </div>

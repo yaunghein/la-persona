@@ -223,18 +223,19 @@ function closeInfo() {
         >
           <UButton
             label="Invite Member"
-            leading-icon="i-material-symbols:add"
+            leading-icon="i-lucide-plus"
             color="neutral"
             class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark shadow-lg hover:bg-white/90 sm:shadow-none"
             @click="emit('invite')"
           />
-          <UButton
+          <!-- Export hidden for now -->
+          <!-- <UButton
             icon="i-material-symbols:download-sharp"
             color="neutral"
             class="h-10 cursor-pointer rounded-full bg-[#232323] px-5 text-white shadow-lg hover:bg-[#2a2a2a] sm:shadow-none"
             aria-label="Export members"
             @click="emit('export')"
-          />
+          /> -->
         </div>
       </div>
 

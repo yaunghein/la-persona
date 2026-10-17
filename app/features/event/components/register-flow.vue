@@ -335,20 +335,44 @@ onBeforeUnmount(() => {
     </div>
 
     <div
-      class="shrink-0 border-t border-[#2a2a2a] p-6"
-      :class="[
-        step === 'success' ? 'pt-8 pb-4' : '',
-        isPage ? 'sm:px-8 sm:py-6 lg:px-16' : '',
-      ]"
+      v-if="isPage || step !== 'success' || canAddToGoogleCalendar"
+      class="shrink-0"
+      :class="
+        isPage
+          ? [
+              'border-t border-[#2a2a2a] p-6 sm:px-8 sm:py-6 lg:px-16',
+              step === 'success' ? 'pt-8 pb-4' : '',
+            ]
+          : 'border-t-2 border-[#232323] px-6 py-4'
+      "
     >
       <div
-        class="mx-auto flex w-full flex-col items-center"
-        :class="[
-          step === 'success' ? 'gap-8' : 'gap-6',
-          isPage ? 'max-w-120 sm:max-w-md' : '',
-        ]"
+        class="flex w-full"
+        :class="
+          isPage
+            ? [
+                'mx-auto max-w-120 flex-col items-center sm:max-w-md',
+                step === 'success' ? 'gap-8' : 'gap-6',
+              ]
+            : 'flex-wrap items-center justify-end gap-2'
+        "
       >
         <template v-if="step !== 'success'">
+          <UButton
+            v-if="!isPage && organizerCardUrl"
+            label="See Organizer"
+            color="neutral"
+            :href="organizerCardUrl"
+            target="_blank"
+            class="h-10 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+          />
+          <UButton
+            v-else-if="!isPage"
+            label="See Organizer"
+            color="neutral"
+            class="h-10 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+            @click="onViewOrganizer"
+          />
           <UButton
             v-if="registrationBlock"
             :label="
@@ -362,21 +386,22 @@ onBeforeUnmount(() => {
             "
             color="neutral"
             disabled
-            class="h-10 w-full justify-center rounded-full bg-[#232323] px-2.5 text-sm font-bold text-[#8b8b8b] disabled:opacity-100"
+            class="h-10 justify-center rounded-full bg-white/10 px-5 text-sm font-medium text-white/50 disabled:bg-white/10 disabled:opacity-100"
+            :class="isPage && 'w-full'"
           />
           <UButton
             v-else-if="step === 'confirm'"
             color="neutral"
-            block
-            class="h-10 text-sm cursor-pointer rounded-full bg-white px-2.5 hover:bg-white/90"
+            :block="isPage"
+            class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm hover:bg-white/90"
             :ui="{
-              base: 'flex-col gap-1',
+              base: 'flex-col gap-0.5',
               label:
-                'flex flex-col items-center gap-1 whitespace-normal text-center',
+                'flex flex-col items-center gap-0.5 whitespace-normal text-center',
             }"
             @click="startRegister"
           >
-            <span class="text-sm font-bold leading-[1.1] text-dark">
+            <span class="text-sm font-medium leading-[1.1] text-dark">
               Register
             </span>
             <span
@@ -390,39 +415,22 @@ onBeforeUnmount(() => {
             v-else
             label="Registering..."
             color="neutral"
-            disabled
-            class="h-10 w-full justify-center rounded-full bg-[#232323] px-2.5 text-sm font-bold text-[#8b8b8b] disabled:opacity-100"
+            loading
+            class="h-10 justify-center rounded-full bg-white/10 px-5 text-sm font-medium text-white/50 disabled:bg-white/10 disabled:opacity-100"
+            :class="isPage && 'w-full'"
           />
-          <a
-            v-if="!isPage && organizerCardUrl"
-            :href="organizerCardUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="cursor-pointer text-sm font-bold text-white underline"
-          >
-            See Organizer
-          </a>
-          <button
-            v-else-if="!isPage"
-            type="button"
-            class="cursor-pointer text-sm font-bold text-white underline"
-            @click="onViewOrganizer"
-          >
-            See Organizer
-          </button>
         </template>
-        <div v-else class="flex w-full flex-col gap-3">
-          <UButton
-            v-if="canAddToGoogleCalendar"
-            label="Add to Google Calendar"
-            :avatar="{ src: '/images/google-calendar-icon.svg', alt: '' }"
-            :ui="{ leadingAvatar: 'rounded-none bg-transparent' }"
-            color="neutral"
-            :loading="addingEventId === event.id"
-            class="h-10 w-full cursor-pointer justify-center rounded-full bg-white px-2.5 text-sm font-bold text-dark hover:bg-white/90"
-            @click="addToGoogleCalendar(event.id)"
-          />
-        </div>
+        <UButton
+          v-else-if="canAddToGoogleCalendar"
+          label="Add to Google Calendar"
+          :avatar="{ src: '/images/google-calendar-icon.svg', alt: '' }"
+          :ui="{ leadingAvatar: 'rounded-none bg-transparent' }"
+          color="neutral"
+          :loading="addingEventId === event.id"
+          class="h-10 cursor-pointer justify-center rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+          :class="isPage && 'w-full'"
+          @click="addToGoogleCalendar(event.id)"
+        />
         <UiPoweredByLaPersona v-if="isPage" />
       </div>
     </div>

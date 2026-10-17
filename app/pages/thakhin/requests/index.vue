@@ -469,14 +469,19 @@ const columns: TableColumn<CardRequestRow>[] = [
             Payment {{ selectedRequest.paymentId || 'none' }} ·
             {{ selectedRequest.paymentStatus || 'n/a' }}
           </p>
-          <UButton
-            v-if="selectedRequest.paymentReceiptUrl"
-            label="View receipt"
-            variant="link"
-            :to="resolveObjectStorageUrl(selectedRequest.paymentReceiptUrl)"
-            target="_blank"
-          />
         </div>
+      </template>
+
+      <template #footer>
+        <UButton
+          v-if="selectedRequest?.paymentReceiptUrl"
+          label="View receipt"
+          leading-icon="i-lucide-external-link"
+          color="neutral"
+          :to="resolveObjectStorageUrl(selectedRequest.paymentReceiptUrl)"
+          target="_blank"
+          class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+        />
       </template>
     </USlideover>
 

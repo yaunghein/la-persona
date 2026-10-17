@@ -56,7 +56,6 @@ function onViewPersona() {
       header: 'border-b-2 border-[#232323] px-6 py-6',
       title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
       body: 'px-6',
-      footer: 'px-6 py-6 justify-end',
     }"
   >
     <template v-if="attendee" #body>
@@ -162,7 +161,6 @@ function onViewPersona() {
           color="neutral"
           :to="personaCardUrl"
           :target="personaCardUrl ? '_blank' : undefined"
-          :ui="{ leadingIcon: 'size-5' }"
           class="h-10 cursor-pointer justify-center rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
           @click="onViewPersona"
         />

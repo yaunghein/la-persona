@@ -109,10 +109,11 @@ function onBadgeClick() {
         />
         <UButton
           v-if="!isCommunity"
-          icon="i-lucide-trash"
-          color="primary"
+          icon="i-lucide-trash-2"
+          color="error"
+          variant="soft"
           size="sm"
-          class="ml-auto bg-white/5 text-red-500 hover:bg-white/15 active:hover:bg-white/20"
+          class="ml-auto"
           aria-label="Delete card"
           @click="emit('delete', card)"
         />
