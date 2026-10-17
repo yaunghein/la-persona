@@ -9,7 +9,11 @@ import { CardRouteParams } from '~~/shared/contracts/card';
 
 export default defineEventHandler(async (event) => {
   const { cardSlug } = await parseRouteParams(event, CardRouteParams);
-  const { card, principal } = await authorizeCardAccess(event, cardSlug, 'card:read');
+  const { card, principal } = await authorizeCardAccess(
+    event,
+    cardSlug,
+    'card:read'
+  );
   const request = await parseRequestBody(event, CreateCardPaymentRequest);
 
   const payment = await submitCardPayment({

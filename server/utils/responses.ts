@@ -1,7 +1,11 @@
 import type { H3Event } from 'h3';
 
 /** 201 with `Location` pointing at the new resource; returns the representation. */
-export function respondCreated<T>(event: H3Event, location: string, body: T): T {
+export function respondCreated<T>(
+  event: H3Event,
+  location: string,
+  body: T
+): T {
   setResponseStatus(event, 201);
   setResponseHeader(event, 'Location', location);
   return body;

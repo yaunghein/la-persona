@@ -6,7 +6,9 @@ export function contactOriginLabel(
 ): string {
   if (contact.source === 'seamless_exchange') return 'Seamless Exchange';
   if (contact.source === 'manual') return 'Added Manually';
-  return contact.card?.name ? `From ${contact.card.name}` : 'From Card Exchange';
+  return contact.card?.name
+    ? `From ${contact.card.name}`
+    : 'From Card Exchange';
 }
 
 /** Platform link to the card the contact was exchanged with (not for seamless). */

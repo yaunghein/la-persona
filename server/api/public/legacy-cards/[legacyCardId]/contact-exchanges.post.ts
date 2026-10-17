@@ -7,7 +7,10 @@ import {
 /** Contact form on the pre-platform static cards (`/:legacyCardId`). */
 export default defineEventHandler(async (event) => {
   const { legacyCardId } = await parseRouteParams(event, LegacyCardRouteParams);
-  const request = await parseRequestBody(event, CreateLegacyContactExchangeRequest);
+  const request = await parseRequestBody(
+    event,
+    CreateLegacyContactExchangeRequest
+  );
 
   const { contactId, ownerEmail, emails } = await exchangeContactWithLegacyCard(
     legacyCardId,

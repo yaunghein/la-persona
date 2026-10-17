@@ -39,14 +39,16 @@ withDefaults(
         Hi&nbsp;{{ recipientName }},
       </EText>
       <EText :style="bodyStyle">
-        Thank you for being part of&nbsp;<strong>{{ eventTitle }}</strong>!
+        Thank you for being part of&nbsp;<strong>{{ eventTitle }}</strong
+        >!
       </EText>
       <EText :style="`${bodyStyle}; margin-top: 12px`">
         We hope you had a great time, met interesting people, and made
         connections worth&nbsp;keeping.
       </EText>
       <EText :style="`${bodyStyle}; margin-top: 12px`">
-        Here's something to remember, your community card doesn't end with the&nbsp;event.
+        Here's something to remember, your community card doesn't end with
+        the&nbsp;event.
       </EText>
     </EContainer>
 

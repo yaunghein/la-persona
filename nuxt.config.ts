@@ -114,6 +114,8 @@ export default defineNuxtConfig({
   typescript: {
     // drizzle-kit's config runs in Node outside Nuxt; type-check it with nuxt.config.
     nodeTsConfig: { include: ['../drizzle.config.ts'] },
+    // env.ts sits at the root, outside every generated tsconfig; give the editor Nuxt types for it.
+    tsConfig: { include: ['../env.ts'] },
   },
   // Browser-readable env (`PublicEnv` in env.ts), inlined at build time.
   runtimeConfig: {

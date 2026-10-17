@@ -46,18 +46,15 @@ const checkInSteps = [
 </script>
 
 <template>
-  <EmailLayout
-    :preview="`You're registered for ${eventTitle}`"
-    :boxed="false"
-  >
+  <EmailLayout :preview="`You're registered for ${eventTitle}`" :boxed="false">
     <EContainer :style="boxStyle">
       <EContainer style="padding: 24px 20px">
         <EText :style="`${bodyStyle}; margin-bottom: 8px`">
           Hi&nbsp;{{ recipientName }},
         </EText>
         <EText :style="bodyStyle">
-          You registered for <strong>{{ eventTitle }}</strong>, and now have
-          your own Community&nbsp;Card.
+          You registered for <strong>{{ eventTitle }}</strong
+          >, and now have your own Community&nbsp;Card.
         </EText>
       </EContainer>
       <EImg

@@ -23,7 +23,8 @@ export const organizationQueryKeys = {
 export function useUserOrganizations() {
   return useQuery({
     queryKey: organizationQueryKeys.mine(),
-    queryFn: () => $fetch<Collection<UserOrganization>>('/api/me/organizations'),
+    queryFn: () =>
+      $fetch<Collection<UserOrganization>>('/api/me/organizations'),
     select: (collection) => collection.items,
   });
 }
@@ -36,7 +37,8 @@ export async function loadUserOrganizations(): Promise<UserOrganization[]> {
   const queryClient = useNuxtApp().$queryClient as QueryClient;
   const collection = await queryClient.fetchQuery({
     queryKey: organizationQueryKeys.mine(),
-    queryFn: () => $fetch<Collection<UserOrganization>>('/api/me/organizations'),
+    queryFn: () =>
+      $fetch<Collection<UserOrganization>>('/api/me/organizations'),
   });
   return collection.items;
 }

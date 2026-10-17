@@ -31,7 +31,9 @@ const props = defineProps<{
   data: CommunityInsightsData;
 }>();
 
-const selectedPeriod = defineModel<AnalyticsPeriod>('period', { default: '7d' });
+const selectedPeriod = defineModel<AnalyticsPeriod>('period', {
+  default: '7d',
+});
 const isInfoOpen = ref(false);
 
 function openInfo() {
@@ -123,7 +125,9 @@ const columns: TableColumn<CommunityEventPerformance>[] = [
         />
       </div>
 
-      <div class="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center">
+      <div
+        class="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center"
+      >
         <USelectMenu
           v-model="selectedPeriod"
           value-key="value"
@@ -180,8 +184,7 @@ const columns: TableColumn<CommunityEventPerformance>[] = [
           :columns="columns"
           :ui="{
             th: 'px-6 py-5 border-b border-[#232323] text-xs font-semibold tracking-wide uppercase text-white',
-            tbody:
-              '[&>tr:last-child>td]:border-b-0 [&>tr:last-child>td]:pb-0',
+            tbody: '[&>tr:last-child>td]:border-b-0 [&>tr:last-child>td]:pb-0',
             td: 'px-6 py-5 border-b border-[#232323] text-sm',
             tr: 'bg-transparent',
             empty: 'py-12 text-center text-sm text-muted',
@@ -211,8 +214,7 @@ const columns: TableColumn<CommunityEventPerformance>[] = [
     v-model:open="isInfoOpen"
     title="What is community insights?"
     :ui="{
-      content:
-        'sm:max-w-[480px] rounded-lg bg-[#171717]',
+      content: 'sm:max-w-[480px] rounded-lg bg-[#171717]',
       title: 'text-sm font-medium uppercase tracking-widest text-white',
       body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"

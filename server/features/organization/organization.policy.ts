@@ -8,7 +8,11 @@ export async function authorizeCommunityAccess(
   organizationSlug: string,
   permission?: OrganizationPermissionKey
 ) {
-  const access = await authorizeOrganizationAccess(event, organizationSlug, permission);
+  const access = await authorizeOrganizationAccess(
+    event,
+    organizationSlug,
+    permission
+  );
   assertCommunityOrganization(access.organization);
   return access;
 }

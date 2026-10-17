@@ -12,10 +12,7 @@ import {
 } from '~~/shared/permissions/organization';
 import { getSafeInternalPath } from '~~/shared/utils/safe-redirect';
 import { GOOGLE_CALENDAR_SCOPE } from '~~/shared/constants/google-calendar';
-import {
-  isCommunitySetupBootstrapPath,
-  ROUTES,
-} from '~~/shared/utils/routes';
+import { isCommunitySetupBootstrapPath, ROUTES } from '~~/shared/utils/routes';
 
 export const authClient = createAuthClient({
   plugins: [

@@ -11,8 +11,11 @@ export type AnalyticsScope = { organizationSlug: string } | { workspace: true };
 
 export const analyticsQueryKeys = {
   all: ['analytics'] as const,
-  cards: (scope: AnalyticsScope, period: AnalyticsPeriod, cardId: string | null) =>
-    [...analyticsQueryKeys.all, 'cards', scope, period, cardId] as const,
+  cards: (
+    scope: AnalyticsScope,
+    period: AnalyticsPeriod,
+    cardId: string | null
+  ) => [...analyticsQueryKeys.all, 'cards', scope, period, cardId] as const,
   community: (organizationSlug: string, period: AnalyticsPeriod) =>
     [...analyticsQueryKeys.all, 'community', organizationSlug, period] as const,
 };
@@ -27,7 +30,11 @@ export function useCardAnalyticsQuery(
   return useQuery({
     queryKey: computed(() => {
       const { scope, period, cardId } = toValue(params);
-      return analyticsQueryKeys.cards(scope ?? { workspace: true }, period, cardId);
+      return analyticsQueryKeys.cards(
+        scope ?? { workspace: true },
+        period,
+        cardId
+      );
     }),
     queryFn: () => {
       const { scope, period, cardId } = toValue(params);
@@ -36,7 +43,11 @@ export function useCardAnalyticsQuery(
           ? `/api/organizations/${scope.organizationSlug}/analytics`
           : '/api/me/analytics';
       return $fetch<CardAnalyticsSummary>(url, {
-        query: { period, ...(cardId ? { cardId } : {}), ...timezoneOffsetQuery() },
+        query: {
+          period,
+          ...(cardId ? { cardId } : {}),
+          ...timezoneOffsetQuery(),
+        },
       });
     },
     enabled: () => !!toValue(params).scope,
@@ -58,6 +69,7 @@ export function useCommunityInsightsQuery(
         `/api/organizations/${toValue(organizationSlug)}/insights`,
         { query: { period: toValue(period), ...timezoneOffsetQuery() } }
       ),
-    enabled: () => !!toValue(organizationSlug) && toValue(options.enabled ?? true),
+    enabled: () =>
+      !!toValue(organizationSlug) && toValue(options.enabled ?? true),
   });
 }

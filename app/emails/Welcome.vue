@@ -159,7 +159,8 @@ const props = defineProps<Props>();
       3. SCHEDULE YOUR DESIGN&nbsp;CONSULTATION
     </EHeading>
     <EText style="margin: -16px 0 0 16px; line-height: 1.5">
-      Book a dedicated session to craft your bespoke digital card with our&nbsp;team.
+      Book a dedicated session to craft your bespoke digital card with
+      our&nbsp;team.
     </EText>
 
     <EText style="margin-top: 12px; line-height: 1.5">

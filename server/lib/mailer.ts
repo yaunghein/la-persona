@@ -51,7 +51,9 @@ export const sendBatchEmails = async (
           html: email.html,
         }))
       );
-      chunks.push(response.error ? { to, error: toError(response.error) } : { to });
+      chunks.push(
+        response.error ? { to, error: toError(response.error) } : { to }
+      );
     } catch (error) {
       chunks.push({ to, error: error instanceof Error ? error : toError({}) });
     }

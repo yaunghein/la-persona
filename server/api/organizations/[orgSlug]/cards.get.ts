@@ -6,6 +6,8 @@ export default defineEventHandler(async (event) => {
   const access = await authorizeOrganizationAccess(event, orgSlug, 'card:read');
   return listOrganizationCards(
     access.organization.id,
-    canAccessOrganization(access, 'card:readAll') ? null : access.principal.user.id
+    canAccessOrganization(access, 'card:readAll')
+      ? null
+      : access.principal.user.id
   );
 });

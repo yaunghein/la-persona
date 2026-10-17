@@ -8,5 +8,9 @@ export default defineEventHandler(async (event) => {
   enrichLog(event, {
     organization: { id: created.id, slug: created.slug, type: created.type },
   });
-  return respondCreated(event, `/api/admin/organizations/${created.id}`, created);
+  return respondCreated(
+    event,
+    `/api/admin/organizations/${created.id}`,
+    created
+  );
 });

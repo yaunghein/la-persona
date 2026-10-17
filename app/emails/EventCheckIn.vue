@@ -34,17 +34,14 @@ withDefaults(
 </script>
 
 <template>
-  <EmailLayout
-    :preview="`You're checked in to ${eventTitle}`"
-    :boxed="false"
-  >
+  <EmailLayout :preview="`You're checked in to ${eventTitle}`" :boxed="false">
     <EContainer :style="`${boxStyle}; padding: 24px 20px`">
       <EText :style="`${bodyStyle}; margin-bottom: 8px`">
         Hi&nbsp;{{ recipientName }},
       </EText>
       <EText :style="bodyStyle">
-        You're checked in to <strong>{{ eventTitle }}</strong>. Welcome, and
-        enjoy the&nbsp;event!
+        You're checked in to <strong>{{ eventTitle }}</strong
+        >. Welcome, and enjoy the&nbsp;event!
       </EText>
       <EText
         :style="`${bodyStyle}; margin-top: 12px; font-size: 12px; letter-spacing: 1.2px; color: #6b6d7c`"

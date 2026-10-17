@@ -1,7 +1,4 @@
-import {
-  createAccessControl,
-  type Role,
-} from 'better-auth/plugins/access';
+import { createAccessControl, type Role } from 'better-auth/plugins/access';
 
 export const organizationPermissionStatements = {
   organization: ['read', 'update', 'delete'],
@@ -129,8 +126,9 @@ export function roleHasPermission(
     .filter(isOrganizationRole)
     .some(
       (memberRole) =>
-        (organizationRoles[memberRole] as Role).authorize({ [resource]: [action] })
-          .success
+        (organizationRoles[memberRole] as Role).authorize({
+          [resource]: [action],
+        }).success
     );
 }
 

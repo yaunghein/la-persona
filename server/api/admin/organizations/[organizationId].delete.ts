@@ -3,9 +3,13 @@ import { AdminOrganizationRouteParams } from '~~/shared/contracts/organization';
 
 export default defineEventHandler(async (event) => {
   authorizePlatformAccess(event, 'organization:delete');
-  const { organizationId } = await parseRouteParams(event, AdminOrganizationRouteParams);
+  const { organizationId } = await parseRouteParams(
+    event,
+    AdminOrganizationRouteParams
+  );
 
-  const { organization, memberEmails } = await removeOrganization(organizationId);
+  const { organization, memberEmails } =
+    await removeOrganization(organizationId);
   enrichLog(event, {
     organization: {
       id: organization.id,

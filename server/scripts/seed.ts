@@ -44,7 +44,10 @@ async function main() {
   // drizzle-seed may generate duplicate card_id values for card_subscription.
   // Seed core entities first, then backfill subscriptions deterministically.
   await seed(db, seedableSchema);
-  await db.insert(schema.subscriptionPlan).values(defaultPlans).onConflictDoNothing();
+  await db
+    .insert(schema.subscriptionPlan)
+    .values(defaultPlans)
+    .onConflictDoNothing();
 
   const cards = await db.query.card.findMany({
     columns: { id: true, createdAt: true },

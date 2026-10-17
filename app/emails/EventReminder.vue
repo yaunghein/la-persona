@@ -41,17 +41,15 @@ withDefaults(
 </script>
 
 <template>
-  <EmailLayout
-    :preview="`Reminder: ${eventTitle} is coming up`"
-    :boxed="false"
-  >
+  <EmailLayout :preview="`Reminder: ${eventTitle} is coming up`" :boxed="false">
     <EContainer :style="`${boxStyle}; padding-bottom: 20px`">
       <EContainer style="padding: 20px">
         <EText :style="`${bodyStyle}; margin-bottom: 8px`">
           Hi&nbsp;{{ recipientName }},
         </EText>
         <EText :style="bodyStyle">
-          A quick reminder that <strong>{{ eventTitle }}</strong> is coming&nbsp;up!
+          A quick reminder that <strong>{{ eventTitle }}</strong> is
+          coming&nbsp;up!
         </EText>
         <EContainer style="margin-top: 32px">
           <EmailEventDetails

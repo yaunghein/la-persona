@@ -67,7 +67,10 @@ defineEmits<{
             >
               {{ contactOriginLabel(contact) }}
             </UButton>
-            <p v-else class="mt-2 text-md leading-none text-white sm:mt-1 sm:text-sm">
+            <p
+              v-else
+              class="mt-2 text-md leading-none text-white sm:mt-1 sm:text-sm"
+            >
               {{ contactOriginLabel(contact) }}
             </p>
           </div>

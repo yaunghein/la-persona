@@ -74,7 +74,10 @@ export function contactLinkValue(
 ): string {
   if (label === 'Gmail') return String(source.email || '').trim();
   if (label === 'Phone') {
-    return internationalPhone(String(source.phone || ''), source.phoneCountryCode);
+    return internationalPhone(
+      String(source.phone || ''),
+      source.phoneCountryCode
+    );
   }
   return String(source.website || '').trim();
 }

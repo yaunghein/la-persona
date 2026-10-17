@@ -22,7 +22,9 @@ import {
   type CommunityInviteRole,
 } from '~~/shared/permissions/organization';
 
-type InvitationRecord = NonNullable<Awaited<ReturnType<typeof findInvitationById>>>;
+type InvitationRecord = NonNullable<
+  Awaited<ReturnType<typeof findInvitationById>>
+>;
 
 function inviteRole(invitation: InvitationRecord): CommunityInviteRole {
   return COMMUNITY_INVITE_ROLES.includes(invitation.role as CommunityInviteRole)
@@ -35,7 +37,10 @@ function isInvitee(invitation: InvitationRecord, email: string) {
 }
 
 function isOpen(invitation: InvitationRecord) {
-  return invitation.status === 'pending' && invitation.expiresAt.getTime() >= Date.now();
+  return (
+    invitation.status === 'pending' &&
+    invitation.expiresAt.getTime() >= Date.now()
+  );
 }
 
 /** better-auth sends the email; resending replaces the pending invitation. */
@@ -119,21 +124,39 @@ export async function reviewInvitation(
     return acceptAsInvitee(event, invitation, viewer.userId);
   }
 
-  const permission = status === 'accepted' ? 'member:create' : 'invitation:cancel';
-  await authorizeOrganizationAccessById(event, invitation.organizationId, permission);
+  const permission =
+    status === 'accepted' ? 'member:create' : 'invitation:cancel';
+  await authorizeOrganizationAccessById(
+    event,
+    invitation.organizationId,
+    permission
+  );
   if (invitation.status !== 'pending') {
-    throw conflict('This invitation has already been processed.', 'invitation_decided');
+    throw conflict(
+      'This invitation has already been processed.',
+      'invitation_decided'
+    );
   }
 
   if (status === 'canceled') {
-    await auth.api.cancelInvitation({ body: { invitationId }, headers: event.headers });
+    await auth.api.cancelInvitation({
+      body: { invitationId },
+      headers: event.headers,
+    });
     return { status: 'canceled' };
   }
 
   const accountId = await findUserIdByEmail(invitation.email);
   if (accountId) {
-    await joinCommunity(accountId, invitation.organizationId, inviteRole(invitation));
-    await auth.api.cancelInvitation({ body: { invitationId }, headers: event.headers });
+    await joinCommunity(
+      accountId,
+      invitation.organizationId,
+      inviteRole(invitation)
+    );
+    await auth.api.cancelInvitation({
+      body: { invitationId },
+      headers: event.headers,
+    });
     return { status: 'member_added' };
   }
 

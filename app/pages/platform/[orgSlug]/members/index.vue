@@ -14,8 +14,10 @@ const { organizationSlug } = useOrganizationSlug();
 const { data: roster } = useCommunityRosterQuery(organizationSlug);
 const { mutate: removeMember, isPending: isRemoving } =
   useRemoveMemberMutation(organizationSlug);
-const { mutate: updateMemberRole } = useUpdateMemberRoleMutation(organizationSlug);
-const { mutate: reviewInvitation } = useReviewInvitationMutation(organizationSlug);
+const { mutate: updateMemberRole } =
+  useUpdateMemberRoleMutation(organizationSlug);
+const { mutate: reviewInvitation } =
+  useReviewInvitationMutation(organizationSlug);
 
 const isInviteOpen = ref(false);
 const memberToRemove = ref<CommunityMember | null>(null);
@@ -121,7 +123,8 @@ function cancelInvitation(member: CommunityMember) {
   reviewInvitation(
     { invitationId: member.id, status: 'canceled' },
     {
-      onSuccess: () => toast.add({ title: 'Invitation cancelled', color: 'success' }),
+      onSuccess: () =>
+        toast.add({ title: 'Invitation cancelled', color: 'success' }),
       onError: (error) => showError('Could not cancel', error),
     }
   );

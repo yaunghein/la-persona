@@ -18,9 +18,7 @@ const rows = [
 </script>
 
 <template>
-  <EmailLayout
-    :preview="`New ${submissionTitle} from ${payerName}`"
-  >
+  <EmailLayout :preview="`New ${submissionTitle} from ${payerName}`">
     <EText
       style="
         margin: 0;

@@ -63,7 +63,10 @@ function saveSettings(values: CommunitySettingsFormValues) {
     onError: (error) => {
       toast.add({
         title: 'Could not save',
-        description: apiErrorMessage(error, 'Community settings could not be saved.'),
+        description: apiErrorMessage(
+          error,
+          'Community settings could not be saved.'
+        ),
         color: 'error',
       });
     },

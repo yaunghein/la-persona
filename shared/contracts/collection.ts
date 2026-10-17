@@ -37,7 +37,9 @@ export function sortQuery<const TField extends string>(
   fields: readonly [TField, ...TField[]],
   defaultSort: `${TField}` | `-${TField}`
 ) {
-  const allowed = new Set<string>(fields.flatMap((field) => [field, `-${field}`]));
+  const allowed = new Set<string>(
+    fields.flatMap((field) => [field, `-${field}`])
+  );
   return z
     .string()
     .default(defaultSort)

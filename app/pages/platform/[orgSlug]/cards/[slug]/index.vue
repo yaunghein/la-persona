@@ -17,8 +17,11 @@ const router = useRouter();
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
 const slug = computed(() => String(route.params.slug || ''));
 
-const { data: card, isPending: isCardPending, error: cardError } =
-  useCardQuery(slug);
+const {
+  data: card,
+  isPending: isCardPending,
+  error: cardError,
+} = useCardQuery(slug);
 const showCardUnavailable = computed(
   () => !isCardPending.value && (!!cardError.value || !card.value)
 );

@@ -198,8 +198,7 @@ function isLogFields(value: unknown): value is LogFields {
 }
 
 function unnamedOrganizations(wide: WideEvent) {
-  const targets: Array<{ fields: LogFields; id: string; nameKey: string }> =
-    [];
+  const targets: Array<{ fields: LogFields; id: string; nameKey: string }> = [];
   const add = (fields: LogFields, id: unknown, nameKey: string) => {
     if (typeof id === 'string' && id && !fields[nameKey]) {
       targets.push({ fields, id, nameKey });
@@ -263,8 +262,7 @@ export function emitWideEvent(event: H3Event) {
   if (!wide.user_id && user?.id) wide.user_id = user.id;
   if (!wide.user_email && user?.email) wide.user_email = user.email;
 
-  const organizationId =
-    event.context.principal?.session.activeOrganizationId;
+  const organizationId = event.context.principal?.session.activeOrganizationId;
   if (!wide.organization_id && organizationId) {
     wide.organization_id = organizationId;
   }

@@ -11,11 +11,7 @@ import {
   sql,
 } from 'drizzle-orm';
 import { db } from '~~/server/db';
-import {
-  event,
-  eventRegistration,
-  member,
-} from '~~/server/db/schema';
+import { event, eventRegistration, member } from '~~/server/db/schema';
 import {
   ANALYTICS_PERIOD_OPTIONS,
   analyticsPeriodDays,
@@ -44,8 +40,7 @@ const COMMUNITY_INSIGHTS_INFO = [
   {
     icon: 'i-lucide-users',
     title: 'Track Membership',
-    description:
-      'See total, active, and new members across your organization.',
+    description: 'See total, active, and new members across your organization.',
   },
   {
     icon: 'i-lucide-calendar',
@@ -123,7 +118,9 @@ export async function getCommunityInsights(
         and(
           eq(event.organizationId, organizationId),
           gte(eventRegistration.registeredAt, since),
-          inArray(eventRegistration.status, [...COMPLETED_REGISTRATION_STATUSES])
+          inArray(eventRegistration.status, [
+            ...COMPLETED_REGISTRATION_STATUSES,
+          ])
         )
       )
       .then((rows) => rows[0]),
@@ -134,7 +131,9 @@ export async function getCommunityInsights(
       .where(
         and(
           eq(event.organizationId, organizationId),
-          inArray(eventRegistration.status, [...COMPLETED_REGISTRATION_STATUSES]),
+          inArray(eventRegistration.status, [
+            ...COMPLETED_REGISTRATION_STATUSES,
+          ]),
           or(
             gte(eventRegistration.registeredAt, since),
             and(
@@ -153,10 +152,7 @@ export async function getCommunityInsights(
         checkedIn: sql<number>`count(${eventRegistration.id}) filter (where ${eventRegistration.status} = 'checked_in')::int`,
       })
       .from(event)
-      .leftJoin(
-        eventRegistration,
-        eq(eventRegistration.eventId, event.id)
-      )
+      .leftJoin(eventRegistration, eq(eventRegistration.eventId, event.id))
       .where(eventWindow)
       .groupBy(event.id, event.title, event.startsAt)
       .orderBy(sql`${event.startsAt} desc`),
@@ -216,7 +212,10 @@ export async function getCommunityInsights(
       },
       {
         label: 'New Members',
-        value: newMembers > 0 ? `+${formatCount(newMembers)}` : formatCount(newMembers),
+        value:
+          newMembers > 0
+            ? `+${formatCount(newMembers)}`
+            : formatCount(newMembers),
       },
     ],
     memberGrowth,

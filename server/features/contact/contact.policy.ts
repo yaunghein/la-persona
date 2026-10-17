@@ -22,7 +22,10 @@ export async function authorizeContactAccess(
     permission
   );
   const isCardHolder = contact.cardUserId === access.principal.user.id;
-  if (!isCardHolder && !canAccessOrganization(access, 'contactExchange:readAll')) {
+  if (
+    !isCardHolder &&
+    !canAccessOrganization(access, 'contactExchange:readAll')
+  ) {
     throw notFound('Contact');
   }
   enrichLog(event, { contact: { id: contact.id, card_id: contact.cardId } });

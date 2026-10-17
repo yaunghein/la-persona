@@ -8,7 +8,11 @@ import {
 
 export default defineEventHandler(async (event) => {
   const { memberId } = await parseRouteParams(event, MemberRouteParams);
-  const { organization } = await authorizeMemberAccess(event, memberId, 'member:update');
+  const { organization } = await authorizeMemberAccess(
+    event,
+    memberId,
+    'member:update'
+  );
   const { role } = await parseRequestBody(event, UpdateMemberRequest);
 
   const target = await assertMemberRoleChangeable(memberId, organization.id);

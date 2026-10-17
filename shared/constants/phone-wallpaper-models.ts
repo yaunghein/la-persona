@@ -23,7 +23,12 @@ export const phoneWallpaperModels: PhoneWallpaperModel[] = [
     width: 1320,
     height: 2868,
   },
-  { label: 'iPhone 16 Plus', value: 'iphone-16-plus', width: 1290, height: 2796 },
+  {
+    label: 'iPhone 16 Plus',
+    value: 'iphone-16-plus',
+    width: 1290,
+    height: 2796,
+  },
   { label: 'iPhone 15 Pro', value: 'iphone-15-pro', width: 1179, height: 2556 },
   { label: 'iPhone 15', value: 'iphone-15', width: 1179, height: 2556 },
   {
@@ -32,8 +37,18 @@ export const phoneWallpaperModels: PhoneWallpaperModel[] = [
     width: 1290,
     height: 2796,
   },
-  { label: 'iPhone 15 Plus', value: 'iphone-15-plus', width: 1290, height: 2796 },
-  { label: 'iPhone 14 Plus', value: 'iphone-14-plus', width: 1284, height: 2778 },
+  {
+    label: 'iPhone 15 Plus',
+    value: 'iphone-15-plus',
+    width: 1290,
+    height: 2796,
+  },
+  {
+    label: 'iPhone 14 Plus',
+    value: 'iphone-14-plus',
+    width: 1284,
+    height: 2778,
+  },
   {
     label: 'iPhone 14 Pro Max',
     value: 'iphone-14-pro-max',
@@ -63,7 +78,12 @@ export const phoneWallpaperModels: PhoneWallpaperModel[] = [
   { label: 'iPhone 13 Pro', value: 'iphone-13-pro', width: 1170, height: 2532 },
   { label: 'iPhone 13', value: 'iphone-13', width: 1170, height: 2532 },
   { label: 'iPhone X', value: 'iphone-x', width: 1125, height: 2436 },
-  { label: 'iPhone 13 mini', value: 'iphone-13-mini', width: 1125, height: 2436 },
+  {
+    label: 'iPhone 13 mini',
+    value: 'iphone-13-mini',
+    width: 1125,
+    height: 2436,
+  },
   {
     label: 'iPhone 11 Pro Max',
     value: 'iphone-11-pro-max',
@@ -99,7 +119,8 @@ export function closestPhoneWallpaperModel(width: number, height: number) {
 
   for (const model of phoneWallpaperModels) {
     const score =
-      Math.abs(model.width - targetWidth) + Math.abs(model.height - targetHeight);
+      Math.abs(model.width - targetWidth) +
+      Math.abs(model.height - targetHeight);
     if (score < bestScore) {
       best = model;
       bestScore = score;

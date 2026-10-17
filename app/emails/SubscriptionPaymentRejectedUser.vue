@@ -16,7 +16,9 @@ defineProps<{
       PAYMENT UPDATE
     </EHeading>
     <EText style="margin: 12px 0 0">Hi&nbsp;{{ recipientName }},</EText>
-    <EText style="margin: 8px 0 0; line-height: 1.5; white-space: pre-wrap">{{ noWidows(bodyText) }}</EText>
+    <EText style="margin: 8px 0 0; line-height: 1.5; white-space: pre-wrap">{{
+      noWidows(bodyText)
+    }}</EText>
 
     <EmailButton :href="platformUrl">OPEN LA PERSONA</EmailButton>
 

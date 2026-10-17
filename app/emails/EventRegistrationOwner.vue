@@ -35,7 +35,10 @@ const rows = computed(() => [
     value: `${props.attendeeName} <${props.attendeeEmail}>`,
   },
   { label: 'Event', value: props.eventTitle },
-  { label: 'Status', value: props.pending ? 'Waiting for approval' : 'Registered' },
+  {
+    label: 'Status',
+    value: props.pending ? 'Waiting for approval' : 'Registered',
+  },
   {
     label: 'Registered',
     value: props.capacity
@@ -46,9 +49,7 @@ const rows = computed(() => [
 </script>
 
 <template>
-  <EmailLayout
-    :preview="`${attendeeName} registered for ${eventTitle}`"
-  >
+  <EmailLayout :preview="`${attendeeName} registered for ${eventTitle}`">
     <EHeading
       as="h4"
       style="
@@ -64,8 +65,11 @@ const rows = computed(() => [
       Hi {{ ownerName }},
       <strong style="font-weight: 700">{{ attendeeName }}</strong>
       {{ pending ? 'asked to join' : 'registered for' }}
-      <strong style="font-weight: 700">{{ eventTitle }}</strong>.
-      <template v-if="pending">Approve them to confirm their&nbsp;spot.</template>
+      <strong style="font-weight: 700">{{ eventTitle }}</strong
+      >.
+      <template v-if="pending"
+        >Approve them to confirm their&nbsp;spot.</template
+      >
     </EText>
 
     <EmailDetails :rows="rows" />

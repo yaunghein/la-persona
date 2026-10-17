@@ -12,9 +12,9 @@ defineProps<{ inviteUrl: string }>();
       YOUR CARD IS&nbsp;READY
     </EHeading>
     <EText style="margin: 12px 0 0; line-height: 1.5">
-      Your <strong style="font-weight: 900">LA&nbsp;PERSONA</strong> digital card has
-      been prepared for you. Accept the invitation to claim it and finish
-      setting up your&nbsp;profile.
+      Your <strong style="font-weight: 900">LA&nbsp;PERSONA</strong> digital
+      card has been prepared for you. Accept the invitation to claim it and
+      finish setting up your&nbsp;profile.
     </EText>
 
     <EText style="margin: 32px 0 0">WHAT YOU&nbsp;GET</EText>

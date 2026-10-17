@@ -37,7 +37,12 @@ const details = computed(() => [
       <EColumn
         v-for="detail in details"
         :key="detail.label"
-        style="width: 33%; padding: 0 6px; vertical-align: top; text-align: center"
+        style="
+          width: 33%;
+          padding: 0 6px;
+          vertical-align: top;
+          text-align: center;
+        "
       >
         <EImg
           :src="emailAsset(assetBaseUrl, detail.icon)"

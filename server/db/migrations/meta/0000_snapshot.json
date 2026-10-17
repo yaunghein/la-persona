@@ -110,12 +110,8 @@
           "name": "analytics_organization_id_organization_id_fk",
           "tableFrom": "analytics",
           "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organization_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -123,12 +119,8 @@
           "name": "analytics_card_id_card_id_fk",
           "tableFrom": "analytics",
           "tableTo": "card",
-          "columnsFrom": [
-            "card_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["card_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -136,12 +128,8 @@
           "name": "analytics_user_id_user_id_fk",
           "tableFrom": "analytics",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -258,12 +246,8 @@
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -366,12 +350,8 @@
           "name": "invitation_organization_id_organization_id_fk",
           "tableFrom": "invitation",
           "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organization_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -379,12 +359,8 @@
           "name": "invitation_inviter_id_user_id_fk",
           "tableFrom": "invitation",
           "tableTo": "user",
-          "columnsFrom": [
-            "inviter_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["inviter_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -468,12 +444,8 @@
           "name": "member_organization_id_organization_id_fk",
           "tableFrom": "member",
           "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organization_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -481,12 +453,8 @@
           "name": "member_user_id_user_id_fk",
           "tableFrom": "member",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -568,9 +536,7 @@
         "organization_slug_unique": {
           "name": "organization_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -665,12 +631,8 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -680,9 +642,7 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -771,9 +731,7 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -926,12 +884,8 @@
           "name": "card_request_user_id_user_id_fk",
           "tableFrom": "card_request",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1072,12 +1026,8 @@
           "name": "card_subscription_card_id_card_id_fk",
           "tableFrom": "card_subscription",
           "tableTo": "card",
-          "columnsFrom": [
-            "card_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["card_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1085,12 +1035,8 @@
           "name": "card_subscription_plan_code_subscription_plan_code_fk",
           "tableFrom": "card_subscription",
           "tableTo": "subscription_plan",
-          "columnsFrom": [
-            "plan_code"
-          ],
-          "columnsTo": [
-            "code"
-          ],
+          "columnsFrom": ["plan_code"],
+          "columnsTo": ["code"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1098,12 +1044,8 @@
           "name": "card_subscription_last_payment_item_id_subscription_payment_item_id_fk",
           "tableFrom": "card_subscription",
           "tableTo": "subscription_payment_item",
-          "columnsFrom": [
-            "last_payment_item_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["last_payment_item_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1113,9 +1055,7 @@
         "card_subscription_cardId_unique": {
           "name": "card_subscription_cardId_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "card_id"
-          ]
+          "columns": ["card_id"]
         }
       },
       "policies": {},
@@ -1245,12 +1185,8 @@
           "name": "card_update_request_card_id_card_id_fk",
           "tableFrom": "card_update_request",
           "tableTo": "card",
-          "columnsFrom": [
-            "card_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["card_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1258,12 +1194,8 @@
           "name": "card_update_request_requested_by_user_id_fk",
           "tableFrom": "card_update_request",
           "tableTo": "user",
-          "columnsFrom": [
-            "requested_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["requested_by"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1412,12 +1344,8 @@
           "name": "card_organization_id_organization_id_fk",
           "tableFrom": "card",
           "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organization_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1425,12 +1353,8 @@
           "name": "card_user_id_user_id_fk",
           "tableFrom": "card",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1440,9 +1364,7 @@
         "card_slug_unique": {
           "name": "card_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -1594,12 +1516,8 @@
           "name": "contact_exchange_card_id_card_id_fk",
           "tableFrom": "contact_exchange",
           "tableTo": "card",
-          "columnsFrom": [
-            "card_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["card_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1711,12 +1629,8 @@
           "name": "feedback_submission_organization_id_organization_id_fk",
           "tableFrom": "feedback_submission",
           "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organization_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1724,12 +1638,8 @@
           "name": "feedback_submission_user_id_user_id_fk",
           "tableFrom": "feedback_submission",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1811,9 +1721,7 @@
         "subscription_plan_code_unique": {
           "name": "subscription_plan_code_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "code"
-          ]
+          "columns": ["code"]
         }
       },
       "policies": {},
@@ -1946,12 +1854,8 @@
           "name": "subscription_payment_organization_id_organization_id_fk",
           "tableFrom": "subscription_payment",
           "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organization_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1959,12 +1863,8 @@
           "name": "subscription_payment_paid_by_user_id_user_id_fk",
           "tableFrom": "subscription_payment",
           "tableTo": "user",
-          "columnsFrom": [
-            "paid_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["paid_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1972,12 +1872,8 @@
           "name": "subscription_payment_request_id_card_request_id_fk",
           "tableFrom": "subscription_payment",
           "tableTo": "card_request",
-          "columnsFrom": [
-            "request_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["request_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -2121,12 +2017,8 @@
           "name": "subscription_payment_item_payment_id_subscription_payment_id_fk",
           "tableFrom": "subscription_payment_item",
           "tableTo": "subscription_payment",
-          "columnsFrom": [
-            "payment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["payment_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2134,12 +2026,8 @@
           "name": "subscription_payment_item_card_id_card_id_fk",
           "tableFrom": "subscription_payment_item",
           "tableTo": "card",
-          "columnsFrom": [
-            "card_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["card_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2147,12 +2035,8 @@
           "name": "subscription_payment_item_plan_code_subscription_plan_code_fk",
           "tableFrom": "subscription_payment_item",
           "tableTo": "subscription_plan",
-          "columnsFrom": [
-            "plan_code"
-          ],
-          "columnsTo": [
-            "code"
-          ],
+          "columnsFrom": ["plan_code"],
+          "columnsTo": ["code"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2351,12 +2235,8 @@
           "name": "onboarding_invitation_organization_id_organization_id_fk",
           "tableFrom": "onboarding_invitation",
           "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organization_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2364,12 +2244,8 @@
           "name": "onboarding_invitation_card_id_card_id_fk",
           "tableFrom": "onboarding_invitation",
           "tableTo": "card",
-          "columnsFrom": [
-            "card_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["card_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2377,12 +2253,8 @@
           "name": "onboarding_invitation_subscription_plan_code_subscription_plan_code_fk",
           "tableFrom": "onboarding_invitation",
           "tableTo": "subscription_plan",
-          "columnsFrom": [
-            "subscription_plan_code"
-          ],
-          "columnsTo": [
-            "code"
-          ],
+          "columnsFrom": ["subscription_plan_code"],
+          "columnsTo": ["code"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2390,12 +2262,8 @@
           "name": "onboarding_invitation_created_by_user_id_user_id_fk",
           "tableFrom": "onboarding_invitation",
           "tableTo": "user",
-          "columnsFrom": [
-            "created_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2403,12 +2271,8 @@
           "name": "onboarding_invitation_accepted_by_user_id_user_id_fk",
           "tableFrom": "onboarding_invitation",
           "tableTo": "user",
-          "columnsFrom": [
-            "accepted_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["accepted_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }

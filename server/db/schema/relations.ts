@@ -3,7 +3,10 @@ import { member, organization, user } from './auth';
 import { card } from './card';
 import { contactExchange } from './contact-exchange';
 import { cardSubscription } from './card-subscription';
-import { subscriptionPayment, subscriptionPaymentItem } from './subscription-payment';
+import {
+  subscriptionPayment,
+  subscriptionPaymentItem,
+} from './subscription-payment';
 import { subscriptionPlan } from './subscription-plan';
 import { cardRequest } from './card-request';
 import { feedbackSubmission } from './feedback-submission';
@@ -76,10 +79,13 @@ export const contactExchangeRelations = relations(
   })
 );
 
-export const subscriptionPlanRelations = relations(subscriptionPlan, ({ many }) => ({
-  cardSubscriptions: many(cardSubscription),
-  onboardingInvitations: many(onboardingInvitation),
-}));
+export const subscriptionPlanRelations = relations(
+  subscriptionPlan,
+  ({ many }) => ({
+    cardSubscriptions: many(cardSubscription),
+    onboardingInvitations: many(onboardingInvitation),
+  })
+);
 
 export const subscriptionPaymentRelations = relations(
   subscriptionPayment,
@@ -118,20 +124,23 @@ export const subscriptionPaymentItemRelations = relations(
   })
 );
 
-export const cardSubscriptionRelations = relations(cardSubscription, ({ one }) => ({
-  card: one(card, {
-    fields: [cardSubscription.cardId],
-    references: [card.id],
-  }),
-  lastPaymentItem: one(subscriptionPaymentItem, {
-    fields: [cardSubscription.lastPaymentItemId],
-    references: [subscriptionPaymentItem.id],
-  }),
-  plan: one(subscriptionPlan, {
-    fields: [cardSubscription.planCode],
-    references: [subscriptionPlan.code],
-  }),
-}));
+export const cardSubscriptionRelations = relations(
+  cardSubscription,
+  ({ one }) => ({
+    card: one(card, {
+      fields: [cardSubscription.cardId],
+      references: [card.id],
+    }),
+    lastPaymentItem: one(subscriptionPaymentItem, {
+      fields: [cardSubscription.lastPaymentItemId],
+      references: [subscriptionPaymentItem.id],
+    }),
+    plan: one(subscriptionPlan, {
+      fields: [cardSubscription.planCode],
+      references: [subscriptionPlan.code],
+    }),
+  })
+);
 
 export const feedbackSubmissionRelations = relations(
   feedbackSubmission,

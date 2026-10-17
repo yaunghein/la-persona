@@ -1,4 +1,11 @@
-import { pgTable, text, timestamp, integer, jsonb, index } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  timestamp,
+  integer,
+  jsonb,
+  index,
+} from 'drizzle-orm/pg-core';
 import { nanoid } from 'nanoid';
 import { organization, user } from './auth';
 

@@ -21,7 +21,9 @@ export const CardLinkUrl = z
 export const WebsiteUrl = z
   .union([
     z.literal(''),
-    z.url({ protocol: /^https?$/, message: 'Enter a valid website link.' }).max(2048),
+    z
+      .url({ protocol: /^https?$/, message: 'Enter a valid website link.' })
+      .max(2048),
   ])
   .transform((value) => value || null);
 
@@ -187,7 +189,10 @@ export const CreateCardRequestRequest = z.discriminatedUnion('type', [
   }),
   z.object({
     type: z.literal('existing_design'),
-    sourceCardId: z.string().trim().min(1, 'Please choose an existing card design.'),
+    sourceCardId: z
+      .string()
+      .trim()
+      .min(1, 'Please choose an existing card design.'),
     card: RequestedCardDetails,
     receiptUrl,
   }),
@@ -206,7 +211,11 @@ export const CardRequestRouteParams = z.object({
   cardRequestId: z.string().trim().min(1),
 });
 
-export const CARD_REQUEST_STATUSES = ['pending', 'approved', 'declined'] as const;
+export const CARD_REQUEST_STATUSES = [
+  'pending',
+  'approved',
+  'declined',
+] as const;
 
 export const ListCardRequestsQuery = AdminPaginationQuery.extend({
   status: z.enum(CARD_REQUEST_STATUSES).optional(),
@@ -253,7 +262,9 @@ export const ListCardUpdateRequestsQuery = AdminPaginationQuery.extend({
   status: z.enum(CARD_REQUEST_STATUSES).optional(),
 });
 
-export type ListCardUpdateRequestsQuery = z.infer<typeof ListCardUpdateRequestsQuery>;
+export type ListCardUpdateRequestsQuery = z.infer<
+  typeof ListCardUpdateRequestsQuery
+>;
 
 export type CardUpdateRequestForReview = {
   id: string;

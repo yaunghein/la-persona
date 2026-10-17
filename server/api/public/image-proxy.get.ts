@@ -22,7 +22,10 @@ export default defineEventHandler(async (event) => {
     throw upstreamFailed('Could not load the image.');
   }
 
-  const contentType = upstream.headers.get('content-type')?.split(';')[0]?.trim();
+  const contentType = upstream.headers
+    .get('content-type')
+    ?.split(';')[0]
+    ?.trim();
   if (!contentType || !PROXIED_CONTENT_TYPES.has(contentType)) {
     throw unsupportedMediaType('Only JPG, PNG and WebP images can be proxied.');
   }

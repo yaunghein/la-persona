@@ -7,7 +7,11 @@ import {
 
 export default defineEventHandler(async (event) => {
   const { orgSlug } = await parseRouteParams(event, OrganizationRouteParams);
-  const { organization } = await authorizeCommunityAccess(event, orgSlug, 'invitation:create');
+  const { organization } = await authorizeCommunityAccess(
+    event,
+    orgSlug,
+    'invitation:create'
+  );
   const request = await parseRequestBody(event, CreateInvitationRequest);
 
   const invitation = await sendInvitation(event, organization.id, request);

@@ -35,10 +35,7 @@ export function resolvedPhoneFields(
   };
 }
 
-export function internationalPhone(
-  phone: string,
-  countryCode?: string | null
-) {
+export function internationalPhone(phone: string, countryCode?: string | null) {
   const trimmed = phone.trim();
   if (!trimmed || trimmed.startsWith('+')) return trimmed;
 

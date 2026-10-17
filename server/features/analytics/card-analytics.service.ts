@@ -1,20 +1,35 @@
-import { aggregateCardInteractions, type CardAnalyticsScope } from '~~/server/features/analytics/card-analytics.repository';
+import {
+  aggregateCardInteractions,
+  type CardAnalyticsScope,
+} from '~~/server/features/analytics/card-analytics.repository';
 import { listWorkspaceCards } from '~~/server/features/card/card.repository';
-import type { AnalyticsQuery, CardAnalyticsSummary } from '~~/shared/contracts/analytics';
+import type {
+  AnalyticsQuery,
+  CardAnalyticsSummary,
+} from '~~/shared/contracts/analytics';
 import {
   OTHER_LINK_LABELS,
   SOCIAL_MEDIA_LINK_LABELS,
 } from '~~/shared/constants/card-link-options';
 import { analyticsPeriodStart } from '~~/shared/utils/analytics-period';
 
-const SOCIAL_LABELS = new Set(SOCIAL_MEDIA_LINK_LABELS.map((label) => label.toLowerCase()));
-const OTHER_LABELS = new Set(OTHER_LINK_LABELS.map((label) => label.toLowerCase()));
+const SOCIAL_LABELS = new Set(
+  SOCIAL_MEDIA_LINK_LABELS.map((label) => label.toLowerCase())
+);
+const OTHER_LABELS = new Set(
+  OTHER_LINK_LABELS.map((label) => label.toLowerCase())
+);
 const KNOWN_LABEL_BY_LOWER = new Map(
-  [...SOCIAL_MEDIA_LINK_LABELS, ...OTHER_LINK_LABELS].map((label) => [label.toLowerCase(), label])
+  [...SOCIAL_MEDIA_LINK_LABELS, ...OTHER_LINK_LABELS].map((label) => [
+    label.toLowerCase(),
+    label,
+  ])
 );
 
 /** Which link labels the cards in scope actually show, for zero-filled charts. */
-function configuredLinkLabels(cards: { socials: { label: string }[] | null }[]) {
+function configuredLinkLabels(
+  cards: { socials: { label: string }[] | null }[]
+) {
   const social = new Set<string>();
   const other = new Map<string, string>();
   for (const { socials } of cards) {
@@ -27,13 +42,17 @@ function configuredLinkLabels(cards: { socials: { label: string }[] | null }[]) 
       else other.set(lower, canonical);
     }
   }
-  const knownOther = OTHER_LINK_LABELS.filter((label) => other.has(label.toLowerCase()));
+  const knownOther = OTHER_LINK_LABELS.filter((label) =>
+    other.has(label.toLowerCase())
+  );
   const customOther = [...other.entries()]
     .filter(([lower]) => !OTHER_LABELS.has(lower))
     .map(([, label]) => label)
     .sort((a, b) => a.localeCompare(b));
   return {
-    socialConfiguredLabels: SOCIAL_MEDIA_LINK_LABELS.filter((label) => social.has(label)),
+    socialConfiguredLabels: SOCIAL_MEDIA_LINK_LABELS.filter((label) =>
+      social.has(label)
+    ),
     otherConfiguredLabels: [...knownOther, ...customOther],
   };
 }
@@ -79,7 +98,10 @@ export function summarizeOrganizationAnalytics(params: {
 }
 
 /** Every card the user holds, across personal and community workspaces. */
-export async function summarizeWorkspaceAnalytics(userId: string, query: AnalyticsQuery) {
+export async function summarizeWorkspaceAnalytics(
+  userId: string,
+  query: AnalyticsQuery
+) {
   const cards = await listWorkspaceCards(userId);
   const cardIds = cards.map((row) => row.card.id);
   const scopedIds = query.cardId

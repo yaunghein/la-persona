@@ -52,7 +52,6 @@ const {
 } = useCommunityInsightsQuery(orgSlug, communityPeriod, {
   enabled: showCommunityInsights,
 });
-
 </script>
 
 <template>

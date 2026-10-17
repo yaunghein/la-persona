@@ -26,7 +26,9 @@ export const RecordCardInteractionRequest = z.object({
     .optional(),
 });
 
-export type RecordCardInteractionRequest = z.infer<typeof RecordCardInteractionRequest>;
+export type RecordCardInteractionRequest = z.infer<
+  typeof RecordCardInteractionRequest
+>;
 
 /** `?period=7d|30d|90d&cardId=&tzOffset=` (tzOffset groups by the viewer's day). */
 export const AnalyticsQuery = z.object({

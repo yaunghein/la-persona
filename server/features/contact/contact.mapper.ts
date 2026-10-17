@@ -20,7 +20,8 @@ export function toContactSummary(row: ContactRow): ContactSummary {
 
   const details = isLiveCard
     ? {
-        name: fullName(personaCard.firstName, personaCard.lastName) || contact.name,
+        name:
+          fullName(personaCard.firstName, personaCard.lastName) || contact.name,
         phone: personaCard.phone?.trim() || '',
         phoneCountryCode: personaCard.phone?.trim()
           ? normalizePhoneCountryCode(personaCard.phoneCountryCode)

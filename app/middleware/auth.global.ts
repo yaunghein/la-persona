@@ -1,4 +1,7 @@
-import { isProtectedInvitePath, parsePlatformEventDetailPath } from '~~/shared/utils/routes';
+import {
+  isProtectedInvitePath,
+  parsePlatformEventDetailPath,
+} from '~~/shared/utils/routes';
 import { canRunCommunityCheckIn } from '~/features/organization/utils/organization-roles';
 
 export default defineNuxtRouteMiddleware(async (to) => {

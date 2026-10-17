@@ -96,7 +96,11 @@ async function confirmPayment() {
             <div class="flex items-center justify-between text-sm text-white">
               <span>{{ line.label }}</span>
               <span class="font-bold">
-                {{ line.isFree ? 'Free of charge' : formatAmount(line.amountMinor) }}
+                {{
+                  line.isFree
+                    ? 'Free of charge'
+                    : formatAmount(line.amountMinor)
+                }}
               </span>
             </div>
           </div>

@@ -5,8 +5,18 @@ import { OrganizationRouteParams } from '~~/shared/contracts/organization';
 /** Issues a fresh join link; the previous link stops working. */
 export default defineEventHandler(async (event) => {
   const { orgSlug } = await parseRouteParams(event, OrganizationRouteParams);
-  const { organization } = await authorizeCommunityAccess(event, orgSlug, 'invitation:create');
+  const { organization } = await authorizeCommunityAccess(
+    event,
+    orgSlug,
+    'invitation:create'
+  );
   const joinLink = await issueNewJoinLink(organization.id);
-  enrichLog(event, { join_link: { rotated: true, expires_at: joinLink.expiresAt } });
-  return respondCreated(event, `/api/organizations/${orgSlug}/join-link`, joinLink);
+  enrichLog(event, {
+    join_link: { rotated: true, expires_at: joinLink.expiresAt },
+  });
+  return respondCreated(
+    event,
+    `/api/organizations/${orgSlug}/join-link`,
+    joinLink
+  );
 });

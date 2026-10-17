@@ -59,7 +59,11 @@ export async function findUserFootprint(userId: string) {
       .from(card)
       .where(eq(card.userId, userId)),
     db
-      .select({ id: organization.id, name: organization.name, cardCount: count(card.id) })
+      .select({
+        id: organization.id,
+        name: organization.name,
+        cardCount: count(card.id),
+      })
       .from(organization)
       .innerJoin(member, eq(member.organizationId, organization.id))
       .leftJoin(card, eq(card.organizationId, organization.id))
@@ -76,5 +80,8 @@ export async function findUserFootprint(userId: string) {
 }
 
 export async function updateUserName(userId: string, name: string) {
-  await db.update(user).set({ name, updatedAt: new Date() }).where(eq(user.id, userId));
+  await db
+    .update(user)
+    .set({ name, updatedAt: new Date() })
+    .where(eq(user.id, userId));
 }

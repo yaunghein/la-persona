@@ -6,7 +6,10 @@ import {
 
 export default defineEventHandler(async (event) => {
   authorizePlatformAccess(event, 'organization:update');
-  const { organizationId } = await parseRouteParams(event, AdminOrganizationRouteParams);
+  const { organizationId } = await parseRouteParams(
+    event,
+    AdminOrganizationRouteParams
+  );
   const changes = await parseRequestBody(event, UpdateOrganizationRequest);
 
   const result = await updateOrganization(organizationId, changes);

@@ -23,7 +23,9 @@ const columns = computed<TableColumn<ContactSummary>[]>(() => [
   {
     id: 'name',
     header: 'NAME',
-    meta: { class: { th: headerClass, td: 'text-sm font-medium leading-[1.35]' } },
+    meta: {
+      class: { th: headerClass, td: 'text-sm font-medium leading-[1.35]' },
+    },
   },
   {
     id: 'company',
@@ -83,7 +85,9 @@ const columns = computed<TableColumn<ContactSummary>[]>(() => [
         </p>
       </div>
     </template>
-    <template #company-cell="{ row }">{{ row.original.company || 'N/A' }}</template>
+    <template #company-cell="{ row }">{{
+      row.original.company || 'N/A'
+    }}</template>
     <template #phone-cell="{ row }">{{ row.original.phone || 'N/A' }}</template>
     <template #email-cell="{ row }">{{ row.original.email || 'N/A' }}</template>
     <template #origin-cell="{ row }">

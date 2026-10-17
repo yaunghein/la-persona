@@ -53,7 +53,9 @@ export const CreateContactExchangeRequest = z.discriminatedUnion('mode', [
   SeamlessContactExchange,
 ]);
 
-export type CreateContactExchangeRequest = z.infer<typeof CreateContactExchangeRequest>;
+export type CreateContactExchangeRequest = z.infer<
+  typeof CreateContactExchangeRequest
+>;
 
 /** The pre-platform static cards (`/:legacyCardId`). */
 export const CreateLegacyContactExchangeRequest = z.object({
@@ -64,7 +66,9 @@ export const CreateLegacyContactExchangeRequest = z.object({
   position: optionalText,
 });
 
-export type CreateLegacyContactExchangeRequest = z.infer<typeof CreateLegacyContactExchangeRequest>;
+export type CreateLegacyContactExchangeRequest = z.infer<
+  typeof CreateLegacyContactExchangeRequest
+>;
 
 export const CreateManualContactRequest = z.object({
   firstName: z.string().trim().min(1, 'First name is required').max(80),
@@ -80,7 +84,9 @@ export const CreateManualContactRequest = z.object({
   email: optionalEmail,
 });
 
-export type CreateManualContactRequest = z.infer<typeof CreateManualContactRequest>;
+export type CreateManualContactRequest = z.infer<
+  typeof CreateManualContactRequest
+>;
 
 export const CONTACT_SOURCES = [
   'public_form',

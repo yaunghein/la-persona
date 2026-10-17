@@ -28,7 +28,8 @@ export function cardBadgeLabel(card: CardDetail): string {
   if (card.subscription?.status === 'trial' || card.subscription?.isTrial) {
     return 'Standard (Trial)';
   }
-  if (card.subscription?.planName?.trim()) return card.subscription.planName.trim();
+  if (card.subscription?.planName?.trim())
+    return card.subscription.planName.trim();
   if (planCode === 'standard') return 'Standard';
   return 'No Plan';
 }
@@ -39,11 +40,15 @@ export function cardBadgeColor(card: CardDetail) {
   return 'neutral' as const;
 }
 
-export function cardHolderName(card: Pick<CardDetail, 'firstName' | 'lastName'>) {
+export function cardHolderName(
+  card: Pick<CardDetail, 'firstName' | 'lastName'>
+) {
   return [card.firstName, card.lastName].filter(Boolean).join(' ').trim();
 }
 
 /** Cards are edited inside the organization that owns them. */
-export function cardEditorPath(card: Pick<CardDetail, 'slug' | 'organization'>) {
+export function cardEditorPath(
+  card: Pick<CardDetail, 'slug' | 'organization'>
+) {
   return `/platform/${card.organization.slug}/cards/${card.slug}`;
 }

@@ -11,7 +11,11 @@ export const CreateOnboardingInvitationRequest = z.object({
   cardId: z.string().trim().min(1),
   subscriptionPlanCode: z.string().trim().min(1),
   freeMonths: z.coerce.number().int().min(0).max(120),
-  expirationMinutes: z.coerce.number().int().min(1).max(60 * 24 * 90),
+  expirationMinutes: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(60 * 24 * 90),
   sendNow: z.coerce.boolean().default(false),
 });
 

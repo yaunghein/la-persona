@@ -5,6 +5,8 @@ import { ListMyOnboardingInvitationsQuery } from '~~/shared/contracts/onboarding
 export default defineEventHandler(async (event) => {
   const principal = requirePrincipal(event);
   await parseRequestQuery(event, ListMyOnboardingInvitationsQuery);
-  const pending = await getPendingOnboardingInvitationByEmail(principal.user.email);
+  const pending = await getPendingOnboardingInvitationByEmail(
+    principal.user.email
+  );
   return { items: pending ? [{ id: pending.id }] : [] };
 });

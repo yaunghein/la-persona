@@ -71,13 +71,19 @@ export async function findMembership(userId: string, organizationId: string) {
   const [row] = await db
     .select()
     .from(member)
-    .where(and(eq(member.userId, userId), eq(member.organizationId, organizationId)))
+    .where(
+      and(eq(member.userId, userId), eq(member.organizationId, organizationId))
+    )
     .limit(1);
   return row ?? null;
 }
 
 export async function findMemberById(memberId: string) {
-  const [row] = await db.select().from(member).where(eq(member.id, memberId)).limit(1);
+  const [row] = await db
+    .select()
+    .from(member)
+    .where(eq(member.id, memberId))
+    .limit(1);
   return row ?? null;
 }
 
@@ -88,7 +94,9 @@ export async function findMemberInOrganization(
   const [row] = await db
     .select()
     .from(member)
-    .where(and(eq(member.id, memberId), eq(member.organizationId, organizationId)))
+    .where(
+      and(eq(member.id, memberId), eq(member.organizationId, organizationId))
+    )
     .limit(1);
   return row ?? null;
 }
@@ -100,7 +108,13 @@ export async function insertMember(
 ) {
   const [row] = await db
     .insert(member)
-    .values({ id: nanoid(), userId, organizationId, role, createdAt: new Date() })
+    .values({
+      id: nanoid(),
+      userId,
+      organizationId,
+      role,
+      createdAt: new Date(),
+    })
     .returning();
   return row ?? null;
 }
@@ -109,7 +123,9 @@ export async function countOwners(organizationId: string) {
   const [row] = await db
     .select({ value: count() })
     .from(member)
-    .where(and(eq(member.organizationId, organizationId), eq(member.role, 'owner')));
+    .where(
+      and(eq(member.organizationId, organizationId), eq(member.role, 'owner'))
+    );
   return Number(row?.value ?? 0);
 }
 
@@ -120,9 +136,14 @@ export async function findOrganizerCardSlug(organizationId: string) {
     .from(member)
     .innerJoin(
       card,
-      and(eq(card.userId, member.userId), eq(card.organizationId, member.organizationId))
+      and(
+        eq(card.userId, member.userId),
+        eq(card.organizationId, member.organizationId)
+      )
     )
-    .where(and(eq(member.organizationId, organizationId), eq(member.role, 'owner')))
+    .where(
+      and(eq(member.organizationId, organizationId), eq(member.role, 'owner'))
+    )
     .orderBy(asc(member.createdAt), desc(card.createdAt))
     .limit(1);
   return row?.slug ?? null;
@@ -130,7 +151,12 @@ export async function findOrganizerCardSlug(organizationId: string) {
 
 export async function findUserAccount(userId: string) {
   const [row] = await db
-    .select({ id: user.id, name: user.name, email: user.email, image: user.image })
+    .select({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      image: user.image,
+    })
     .from(user)
     .where(eq(user.id, userId))
     .limit(1);
@@ -146,11 +172,16 @@ export async function findUserIdByEmail(email: string) {
   return row?.id ?? null;
 }
 
-export async function findUserCardInOrganization(userId: string, organizationId: string) {
+export async function findUserCardInOrganization(
+  userId: string,
+  organizationId: string
+) {
   const [row] = await db
     .select()
     .from(card)
-    .where(and(eq(card.userId, userId), eq(card.organizationId, organizationId)))
+    .where(
+      and(eq(card.userId, userId), eq(card.organizationId, organizationId))
+    )
     .orderBy(desc(card.createdAt))
     .limit(1);
   return row ?? null;
@@ -161,7 +192,12 @@ export async function findPersonalCardOfUser(userId: string) {
     .select({ card })
     .from(card)
     .innerJoin(organization, eq(organization.id, card.organizationId))
-    .where(and(eq(card.userId, userId), eq(organization.type, ORGANIZATION_TYPES.PERSONAL)))
+    .where(
+      and(
+        eq(card.userId, userId),
+        eq(organization.type, ORGANIZATION_TYPES.PERSONAL)
+      )
+    )
     .orderBy(desc(card.createdAt))
     .limit(1);
   return row?.card ?? null;
@@ -177,7 +213,10 @@ export async function updateCommunityCardsBrand(
   organizationId: string,
   values: { splineUrl: string; wallpaperUrl: string; cardBackUrl: string }
 ) {
-  await db.update(card).set(values).where(eq(card.organizationId, organizationId));
+  await db
+    .update(card)
+    .set(values)
+    .where(eq(card.organizationId, organizationId));
 }
 
 export function listRosterMembers(organizationId: string) {
@@ -188,19 +227,32 @@ export function listRosterMembers(organizationId: string) {
     .where(eq(member.organizationId, organizationId));
 }
 
-export function listCardsOfUsersInOrganization(userIds: string[], organizationId: string) {
+export function listCardsOfUsersInOrganization(
+  userIds: string[],
+  organizationId: string
+) {
   if (!userIds.length) return Promise.resolve([]);
   return db
     .select()
     .from(card)
-    .where(and(eq(card.organizationId, organizationId), inArray(card.userId, userIds)));
+    .where(
+      and(
+        eq(card.organizationId, organizationId),
+        inArray(card.userId, userIds)
+      )
+    );
 }
 
 export function listPendingInvitations(organizationId: string) {
   return db
     .select()
     .from(invitation)
-    .where(and(eq(invitation.organizationId, organizationId), eq(invitation.status, 'pending')));
+    .where(
+      and(
+        eq(invitation.organizationId, organizationId),
+        eq(invitation.status, 'pending')
+      )
+    );
 }
 
 export async function findInvitationById(invitationId: string) {
@@ -225,7 +277,12 @@ export async function deleteMemberWithCommunityData(target: {
   await db.transaction(async (tx) => {
     await tx
       .delete(card)
-      .where(and(eq(card.userId, target.userId), eq(card.organizationId, target.organizationId)));
+      .where(
+        and(
+          eq(card.userId, target.userId),
+          eq(card.organizationId, target.organizationId)
+        )
+      );
     await tx.delete(member).where(eq(member.id, target.memberId));
     await tx
       .update(session)

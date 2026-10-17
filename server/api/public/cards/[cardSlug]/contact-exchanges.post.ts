@@ -20,11 +20,18 @@ export default defineEventHandler(async (event) => {
   const ownerCard = await findCardBySlug(cardSlug);
   if (!ownerCard) throw notFound('Card');
   enrichLog(event, {
-    contact_exchange: { card_id: ownerCard.id, card_slug: cardSlug, mode: request.mode },
+    contact_exchange: {
+      card_id: ownerCard.id,
+      card_slug: cardSlug,
+      mode: request.mode,
+    },
   });
 
   if (request.mode === 'form') {
-    const { contactId, emails } = await exchangeContactViaForm(ownerCard, request);
+    const { contactId, emails } = await exchangeContactViaForm(
+      ownerCard,
+      request
+    );
     enrichLog(event, {
       contact_exchange: {
         id: contactId,
@@ -34,10 +41,14 @@ export default defineEventHandler(async (event) => {
       email: { attempted: emails.recipients.length > 0, to: emails.recipients },
     });
     trackEmailSends(event, emails.deliveries);
-    return respondCreated<ContactExchangeResult>(event, `/api/contacts/${contactId}`, {
-      mode: 'form',
-      contactId,
-    });
+    return respondCreated<ContactExchangeResult>(
+      event,
+      `/api/contacts/${contactId}`,
+      {
+        mode: 'form',
+        contactId,
+      }
+    );
   }
 
   const principal = requirePrincipal(event);
@@ -51,7 +62,10 @@ export default defineEventHandler(async (event) => {
       visitor_card_id: result.visitorCardId,
       result: 'exchanged',
     },
-    email: { attempted: result.emails.recipients.length > 0, to: result.emails.recipients },
+    email: {
+      attempted: result.emails.recipients.length > 0,
+      to: result.emails.recipients,
+    },
   });
   trackEmailSends(event, result.emails.deliveries);
   return respondCreated<ContactExchangeResult>(

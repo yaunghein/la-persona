@@ -54,7 +54,9 @@ export const findCommunitySettingByInviteToken = async (token: string) => {
 export const JOIN_LINK_LIFETIME_DAYS = 30;
 
 export function joinLinkExpiry(from = new Date()) {
-  return new Date(from.getTime() + JOIN_LINK_LIFETIME_DAYS * 24 * 60 * 60 * 1000);
+  return new Date(
+    from.getTime() + JOIN_LINK_LIFETIME_DAYS * 24 * 60 * 60 * 1000
+  );
 }
 
 /** Replaces the join token; links shared before stop working immediately. */

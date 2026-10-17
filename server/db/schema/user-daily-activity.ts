@@ -9,7 +9,5 @@ export const userDailyActivity = pgTable(
       .references(() => user.id, { onDelete: 'cascade' }),
     day: date('day').notNull(),
   },
-  (table) => [
-    primaryKey({ columns: [table.userId, table.day] }),
-  ]
+  (table) => [primaryKey({ columns: [table.userId, table.day] })]
 );

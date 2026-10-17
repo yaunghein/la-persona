@@ -1,4 +1,11 @@
-import { pgTable, text, timestamp, integer, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  timestamp,
+  integer,
+  index,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core';
 import { nanoid } from 'nanoid';
 import { organization, user } from './auth';
 import { card } from './card';
@@ -18,7 +25,9 @@ export const subscriptionPayment = pgTable(
     paidByUserId: text()
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
-    requestId: text().references(() => cardRequest.id, { onDelete: 'set null' }),
+    requestId: text().references(() => cardRequest.id, {
+      onDelete: 'set null',
+    }),
     receiptUrl: text().notNull(),
     paymentReference: text(),
     paymentMethod: text(),

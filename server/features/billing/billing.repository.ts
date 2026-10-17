@@ -254,7 +254,6 @@ export async function countSubmittedPayments() {
   return Number(row?.value ?? 0);
 }
 
-
 const LINKED_REQUEST_ID = /^(?:New|Existing) design request \(([^)]+)\)$/;
 
 /** Card request linked to a payment (by column, or the legacy note format). */
@@ -262,7 +261,9 @@ export function linkedCardRequestId(payment: {
   requestId: string | null;
   note: string | null;
 }) {
-  return payment.requestId || payment.note?.match(LINKED_REQUEST_ID)?.[1] || null;
+  return (
+    payment.requestId || payment.note?.match(LINKED_REQUEST_ID)?.[1] || null
+  );
 }
 
 export async function listPaymentsForReview(filter: {

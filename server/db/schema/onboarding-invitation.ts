@@ -28,7 +28,9 @@ export const onboardingInvitation = pgTable(
     createdByUserId: text()
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
-    acceptedByUserId: text().references(() => user.id, { onDelete: 'set null' }),
+    acceptedByUserId: text().references(() => user.id, {
+      onDelete: 'set null',
+    }),
     acceptedAt: timestamp(),
     lastSentAt: timestamp(),
     resendCount: integer().notNull().default(0),

@@ -9,7 +9,9 @@ export const feedbackSubmission = pgTable(
       .primaryKey()
       .notNull()
       .$defaultFn(() => nanoid()),
-    kind: text().$type<'feedback' | 'bug_report' | 'feature_request'>().notNull(),
+    kind: text()
+      .$type<'feedback' | 'bug_report' | 'feature_request'>()
+      .notNull(),
     message: text().notNull(),
     organizationId: text()
       .notNull()

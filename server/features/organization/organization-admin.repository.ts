@@ -8,13 +8,19 @@ import {
   subscriptionPayment,
   user,
 } from '~~/server/db/schema';
-import { ORGANIZATION_TYPES, type OrganizationType } from '~~/shared/utils/constants';
+import {
+  ORGANIZATION_TYPES,
+  type OrganizationType,
+} from '~~/shared/utils/constants';
 
 export async function listOrganizationsWithCounts() {
   const [orgs, memberCounts, cardCounts] = await Promise.all([
     db.select().from(organization).orderBy(desc(organization.createdAt)),
     db
-      .select({ organizationId: member.organizationId, value: count(member.id) })
+      .select({
+        organizationId: member.organizationId,
+        value: count(member.id),
+      })
       .from(member)
       .groupBy(member.organizationId),
     db
@@ -22,8 +28,12 @@ export async function listOrganizationsWithCounts() {
       .from(card)
       .groupBy(card.organizationId),
   ]);
-  const membersByOrg = new Map(memberCounts.map((row) => [row.organizationId, Number(row.value)]));
-  const cardsByOrg = new Map(cardCounts.map((row) => [row.organizationId, Number(row.value)]));
+  const membersByOrg = new Map(
+    memberCounts.map((row) => [row.organizationId, Number(row.value)])
+  );
+  const cardsByOrg = new Map(
+    cardCounts.map((row) => [row.organizationId, Number(row.value)])
+  );
   return orgs.map((org) => ({
     ...org,
     memberCount: membersByOrg.get(org.id) ?? 0,
@@ -35,7 +45,12 @@ export async function isOrganizationSlugTaken(slug: string, exceptId?: string) {
   const [row] = await db
     .select({ id: organization.id })
     .from(organization)
-    .where(and(eq(organization.slug, slug), exceptId ? ne(organization.id, exceptId) : undefined))
+    .where(
+      and(
+        eq(organization.slug, slug),
+        exceptId ? ne(organization.id, exceptId) : undefined
+      )
+    )
     .limit(1);
   return !!row;
 }
@@ -45,13 +60,22 @@ export async function hasPersonalOrganization(userId: string) {
     .select({ id: organization.id })
     .from(organization)
     .innerJoin(member, eq(member.organizationId, organization.id))
-    .where(and(eq(member.userId, userId), eq(organization.type, ORGANIZATION_TYPES.PERSONAL)))
+    .where(
+      and(
+        eq(member.userId, userId),
+        eq(organization.type, ORGANIZATION_TYPES.PERSONAL)
+      )
+    )
     .limit(1);
   return !!row;
 }
 
 export async function userExists(userId: string) {
-  const [row] = await db.select({ id: user.id }).from(user).where(eq(user.id, userId)).limit(1);
+  const [row] = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1);
   return !!row;
 }
 
@@ -133,15 +157,23 @@ export async function updateOrganizationIdentity(
   return row ?? null;
 }
 
-export async function countOrganizationCardsAndPayments(organizationId: string) {
+export async function countOrganizationCardsAndPayments(
+  organizationId: string
+) {
   const [[cards], [payments]] = await Promise.all([
-    db.select({ value: count() }).from(card).where(eq(card.organizationId, organizationId)),
+    db
+      .select({ value: count() })
+      .from(card)
+      .where(eq(card.organizationId, organizationId)),
     db
       .select({ value: count() })
       .from(subscriptionPayment)
       .where(eq(subscriptionPayment.organizationId, organizationId)),
   ]);
-  return { cardCount: Number(cards?.value ?? 0), paymentCount: Number(payments?.value ?? 0) };
+  return {
+    cardCount: Number(cards?.value ?? 0),
+    paymentCount: Number(payments?.value ?? 0),
+  };
 }
 
 export async function listMemberEmails(organizationId: string) {

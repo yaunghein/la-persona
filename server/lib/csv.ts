@@ -5,7 +5,9 @@
 const FORMULA_TRIGGER = /^[=+\-@\t\r]/;
 
 function toCsvCell(value: unknown): string {
-  const text = String(value ?? '').replace(/\r?\n/g, ' ').trim();
+  const text = String(value ?? '')
+    .replace(/\r?\n/g, ' ')
+    .trim();
   const safe = FORMULA_TRIGGER.test(text) ? `'${text}` : text;
   return `"${safe.replace(/"/g, '""')}"`;
 }

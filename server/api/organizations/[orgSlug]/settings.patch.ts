@@ -7,7 +7,11 @@ import {
 
 export default defineEventHandler(async (event) => {
   const { orgSlug } = await parseRouteParams(event, OrganizationRouteParams);
-  const { organization } = await authorizeCommunityAccess(event, orgSlug, 'organization:update');
+  const { organization } = await authorizeCommunityAccess(
+    event,
+    orgSlug,
+    'organization:update'
+  );
   const changes = await parseRequestBody(event, UpdateCommunitySettingsRequest);
   return updateCommunitySettings(organization.id, changes);
 });

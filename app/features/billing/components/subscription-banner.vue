@@ -4,7 +4,12 @@ import type { CardSubscriptionOverview } from '~~/shared/contracts/billing';
 const props = defineProps<{ overview: CardSubscriptionOverview }>();
 defineEmits<{ renew: [] }>();
 
-const PAID_STATUSES = new Set(['active', 'grace', 'pending_approval', 'submitted']);
+const PAID_STATUSES = new Set([
+  'active',
+  'grace',
+  'pending_approval',
+  'submitted',
+]);
 const ENDING_SOON_DAYS = 15;
 
 const daysLeft = computed(() => props.overview.daysLeft);

@@ -19,7 +19,10 @@ function selectInvitations() {
       planName: subscriptionPlan.name,
     })
     .from(onboardingInvitation)
-    .innerJoin(organization, eq(organization.id, onboardingInvitation.organizationId))
+    .innerJoin(
+      organization,
+      eq(organization.id, onboardingInvitation.organizationId)
+    )
     .innerJoin(card, eq(card.id, onboardingInvitation.cardId))
     .innerJoin(
       subscriptionPlan,
@@ -35,7 +38,9 @@ export type OnboardingInvitationRow = Awaited<
   ReturnType<typeof listOnboardingInvitations>
 >[number];
 
-export async function findOnboardingInvitationWithContext(invitationId: string) {
+export async function findOnboardingInvitationWithContext(
+  invitationId: string
+) {
   const [row] = await selectInvitations()
     .where(eq(onboardingInvitation.id, invitationId))
     .limit(1);

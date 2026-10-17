@@ -88,7 +88,8 @@ export async function listWorkspaceCards(userId: string) {
   const communityIds = idsOfType(ORGANIZATION_TYPES.COMMUNITY);
 
   const scopes: SQL[] = [];
-  if (personalIds.length) scopes.push(inArray(card.organizationId, personalIds));
+  if (personalIds.length)
+    scopes.push(inArray(card.organizationId, personalIds));
   if (communityIds.length) {
     scopes.push(
       and(inArray(card.organizationId, communityIds), eq(card.userId, userId))!
@@ -102,12 +103,20 @@ export async function listWorkspaceCards(userId: string) {
 }
 
 export async function findCardBySlug(slug: string): Promise<CardRecord | null> {
-  const [row] = await db.select().from(card).where(eq(card.slug, slug)).limit(1);
+  const [row] = await db
+    .select()
+    .from(card)
+    .where(eq(card.slug, slug))
+    .limit(1);
   return row ?? null;
 }
 
 export async function findCardById(cardId: string): Promise<CardRecord | null> {
-  const [row] = await db.select().from(card).where(eq(card.id, cardId)).limit(1);
+  const [row] = await db
+    .select()
+    .from(card)
+    .where(eq(card.id, cardId))
+    .limit(1);
   return row ?? null;
 }
 
@@ -180,7 +189,8 @@ export async function updateCardById(
   return updated ?? null;
 }
 
-const PENDING_REQUEST_NOTE = /^(?:Existing|New) design request \((?<requestId>[^)]+)\)$/;
+const PENDING_REQUEST_NOTE =
+  /^(?:Existing|New) design request \((?<requestId>[^)]+)\)$/;
 
 /**
  * Deletes a card. A card awaiting payment approval also withdraws the
@@ -193,7 +203,10 @@ export async function deleteCardWithPendingRequests(
 ) {
   await db.transaction(async (tx) => {
     const pendingNotes = await tx
-      .select({ note: subscriptionPayment.note, requestId: subscriptionPayment.requestId })
+      .select({
+        note: subscriptionPayment.note,
+        requestId: subscriptionPayment.requestId,
+      })
       .from(subscriptionPaymentItem)
       .innerJoin(
         subscriptionPayment,

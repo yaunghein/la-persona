@@ -12,8 +12,7 @@ export function isObjectStorageUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
     return (
-      parsed.protocol === 'https:' &&
-      objectStorageHosts().includes(parsed.host)
+      parsed.protocol === 'https:' && objectStorageHosts().includes(parsed.host)
     );
   } catch {
     return false;

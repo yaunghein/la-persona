@@ -1,7 +1,4 @@
-import {
-  createAccessControl,
-  type Role,
-} from 'better-auth/plugins/access';
+import { createAccessControl, type Role } from 'better-auth/plugins/access';
 import {
   adminAc,
   defaultStatements,
@@ -78,7 +75,8 @@ export function platformRoleHasPermission(
     .filter(isPlatformRole)
     .some(
       (platformRole) =>
-        (platformRoles[platformRole] as Role).authorize({ [resource]: [action] })
-          .success
+        (platformRoles[platformRole] as Role).authorize({
+          [resource]: [action],
+        }).success
     );
 }

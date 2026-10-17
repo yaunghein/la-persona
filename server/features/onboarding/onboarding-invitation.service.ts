@@ -37,7 +37,9 @@ export function addMonths(base: Date, months: number) {
 }
 
 export function normalizeEmail(value: string) {
-  return String(value || '').trim().toLowerCase();
+  return String(value || '')
+    .trim()
+    .toLowerCase();
 }
 
 export async function getPendingOnboardingInvitationByEmail(email: string) {
@@ -72,7 +74,9 @@ export async function createOnboardingInvitation(params: {
 }) {
   const now = new Date();
   const normalizedEmail = normalizeEmail(params.email);
-  const expiresAt = new Date(now.getTime() + params.expirationMinutes * 60 * 1000);
+  const expiresAt = new Date(
+    now.getTime() + params.expirationMinutes * 60 * 1000
+  );
 
   return await db.transaction(async (tx) => {
     const selectedCard = await tx.query.card.findFirst({
@@ -383,7 +387,9 @@ export async function cancelOnboardingInvitation(invitationId: string) {
       throw notFound("'Card'");
     }
     if (members.length > 0 || selectedCard.userId) {
-      throw conflict('Invitation cannot be cancelled because the organization or card is already in use.');
+      throw conflict(
+        'Invitation cannot be cancelled because the organization or card is already in use.'
+      );
     }
 
     if (selectedCard.organizationId === invite.organizationId) {
@@ -422,7 +428,9 @@ export async function cancelOnboardingInvitation(invitationId: string) {
 
 // ── Read models and delivery ────────────────────────────────────────────────
 
-function toInvitationSummary(row: OnboardingInvitationRow): OnboardingInvitationSummary {
+function toInvitationSummary(
+  row: OnboardingInvitationRow
+): OnboardingInvitationSummary {
   const { invitation } = row;
   return {
     id: invitation.id,
@@ -450,7 +458,9 @@ function toInvitationSummary(row: OnboardingInvitationRow): OnboardingInvitation
 export async function listInvitationsForAdmin(): Promise<
   Collection<OnboardingInvitationSummary>
 > {
-  return { items: (await listOnboardingInvitations()).map(toInvitationSummary) };
+  return {
+    items: (await listOnboardingInvitations()).map(toInvitationSummary),
+  };
 }
 
 export async function describeInvitationForAdmin(invitationId: string) {
@@ -468,7 +478,8 @@ export async function previewInvitationForUser(
   if (!row) throw notFound('Invitation');
   const { invitation } = row;
   const isExpired = invitation.expiresAt <= new Date();
-  const isEmailMatched = normalizeEmail(viewerEmail) === normalizeEmail(invitation.email);
+  const isEmailMatched =
+    normalizeEmail(viewerEmail) === normalizeEmail(invitation.email);
   return {
     id: invitation.id,
     email: invitation.email,
@@ -493,14 +504,22 @@ export async function deliverOnboardingInvitation(invitationId: string) {
   const invitation = await findOnboardingInvitation(invitationId);
   if (!invitation) throw notFound('Invitation');
   if (invitation.status !== 'pending') {
-    throw conflict('Only pending invitations can be sent.', 'invitation_decided');
+    throw conflict(
+      'Only pending invitations can be sent.',
+      'invitation_decided'
+    );
   }
 
-  await sendOnboardingInvitationEmail({ invitationId, email: invitation.email });
+  await sendOnboardingInvitationEmail({
+    invitationId,
+    email: invitation.email,
+  });
 
   const now = new Date();
   const updated = await recordOnboardingInvitationSent(invitationId, {
-    expiresAt: new Date(now.getTime() + invitation.expirationMinutes * 60 * 1000),
+    expiresAt: new Date(
+      now.getTime() + invitation.expirationMinutes * 60 * 1000
+    ),
     lastSentAt: now,
     resendCount: invitation.resendCount + 1,
   });

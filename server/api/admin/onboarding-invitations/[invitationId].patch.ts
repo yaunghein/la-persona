@@ -6,12 +6,20 @@ import {
 
 export default defineEventHandler(async (event) => {
   authorizePlatformAccess(event, 'onboardingInvitation:cancel');
-  const { invitationId } = await parseRouteParams(event, OnboardingInvitationRouteParams);
+  const { invitationId } = await parseRouteParams(
+    event,
+    OnboardingInvitationRouteParams
+  );
   await parseRequestBody(event, CancelOnboardingInvitationRequest);
 
   const result = await cancelOnboardingInvitation(invitationId);
   enrichLog(event, {
-    invitation: { id: result.id, email: result.email, card_id: result.cardId, deleted_organization_id: result.deletedOrganizationId },
+    invitation: {
+      id: result.id,
+      email: result.email,
+      card_id: result.cardId,
+      deleted_organization_id: result.deletedOrganizationId,
+    },
   });
   return { id: result.id, status: 'canceled' };
 });

@@ -7,9 +7,14 @@ import {
 /** The invitee claims their card. */
 export default defineEventHandler(async (event) => {
   const principal = requirePrincipal(event);
-  const { invitationId } = await parseRouteParams(event, OnboardingInvitationRouteParams);
+  const { invitationId } = await parseRouteParams(
+    event,
+    OnboardingInvitationRouteParams
+  );
   await parseRequestBody(event, AcceptOnboardingInvitationRequest);
-  enrichLog(event, { invitation: { id: invitationId, email: principal.user.email } });
+  enrichLog(event, {
+    invitation: { id: invitationId, email: principal.user.email },
+  });
 
   return acceptOnboardingInvitation({
     invitationId,

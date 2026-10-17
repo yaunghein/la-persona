@@ -74,7 +74,8 @@ const { data: organizationCards } = useOrganizationCardsQuery(
 );
 
 const ownerCardItems = computed(() => {
-  const cards = (props.workspace ? workspaceCards.value : organizationCards.value) ?? [];
+  const cards =
+    (props.workspace ? workspaceCards.value : organizationCards.value) ?? [];
   return [
     { id: 'all', label: 'All Cards' },
     ...cards.map((item) => ({
@@ -220,8 +221,7 @@ const hasLinkRows = computed(() => linkRows.value.length > 0);
 
 const chartData = computed(() => ({
   labels:
-    stats.value?.dailyViews.map((v) => format(parseISO(v.date), 'MMM d')) ||
-    [],
+    stats.value?.dailyViews.map((v) => format(parseISO(v.date), 'MMM d')) || [],
   datasets: [
     {
       data: stats.value?.dailyViews.map((v) => v.count) || [],
@@ -280,7 +280,6 @@ const chartOptions = {
 function openInfo() {
   isInfoOpen.value = true;
 }
-
 </script>
 
 <template>

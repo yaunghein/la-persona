@@ -67,9 +67,7 @@ const actionLabel = computed(() => {
 
 function onAction() {
   if (data.value?.alreadyMember) {
-    return navigateTo(
-      `${ROUTES.PLATFORM.ROOT}/${data.value.organizationSlug}`
-    );
+    return navigateTo(`${ROUTES.PLATFORM.ROOT}/${data.value.organizationSlug}`);
   }
   accept();
 }

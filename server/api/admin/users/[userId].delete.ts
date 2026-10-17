@@ -5,7 +5,10 @@ export default defineEventHandler(async (event) => {
   const principal = authorizePlatformAccess(event, 'user:delete');
   const { userId } = await parseRouteParams(event, AdminUserRouteParams);
 
-  const result = await deleteAccount(event, { userId, actorUserId: principal.user.id });
+  const result = await deleteAccount(event, {
+    userId,
+    actorUserId: principal.user.id,
+  });
   enrichLog(event, {
     target_user: {
       id: result.account.id,

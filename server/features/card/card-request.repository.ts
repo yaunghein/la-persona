@@ -30,7 +30,10 @@ function linkedToRequest(requestId: string) {
   );
 }
 
-export async function findDesignSourceCard(cardId: string, organizationId: string) {
+export async function findDesignSourceCard(
+  cardId: string,
+  organizationId: string
+) {
   const [row] = await db
     .select({
       card,
@@ -68,7 +71,8 @@ export function insertCardRequestWithPayment(input: {
       .insert(cardRequest)
       .values({ ...input.request, status: 'pending' })
       .returning({ id: cardRequest.id });
-    if (!createdCard || !request) throw new Error('Card request insert failed.');
+    if (!createdCard || !request)
+      throw new Error('Card request insert failed.');
 
     const [payment] = await tx
       .insert(subscriptionPayment)
@@ -141,17 +145,27 @@ export async function decidePendingCardRequest(
   const [updated] = await tx
     .update(cardRequest)
     .set({ status, updatedAt: new Date() })
-    .where(and(eq(cardRequest.id, requestId), eq(cardRequest.status, 'pending')))
+    .where(
+      and(eq(cardRequest.id, requestId), eq(cardRequest.status, 'pending'))
+    )
     .returning();
   return updated ?? null;
 }
 
 /** Approves the request's submitted payments and activates their card terms. */
-export async function approveLinkedPayments(tx: Transaction, requestId: string) {
+export async function approveLinkedPayments(
+  tx: Transaction,
+  requestId: string
+) {
   const payments = await tx
     .update(subscriptionPayment)
     .set({ status: 'approved', updatedAt: new Date() })
-    .where(and(linkedToRequest(requestId), eq(subscriptionPayment.status, 'submitted')))
+    .where(
+      and(
+        linkedToRequest(requestId),
+        eq(subscriptionPayment.status, 'submitted')
+      )
+    )
     .returning({ id: subscriptionPayment.id });
   const paymentIds = payments.map((payment) => payment.id);
   if (!paymentIds.length) return paymentIds;
@@ -168,7 +182,12 @@ export async function rejectLinkedPayments(tx: Transaction, requestId: string) {
   const payments = await tx
     .update(subscriptionPayment)
     .set({ status: 'rejected', updatedAt: new Date() })
-    .where(and(linkedToRequest(requestId), eq(subscriptionPayment.status, 'submitted')))
+    .where(
+      and(
+        linkedToRequest(requestId),
+        eq(subscriptionPayment.status, 'submitted')
+      )
+    )
     .returning({ id: subscriptionPayment.id });
   return payments.map((payment) => payment.id);
 }
@@ -202,7 +221,8 @@ export async function insertApprovedCardForLegacyRequest(
       note: `New design request (${input.request.id})`,
     })
     .returning({ id: subscriptionPayment.id });
-  if (!createdCard || !payment) throw new Error('Legacy request card insert failed.');
+  if (!createdCard || !payment)
+    throw new Error('Legacy request card insert failed.');
 
   const [item] = await tx
     .insert(subscriptionPaymentItem)
@@ -233,7 +253,9 @@ export async function listCardRequestsForReview(filter: {
   limit: number;
   offset: number;
 }) {
-  const where = filter.status ? eq(cardRequest.status, filter.status) : undefined;
+  const where = filter.status
+    ? eq(cardRequest.status, filter.status)
+    : undefined;
   const [rows, [totals]] = await Promise.all([
     db
       .select({
@@ -264,7 +286,10 @@ export async function listCardRequestsForReview(filter: {
         .where(
           or(
             inArray(subscriptionPayment.requestId, requestIds),
-            inArray(subscriptionPayment.note, requestIds.flatMap(legacyRequestNotes))
+            inArray(
+              subscriptionPayment.note,
+              requestIds.flatMap(legacyRequestNotes)
+            )
           )
         )
     : [];

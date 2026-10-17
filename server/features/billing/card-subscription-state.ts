@@ -37,7 +37,9 @@ export function resolveCardSubscriptionState(
   now = new Date()
 ): CardSubscriptionState {
   if (!stored) {
-    const trialEndAt = new Date(cardCreatedAt.getTime() + TRIAL_LENGTH_DAYS * DAY_MS);
+    const trialEndAt = new Date(
+      cardCreatedAt.getTime() + TRIAL_LENGTH_DAYS * DAY_MS
+    );
     return {
       status: trialEndAt > now ? 'trial' : 'expired',
       planCode: null,
@@ -82,5 +84,7 @@ export function isOnTrialPlan(state: CardSubscriptionState) {
 }
 
 export function isSubscriptionLapsed(state: CardSubscriptionState) {
-  return state.status === 'expired' || toSubscriptionOverview(state).daysLeft === 0;
+  return (
+    state.status === 'expired' || toSubscriptionOverview(state).daysLeft === 0
+  );
 }

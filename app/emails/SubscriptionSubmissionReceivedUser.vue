@@ -16,7 +16,9 @@ defineProps<{
       PAYMENT RECEIVED
     </EHeading>
     <EText style="margin: 12px 0 0">Hi&nbsp;{{ recipientName }},</EText>
-    <EText style="margin: 8px 0 0; line-height: 1.5; white-space: pre-wrap">{{ noWidows(bodyText) }}</EText>
+    <EText style="margin: 8px 0 0; line-height: 1.5; white-space: pre-wrap">{{
+      noWidows(bodyText)
+    }}</EText>
 
     <EText style="margin: 32px 0 0">WHAT HAPPENS&nbsp;NEXT</EText>
     <EText style="margin: 8px 0 0; line-height: 1.5">
