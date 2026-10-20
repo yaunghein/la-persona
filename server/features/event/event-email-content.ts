@@ -5,26 +5,31 @@ import { event as eventTable } from '~~/server/db/schema';
 import { env } from '~~/env';
 import { ROUTES } from '~~/shared/utils/routes';
 
-const yangonDate = new Intl.DateTimeFormat('en-GB', {
-  timeZone: 'Asia/Yangon',
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-});
-const yangonTime = new Intl.DateTimeFormat('en-US', {
-  timeZone: 'Asia/Yangon',
-  hour: 'numeric',
-  minute: 'numeric',
-});
-
-// "1:00 PM" → "1 PM"; keeps minutes when they matter.
-function formatTime(date: Date) {
-  return yangonTime.format(date).replace(':00', '');
+function formatDate(date: Date, timeZone: string) {
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(date);
 }
 
-/** "2:15 PM, 11 November 2026" in Yangon time. */
-export function formatYangonDateTime(date: Date) {
-  return `${yangonTime.format(date)}, ${yangonDate.format(date)}`;
+function formatTimeOfDay(date: Date, timeZone: string) {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hour: 'numeric',
+    minute: 'numeric',
+  }).format(date);
+}
+
+// "1:00 PM" → "1 PM"; keeps minutes when they matter.
+function formatTime(date: Date, timeZone: string) {
+  return formatTimeOfDay(date, timeZone).replace(':00', '');
+}
+
+/** "2:15 PM, 11 November 2026" in the event's time zone. */
+export function formatEventDateTime(date: Date, timeZone: string) {
+  return `${formatTimeOfDay(date, timeZone)}, ${formatDate(date, timeZone)}`;
 }
 
 /**
@@ -38,16 +43,23 @@ export async function loadEventEmailContent(params: {
   const [eventRow, setting] = await Promise.all([
     db.query.event.findFirst({
       where: eq(eventTable.id, params.eventId),
-      columns: { location: true, mapUrl: true, startsAt: true, endsAt: true },
+      columns: {
+        location: true,
+        mapUrl: true,
+        startsAt: true,
+        endsAt: true,
+        timeZone: true,
+      },
     }),
     findCommunitySettingByOrganizationId(params.organizationId),
   ]);
   if (!eventRow) return null;
 
   return {
+    timeZone: eventRow.timeZone,
     details: {
-      eventDate: yangonDate.format(eventRow.startsAt),
-      eventTime: `${formatTime(eventRow.startsAt)} - ${formatTime(eventRow.endsAt)}`,
+      eventDate: formatDate(eventRow.startsAt, eventRow.timeZone),
+      eventTime: `${formatTime(eventRow.startsAt, eventRow.timeZone)} - ${formatTime(eventRow.endsAt, eventRow.timeZone)}`,
       eventLocation: eventRow.location,
       directionsUrl:
         eventRow.mapUrl ||

@@ -8,6 +8,7 @@ import { z } from 'zod';
 import type { EventDTO } from '~~/shared/contracts/event';
 import { publicEventAbsoluteUrl } from '~~/shared/utils/routes';
 import {
+  deviceTimeZone,
   eventScheduleError,
   eventTimeOptions,
   formatEventDateValue,
@@ -428,7 +429,14 @@ const { mutate: createEvent, isPending: isCreating } = useMutation({
     const images = await uploadedImageUrls();
     return await $fetch<EventDTO>(
       `/api/organizations/${organizationSlug.value}/events` as string,
-      { method: 'POST', body: { ...toEventBody(payload), ...images } }
+      {
+        method: 'POST',
+        body: {
+          ...toEventBody(payload),
+          ...images,
+          timeZone: deviceTimeZone(),
+        },
+      }
     );
   },
   onSuccess: (created) => {

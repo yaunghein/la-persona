@@ -1,0 +1,1 @@
+ALTER TABLE "event" ADD COLUMN "time_zone" text DEFAULT 'Asia/Yangon' NOT NULL;

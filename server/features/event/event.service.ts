@@ -50,6 +50,7 @@ import type {
   PublicEventViewer,
   SelectEvent,
   TicketLookup,
+  UpdateEventRequest,
 } from '~~/shared/contracts/event';
 import {
   checkInPhase,
@@ -63,7 +64,7 @@ import type { TimezoneOffset } from '~~/shared/utils/datetime';
 
 type Organization = { id: string; slug: string; name: string };
 
-function toEventValues(request: CreateEventRequest) {
+function toEventValues(request: UpdateEventRequest) {
   return {
     title: request.title,
     description: sanitizeRichText(request.description),
@@ -132,6 +133,7 @@ export async function createEvent(
     organizationId,
     userId: creatorUserId,
     ...toEventValues(request),
+    timeZone: request.timeZone,
   });
   if (!inserted) throw new Error('Event insert returned no row.');
   return toEventDTO(inserted);
@@ -139,7 +141,7 @@ export async function createEvent(
 
 export async function updateEvent(
   record: SelectEvent,
-  request: CreateEventRequest
+  request: UpdateEventRequest
 ) {
   const updated = await updateEventByIdAndOrganizationId(
     record.id,
@@ -259,7 +261,7 @@ export async function approveRegistration(
 }
 
 function assertCheckInOpen(record: SelectEvent) {
-  const phase = checkInPhase(record.startsAt, record.endsAt);
+  const phase = checkInPhase(record.startsAt, record.endsAt, record.timeZone);
   if (phase === 'live') return;
   throw conflict(
     phase === 'before'

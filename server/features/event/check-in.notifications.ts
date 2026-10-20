@@ -5,7 +5,7 @@ import { user } from '~~/server/db/schema';
 import {
   communityContactsUrl,
   firstName,
-  formatYangonDateTime,
+  formatEventDateTime,
   loadEventEmailContent,
   publicCardUrl,
 } from '~~/server/features/event/event-email-content';
@@ -55,7 +55,10 @@ export async function sendEventCheckInEmail(
           renderEmailComponent('EventCheckIn', {
             recipientName: firstName(params.cardFirstName, account.name),
             eventTitle: params.event.title,
-            checkedInAt: formatYangonDateTime(params.checkedInAt),
+            checkedInAt: formatEventDateTime(
+              params.checkedInAt,
+              content.timeZone
+            ),
             contactExchangeImageUrl: content.images.contactExchangeUrl,
             contactsUrl: communityContactsUrl(params.organization.slug),
             assetBaseUrl: content.details.assetBaseUrl,

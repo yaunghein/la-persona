@@ -26,6 +26,8 @@ export const event = pgTable(
     mapUrl: text(),
     startsAt: timestamp().notNull(),
     endsAt: timestamp().notNull(),
+    // IANA zone of the venue; emails and the check-in window use it.
+    timeZone: text().default('Asia/Yangon').notNull(),
     capacity: integer(),
     coverUrl: text().notNull(),
     photoUrls: jsonb().$type<string[]>().default([]).notNull(),

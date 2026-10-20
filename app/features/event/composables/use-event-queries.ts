@@ -9,6 +9,7 @@ import type {
   EventDTO,
   EventMembershipResult,
   TicketLookup,
+  UpdateEventRequest,
 } from '~~/shared/contracts/event';
 import { timezoneOffsetQuery } from '~~/shared/utils/datetime';
 import { organizationQueryKeys } from '~/features/organization/composables/use-user-organizations';
@@ -95,7 +96,7 @@ export function useUpdateEventMutation() {
       request,
     }: {
       eventId: string;
-      request: CreateEventRequest;
+      request: UpdateEventRequest;
     }) =>
       $fetch<EventDTO>(eventUrl(eventId), { method: 'PATCH', body: request }),
     onSuccess: invalidateEvents,

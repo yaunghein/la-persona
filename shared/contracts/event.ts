@@ -12,7 +12,7 @@ import {
   EVENT_MAX_EXTRA_PHOTOS,
   isAllowedEventImageUrl,
 } from '~~/shared/utils/event-media';
-import { eventScheduleError } from '~~/shared/utils/event-datetime';
+import { eventScheduleError, isTimeZone } from '~~/shared/utils/event-datetime';
 
 export type SelectEvent = InferSelectModel<typeof event>;
 export type InsertEvent = InferInsertModel<typeof event>;
@@ -133,8 +133,10 @@ const eventBodyFields = {
   approvalMode: z.enum(EVENT_APPROVAL_MODES).default('everyone'),
 };
 
-function eventBodySchema(allowPast: boolean) {
-  return z.object(eventBodyFields).superRefine((value, ctx) => {
+function withSchedule<
+  T extends z.ZodType<{ startsAt: string; endsAt: string }>,
+>(schema: T, allowPast: boolean) {
+  return schema.superRefine((value, ctx) => {
     const message = eventScheduleError(
       new Date(value.startsAt),
       new Date(value.endsAt),
@@ -149,14 +151,23 @@ function eventBodySchema(allowPast: boolean) {
   });
 }
 
-export const CreateEventRequest = eventBodySchema(false);
+/** The zone is set once, from the organizer's device; edits keep it. */
+export const CreateEventRequest = withSchedule(
+  z.object({
+    ...eventBodyFields,
+    timeZone: z
+      .string()
+      .refine(isTimeZone, { message: 'Enter a valid time zone' }),
+  }),
+  false
+);
 
 export type CreateEventRequest = z.infer<typeof CreateEventRequest>;
 
-/** Same fields as create; past dates are allowed when editing an existing event. */
-export const UpdateEventRequest = eventBodySchema(true);
+/** Same fields as create minus the zone; past dates are allowed when editing an existing event. */
+export const UpdateEventRequest = withSchedule(z.object(eventBodyFields), true);
 
-export type UpdateEventRequest = CreateEventRequest;
+export type UpdateEventRequest = z.infer<typeof UpdateEventRequest>;
 
 export const EventRouteParams = z.object({
   eventId: z.string().trim().min(1),

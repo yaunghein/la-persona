@@ -85,6 +85,13 @@
       "when": 1791984975861,
       "tag": "0011_tired_pestilence",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792516559395,
+      "tag": "0012_lethal_zemo",
+      "breakpoints": true
     }
   ]
 }

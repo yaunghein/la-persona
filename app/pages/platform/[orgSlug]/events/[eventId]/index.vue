@@ -100,7 +100,11 @@ const phase = computed(() =>
 
 const checkInWindow = computed(() =>
   event.value
-    ? checkInPhase(event.value.startsAt, event.value.endsAt)
+    ? checkInPhase(
+        event.value.startsAt,
+        event.value.endsAt,
+        event.value.timeZone
+      )
     : 'before'
 );
 

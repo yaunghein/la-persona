@@ -65,20 +65,68 @@ export function eventPhase(
   return 'live';
 }
 
-const YANGON_OFFSET_MS = (6 * 60 + 30) * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** Check-in opens at midnight Asia/Yangon on the start day and closes when the event ends. */
+/** True for an IANA zone name the runtime knows, e.g. "Asia/Yangon". */
+export function isTimeZone(value: string) {
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: value });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The organizer's device zone, which is how the event form reads its times.
+ * TODO: add a time zone picker for events outside the organizer's zone. That
+ * needs the form to parse and prefill times in the chosen zone (e.g.
+ * @date-fns/tz), timeZone on UpdateEventRequest, and event pages to show
+ * times in the event's zone instead of the viewer's.
+ */
+export function deviceTimeZone() {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+/** Milliseconds `timeZone` is ahead of UTC at `date`. */
+function timeZoneOffsetMs(date: Date, timeZone: string) {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      hourCycle: 'h23',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    })
+      .formatToParts(date)
+      .map((part) => [part.type, Number(part.value)])
+  );
+  const wallClock = Date.UTC(
+    parts.year!,
+    parts.month! - 1,
+    parts.day!,
+    parts.hour!,
+    parts.minute!,
+    parts.second!
+  );
+  return wallClock - Math.floor(date.getTime() / 1000) * 1000;
+}
+
+/** Check-in opens at midnight in the event's zone on the start day and closes when the event ends. */
 export function checkInPhase(
   startsAt: Date | string,
-  endsAt: Date | string
+  endsAt: Date | string,
+  timeZone: string
 ): EventPhase {
   const now = Date.now();
   if (asDate(endsAt).getTime() < now) return 'past';
-  const startsAtMs = asDate(startsAt).getTime();
+  const start = asDate(startsAt);
+  const offset = timeZoneOffsetMs(start, timeZone);
   const startDayMs =
-    Math.floor((startsAtMs + YANGON_OFFSET_MS) / DAY_MS) * DAY_MS -
-    YANGON_OFFSET_MS;
+    Math.floor((start.getTime() + offset) / DAY_MS) * DAY_MS - offset;
   if (startDayMs > now) return 'before';
   return 'live';
 }
