@@ -30,10 +30,10 @@ usePageSeo({
   },
   image: () => {
     if (!preview.value) return null;
-    const logo = invitationLogoSrc(preview.value.logoUrl);
     return (
       communityCoverSrc(preview.value.coverUrl) ||
-      (logo === INVITATION_LOGO_FALLBACK ? null : logo)
+      invitationLogoSrc(preview.value.logoUrl) ||
+      null
     );
   },
   imageAlt: () => preview.value?.organizationName,

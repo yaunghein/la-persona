@@ -34,17 +34,15 @@ export function communityCoverSrc(url: string | null | undefined) {
 }
 
 export const INVITATION_COVER_FALLBACK = '/images/reveal-image.webp';
-export const INVITATION_LOGO_FALLBACK = '/images/favicon.png';
 
+/** Undefined when unset, so the invitation screen shows its icon instead. */
 export function invitationCoverSrc(url: string | null | undefined) {
-  return communityCoverSrc(url) || INVITATION_COVER_FALLBACK;
+  return communityCoverSrc(url) || undefined;
 }
 
 export function invitationLogoSrc(url: string | null | undefined) {
   const value = String(url || '').trim();
-  if (!value || value === COMMUNITY_LOGO_PLACEHOLDER) {
-    return INVITATION_LOGO_FALLBACK;
-  }
+  if (!value || value === COMMUNITY_LOGO_PLACEHOLDER) return undefined;
   return value;
 }
 

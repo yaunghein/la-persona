@@ -51,8 +51,11 @@ const emit = defineEmits<{
 
       <div v-else class="flex flex-col gap-10 pb-10 rounded-lg bg-[#232323]">
         <div
-          class="w-full overflow-hidden rounded-t-lg bg-[#232323]"
-          :class="props.coverAspectClass || 'aspect-[1/0.25]'"
+          class="flex w-full items-center justify-center overflow-hidden rounded-t-lg"
+          :class="[
+            props.coverAspectClass || 'aspect-[1/0.25]',
+            coverSrc ? 'bg-[#232323]' : 'bg-white/5',
+          ]"
         >
           <NuxtImg
             v-if="coverSrc"
@@ -60,6 +63,11 @@ const emit = defineEmits<{
             alt=""
             width="480"
             class="size-full object-cover"
+          />
+          <UIcon
+            v-else
+            name="i-lucide-image"
+            class="size-6 text-[#8b8b8b] sm:size-8"
           />
         </div>
 
@@ -69,15 +77,21 @@ const emit = defineEmits<{
           </p>
           <div class="flex w-full flex-col items-center gap-4">
             <div
-              v-if="logoSrc"
-              class="flex size-18 items-center justify-center overflow-hidden rounded-full bg-white"
+              class="flex size-18 items-center justify-center overflow-hidden rounded-full"
+              :class="logoSrc ? 'bg-white' : 'bg-[#171717]'"
             >
               <NuxtImg
+                v-if="logoSrc"
                 :src="logoSrc"
                 :alt="organizationName || ''"
                 width="72"
                 height="72"
                 class="size-full object-cover"
+              />
+              <UIcon
+                v-else
+                name="i-lucide-users"
+                class="size-7 text-[#8b8b8b]"
               />
             </div>
             <div class="flex flex-col items-center gap-2 text-center">
