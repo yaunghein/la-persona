@@ -7,6 +7,7 @@ import { SOCIAL_MEDIA_LINK_LABELS } from '~~/shared/constants/card-link-options'
 import { downloadFile } from '~/utils/share-or-download';
 import { applyCombinedCardToSpline } from '~/features/card/utils/spline-card';
 import { vcfPhoneLines } from '~~/shared/utils/phone';
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
 const route = useRoute();
 const { normalizeCardLinkValue } = useUrlNormalization();
@@ -22,6 +23,9 @@ if (!card.value) {
 }
 
 const { data: session } = await authClient.useSession(useFetch);
+const { data: myCards, refetch: refetchMyCards } = useWorkspaceCardsQuery({
+  enabled: () => !!session.value,
+});
 
 const cardFullName = computed(() =>
   [card.value?.firstName, card.value?.lastName].filter(Boolean).join(' ').trim()
@@ -104,6 +108,7 @@ const isValid = ref(true);
 const isSubmitting = ref(false);
 const isSavingContact = ref(false);
 const isSeamlessExchanging = ref(false);
+const isPickingCard = ref(false);
 const successMode = ref<'visitor' | 'seamless' | null>(null);
 const loading = ref(false);
 const error = ref('');
@@ -133,6 +138,7 @@ const closeForm = () => {
   isFormOpen.value = false;
   setTimeout(() => {
     isSuccess.value = false;
+    isPickingCard.value = false;
     successMode.value = null;
     error.value = '';
   }, 750);
@@ -146,11 +152,24 @@ const onExchangeContactClick = async () => {
   if (!card.value || isSeamlessExchanging.value) return;
 
   isMenuOpen.value = false;
+  exchangeSeamlessly();
+};
+
+const personalCards = computed(() =>
+  (myCards.value ?? []).filter(
+    (myCard) => myCard.organization.type === ORGANIZATION_TYPES.PERSONAL
+  )
+);
+
+/** Without `cardId` the server picks the visitor's card; it asks back only when they must choose. */
+const exchangeSeamlessly = async (cardId?: string) => {
+  if (!card.value || isSeamlessExchanging.value) return;
+
   isSeamlessExchanging.value = true;
   try {
     await $fetch(`/api/public/cards/${card.value.slug}/contact-exchanges`, {
       method: 'POST',
-      body: { mode: 'seamless' } satisfies CreateContactExchangeRequest,
+      body: { mode: 'seamless', cardId } satisfies CreateContactExchangeRequest,
     });
 
     recordCardInteraction(card.value!.slug, {
@@ -159,15 +178,33 @@ const onExchangeContactClick = async () => {
     });
 
     successMode.value = 'seamless';
+    isPickingCard.value = false;
     isSuccess.value = true;
     isFormOpen.value = true;
-  } catch (error: any) {
+  } catch (error) {
+    const code = apiErrorCode(error);
+    if (code === 'card_choice_required') {
+      if (!myCards.value) await refetchMyCards();
+      isPickingCard.value = true;
+      isFormOpen.value = true;
+      return;
+    }
+    if (code === 'card_required') {
+      isFormOpen.value = true;
+      toast.add({
+        title: 'Seamless Exchange unavailable',
+        description:
+          "You don't have a La Persona card yet, so please share your details below.",
+        color: 'info',
+        icon: 'i-heroicons-information-circle',
+        progress: false,
+        duration: 6000,
+      });
+      return;
+    }
     toast.add({
       title: 'Unable to connect',
-      description:
-        error?.data?.statusMessage ||
-        error?.statusMessage ||
-        'Please try again.',
+      description: apiErrorMessage(error),
       color: 'error',
       icon: 'i-heroicons-x-circle',
       progress: false,
@@ -515,6 +552,45 @@ async function onSaveContact() {
           </p>
         </div>
 
+        <div
+          v-else-if="isPickingCard"
+          class="hide-scrollbar flex-1 overflow-y-scroll"
+        >
+          <div
+            class="mx-auto max-w-52 pt-8 text-center text-sm font-light leading-normal sm:max-w-[18rem]"
+          >
+            Choose which of your cards to&nbsp;share.
+          </div>
+          <ul class="flex flex-col gap-3 px-5 py-9">
+            <li v-for="myCard in personalCards" :key="myCard.id">
+              <button
+                type="button"
+                :disabled="isSeamlessExchanging"
+                class="flex w-full cursor-pointer flex-col gap-1 border border-[#494949] px-4 py-4 text-left transition duration-500 hover:border-white/20 disabled:cursor-not-allowed disabled:opacity-50 sm:px-6"
+                @click="exchangeSeamlessly(myCard.id)"
+              >
+                <span class="text-sm font-bold tracking-[0.1rem]">
+                  {{
+                    [myCard.firstName, myCard.lastName]
+                      .filter(Boolean)
+                      .join(' ')
+                  }}
+                </span>
+                <span
+                  v-if="myCard.position || myCard.company"
+                  class="text-xs font-light tracking-[0.1rem] text-white/60"
+                >
+                  {{
+                    [myCard.position, myCard.company]
+                      .filter(Boolean)
+                      .join(' · ')
+                  }}
+                </span>
+              </button>
+            </li>
+          </ul>
+        </div>
+
         <div v-else class="hide-scrollbar flex-1 overflow-y-scroll">
           <div
             class="mx-auto max-w-52 pt-8 text-center text-sm font-light leading-normal sm:max-w-[18rem]"
@@ -598,7 +674,7 @@ async function onSaveContact() {
             Save Contact
           </a> -->
           <button
-            v-else
+            v-else-if="!isPickingCard"
             type="submit"
             form="form"
             :disabled="!isValid || isSubmitting"
@@ -631,7 +707,7 @@ async function onSaveContact() {
           </div>
 
           <button
-            v-if="!isSuccess"
+            v-if="!isSuccess && !isPickingCard"
             @click="
               successMode = 'visitor';
               isSuccess = true;
@@ -642,7 +718,7 @@ async function onSaveContact() {
           </button>
 
           <button
-            v-if="isSuccess"
+            v-if="isSuccess || isPickingCard"
             @click="closeForm"
             class="text-xs font-bold leading-none tracking-[0.1rem] underline underline-offset-4"
           >

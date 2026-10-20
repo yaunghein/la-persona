@@ -226,6 +226,7 @@ No client logger. No per-query SQL logs. CLI scripts are not requests.
 - Aspect ratio: keep one side `1` and derive the other (e.g. `aspect-[1/1.25]`, not huge integers).
 - Responsive: use project breakpoints already in use (`sm:`, etc.) unless asked otherwise. Brand tokens: `--color-dark`, `--color-gold` in `main.css`.
 - Color mode defaults to **dark** (`nuxt.config` `colorMode.preference`).
+- **No orphans:** never leave a single word alone on the last line of wrapped text. Whenever you add or change copy, check it at the widths it renders (mobile and desktop) and join the last two words with `&nbsp;` (e.g. `cards to&nbsp;share.`).
 
 ## Motion & media
 

@@ -55,6 +55,7 @@ export default defineEventHandler(async (event) => {
   const result = await exchangeContactSeamlessly(ownerCard, {
     userId: principal.user.id,
     email: principal.user.email,
+    cardId: request.cardId,
   });
   enrichLog(event, {
     contact_exchange: {

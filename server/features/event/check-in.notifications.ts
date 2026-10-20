@@ -19,7 +19,7 @@ import {
 const TEMPLATE = 'event_check_in';
 
 /** Confirmation to the attendee right after their first check-in. */
-export async function queueEventCheckInEmail(
+export async function sendEventCheckInEmail(
   h3Event: H3Event,
   params: {
     userId: string;

@@ -78,7 +78,7 @@ async function buildEventRegistrationEmail(
   };
 }
 
-async function sendEventRegistrationEmail(
+async function sendAttendeeEmail(
   email: NonNullable<Awaited<ReturnType<typeof buildEventRegistrationEmail>>>
 ): Promise<EmailSendResult> {
   const to = [email.to];
@@ -179,7 +179,7 @@ async function sendOwnerEmail(
 }
 
 /** Attendee QR email when registered, plus the community owner's heads-up. */
-export async function queueEventRegistrationEmails(
+export async function sendEventRegistrationEmails(
   event: H3Event,
   params: EventRegistrationEmailParams
 ) {
@@ -189,7 +189,7 @@ export async function queueEventRegistrationEmails(
   ]);
 
   const sends: Promise<EmailSendResult>[] = [];
-  if (attendeeEmail) sends.push(sendEventRegistrationEmail(attendeeEmail));
+  if (attendeeEmail) sends.push(sendAttendeeEmail(attendeeEmail));
   if (ownerEmail) sends.push(sendOwnerEmail(ownerEmail));
 
   enrichLog(event, {

@@ -125,7 +125,7 @@ function buildProps(
  * Rendering and sending finish after the response; failures are logged per
  * batch on the request's wide event.
  */
-export async function queueEventBroadcastEmail(
+export async function sendEventBroadcastEmail(
   h3Event: H3Event,
   params: {
     kind: EventBroadcastKind;

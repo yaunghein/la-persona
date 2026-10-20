@@ -2,7 +2,6 @@ import {
   findCardOwnerEmail,
   findLatestCardInOrganization,
   listWorkspaceCards,
-  findPersonalCardForUser,
   type CardRecord,
 } from '~~/server/features/card/card.repository';
 import {
@@ -30,6 +29,7 @@ import type {
 } from '~~/shared/contracts/contact';
 import { cards as legacyCards } from '~~/shared/utils/cards';
 import { contactOriginLabel } from '~~/shared/utils/contact-origin';
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 import {
   internationalPhone,
   normalizePhoneCountryCode,
@@ -220,10 +220,44 @@ export async function exchangeContactViaForm(
   };
 }
 
+/**
+ * The card a visitor shares: their card in the owner's community, else their
+ * personal card. Several personal cards need `cardId` to pick one.
+ */
+async function resolveVisitorCard(
+  ownerCard: CardRecord,
+  visitor: { userId: string; cardId?: string }
+) {
+  const rows = await listWorkspaceCards(visitor.userId);
+  const communityCard = rows.find(
+    (row) =>
+      row.organization.type === ORGANIZATION_TYPES.COMMUNITY &&
+      row.card.organizationId === ownerCard.organizationId
+  );
+  if (communityCard) return communityCard.card;
+
+  const personalCards = rows
+    .filter((row) => row.organization.type === ORGANIZATION_TYPES.PERSONAL)
+    .map((row) => row.card);
+  if (visitor.cardId) {
+    const chosen = personalCards.find((item) => item.id === visitor.cardId);
+    if (!chosen) throw notFound('Card');
+    return chosen;
+  }
+  if (personalCards.length === 1) return personalCards[0]!;
+  if (personalCards.length === 0) {
+    throw conflict(
+      'Create your La Persona card before using Seamless Exchange.',
+      'card_required'
+    );
+  }
+  throw conflict('Choose which card to share.', 'card_choice_required');
+}
+
 /** A signed-in member swaps cards with the card holder; both get each other. */
 export async function exchangeContactSeamlessly(
   ownerCard: CardRecord,
-  visitor: { userId: string; email: string }
+  visitor: { userId: string; email: string; cardId?: string }
 ) {
   if (!ownerCard.userId) {
     throw conflict(
@@ -238,13 +272,7 @@ export async function exchangeContactSeamlessly(
     );
   }
 
-  const visitorCard = await findPersonalCardForUser(visitor.userId);
-  if (!visitorCard) {
-    throw conflict(
-      'Create your La Persona card before using Seamless Exchange.',
-      'card_required'
-    );
-  }
+  const visitorCard = await resolveVisitorCard(ownerCard, visitor);
 
   const toSide = (holderCard: CardRecord, contactCard: CardRecord) => ({
     cardId: holderCard.id,

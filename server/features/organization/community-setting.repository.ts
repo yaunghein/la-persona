@@ -31,14 +31,16 @@ export const findEmailQrBackgroundByCardSlug = async (cardSlug: string) => {
   const [row] = await db
     .select({ url: communitySetting.emailQrBackgroundUrl })
     .from(card)
-    .innerJoin(
+    .leftJoin(
       communitySetting,
       eq(communitySetting.organizationId, card.organizationId)
     )
     .where(eq(card.slug, cardSlug))
     .limit(1);
 
-  return row?.url ?? '';
+  // null means the card does not exist; '' means it has no background.
+  if (!row) return null;
+  return row.url ?? '';
 };
 
 export const findCommunitySettingByInviteToken = async (token: string) => {

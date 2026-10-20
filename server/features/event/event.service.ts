@@ -6,8 +6,8 @@ import {
   findUserCardInOrganization,
 } from '~~/server/features/organization/community.repository';
 import { joinCommunity } from '~~/server/features/organization/community.service';
-import { queueEventBroadcastEmail } from '~~/server/features/event/broadcast.notifications';
-import { queueEventCheckInEmail } from '~~/server/features/event/check-in.notifications';
+import { sendEventBroadcastEmail } from '~~/server/features/event/broadcast.notifications';
+import { sendEventCheckInEmail } from '~~/server/features/event/check-in.notifications';
 import {
   deleteEventByIdAndOrganizationId,
   findEventsByOrganizationId,
@@ -35,7 +35,7 @@ import {
   toViewerStatus,
   updateEventRegistrationStatus,
 } from '~~/server/features/event/registration.repository';
-import { queueEventRegistrationEmails } from '~~/server/features/event/registration.notifications';
+import { sendEventRegistrationEmails } from '~~/server/features/event/registration.notifications';
 import { sanitizeRichText } from '~~/server/lib/html-sanitizer';
 import type {
   AddToGoogleCalendarResult,
@@ -194,7 +194,7 @@ export async function registerForEvent(
     throw conflict(registrationBlockMessage('full'), 'event_full');
   if (inserted === 'not_found' || !inserted) throw notFound('Event');
 
-  await queueEventRegistrationEmails(h3Event, {
+  await sendEventRegistrationEmails(h3Event, {
     userId,
     organization,
     event: { id: record.id, title: record.title },
@@ -244,7 +244,7 @@ export async function approveRegistration(
   if (updated === 'not_found') throw notFound('Event');
 
   if (updated) {
-    await queueEventRegistrationEmails(h3Event, {
+    await sendEventRegistrationEmails(h3Event, {
       userId: registration.userId,
       organization,
       event: { id: record.id, title: record.title },
@@ -342,7 +342,7 @@ export async function checkInAttendee(
     { checkedInAt }
   );
   if (updated) {
-    await queueEventCheckInEmail(h3Event, {
+    await sendEventCheckInEmail(h3Event, {
       userId: card.card.userId!,
       cardFirstName: card.card.firstName,
       event: { id: record.id, title: record.title },
@@ -369,7 +369,7 @@ export async function broadcastToAttendees(
   if (kind === 'after_event' && phase === 'before') {
     throw conflict('This event has not started yet.', 'event_not_started');
   }
-  return queueEventBroadcastEmail(h3Event, {
+  return sendEventBroadcastEmail(h3Event, {
     kind,
     event: { id: record.id, title: record.title },
     organization: { id: organization.id, slug: organization.slug },

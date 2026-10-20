@@ -2,19 +2,16 @@ import { findEmailQrBackgroundByCardSlug } from '~~/server/features/organization
 import { env } from '~~/env';
 import { renderQrTicketPng } from '~~/server/lib/qr-ticket-renderer';
 import { enrichLog } from '~~/server/utils/wide-event';
-
-const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/i;
+import { CardRouteParams } from '~~/shared/contracts/card';
 
 // Public so email clients can load it; it only ever encodes our own card URL.
 export default defineEventHandler(async (event) => {
-  const slug = getRouterParam(event, 'cardSlug') ?? '';
+  const { cardSlug: slug } = await parseRouteParams(event, CardRouteParams);
   enrichLog(event, { card: { slug } });
 
-  if (!SLUG_RE.test(slug)) {
-    throw createError({ statusCode: 400, statusMessage: 'Invalid card slug.' });
-  }
-
   const backgroundUrl = await findEmailQrBackgroundByCardSlug(slug);
+  if (backgroundUrl === null) throw notFound('Card');
+
   const png = await renderQrTicketPng(
     `${env.BASE_URL}/c/${slug}`,
     backgroundUrl || undefined

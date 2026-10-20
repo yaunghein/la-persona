@@ -43,9 +43,13 @@ const FormContactExchange = z.object({
   position: optionalText,
 });
 
-/** Signed-in visitor swaps cards with the owner in one tap. */
+/**
+ * Signed-in visitor swaps cards with the owner. `cardId` picks one of their
+ * personal cards when they have several.
+ */
 const SeamlessContactExchange = z.object({
   mode: z.literal('seamless'),
+  cardId: z.string().trim().min(1).max(64).optional(),
 });
 
 export const CreateContactExchangeRequest = z.discriminatedUnion('mode', [

@@ -131,25 +131,6 @@ export async function findCardOwnerEmail(cardId: string) {
   return row?.email ?? null;
 }
 
-/** The user's own card in their personal organization (most recent first). */
-export async function findPersonalCardForUser(
-  userId: string
-): Promise<CardRecord | null> {
-  const [row] = await db
-    .select({ card })
-    .from(card)
-    .innerJoin(organization, eq(organization.id, card.organizationId))
-    .where(
-      and(
-        eq(card.userId, userId),
-        eq(organization.type, ORGANIZATION_TYPES.PERSONAL)
-      )
-    )
-    .orderBy(desc(card.createdAt))
-    .limit(1);
-  return row?.card ?? null;
-}
-
 export async function findLatestCardInOrganization(
   organizationId: string,
   holderUserId?: string
