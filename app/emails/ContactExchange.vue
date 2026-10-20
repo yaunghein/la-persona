@@ -36,9 +36,7 @@ const rows = [
 
     <EmailDetails :rows="rows" />
 
-    <EmailButton :href="props.contactsUrl"
-      >MANAGE CONTACT IN PLATFORM</EmailButton
-    >
+    <EmailButton :href="props.contactsUrl">MANAGE CONTACTS</EmailButton>
 
     <EHr style="border-color: #e5e6e9; margin: 0 0 24px" />
 
