@@ -205,6 +205,9 @@ async function saveCardInfo(form: CardInfoForm) {
           { maxSizeMB: 0.8, maxWidthOrHeight: 1200 }
         )
       : form.avatarUrl;
+    // Unchanged photos are left out: one copied from a Google sign-in is not
+    // an uploaded image, so sending it back would fail validation.
+    const isAvatarChanged = avatarUrl !== (card.value.avatarUrl ?? '');
 
     await updateCard({
       firstName: form.firstName,
@@ -214,7 +217,7 @@ async function saveCardInfo(form: CardInfoForm) {
       email: form.email,
       ...resolvedPhoneFields(form.phone, form.phoneCountryCode),
       website: normalizeUrlWithHttps(form.website),
-      avatarUrl,
+      ...(isAvatarChanged && { avatarUrl }),
       socials: normalizeLinkValuesWithHttps(
         resolveSocialLinksForSubmission(form.socials)
       ),
