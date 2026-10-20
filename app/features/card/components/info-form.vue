@@ -13,7 +13,7 @@ import {
   resolveSocialLinksForSubmission,
   type SocialFormLink,
 } from '~~/shared/utils/social-links';
-import { applyCardToSpline } from '~/features/card/utils/spline-card';
+import { applyCombinedCardToSpline } from '~/features/card/utils/spline-card';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
 
 const route = useRoute();
@@ -399,7 +399,7 @@ function confirmRemoveLink() {
 function updatePreviewSplineVariables() {
   if (!previewSpline.value) return;
 
-  applyCardToSpline(previewSpline.value, {
+  applyCombinedCardToSpline(previewSpline.value, {
     firstName: state.firstName || card.value?.firstName || '',
     lastName: state.lastName || card.value?.lastName || '',
     position: state.position || card.value?.position || '',
@@ -409,6 +409,7 @@ function updatePreviewSplineVariables() {
     email: state.email || card.value?.email || '',
     website: state.website || card.value?.website,
     planCode: card.value?.subscription?.planCode,
+    joinedAt: card.value?.createdAt,
   });
 }
 
@@ -931,7 +932,7 @@ onBeforeUnmount(() => {
     v-model:open="isPreviewModalOpen"
     title="Card Preview"
     :ui="{
-      content: 'max-w-md bg-[#171717] overflow-hidden',
+      content: 'max-w-xl bg-[#171717] overflow-hidden',
       header: 'border-b border-[#232323] px-4 py-4 sm:px-6',
       title: 'text-white',
       body: 'p-4 sm:p-6',
@@ -940,7 +941,7 @@ onBeforeUnmount(() => {
     <template #body>
       <div class="space-y-4">
         <div
-          class="relative h-[50vh] min-h-105 overflow-hidden rounded-lg border border-white/10 bg-[#0b0b0b]"
+          class="relative h-[70vh] min-h-105 overflow-hidden rounded-lg border border-white/10 bg-[#0b0b0b]"
         >
           <canvas ref="previewCanvasEl" class="h-full w-full"></canvas>
 
