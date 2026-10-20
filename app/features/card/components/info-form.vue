@@ -170,6 +170,18 @@ function removeCurrentPhoto() {
   state.avatarUrl = '';
 }
 
+const isRemovePhotoConfirmOpen = ref(false);
+
+function openRemovePhotoConfirm() {
+  isRemovePhotoConfirmOpen.value = true;
+}
+
+function confirmRemovePhoto() {
+  if (selectedFile.value) clearSelection();
+  else removeCurrentPhoto();
+  isRemovePhotoConfirmOpen.value = false;
+}
+
 function triggerFilePicker() {
   const input = document.getElementById(
     'avatar-input'
@@ -570,7 +582,8 @@ onBeforeUnmount(() => {
             size="sm"
             icon="i-lucide-trash-2"
             class="scale-80 sm:scale-100 absolute -bottom-1 sm:bottom-0 -right-1 sm:right-0 rounded-full border-2 border-white dark:border-gray-900"
-            @click="selectedFile ? clearSelection() : removeCurrentPhoto()"
+            aria-label="Remove photo"
+            @click="openRemovePhotoConfirm"
           />
         </div>
 
@@ -901,6 +914,15 @@ onBeforeUnmount(() => {
       />
     </template>
   </UModal>
+
+  <UiConfirmDeleteModal
+    v-model:open="isRemovePhotoConfirmOpen"
+    title="Remove Photo?"
+    confirm-label="Remove"
+    @confirm="confirmRemovePhoto"
+  >
+    Your profile photo will be removed from this card when you&nbsp;save.
+  </UiConfirmDeleteModal>
 
   <UModal
     v-model:open="isPreviewModalOpen"
