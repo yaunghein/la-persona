@@ -104,7 +104,7 @@ function checkIn(attendee: EventAttendee) {
         >
           {{
             checkInPhase === 'before'
-              ? 'Check-in opens when the event starts.'
+              ? 'Check-in opens on the event\u00a0day.'
               : 'This event has ended.'
           }}
         </p>

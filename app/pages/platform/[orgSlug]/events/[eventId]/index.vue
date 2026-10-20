@@ -7,6 +7,7 @@ import type {
 } from '~~/shared/contracts/event';
 import { publicEventAbsoluteUrl } from '~~/shared/utils/routes';
 import {
+  checkInPhase,
   eventPhase,
   formatEventDateTimeRange,
   formatEventDateValue,
@@ -97,6 +98,12 @@ const phase = computed(() =>
   event.value ? eventPhase(event.value.startsAt, event.value.endsAt) : 'before'
 );
 
+const checkInWindow = computed(() =>
+  event.value
+    ? checkInPhase(event.value.startsAt, event.value.endsAt)
+    : 'before'
+);
+
 const canWalkIn = computed(() => {
   if (!event.value) return false;
   return (
@@ -122,7 +129,7 @@ function onSelectAttendee(attendee: EventAttendee) {
 }
 
 function onOpenScanner() {
-  if (phase.value !== 'live') return;
+  if (checkInWindow.value !== 'live') return;
   isScannerOpen.value = true;
 }
 
@@ -262,7 +269,7 @@ async function onCheckedIn() {
     <EventCheckIn
       v-else-if="activeTab === 'check-in'"
       :attendees="eventDetail.attendees"
-      :check-in-phase="phase"
+      :check-in-phase="checkInWindow"
       :can-walk-in="canWalkIn"
       @open-scanner="onOpenScanner"
       @open-walk-in="onOpenWalkIn"

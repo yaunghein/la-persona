@@ -52,6 +52,7 @@ import type {
   TicketLookup,
 } from '~~/shared/contracts/event';
 import {
+  checkInPhase,
   eventPhase,
   eventStatus,
   registrationBlockMessage,
@@ -258,11 +259,11 @@ export async function approveRegistration(
 }
 
 function assertCheckInOpen(record: SelectEvent) {
-  const phase = eventPhase(record.startsAt, record.endsAt);
+  const phase = checkInPhase(record.startsAt, record.endsAt);
   if (phase === 'live') return;
   throw conflict(
     phase === 'before'
-      ? 'Check-in opens when the event starts.'
+      ? 'Check-in opens on the event day.'
       : 'This event has ended.',
     phase === 'before' ? 'check_in_not_open' : 'event_ended'
   );

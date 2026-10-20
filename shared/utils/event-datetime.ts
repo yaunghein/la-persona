@@ -65,6 +65,24 @@ export function eventPhase(
   return 'live';
 }
 
+const YANGON_OFFSET_MS = (6 * 60 + 30) * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Check-in opens at midnight Asia/Yangon on the start day and closes when the event ends. */
+export function checkInPhase(
+  startsAt: Date | string,
+  endsAt: Date | string
+): EventPhase {
+  const now = Date.now();
+  if (asDate(endsAt).getTime() < now) return 'past';
+  const startsAtMs = asDate(startsAt).getTime();
+  const startDayMs =
+    Math.floor((startsAtMs + YANGON_OFFSET_MS) / DAY_MS) * DAY_MS -
+    YANGON_OFFSET_MS;
+  if (startDayMs > now) return 'before';
+  return 'live';
+}
+
 export function eventStatus(endsAt: Date | string): 'upcoming' | 'past' {
   return asDate(endsAt).getTime() >= Date.now() ? 'upcoming' : 'past';
 }
