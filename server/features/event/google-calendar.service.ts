@@ -53,17 +53,54 @@ function googleEventId(userId: string, eventId: string) {
     .digest('hex');
 }
 
-function toGoogleEventBody(row: SelectEvent) {
+function escapeHtml(value: string) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+export type GoogleCalendarEventContext = {
+  organizationName: string;
+  /** The attendee's QR ticket image; null when they have no card in the community. */
+  qrTicketUrl: string | null;
+};
+
+function toGoogleEventBody(
+  row: SelectEvent,
+  context: GoogleCalendarEventContext
+) {
   const eventUrl = `${env.BASE_URL}${ROUTES.EVENTS.PUBLIC(row.id)}`;
-  const link = `<a href="${eventUrl}">View event on LA PERSONA</a>`;
+  const sections = [
+    // Stored descriptions are already sanitized HTML.
+    row.description,
+    `Hosted by <b>${escapeHtml(context.organizationName)}</b>`,
+    row.location &&
+      `📍 ${escapeHtml(row.location)}${
+        row.mapUrl
+          ? `<br><a href="${escapeHtml(row.mapUrl)}">Get directions</a>`
+          : ''
+      }`,
+    context.qrTicketUrl &&
+      `🎟 <a href="${escapeHtml(context.qrTicketUrl)}">Your QR ticket</a><br>Show it at the entrance to check in.`,
+    `<a href="${eventUrl}">View event on LA PERSONA</a>`,
+  ];
 
   return {
     summary: row.title,
-    description: row.description ? `${row.description}<br>${link}` : link,
+    description: sections.filter(Boolean).join('<br><br>'),
     location: row.location,
     start: { dateTime: row.startsAt.toISOString() },
     end: { dateTime: row.endsAt.toISOString() },
     source: { title: 'LA PERSONA', url: eventUrl },
+    reminders: {
+      useDefault: false,
+      overrides: [
+        { method: 'popup', minutes: 24 * 60 },
+        { method: 'popup', minutes: 60 },
+      ],
+    },
     status: 'confirmed',
   };
 }
@@ -107,10 +144,11 @@ function apiError(response: { status: number; _data?: GoogleApiErrorBody }) {
 export async function upsertGoogleCalendarEvent(
   accessToken: string,
   userId: string,
-  row: SelectEvent
+  row: SelectEvent,
+  context: GoogleCalendarEventContext
 ) {
   const id = googleEventId(userId, row.id);
-  const body = toGoogleEventBody(row);
+  const body = toGoogleEventBody(row, context);
 
   const inserted = await calendarRequest(
     accessToken,

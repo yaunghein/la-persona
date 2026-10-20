@@ -8,6 +8,8 @@ import {
 import { joinCommunity } from '~~/server/features/organization/community.service';
 import { sendEventBroadcastEmail } from '~~/server/features/event/broadcast.notifications';
 import { sendEventCheckInEmail } from '~~/server/features/event/check-in.notifications';
+import { qrTicketImageUrl } from '~~/server/features/event/event-email-content';
+import { findCommunitySettingByOrganizationId } from '~~/server/features/organization/community-setting.repository';
 import {
   deleteEventByIdAndOrganizationId,
   findEventsByOrganizationId,
@@ -380,9 +382,13 @@ export async function broadcastToAttendees(
 /** Adds the event to the caller's Google Calendar (confirmed attendees only). */
 export async function addEventToGoogleCalendar(
   h3Event: H3Event,
-  params: { record: SelectEvent; userId: string }
+  params: {
+    record: SelectEvent;
+    organization: Organization;
+    userId: string;
+  }
 ): Promise<AddToGoogleCalendarResult> {
-  const { record, userId } = params;
+  const { record, organization, userId } = params;
   const registration = await findRegistrationByEventAndUser(record.id, userId);
   const logContext = { event_id: record.id, registration_id: registration?.id };
 
@@ -408,11 +414,22 @@ export async function addEventToGoogleCalendar(
     return { status: 'consent_required' };
   }
 
+  const [card, setting] = await Promise.all([
+    findUserCardInOrganization(userId, organization.id),
+    findCommunitySettingByOrganizationId(organization.id),
+  ]);
+
   try {
     const { result, htmlLink } = await upsertGoogleCalendarEvent(
       accessToken,
       userId,
-      record
+      record,
+      {
+        organizationName: organization.name,
+        qrTicketUrl: card
+          ? qrTicketImageUrl(card.slug, setting?.updatedAt.getTime() ?? 0)
+          : null,
+      }
     );
     enrichLog(h3Event, { google_calendar: { ...logContext, result } });
     return { status: result, htmlLink: htmlLink ?? null };
