@@ -49,7 +49,11 @@ export async function loadEventEmailContent(params: {
       eventDate: yangonDate.format(eventRow.startsAt),
       eventTime: `${formatTime(eventRow.startsAt)} - ${formatTime(eventRow.endsAt)}`,
       eventLocation: eventRow.location,
-      directionsUrl: eventRow.mapUrl,
+      directionsUrl:
+        eventRow.mapUrl ||
+        (eventRow.location
+          ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(eventRow.location)}`
+          : null),
       assetBaseUrl: env.BASE_URL,
     },
     images: {
