@@ -111,6 +111,20 @@ const socialLinks = [
           >
             {{ link.label }}
           </a>
+          <EText style="margin: 16px 0 0">
+            <a
+              href="https://www.la-persona.com"
+              target="_blank"
+              style="
+                text-decoration: underline;
+                color: #121212;
+                font-size: 12px;
+                font-weight: 600;
+              "
+            >
+              www.la-persona.com
+            </a>
+          </EText>
         </EContainer>
       </EContainer>
     </EBody>
