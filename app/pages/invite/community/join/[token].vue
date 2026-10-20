@@ -44,7 +44,13 @@ const data = computed(() => preview.value ?? null);
 const alreadyMember = computed(() => !!preview.value?.alreadyMember);
 const error = computed(() => previewError.value);
 
-const { mutate: join, isPending: isJoining } = useJoinCommunityMutation(token);
+const {
+  mutate: join,
+  isPending: isJoining,
+  isSuccess: isJoined,
+} = useJoinCommunityMutation(token);
+// Keep the join state until navigation, so "already a member" never flashes.
+const isJoinInProgress = computed(() => isJoining.value || isJoined.value);
 
 function joinCommunity() {
   join(undefined, {
@@ -63,6 +69,7 @@ const meta = computed(() =>
 const actionLabel = computed(() => {
   if (!data.value) return '';
   if (!session.value) return 'Sign in to join';
+  if (isJoinInProgress.value) return 'Join community';
   return alreadyMember.value ? 'Open community' : 'Join community';
 });
 
@@ -94,10 +101,12 @@ function onRetry() {
     :organization-name="data?.organizationName"
     :meta="meta"
     :notice="
-      alreadyMember ? 'You are already a member of this community.' : undefined
+      alreadyMember && !isJoinInProgress
+        ? 'You are already a member of this community.'
+        : undefined
     "
     :action-label="actionLabel"
-    :action-loading="isJoining"
+    :action-loading="isJoinInProgress"
     @action="onAction"
     @retry="onRetry"
   />

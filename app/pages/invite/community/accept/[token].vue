@@ -7,8 +7,15 @@ const invitationId = computed(() => String(route.params.token || ''));
 
 const { data, isPending, isError, error, refetch } =
   useInvitationPreviewQuery(invitationId);
-const { mutate: acceptInvitation, isPending: isAccepting } =
-  useAcceptInvitationMutation(invitationId);
+const {
+  mutate: acceptInvitation,
+  isPending: isAccepting,
+  isSuccess: isAccepted,
+} = useAcceptInvitationMutation(invitationId);
+// The refetch after accepting reports alreadyMember before we navigate away.
+const isAcceptInProgress = computed(
+  () => isAccepting.value || isAccepted.value
+);
 
 function accept() {
   acceptInvitation(undefined, {
@@ -42,7 +49,7 @@ const meta = computed(() =>
 );
 
 const notice = computed(() => {
-  if (!data.value) return '';
+  if (!data.value || isAcceptInProgress.value) return '';
   if (data.value.alreadyMember) {
     return 'You are already a member of this community.';
   }
@@ -60,6 +67,7 @@ const noticeColor = computed(() => {
 
 const actionLabel = computed(() => {
   if (!data.value) return '';
+  if (isAcceptInProgress.value) return 'Accept Invitation';
   if (data.value.alreadyMember) return 'Open community';
   if (canAccept.value) return 'Accept Invitation';
   return '';
@@ -85,7 +93,7 @@ function onAction() {
     :notice="notice"
     :notice-color="noticeColor"
     :action-label="actionLabel"
-    :action-loading="isAccepting"
+    :action-loading="isAcceptInProgress"
     @action="onAction"
     @retry="() => void refetch()"
   />
