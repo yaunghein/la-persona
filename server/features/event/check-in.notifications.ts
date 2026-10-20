@@ -7,8 +7,10 @@ import {
   firstName,
   formatYangonDateTime,
   loadEventEmailContent,
+  publicCardUrl,
 } from '~~/server/features/event/event-email-content';
 import { sendEmail } from '~~/server/lib/mailer';
+import { renderQrTicketPng } from '~~/server/lib/qr-ticket-renderer';
 import {
   emailErrorLabel,
   enrichLog,
@@ -23,6 +25,7 @@ export async function sendEventCheckInEmail(
   h3Event: H3Event,
   params: {
     userId: string;
+    cardSlug: string;
     cardFirstName: string | null;
     event: { id: string; title: string };
     organization: { id: string; slug: string };
@@ -48,18 +51,27 @@ export async function sendEventCheckInEmail(
     h3Event,
     (async (): Promise<EmailSendResult[]> => {
       try {
-        const html = await renderEmailComponent('EventCheckIn', {
-          recipientName: firstName(params.cardFirstName, account.name),
-          eventTitle: params.event.title,
-          checkedInAt: formatYangonDateTime(params.checkedInAt),
-          contactExchangeImageUrl: content.images.contactExchangeUrl,
-          contactsUrl: communityContactsUrl(params.organization.slug),
-          assetBaseUrl: content.details.assetBaseUrl,
-        });
+        const [html, qrPng] = await Promise.all([
+          renderEmailComponent('EventCheckIn', {
+            recipientName: firstName(params.cardFirstName, account.name),
+            eventTitle: params.event.title,
+            checkedInAt: formatYangonDateTime(params.checkedInAt),
+            contactExchangeImageUrl: content.images.contactExchangeUrl,
+            contactsUrl: communityContactsUrl(params.organization.slug),
+            assetBaseUrl: content.details.assetBaseUrl,
+          }),
+          renderQrTicketPng(
+            publicCardUrl(params.cardSlug),
+            content.images.qrBackgroundUrl || undefined
+          ),
+        ]);
         await sendEmail({
           to,
           subject: `You're checked in to ${params.event.title}`,
           html,
+          attachments: [
+            { filename: `${params.cardSlug}-qr.png`, content: qrPng },
+          ],
         });
         return [{ ok: true, template: TEMPLATE, to }];
       } catch (error) {

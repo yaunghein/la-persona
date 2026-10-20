@@ -344,6 +344,7 @@ export async function checkInAttendee(
   if (updated) {
     await sendEventCheckInEmail(h3Event, {
       userId: card.card.userId!,
+      cardSlug: card.card.slug,
       cardFirstName: card.card.firstName,
       event: { id: record.id, title: record.title },
       organization: { id: organization.id, slug: organization.slug },

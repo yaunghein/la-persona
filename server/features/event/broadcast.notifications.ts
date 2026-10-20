@@ -12,10 +12,12 @@ import {
   communityContactsUrl,
   firstName,
   loadEventEmailContent,
+  publicCardUrl,
   qrTicketImageUrl,
   type EventEmailContent,
 } from '~~/server/features/event/event-email-content';
-import { sendBatchEmails } from '~~/server/lib/mailer';
+import { sendBatchEmails, sendEmail } from '~~/server/lib/mailer';
+import { renderQrTicketPng } from '~~/server/lib/qr-ticket-renderer';
 import {
   emailErrorLabel,
   enrichLog,
@@ -52,6 +54,9 @@ const BROADCASTS: Record<
     subject: (title) => `Thank you for being part of ${title}`,
   },
 };
+
+// Resend's default limit is 2 requests/second; reminders go one by one to carry the QR.
+const SINGLE_SEND_INTERVAL_MS = 600;
 
 type Recipient = {
   email: string;
@@ -118,6 +123,51 @@ function buildProps(
     contactExchangeImageUrl: content.images.contactExchangeUrl,
     contactInfoUrl: cardContactInfoUrl(params.orgSlug, cardSlug),
   };
+}
+
+/** Reminders carry each attendee's QR as an attachment, which batch sends can't. */
+async function sendRemindersWithQr(
+  sendable: Recipient[],
+  content: EventEmailContent,
+  params: { subject: string; eventTitle: string; orgSlug: string }
+): Promise<EmailSendResult[]> {
+  const results: EmailSendResult[] = [];
+  for (const [index, recipient] of sendable.entries()) {
+    if (index > 0) {
+      await new Promise((resolve) =>
+        setTimeout(resolve, SINGLE_SEND_INTERVAL_MS)
+      );
+    }
+    const to = [recipient.email];
+    const cardSlug = recipient.cardSlug!;
+    try {
+      const [html, qrPng] = await Promise.all([
+        renderEmailComponent(
+          BROADCASTS.reminder.template,
+          buildProps('reminder', recipient, content, params)
+        ),
+        renderQrTicketPng(
+          publicCardUrl(cardSlug),
+          content.images.qrBackgroundUrl || undefined
+        ),
+      ]);
+      await sendEmail({
+        to,
+        subject: params.subject,
+        html,
+        attachments: [{ filename: `${cardSlug}-qr.png`, content: qrPng }],
+      });
+      results.push({ ok: true, template: BROADCASTS.reminder.logTemplate, to });
+    } catch (error) {
+      results.push({
+        ok: false,
+        template: BROADCASTS.reminder.logTemplate,
+        to,
+        error: emailErrorLabel(error),
+      });
+    }
+  }
+  return results;
 }
 
 /**
@@ -188,6 +238,13 @@ export async function sendEventBroadcastEmail(
     h3Event,
     (async (): Promise<EmailSendResult[]> => {
       try {
+        if (params.kind === 'reminder') {
+          return await sendRemindersWithQr(sendable, content, {
+            subject,
+            eventTitle: params.event.title,
+            orgSlug: params.organization.slug,
+          });
+        }
         const emails = await Promise.all(
           sendable.map(async (recipient) => ({
             to: recipient.email,
