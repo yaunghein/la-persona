@@ -51,9 +51,15 @@ const step = computed(() =>
 );
 
 watch(
-  [card, session, requestedStep, isSettingUp],
+  [card, session, requestedStep, isSettingUp, submitting],
   () => {
-    if (pending.value || !card.value || !session.value || isSettingUp.value) {
+    if (
+      pending.value ||
+      !card.value ||
+      !session.value ||
+      isSettingUp.value ||
+      submitting.value
+    ) {
       return;
     }
     if (card.value.userId && card.value.userId !== session.value.user.id) {
@@ -187,7 +193,7 @@ async function finishSetup() {
         This community card could not be loaded.
       </div>
       <EventOnboardingCreateCard
-        v-else-if="step === 'create-card' && !isSettingUp"
+        v-else-if="(step === 'create-card' || submitting) && !isSettingUp"
         class="min-h-0 flex-1"
         :first-name="card.firstName"
         :last-name="card.lastName"

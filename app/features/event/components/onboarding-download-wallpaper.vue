@@ -190,7 +190,7 @@ async function onDownload() {
 <template>
   <div class="flex h-full min-h-0 flex-col">
     <div
-      class="hide-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto p-6 sm:p-8 lg:px-16 lg:py-10"
+      class="hide-scrollbar flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto p-6 sm:p-8 lg:px-16 lg:py-10"
     >
       <div
         class="mx-auto flex min-h-0 w-full max-w-120 flex-1 flex-col gap-8 sm:max-w-md"
@@ -212,7 +212,7 @@ async function onDownload() {
         </div>
 
         <div
-          class="relative min-h-0 w-full flex-1 overflow-hidden sm:min-h-120"
+          class="relative min-h-0 w-full flex-1 overflow-y-clip sm:min-h-120"
         >
           <div
             class="absolute top-1/2 left-1/2 size-[200%] -translate-x-1/2 -translate-y-1/2"
