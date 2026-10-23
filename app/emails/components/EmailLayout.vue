@@ -12,22 +12,6 @@ withDefaults(
 const BANNER_URL =
   'https://www.la-persona.com/images/emails/welcome-email-banner.jpg';
 
-// Gmail and desktop Outlook ignore web fonts and use the fallbacks.
-const fontFaces = [
-  {
-    weight: 400,
-    url: 'https://fonts.gstatic.com/s/redhatdisplay/v21/8vIf7wUr0m80wwYf0QCXZzYzUoTK8RZQvRd-D1NYbmyWQk8z-FWZk33xGQ.woff2',
-  },
-  {
-    weight: 500,
-    url: 'https://fonts.gstatic.com/s/redhatdisplay/v21/8vIf7wUr0m80wwYf0QCXZzYzUoTK8RZQvRd-D1NYbl6WQk8z-FWZk33xGQ.woff2',
-  },
-  {
-    weight: 700,
-    url: 'https://fonts.gstatic.com/s/redhatdisplay/v21/8vIf7wUr0m80wwYf0QCXZzYzUoTK8RZQvRd-D1NYbouRQk8z-FWZk33xGQ.woff2',
-  },
-];
-
 const socialLinks = [
   { label: 'FACEBOOK', href: 'https://www.facebook.com/share/1A3rzUmSoh/' },
   { label: 'INSTAGRAM', href: 'https://www.instagram.com/lapersona.mm' },
@@ -41,14 +25,7 @@ const socialLinks = [
 <template>
   <EHtml>
     <EHead>
-      <EFont
-        v-for="face in fontFaces"
-        :key="face.weight"
-        font-family="Red Hat Display"
-        :fallback-font-family="['Arial', 'Helvetica', 'sans-serif']"
-        :font-weight="face.weight"
-        :web-font="{ url: face.url, format: 'woff2' }"
-      />
+      <EStyle>* { font-family: Arial, Helvetica, sans-serif; }</EStyle>
       <!-- Older templates style text inline; this evens out their lines too. -->
       <EStyle>p, h1, h2, h3, h4 { text-wrap: pretty; }</EStyle>
     </EHead>

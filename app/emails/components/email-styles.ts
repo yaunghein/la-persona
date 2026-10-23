@@ -1,4 +1,4 @@
-// Inline styles shared by the event emails (designs use Red Hat Display, ink #00041f).
+// Inline styles shared by the event emails (ink #00041f).
 export const ink = 'color: #00041f';
 // text-wrap evens out lines where supported (Apple Mail); templates also join
 // each paragraph's last two words with &nbsp; so no client ends on one word.
