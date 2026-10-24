@@ -14,7 +14,7 @@ const slug = computed(() => route.params.slug as string);
 
 const phoneModels = phoneWallpaperModels;
 
-const selectedModel = ref(phoneModels[0]!.value);
+const selectedModel = useStorage('wallpaper.phoneModel', phoneModels[0]!.value);
 const isGeneratingWallpaper = ref(false);
 const isGeneratingQr = ref(false);
 const isRenderingWallpaperPreview = ref(false);
@@ -346,7 +346,8 @@ async function downloadQr() {
       <div class="flex items-start justify-center flex-wrap gap-10">
         <div class="flex flex-col items-center gap-6">
           <div
-            class="relative flex h-60 w-60 flex-col items-center justify-center gap-1.5 overflow-hidden rounded-[6px] border border-line bg-raised p-4 sm:scale-100"
+            class="relative flex h-60 w-60 cursor-pointer flex-col items-center justify-center gap-1.5 overflow-hidden rounded-[6px] border border-line bg-raised p-4 sm:scale-100"
+            @click="openWallpaperPreview"
           >
             <UButton
               size="xl"
@@ -355,7 +356,7 @@ async function downloadQr() {
               variant="ghost"
               class="absolute flex items-center justify-center right-2 top-2 z-10 cursor-pointer rounded-full bg-black/35 p-3 scale-[0.65] origin-top-right text-white hover:bg-black/50"
               aria-label="Expand wallpaper preview"
-              @click="openWallpaperPreview"
+              @click.stop="openWallpaperPreview"
             />
             <p class="text-sm text-ink/50">Preview</p>
             <div
@@ -371,15 +372,15 @@ async function downloadQr() {
                   alt="Wallpaper preview"
                   class="h-full w-full object-cover"
                 />
+                <USkeleton
+                  v-else-if="isRenderingWallpaperPreview"
+                  class="h-full w-full rounded-[4px]"
+                />
                 <div
                   v-else
                   class="flex h-full w-full items-center justify-center text-xs text-ink/50"
                 >
-                  {{
-                    isRenderingWallpaperPreview
-                      ? 'Preparing preview...'
-                      : 'No wallpaper'
-                  }}
+                  No wallpaper
                 </div>
               </div>
             </div>
@@ -409,6 +410,10 @@ async function downloadQr() {
                 :src="qrOnlyPreviewDataUrl"
                 alt="QR preview"
                 class="h-full w-full rounded-[8px] object-contain"
+              />
+              <USkeleton
+                v-else-if="isRenderingWallpaperPreview"
+                class="h-full w-full rounded-[8px]"
               />
               <div
                 v-else
@@ -460,15 +465,15 @@ async function downloadQr() {
               alt="Large wallpaper preview"
               class="h-full w-full object-contain"
             />
+            <USkeleton
+              v-else-if="isRenderingWallpaperPreview"
+              class="h-full w-full rounded-lg"
+            />
             <div
               v-else
               class="flex h-full min-h-70 w-full items-center justify-center bg-surface-soft text-sm text-ink/50 sm:min-h-100"
             >
-              {{
-                isRenderingWallpaperPreview
-                  ? 'Preparing preview...'
-                  : 'No wallpaper'
-              }}
+              No wallpaper
             </div>
           </div>
         </div>

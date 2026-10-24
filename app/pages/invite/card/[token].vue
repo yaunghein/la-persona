@@ -43,7 +43,6 @@ async function onAccept() {
     await queryClient.invalidateQueries({
       queryKey: organizationQueryKeys.all,
     });
-    await refresh();
     toast.add({
       title: 'Invitation accepted',
       description: 'Your workspace is now ready.',
@@ -75,8 +74,13 @@ const meta = computed(() => {
   return [invitation.value.planName, period];
 });
 
+// Keep the accept state until navigation, so "already processed" never flashes.
+const isAcceptInProgress = computed(
+  () => isAccepting.value || hasAccepted.value
+);
+
 const notice = computed(() => {
-  if (!invitation.value) return '';
+  if (!invitation.value || isAcceptInProgress.value) return '';
   if (invitation.value.isExpired) return 'This invitation is expired.';
   if (invitation.value.status !== 'pending') {
     return 'This invitation has already been processed.';
@@ -84,7 +88,6 @@ const notice = computed(() => {
   if (invitation.value.isEmailMatched === false) {
     return 'This invitation belongs to a different email account.';
   }
-  if (hasAccepted.value) return 'Invitation accepted successfully.';
   return '';
 });
 
@@ -92,7 +95,6 @@ const noticeColor = computed(() => {
   if (!invitation.value) return 'neutral' as const;
   if (invitation.value.isExpired) return 'warning' as const;
   if (invitation.value.isEmailMatched === false) return 'error' as const;
-  if (hasAccepted.value) return 'success' as const;
   return 'neutral' as const;
 });
 
@@ -121,8 +123,8 @@ const errorMessage = computed(() => {
     :notice="notice"
     :notice-color="noticeColor"
     action-label="Accept Invitation"
-    :action-loading="isAccepting"
-    :action-disabled="!invitation?.canAccept"
+    :action-loading="isAcceptInProgress"
+    :action-disabled="!isAcceptInProgress && !invitation?.canAccept"
     @action="onAccept"
     @retry="() => void refresh()"
   />

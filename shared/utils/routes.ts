@@ -3,6 +3,11 @@ const PLATFORM_ROOT = '/platform';
 const THAKHIN_ROOT = '/thakhin';
 const INVITE_ROOT = '/invite';
 
+/** Lets sign-in prefill the magic-link email for the invitee. */
+function inviteEmailQuery(email?: string) {
+  return email ? `?email=${encodeURIComponent(email)}` : '';
+}
+
 export const ROUTES = {
   HOME: '/',
   SIGN_IN: '/sign-in',
@@ -34,9 +39,10 @@ export const ROUTES = {
   },
   INVITE: {
     ROOT: INVITE_ROOT,
-    CARD: (token: string) => `${INVITE_ROOT}/card/${token}`,
-    COMMUNITY_ACCEPT: (token: string) =>
-      `${INVITE_ROOT}/community/accept/${token}`,
+    CARD: (token: string, email?: string) =>
+      `${INVITE_ROOT}/card/${token}${inviteEmailQuery(email)}`,
+    COMMUNITY_ACCEPT: (token: string, email?: string) =>
+      `${INVITE_ROOT}/community/accept/${token}${inviteEmailQuery(email)}`,
     COMMUNITY_JOIN: (token: string) => `${INVITE_ROOT}/community/join/${token}`,
   },
   PLATFORM: {

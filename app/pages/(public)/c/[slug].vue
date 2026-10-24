@@ -27,6 +27,10 @@ const { data: myCards, refetch: refetchMyCards } = useWorkspaceCardsQuery({
   enabled: () => !!session.value,
 });
 
+const isOwnCard = computed(
+  () => !!myCards.value?.some((myCard) => myCard.slug === card.value?.slug)
+);
+
 const cardFullName = computed(() =>
   [card.value?.firstName, card.value?.lastName].filter(Boolean).join(' ').trim()
 );
@@ -117,9 +121,10 @@ const toast = useToast();
 const cardDisplayName = computed(() =>
   [card.value?.firstName, card.value?.lastName].filter(Boolean).join(' ').trim()
 );
-const exchangeButtonLabel = computed(() =>
-  isSeamlessExchanging.value ? 'Connecting...' : 'Exchange Contact'
-);
+const exchangeButtonLabel = computed(() => {
+  if (isOwnCard.value) return 'This is your card';
+  return isSeamlessExchanging.value ? 'Connecting...' : 'Exchange Contact';
+});
 const successTitle = computed(() =>
   successMode.value === 'seamless'
     ? 'Successfully Connected'
@@ -149,7 +154,7 @@ const onExchangeContactClick = async () => {
     isFormOpen.value = !isFormOpen.value;
     return;
   }
-  if (!card.value || isSeamlessExchanging.value) return;
+  if (!card.value || isSeamlessExchanging.value || isOwnCard.value) return;
 
   isMenuOpen.value = false;
   exchangeSeamlessly();
@@ -487,7 +492,7 @@ async function onSaveContact() {
       }"
     >
       <button
-        :disabled="isSeamlessExchanging"
+        :disabled="isSeamlessExchanging || isOwnCard"
         @click="onExchangeContactClick"
         class="grid flex-1 place-items-center rounded-full border border-line-heavy bg-line-strong text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
       >

@@ -447,7 +447,14 @@ function openInfo() {
           >
             <div class="flex items-center gap-2 text-sm">
               <UiSkeletonImage
-                v-if="row.image"
+                v-if="row.platform === 'Github'"
+                :src="row.image"
+                :alt="`${row.platform} icon`"
+                width="16"
+                class="size-4 rounded-full object-cover invert dark:invert-0"
+              />
+              <UiSkeletonImage
+                v-else-if="row.image"
                 :src="row.image"
                 :alt="`${row.platform} icon`"
                 width="16"

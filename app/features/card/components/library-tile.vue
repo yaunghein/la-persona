@@ -29,12 +29,13 @@ function onBadgeClick() {
 <template>
   <UCard
     variant="outline"
-    class="aspect-[1/0.9] w-full min-h-0 overflow-hidden bg-raised"
+    class="aspect-[1/0.9] w-full min-h-0 cursor-pointer overflow-hidden bg-raised"
     :ui="{
       root: 'flex h-full min-h-0 flex-col',
       body: 'min-h-0 flex-1 p-8 lg:p-10',
       footer: 'shrink-0 bg-surface',
     }"
+    @click="navigateTo(cardEditorPath(card))"
   >
     <div class="relative h-full min-h-0">
       <UiSkeletonImage
@@ -63,7 +64,7 @@ function onBadgeClick() {
         ]"
         :color="cardBadgeColor(card)"
         size="sm"
-        @click="onBadgeClick"
+        @click.stop="onBadgeClick"
       >
         <UiOverflowMarquee v-if="isCommunity" :text="cardBadgeLabel(card)" />
         <template v-else>{{ cardBadgeLabel(card) }}</template>
@@ -72,7 +73,7 @@ function onBadgeClick() {
 
     <template #footer>
       <div>{{ cardHolderName(card) }}</div>
-      <div class="mt-4 flex items-center justify-start gap-2">
+      <div class="mt-4 flex items-center justify-start gap-2" @click.stop>
         <UButton
           v-if="hasSplinePreview"
           icon="i-lucide-scan-eye"

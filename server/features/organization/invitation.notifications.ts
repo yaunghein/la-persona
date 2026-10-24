@@ -17,7 +17,7 @@ export async function sendOwnerInvitationEmail(params: {
   try {
     const html = await renderEmailComponent('CommunityOwnerInvitation', {
       organizationName: params.organizationName,
-      inviteUrl: `${env.BASE_URL}${ROUTES.INVITE.COMMUNITY_ACCEPT(params.invitationId)}`,
+      inviteUrl: `${env.BASE_URL}${ROUTES.INVITE.COMMUNITY_ACCEPT(params.invitationId, params.to)}`,
     });
     await sendEmail({
       to,

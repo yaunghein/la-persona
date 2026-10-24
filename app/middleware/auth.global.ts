@@ -30,7 +30,10 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (!session?.value && isProtected) {
     return navigateTo({
       path: ROUTES.SIGN_IN,
-      query: { redirectTo: to.fullPath },
+      query: {
+        redirectTo: to.fullPath,
+        email: typeof to.query.email === 'string' ? to.query.email : undefined,
+      },
     });
   }
 

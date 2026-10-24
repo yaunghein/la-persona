@@ -161,8 +161,11 @@ export async function createOnboardingInvitation(params: {
   });
 }
 
-export function buildOnboardingInvitationLink(invitationId: string) {
-  return `${env.BASE_URL}${ROUTES.INVITE.CARD(invitationId)}`;
+export function buildOnboardingInvitationLink(
+  invitationId: string,
+  email: string
+) {
+  return `${env.BASE_URL}${ROUTES.INVITE.CARD(invitationId, email)}`;
 }
 
 export async function sendOnboardingInvitationEmail(params: {
@@ -173,7 +176,10 @@ export async function sendOnboardingInvitationEmail(params: {
     to: [params.email],
     subject: 'Your LA PERSONA card is ready',
     html: await renderEmailComponent('OnboardingInvitation', {
-      inviteUrl: buildOnboardingInvitationLink(params.invitationId),
+      inviteUrl: buildOnboardingInvitationLink(
+        params.invitationId,
+        params.email
+      ),
     }),
   });
 }
@@ -451,7 +457,7 @@ function toInvitationSummary(
     cardLastName: row.cardLastName,
     planCode: invitation.subscriptionPlanCode,
     planName: row.planName,
-    link: buildOnboardingInvitationLink(invitation.id),
+    link: buildOnboardingInvitationLink(invitation.id, invitation.email),
   };
 }
 

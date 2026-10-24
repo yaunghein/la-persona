@@ -10,7 +10,9 @@ import { Application } from '@splinetool/runtime';
 const toast = useToast();
 const route = useRoute();
 const loading = ref(false);
-const email = ref('');
+const email = ref(
+  typeof route.query.email === 'string' ? route.query.email : ''
+);
 const isGoogleSigningIn = ref(false);
 const isLinkedInSigningIn = ref(false);
 const isMagicLinkSending = ref(false);
