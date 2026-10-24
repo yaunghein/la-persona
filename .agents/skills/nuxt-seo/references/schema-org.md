@@ -7,7 +7,7 @@ JSON-LD structured data for rich search results.
 Configure once in `nuxt.config.ts`:
 
 ```ts
-import { defineOrganization } from 'nuxt-schema-org/schema'
+import { defineOrganization } from 'nuxt-schema-org/schema';
 
 export default defineNuxtConfig({
   schemaOrg: {
@@ -15,16 +15,16 @@ export default defineNuxtConfig({
       name: 'My Company',
       url: 'https://example.com',
       logo: '/logo.png',
-      sameAs: ['https://twitter.com/mycompany', 'https://github.com/mycompany']
-    })
-  }
-})
+      sameAs: ['https://twitter.com/mycompany', 'https://github.com/mycompany'],
+    }),
+  },
+});
 ```
 
 For personal sites:
 
 ```ts
-import { definePerson } from 'nuxt-schema-org/schema'
+import { definePerson } from 'nuxt-schema-org/schema';
 
 export default defineNuxtConfig({
   schemaOrg: {
@@ -32,10 +32,10 @@ export default defineNuxtConfig({
       name: 'John Doe',
       url: 'https://johndoe.com',
       image: '/avatar.jpg',
-      sameAs: ['https://twitter.com/johndoe']
-    })
-  }
-})
+      sameAs: ['https://twitter.com/johndoe'],
+    }),
+  },
+});
 ```
 
 ## Page-Level Schema
@@ -51,9 +51,9 @@ useSchemaOrg([
     image: '/article-image.jpg',
     datePublished: '2025-01-15',
     dateModified: '2025-01-20',
-    author: { name: 'John Doe', url: 'https://johndoe.com' }
-  })
-])
+    author: { name: 'John Doe', url: 'https://johndoe.com' },
+  }),
+]);
 ```
 
 ```ts
@@ -67,10 +67,10 @@ useSchemaOrg([
       price: 99.99,
       priceCurrency: 'USD',
       availability: 'InStock',
-      url: 'https://example.com/product'
-    }
-  })
-])
+      url: 'https://example.com/product',
+    },
+  }),
+]);
 ```
 
 ## Define Functions
@@ -110,17 +110,17 @@ useSchemaOrg([
     itemListElement: [
       { name: 'Home', item: '/' },
       { name: 'Blog', item: '/blog' },
-      { name: 'My Post', item: '/blog/my-post' }
-    ]
-  })
-])
+      { name: 'My Post', item: '/blog/my-post' },
+    ],
+  }),
+]);
 ```
 
 Or use the `useBreadcrumbItems()` composable (from seo-utils):
 
 ```ts
-const items = useBreadcrumbItems()
-useSchemaOrg([defineBreadcrumb({ itemListElement: items })])
+const items = useBreadcrumbItems();
+useSchemaOrg([defineBreadcrumb({ itemListElement: items })]);
 ```
 
 ## FAQ Page
@@ -129,11 +129,17 @@ useSchemaOrg([defineBreadcrumb({ itemListElement: items })])
 useSchemaOrg([
   defineFAQPage({
     mainEntity: [
-      { name: 'What is your return policy?', acceptedAnswer: 'You can return within 30 days.' },
-      { name: 'How do I contact support?', acceptedAnswer: 'Email us at support@example.com' }
-    ]
-  })
-])
+      {
+        name: 'What is your return policy?',
+        acceptedAnswer: 'You can return within 30 days.',
+      },
+      {
+        name: 'How do I contact support?',
+        acceptedAnswer: 'Email us at support@example.com',
+      },
+    ],
+  }),
+]);
 ```
 
 ## Nuxt Content
@@ -157,8 +163,10 @@ With `asSeoCollection()` (see main SKILL.md), ensure schema renders:
 
 ```vue
 <script setup>
-const { data: page } = await useAsyncData(() => queryCollection('posts').path(route.path).first())
-useHead(page.value?.head || {})
+const { data: page } = await useAsyncData(() =>
+  queryCollection('posts').path(route.path).first()
+);
+useHead(page.value?.head || {});
 </script>
 ```
 
@@ -175,8 +183,8 @@ useHead(page.value?.head || {})
 export default defineNuxtConfig({
   routeRules: {
     '/blog/**': {
-      schemaOrg: { type: 'Article' }
-    }
-  }
-})
+      schemaOrg: { type: 'Article' },
+    },
+  },
+});
 ```

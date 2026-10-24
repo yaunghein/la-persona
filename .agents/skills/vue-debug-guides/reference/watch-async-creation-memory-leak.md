@@ -24,35 +24,35 @@ Always manually stop watchers that are created asynchronously, or restructure yo
 
 ```vue
 <script setup>
-import { ref, watch, watchEffect, onMounted } from 'vue'
+import { ref, watch, watchEffect, onMounted } from 'vue';
 
-const data = ref(null)
+const data = ref(null);
 
 // BAD: Watcher created in setTimeout won't auto-stop
 onMounted(() => {
   setTimeout(() => {
     watchEffect(() => {
-      console.log(data.value)  // Keeps running after unmount!
-    })
-  }, 1000)
-})
+      console.log(data.value); // Keeps running after unmount!
+    });
+  }, 1000);
+});
 
 // BAD: Watcher created after await won't auto-stop
 onMounted(async () => {
-  await loadInitialData()
+  await loadInitialData();
 
   // This watcher is NOT bound to component lifecycle
   watch(data, (newVal) => {
-    processData(newVal)  // Memory leak!
-  })
-})
+    processData(newVal); // Memory leak!
+  });
+});
 
 // BAD: Watcher in Promise callback
 fetch('/api/config').then(() => {
   watch(data, () => {
     // Leaks memory!
-  })
-})
+  });
+});
 </script>
 ```
 
@@ -60,45 +60,42 @@ fetch('/api/config').then(() => {
 
 ```vue
 <script setup>
-import { ref, watch, watchEffect, onMounted, onUnmounted } from 'vue'
+import { ref, watch, watchEffect, onMounted, onUnmounted } from 'vue';
 
-const data = ref(null)
-const isDataLoaded = ref(false)
-let asyncWatcherCleanup = null
+const data = ref(null);
+const isDataLoaded = ref(false);
+let asyncWatcherCleanup = null;
 
 // CORRECT: Synchronous watcher with conditional logic
-watch(
-  data,
-  (newVal) => {
-    if (isDataLoaded.value && newVal) {
-      processData(newVal)
-    }
+watch(data, (newVal) => {
+  if (isDataLoaded.value && newVal) {
+    processData(newVal);
   }
-)
+});
 
 onMounted(async () => {
-  await loadInitialData()
-  isDataLoaded.value = true
-})
+  await loadInitialData();
+  isDataLoaded.value = true;
+});
 
 // CORRECT: Manual cleanup for async-created watcher
 onMounted(() => {
   setTimeout(() => {
     const unwatch = watchEffect(() => {
-      console.log(data.value)
-    })
+      console.log(data.value);
+    });
 
     // Store for cleanup
-    asyncWatcherCleanup = unwatch
-  }, 1000)
-})
+    asyncWatcherCleanup = unwatch;
+  }, 1000);
+});
 
 onUnmounted(() => {
   // Clean up async watcher
   if (asyncWatcherCleanup) {
-    asyncWatcherCleanup()
+    asyncWatcherCleanup();
   }
-})
+});
 </script>
 ```
 
@@ -106,26 +103,23 @@ onUnmounted(() => {
 
 ```vue
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue';
 
-const config = ref(null)
-const userData = ref(null)
+const config = ref(null);
+const userData = ref(null);
 
 // BEST: Create watcher synchronously, handle async condition inside
-watch(
-  userData,
-  (newData) => {
-    // Only process when config is loaded
-    if (config.value && newData) {
-      applyUserSettings(config.value, newData)
-    }
+watch(userData, (newData) => {
+  // Only process when config is loaded
+  if (config.value && newData) {
+    applyUserSettings(config.value, newData);
   }
-)
+});
 
 onMounted(async () => {
-  config.value = await fetchConfig()
+  config.value = await fetchConfig();
   // Watcher will start processing once config is loaded
-})
+});
 </script>
 ```
 
@@ -133,23 +127,23 @@ onMounted(async () => {
 
 ```vue
 <script setup>
-import { ref, watchEffect, onMounted } from 'vue'
+import { ref, watchEffect, onMounted } from 'vue';
 
-const apiData = ref(null)
-const isReady = ref(false)
+const apiData = ref(null);
+const isReady = ref(false);
 
 // GOOD: Synchronous watchEffect with condition
 watchEffect(() => {
   if (isReady.value && apiData.value) {
     // This pattern avoids async watcher creation
-    doSomethingWithData(apiData.value)
+    doSomethingWithData(apiData.value);
   }
-})
+});
 
 onMounted(async () => {
-  apiData.value = await fetchData()
-  isReady.value = true
-})
+  apiData.value = await fetchData();
+  isReady.value = true;
+});
 </script>
 ```
 
@@ -157,20 +151,20 @@ onMounted(async () => {
 
 ```vue
 <script setup>
-import { ref, watch, onUnmounted } from 'vue'
+import { ref, watch, onUnmounted } from 'vue';
 
-const unwatchers = []
+const unwatchers = [];
 
 function createDynamicWatcher(source, callback) {
-  const unwatch = watch(source, callback)
-  unwatchers.push(unwatch)
-  return unwatch
+  const unwatch = watch(source, callback);
+  unwatchers.push(unwatch);
+  return unwatch;
 }
 
 // Clean up all dynamic watchers
 onUnmounted(() => {
-  unwatchers.forEach(unwatch => unwatch())
-})
+  unwatchers.forEach((unwatch) => unwatch());
+});
 </script>
 ```
 

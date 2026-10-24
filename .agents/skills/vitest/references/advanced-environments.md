@@ -27,7 +27,7 @@ defineConfig({
       },
     },
   },
-})
+});
 ```
 
 ## Installing Environment Packages
@@ -47,12 +47,12 @@ Use magic comment at top of file:
 ```ts
 // @vitest-environment jsdom
 
-import { expect, test } from 'vitest'
+import { expect, test } from 'vitest';
 
 test('DOM test', () => {
-  const div = document.createElement('div')
-  expect(div).toBeInstanceOf(HTMLDivElement)
-})
+  const div = document.createElement('div');
+  expect(div).toBeInstanceOf(HTMLDivElement);
+});
 ```
 
 ## jsdom Environment
@@ -63,18 +63,18 @@ Full browser environment simulation:
 // @vitest-environment jsdom
 
 test('DOM manipulation', () => {
-  document.body.innerHTML = '<div id="app"></div>'
+  document.body.innerHTML = '<div id="app"></div>';
 
-  const app = document.getElementById('app')
-  app.textContent = 'Hello'
+  const app = document.getElementById('app');
+  app.textContent = 'Hello';
 
-  expect(app.textContent).toBe('Hello')
-})
+  expect(app.textContent).toBe('Hello');
+});
 
 test('window APIs', () => {
-  expect(window.location.href).toBeDefined()
-  expect(localStorage).toBeDefined()
-})
+  expect(window.location.href).toBeDefined();
+  expect(localStorage).toBeDefined();
+});
 ```
 
 ### jsdom Options
@@ -91,7 +91,7 @@ defineConfig({
       },
     },
   },
-})
+});
 ```
 
 ## happy-dom Environment
@@ -102,10 +102,10 @@ Faster but fewer APIs:
 // @vitest-environment happy-dom
 
 test('basic DOM', () => {
-  const el = document.createElement('div')
-  el.className = 'test'
-  expect(el.className).toBe('test')
-})
+  const el = document.createElement('div');
+  el.className = 'test';
+  expect(el.className).toBe('test');
+});
 ```
 
 ## Multiple Environments per Project
@@ -132,7 +132,7 @@ defineConfig({
       },
     ],
   },
-})
+});
 ```
 
 ## Custom Environment
@@ -141,7 +141,7 @@ Create custom environment package:
 
 ```ts
 // vitest-environment-custom/index.ts
-import type { Environment } from 'vitest/runtime'
+import type { Environment } from 'vitest/runtime';
 
 export default <Environment>{
   name: 'custom',
@@ -149,15 +149,15 @@ export default <Environment>{
 
   setup() {
     // Setup global state
-    globalThis.myGlobal = 'value'
+    globalThis.myGlobal = 'value';
 
     return {
       teardown() {
-        delete globalThis.myGlobal
+        delete globalThis.myGlobal;
       },
-    }
+    };
   },
-}
+};
 ```
 
 Use with:
@@ -167,7 +167,7 @@ defineConfig({
   test: {
     environment: 'custom',
   },
-})
+});
 ```
 
 ## Environment with VM
@@ -180,21 +180,21 @@ export default <Environment>{
   viteEnvironment: 'ssr',
 
   async setupVM() {
-    const vm = await import('node:vm')
-    const context = vm.createContext()
+    const vm = await import('node:vm');
+    const context = vm.createContext();
 
     return {
       getVmContext() {
-        return context
+        return context;
       },
       teardown() {},
-    }
+    };
   },
 
   setup() {
-    return { teardown() {} }
+    return { teardown() {} };
   },
-}
+};
 ```
 
 ## Browser Mode (Separate from Environments)
@@ -202,7 +202,7 @@ export default <Environment>{
 For real browser testing, use Vitest Browser Mode. In **v4 the provider is an object** (not a string), and the context imports from `vitest/browser`:
 
 ```ts
-import { playwright } from '@vitest/browser-playwright'
+import { playwright } from '@vitest/browser-playwright';
 
 defineConfig({
   test: {
@@ -212,11 +212,11 @@ defineConfig({
       instances: [{ browser: 'chromium' }], // or 'firefox', 'webkit'
     },
   },
-})
+});
 ```
 
 ```ts
-import { page } from 'vitest/browser' // v4: was '@vitest/browser/context'
+import { page } from 'vitest/browser'; // v4: was '@vitest/browser/context'
 ```
 
 > v5: DOM-environment global assignments (e.g. `window.innerWidth`) now propagate to the underlying jsdom/happy-dom implementation. Locators are exact/strict by default (`getByText('Item')` no longer matches `Item 1`). `browser.api` is deprecated — move it to the top-level `api` option. Browser mode adds a built-in Trace View (`browser.traceView: true`).
@@ -238,7 +238,7 @@ defineConfig({
       },
     },
   },
-})
+});
 ```
 
 ## Fixing External Dependencies
@@ -254,7 +254,7 @@ defineConfig({
       },
     },
   },
-})
+});
 ```
 
 ## Key Points

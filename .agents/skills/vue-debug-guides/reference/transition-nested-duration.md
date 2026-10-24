@@ -94,10 +94,7 @@ tags: [vue3, transition, animation, duration, nested, timing]
 ```vue
 <template>
   <!-- GOOD: Separate durations for enter and leave -->
-  <Transition
-    name="complex"
-    :duration="{ enter: 500, leave: 800 }"
-  >
+  <Transition name="complex" :duration="{ enter: 500, leave: 800 }">
     <div v-if="show" class="container">
       <h1 class="title">Title</h1>
       <p class="content">Content with staggered animation</p>
@@ -108,20 +105,28 @@ tags: [vue3, transition, animation, duration, nested, timing]
 <style>
 /* Enter: title first, then content */
 .complex-enter-active .title {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
 }
 
 .complex-enter-active .content {
-  transition: opacity 0.3s ease 0.2s, transform 0.3s ease 0.2s;
+  transition:
+    opacity 0.3s ease 0.2s,
+    transform 0.3s ease 0.2s;
 }
 
 /* Leave: content first, then title (reverse order) */
 .complex-leave-active .content {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
 }
 
 .complex-leave-active .title {
-  transition: opacity 0.5s ease 0.3s, transform 0.5s ease 0.3s;
+  transition:
+    opacity 0.5s ease 0.3s,
+    transform 0.5s ease 0.3s;
 }
 
 .complex-enter-from .title,
@@ -150,10 +155,18 @@ tags: [vue3, transition, animation, duration, nested, timing]
 
 <style>
 /* Staggered entrance: image -> title -> body -> action */
-.stagger-enter-active .card-image { transition: all 0.3s ease; }
-.stagger-enter-active .card-title { transition: all 0.3s ease 0.1s; }
-.stagger-enter-active .card-body { transition: all 0.3s ease 0.2s; }
-.stagger-enter-active .card-action { transition: all 0.3s ease 0.3s; }
+.stagger-enter-active .card-image {
+  transition: all 0.3s ease;
+}
+.stagger-enter-active .card-title {
+  transition: all 0.3s ease 0.1s;
+}
+.stagger-enter-active .card-body {
+  transition: all 0.3s ease 0.2s;
+}
+.stagger-enter-active .card-action {
+  transition: all 0.3s ease 0.3s;
+}
 /* Total: 0.3s delay + 0.3s animation = 0.6s, but use 800ms for safety */
 
 .stagger-enter-from .card-image,

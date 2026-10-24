@@ -24,12 +24,12 @@ This subtle bug can cause confusing behavior where the parent component shows on
 ```html
 <!-- ChildComponent.vue -->
 <script setup>
-// Default value of 1 if parent doesn't provide value
-const model = defineModel({ default: 1 })
+  // Default value of 1 if parent doesn't provide value
+  const model = defineModel({ default: 1 });
 </script>
 
 <template>
-  <input v-model="model" type="number">
+  <input v-model="model" type="number" />
   <!-- Shows: 1 (from default) -->
 </template>
 ```
@@ -37,18 +37,19 @@ const model = defineModel({ default: 1 })
 ```html
 <!-- ParentComponent.vue -->
 <script setup>
-import { ref } from 'vue'
-import ChildComponent from './ChildComponent.vue'
+  import { ref } from 'vue';
+  import ChildComponent from './ChildComponent.vue';
 
-// PROBLEM: Parent ref is undefined, not synced with child's default
-const myValue = ref()  // undefined
+  // PROBLEM: Parent ref is undefined, not synced with child's default
+  const myValue = ref(); // undefined
 </script>
 
 <template>
   <ChildComponent v-model="myValue" />
 
   <!-- DESYNC: Child shows 1, but parent shows undefined -->
-  <p>Parent value: {{ myValue }}</p>  <!-- Shows: undefined -->
+  <p>Parent value: {{ myValue }}</p>
+  <!-- Shows: undefined -->
 
   <!-- Even after child changes value, parent may not update correctly -->
 </template>
@@ -59,16 +60,17 @@ const myValue = ref()  // undefined
 ```html
 <!-- ParentComponent.vue -->
 <script setup>
-import { ref } from 'vue'
-import ChildComponent from './ChildComponent.vue'
+  import { ref } from 'vue';
+  import ChildComponent from './ChildComponent.vue';
 
-// CORRECT: Parent provides the initial value
-const myValue = ref(1)  // Match the expected default
+  // CORRECT: Parent provides the initial value
+  const myValue = ref(1); // Match the expected default
 </script>
 
 <template>
   <ChildComponent v-model="myValue" />
-  <p>Parent value: {{ myValue }}</p>  <!-- Shows: 1, stays in sync -->
+  <p>Parent value: {{ myValue }}</p>
+  <!-- Shows: 1, stays in sync -->
 </template>
 ```
 
@@ -77,21 +79,22 @@ const myValue = ref(1)  // Match the expected default
 ```html
 <!-- ChildComponent.vue -->
 <script setup>
-import { onMounted } from 'vue'
+  import { onMounted } from 'vue';
 
-const model = defineModel({ default: 1 })
+  const model = defineModel({ default: 1 });
 
-// Sync default value back to parent on mount
-onMounted(() => {
-  if (model.value === 1) {  // Is using default
-    // Force emit to sync parent
-    model.value = 1
-  }
-})
+  // Sync default value back to parent on mount
+  onMounted(() => {
+    if (model.value === 1) {
+      // Is using default
+      // Force emit to sync parent
+      model.value = 1;
+    }
+  });
 </script>
 
 <template>
-  <input v-model="model" type="number">
+  <input v-model="model" type="number" />
 </template>
 ```
 
@@ -100,20 +103,22 @@ onMounted(() => {
 ```html
 <!-- ChildComponent.vue -->
 <script setup>
-import { computed } from 'vue'
+  import { computed } from 'vue';
 
-// Mark as required - TypeScript will warn if not provided
-const model = defineModel({ required: true })
+  // Mark as required - TypeScript will warn if not provided
+  const model = defineModel({ required: true });
 
-// Or handle undefined explicitly
-const safeModel = computed({
-  get: () => model.value ?? 1,  // Provide fallback
-  set: (val) => { model.value = val }
-})
+  // Or handle undefined explicitly
+  const safeModel = computed({
+    get: () => model.value ?? 1, // Provide fallback
+    set: (val) => {
+      model.value = val;
+    },
+  });
 </script>
 
 <template>
-  <input v-model="safeModel" type="number">
+  <input v-model="safeModel" type="number" />
 </template>
 ```
 
@@ -122,20 +127,22 @@ const safeModel = computed({
 ```html
 <!-- ChildComponent.vue -->
 <script setup>
-/**
- * @prop modelValue - The numeric value (parent should initialize to 1 or desired default)
- */
-const model = defineModel({
-  type: Number,
-  default: 1,
-  // Adding validator helps catch issues in development
-  validator: (value) => {
-    if (value === undefined) {
-      console.warn('ChildComponent: v-model value is undefined. Provide initial value from parent.')
-    }
-    return true
-  }
-})
+  /**
+   * @prop modelValue - The numeric value (parent should initialize to 1 or desired default)
+   */
+  const model = defineModel({
+    type: Number,
+    default: 1,
+    // Adding validator helps catch issues in development
+    validator: (value) => {
+      if (value === undefined) {
+        console.warn(
+          'ChildComponent: v-model value is undefined. Provide initial value from parent.'
+        );
+      }
+      return true;
+    },
+  });
 </script>
 ```
 

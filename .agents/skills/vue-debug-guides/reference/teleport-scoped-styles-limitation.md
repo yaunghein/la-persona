@@ -36,7 +36,7 @@ tags: [vue3, teleport, scoped-styles, css]
 }
 
 .modal-text {
-  color: blue;  /* May not work */
+  color: blue; /* May not work */
 }
 </style>
 ```
@@ -54,7 +54,9 @@ tags: [vue3, teleport, scoped-styles, css]
 
 <style scoped>
 /* Component-specific styles */
-.button { color: blue; }
+.button {
+  color: blue;
+}
 </style>
 
 <style>
@@ -143,9 +145,7 @@ Pass classes explicitly to avoid inheritance issues:
 <template>
   <button @click="open = true">Open</button>
   <Teleport to="body">
-    <div :class="['modal', $attrs.class]" :style="$attrs.style">
-      Content
-    </div>
+    <div :class="['modal', $attrs.class]" :style="$attrs.style">Content</div>
   </Teleport>
 </template>
 ```
@@ -176,7 +176,7 @@ Create a dedicated stylesheet for modal/overlay components:
 
 ```vue
 <script setup>
-import './modal-styles.css'
+import './modal-styles.css';
 </script>
 
 <template>

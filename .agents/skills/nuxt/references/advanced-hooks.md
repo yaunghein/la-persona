@@ -18,7 +18,7 @@ Used in `nuxt.config.ts` or modules:
 export default defineNuxtConfig({
   hooks: {
     'build:before': () => {
-      console.log('Build starting...')
+      console.log('Build starting...');
     },
     'pages:extend': (pages) => {
       // Add custom pages
@@ -26,14 +26,14 @@ export default defineNuxtConfig({
         name: 'custom',
         path: '/custom',
         file: '~/pages/custom.vue',
-      })
+      });
     },
     'components:dirs': (dirs) => {
       // Add component directories
-      dirs.push({ path: '~/extra-components' })
+      dirs.push({ path: '~/extra-components' });
     },
   },
-})
+});
 ```
 
 ### In Modules
@@ -43,18 +43,18 @@ export default defineNuxtConfig({
 export default defineNuxtModule({
   setup(options, nuxt) {
     nuxt.hook('ready', async (nuxt) => {
-      console.log('Nuxt is ready')
-    })
+      console.log('Nuxt is ready');
+    });
 
     nuxt.hook('close', async (nuxt) => {
-      console.log('Nuxt is closing')
-    })
+      console.log('Nuxt is closing');
+    });
 
     nuxt.hook('modules:done', () => {
-      console.log('All modules loaded')
-    })
+      console.log('All modules loaded');
+    });
   },
-})
+});
 ```
 
 ### Common Build Hooks
@@ -84,29 +84,29 @@ Used in plugins and composables:
 // plugins/lifecycle.ts
 export default defineNuxtPlugin((nuxtApp) => {
   nuxtApp.hook('app:created', (vueApp) => {
-    console.log('Vue app created')
-  })
+    console.log('Vue app created');
+  });
 
   nuxtApp.hook('app:mounted', (vueApp) => {
-    console.log('App mounted')
-  })
+    console.log('App mounted');
+  });
 
   nuxtApp.hook('page:start', () => {
-    console.log('Page navigation starting')
-  })
+    console.log('Page navigation starting');
+  });
 
   nuxtApp.hook('page:finish', () => {
-    console.log('Page navigation finished')
-  })
+    console.log('Page navigation finished');
+  });
 
   nuxtApp.hook('page:loading:start', () => {
-    console.log('Page loading started')
-  })
+    console.log('Page loading started');
+  });
 
   nuxtApp.hook('page:loading:end', () => {
-    console.log('Page loading ended')
-  })
-})
+    console.log('Page loading ended');
+  });
+});
 ```
 
 ### Common App Hooks
@@ -127,11 +127,11 @@ export default defineNuxtPlugin((nuxtApp) => {
 ```ts
 // composables/usePageTracking.ts
 export function usePageTracking() {
-  const nuxtApp = useNuxtApp()
+  const nuxtApp = useNuxtApp();
 
   nuxtApp.hook('page:finish', () => {
-    trackPageView(useRoute().path)
-  })
+    trackPageView(useRoute().path);
+  });
 }
 ```
 
@@ -143,25 +143,25 @@ In Nitro v3 the plugin factory is `definePlugin` from `nitro`:
 
 ```ts
 // server/plugins/hooks.ts
-import { definePlugin } from 'nitro'
+import { definePlugin } from 'nitro';
 
 export default definePlugin((nitroApp) => {
   // Modify HTML before sending
   nitroApp.hooks.hook('render:html', (html, { event }) => {
-    html.head.push('<meta name="custom" content="value">')
-    html.bodyAppend.push('<script>console.log("injected")</script>')
-  })
+    html.head.push('<meta name="custom" content="value">');
+    html.bodyAppend.push('<script>console.log("injected")</script>');
+  });
 
   // Before request
   nitroApp.hooks.hook('request', (event) => {
-    console.log('Request:', event.url.pathname)
-  })
+    console.log('Request:', event.url.pathname);
+  });
 
   // Single response hook (replaces beforeResponse/afterResponse in v3)
   nitroApp.hooks.hook('response', (response, { event }) => {
-    console.log('Sending response')
-  })
-})
+    console.log('Sending response');
+  });
+});
 ```
 
 ### Common Nitro Hooks
@@ -182,23 +182,23 @@ export default definePlugin((nitroApp) => {
 
 ```ts
 // types/hooks.d.ts
-import type { HookResult } from '@nuxt/schema'
+import type { HookResult } from '@nuxt/schema';
 
 declare module '#app' {
   interface RuntimeNuxtHooks {
-    'my-app:event': (data: MyEventData) => HookResult
+    'my-app:event': (data: MyEventData) => HookResult;
   }
 }
 
 declare module '@nuxt/schema' {
   interface NuxtHooks {
-    'my-module:init': () => HookResult
+    'my-module:init': () => HookResult;
   }
 }
 
 declare module 'nitro/types' {
   interface NitroRuntimeHooks {
-    'my-server:event': (data: any) => void
+    'my-server:event': (data: any) => void;
   }
 }
 ```
@@ -211,15 +211,15 @@ declare module 'nitro/types' {
 // In a plugin
 export default defineNuxtPlugin((nuxtApp) => {
   // Call custom hook
-  nuxtApp.callHook('my-app:event', { type: 'custom' })
-})
+  nuxtApp.callHook('my-app:event', { type: 'custom' });
+});
 
 // In a module
 export default defineNuxtModule({
   setup(options, nuxt) {
-    nuxt.callHook('my-module:init')
+    nuxt.callHook('my-module:init');
   },
-})
+});
 ```
 
 > **Nuxt 5:** `callHook` may now return `void` (not always a `Promise`), for performance. Always `await` it instead of chaining `.then()`/`.catch()`. Restore the always-Promise behavior with `experimental.asyncCallHook: true`.
@@ -232,8 +232,8 @@ Call hooks at runtime from components:
 <script setup lang="ts">
 // Register a callback for a runtime hook
 useRuntimeHook('app:error', (error) => {
-  console.error('App error:', error)
-})
+  console.error('App error:', error);
+});
 </script>
 ```
 
@@ -245,13 +245,13 @@ useRuntimeHook('app:error', (error) => {
 // plugins/analytics.client.ts
 export default defineNuxtPlugin((nuxtApp) => {
   nuxtApp.hook('page:finish', () => {
-    const route = useRoute()
+    const route = useRoute();
     analytics.track('pageview', {
       path: route.path,
       title: document.title,
-    })
-  })
-})
+    });
+  });
+});
 ```
 
 ### Performance Monitoring
@@ -259,24 +259,24 @@ export default defineNuxtPlugin((nuxtApp) => {
 ```ts
 // plugins/performance.client.ts
 export default defineNuxtPlugin((nuxtApp) => {
-  let navigationStart: number
+  let navigationStart: number;
 
   nuxtApp.hook('page:start', () => {
-    navigationStart = performance.now()
-  })
+    navigationStart = performance.now();
+  });
 
   nuxtApp.hook('page:finish', () => {
-    const duration = performance.now() - navigationStart
-    console.log(`Navigation took ${duration}ms`)
-  })
-})
+    const duration = performance.now() - navigationStart;
+    console.log(`Navigation took ${duration}ms`);
+  });
+});
 ```
 
 ### Inject HTML
 
 ```ts
 // server/plugins/inject.ts
-import { definePlugin } from 'nitro'
+import { definePlugin } from 'nitro';
 
 export default definePlugin((nitroApp) => {
   nitroApp.hooks.hook('render:html', (html) => {
@@ -284,9 +284,9 @@ export default definePlugin((nitroApp) => {
       <script>
         window.APP_CONFIG = ${JSON.stringify(config)}
       </script>
-    `)
-  })
-})
+    `);
+  });
+});
 ```
 
 <!--

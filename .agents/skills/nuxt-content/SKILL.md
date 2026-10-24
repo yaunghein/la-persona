@@ -28,8 +28,8 @@ license: MIT
 
 ```ts
 // content.config.ts
-import { defineCollection, defineContentConfig } from '@nuxt/content'
-import { z } from 'zod'
+import { defineCollection, defineContentConfig } from '@nuxt/content';
+import { z } from 'zod';
 
 export default defineContentConfig({
   collections: {
@@ -41,15 +41,15 @@ export default defineContentConfig({
       }),
     }),
   },
-})
+});
 ```
 
 ```vue
 <script setup lang="ts">
-const route = useRoute()
+const route = useRoute();
 const { data: page } = await useAsyncData(route.path, () => {
-  return queryCollection('docs').path(route.path).first()
-})
+  return queryCollection('docs').path(route.path).first();
+});
 </script>
 
 <template>

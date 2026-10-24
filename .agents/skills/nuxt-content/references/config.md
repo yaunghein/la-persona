@@ -12,7 +12,7 @@ export default defineNuxtConfig({
       filename: '.data/content/contents.sqlite',
     },
   },
-})
+});
 ```
 
 Supported adapters include:
@@ -34,7 +34,7 @@ export default defineNuxtConfig({
       sqliteConnector: 'native',
     },
   },
-})
+});
 ```
 
 Database indexes belong in `defineCollection({ indexes: [...] })`, because each collection owns its table and query patterns.
@@ -69,7 +69,7 @@ export default defineNuxtConfig({
     },
     watch: { enabled: true },
   },
-})
+});
 ```
 
 The watcher is a development feature. Transformers are registered under `content.build.transformers`; load [Advanced](advanced.md) when processing behavior extends beyond remark/rehype plugins.

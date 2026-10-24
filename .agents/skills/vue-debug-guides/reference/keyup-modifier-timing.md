@@ -49,10 +49,10 @@ tags: [vue3, events, keyboard, modifiers, keyup, shortcuts]
 </template>
 
 <script setup>
-function saveDocument(event) {
-  event.preventDefault()
-  // Save logic here
-}
+  function saveDocument(event) {
+    event.preventDefault();
+    // Save logic here
+  }
 </script>
 ```
 
@@ -97,10 +97,14 @@ function saveDocument(event) {
 
 ```html
 <!-- Available system modifiers -->
-<input @keyup.ctrl="..." />   <!-- Ctrl key -->
-<input @keyup.alt="..." />    <!-- Alt key (Option on Mac) -->
-<input @keyup.shift="..." />  <!-- Shift key -->
-<input @keyup.meta="..." />   <!-- Cmd on Mac, Windows key on PC -->
+<input @keyup.ctrl="..." />
+<!-- Ctrl key -->
+<input @keyup.alt="..." />
+<!-- Alt key (Option on Mac) -->
+<input @keyup.shift="..." />
+<!-- Shift key -->
+<input @keyup.meta="..." />
+<!-- Cmd on Mac, Windows key on PC -->
 ```
 
 ## The .exact Modifier

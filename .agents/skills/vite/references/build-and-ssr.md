@@ -11,8 +11,8 @@ Build a library for distribution:
 
 ```ts
 // vite.config.ts
-import { resolve } from 'node:path'
-import { defineConfig } from 'vite'
+import { resolve } from 'node:path';
+import { defineConfig } from 'vite';
 
 export default defineConfig({
   build: {
@@ -31,7 +31,7 @@ export default defineConfig({
       },
     },
   },
-})
+});
 ```
 
 ### Multiple Entries
@@ -82,7 +82,7 @@ export default defineConfig({
     main: resolve(import.meta.dirname, 'index.html'),
     nested: resolve(import.meta.dirname, 'nested/index.html'),
   },
-})
+});
 ```
 
 ## SSR Development
@@ -103,16 +103,16 @@ These frameworks build on top of Vite's SSR primitives so you don't have to wire
 ### createServer
 
 ```ts
-import { createServer } from 'vite'
+import { createServer } from 'vite';
 
 const server = await createServer({
   configFile: false,
   root: import.meta.dirname,
   server: { port: 1337 },
-})
+});
 
-await server.listen()
-server.printUrls()
+await server.listen();
+server.printUrls();
 ```
 
 ### build
@@ -120,12 +120,12 @@ server.printUrls()
 Returns `RolldownOutput | RolldownOutput[] | RolldownWatcher` (was `RollupOutput` in Vite 7). On failure it throws a `BundleError` — inspect `e.errors`.
 
 ```ts
-import { build } from 'vite'
+import { build } from 'vite';
 
 await build({
   root: './project',
   build: { outDir: 'dist' },
-})
+});
 ```
 
 ### createBuilder (Vite 8, environment-aware)
@@ -133,37 +133,37 @@ await build({
 Use `createBuilder` instead of `build` to build all configured environments (Environment API):
 
 ```ts
-import { createBuilder } from 'vite'
+import { createBuilder } from 'vite';
 
-const builder = await createBuilder()
-await builder.buildApp()
+const builder = await createBuilder();
+await builder.buildApp();
 ```
 
 ### preview
 
 ```ts
-import { preview } from 'vite'
+import { preview } from 'vite';
 
 const previewServer = await preview({
   preview: { port: 8080, open: true },
-})
-previewServer.printUrls()
+});
+previewServer.printUrls();
 ```
 
 ### resolveConfig
 
 ```ts
-import { resolveConfig } from 'vite'
+import { resolveConfig } from 'vite';
 
-const config = await resolveConfig({}, 'build')
+const config = await resolveConfig({}, 'build');
 ```
 
 ### loadEnv
 
 ```ts
-import { loadEnv } from 'vite'
+import { loadEnv } from 'vite';
 
-const env = loadEnv('development', process.cwd(), '')
+const env = loadEnv('development', process.cwd(), '');
 // Loads all env vars (empty prefix = no filtering)
 ```
 

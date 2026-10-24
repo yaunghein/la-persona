@@ -35,7 +35,7 @@ function updateForm(value: CommunitySettingsFormValues) {
 }
 
 const { data, isLoading, isError, error, refetch } =
-  useCommunitySettingsQuery(organizationSlug);
+  useCommunityQuery(organizationSlug);
 
 watch(
   data,

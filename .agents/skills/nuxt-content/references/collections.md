@@ -15,8 +15,8 @@ Keep each source file in one collection. Overlapping collection globs can break 
 Import validators from their packages. The `z` re-export from `@nuxt/content` is deprecated.
 
 ```ts
-import { defineCollection, defineContentConfig, property } from '@nuxt/content'
-import { z } from 'zod/v4'
+import { defineCollection, defineContentConfig, property } from '@nuxt/content';
+import { z } from 'zod/v4';
 
 export default defineContentConfig({
   collections: {
@@ -35,7 +35,7 @@ export default defineContentConfig({
       ],
     }),
   },
-})
+});
 ```
 
 Nuxt Content supports Zod 3, Zod 4, and Valibot through JSON Schema conversion. Use `property(schema).editor(...)` for Studio input metadata and `property(schema).inherit(...)` when a schema should follow a Vue component's props. Keep indexes beside the collection they optimize; `columns`, `unique`, and `name` are collection index options.
@@ -79,7 +79,7 @@ For API-backed content, use `defineCollectionSource` with stable `getKeys()` res
 Navigation metadata lives in `.navigation.yml`. A source such as `**/*.md` excludes that file; use `**` or an include pattern that covers Markdown and YAML when navigation is required.
 
 ```ts
-const common = z.object({ locale: z.enum(['en', 'fr']) })
+const common = z.object({ locale: z.enum(['en', 'fr']) });
 
 export default defineContentConfig({
   collections: {
@@ -94,7 +94,7 @@ export default defineContentConfig({
       schema: common,
     }),
   },
-})
+});
 ```
 
 Pick the collection from the active locale, then query its generated path. For `@nuxtjs/i18n` route behavior, apply that module's guidance after the collection boundary is settled.

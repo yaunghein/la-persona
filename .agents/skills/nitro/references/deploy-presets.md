@@ -14,11 +14,11 @@ NITRO_PRESET=vercel nitro build
 ```
 
 ```ts [nitro.config.ts]
-import { defineConfig } from "nitro";
+import { defineConfig } from 'nitro';
 
 export default defineConfig({
-  preset: "cloudflare_pages",
-  defaultPreset: "node_cluster", // fallback when nothing is detected
+  preset: 'cloudflare_pages',
+  defaultPreset: 'node_cluster', // fallback when nothing is detected
 });
 ```
 
@@ -55,7 +55,7 @@ Providers evolve; Nitro uses a compatibility date to lock behavior at project cr
 
 ```ts [nitro.config.ts]
 export default defineConfig({
-  compatibilityDate: "2025-01-01",
+  compatibilityDate: '2025-01-01',
 });
 ```
 
@@ -64,11 +64,11 @@ export default defineConfig({
 **Cloudflare** (`cloudflare_module`): access bindings via `event.req.runtime.cloudflare.env`:
 
 ```ts
-import { defineHandler } from "nitro";
+import { defineHandler } from 'nitro';
 
 export default defineHandler(async (event) => {
   const { env } = event.req.runtime.cloudflare;
-  const { results } = await env.MY_D1.prepare("SELECT id FROM t").all();
+  const { results } = await env.MY_D1.prepare('SELECT id FROM t').all();
   return results;
 });
 ```

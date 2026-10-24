@@ -51,16 +51,10 @@ The `key` attribute tells Vue how your data relates to the DOM elements it rende
 
 ```html
 <!-- CORRECT: Unique identifier as key -->
-<li v-for="item in items" :key="item.id">
-  {{ item.name }}
-</li>
+<li v-for="item in items" :key="item.id">{{ item.name }}</li>
 
 <!-- CORRECT: With components -->
-<MyComponent
-  v-for="item in items"
-  :key="item.id"
-  :item="item"
-/>
+<MyComponent v-for="item in items" :key="item.id" :item="item" />
 
 <!-- CORRECT (Vue 3): Key on template tag -->
 <template v-for="item in items" :key="item.id">

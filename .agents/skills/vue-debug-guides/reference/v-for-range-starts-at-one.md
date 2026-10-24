@@ -27,7 +27,8 @@ This gotcha commonly causes off-by-one errors when the generated numbers are use
 
 <!-- WRONG: Off-by-one error when used for array access -->
 <li v-for="n in items.length" :key="n">
-  {{ items[n].name }}  <!-- Error! items[10] is undefined when length is 10 -->
+  {{ items[n].name }}
+  <!-- Error! items[10] is undefined when length is 10 -->
 </li>
 ```
 
@@ -40,12 +41,14 @@ This gotcha commonly causes off-by-one errors when the generated numbers are use
 
 <!-- CORRECT: Adjust index for array access -->
 <li v-for="n in items.length" :key="n">
-  {{ items[n - 1].name }}  <!-- n-1 converts to 0-based -->
+  {{ items[n - 1].name }}
+  <!-- n-1 converts to 0-based -->
 </li>
 
 <!-- BETTER: Just iterate the array directly -->
 <li v-for="(item, index) in items" :key="item.id">
-  {{ index + 1 }}. {{ item.name }}  <!-- index is 0-based, add 1 for display -->
+  {{ index + 1 }}. {{ item.name }}
+  <!-- index is 0-based, add 1 for display -->
 </li>
 ```
 

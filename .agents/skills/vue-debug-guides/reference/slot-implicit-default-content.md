@@ -20,7 +20,7 @@ tags: [vue3, slots, named-slots, default-slot, implicit-behavior]
 
 ```vue
 <script setup>
-import BaseLayout from './BaseLayout.vue'
+import BaseLayout from './BaseLayout.vue';
 </script>
 
 <template>
@@ -75,19 +75,22 @@ The two `<p>` elements are automatically placed in `<slot>` (the default slot) i
       <h1>Title</h1>
     </template>
 
-    <p>Content A</p>  <!-- Goes to default slot -->
+    <p>Content A</p>
+    <!-- Goes to default slot -->
 
     <template #sidebar>
       <nav>Navigation</nav>
     </template>
 
-    <p>Content B</p>  <!-- Also goes to default slot! -->
+    <p>Content B</p>
+    <!-- Also goes to default slot! -->
 
     <template #footer>
       <p>Footer</p>
     </template>
 
-    <p>Content C</p>  <!-- Also goes to default slot! -->
+    <p>Content C</p>
+    <!-- Also goes to default slot! -->
   </BaseLayout>
 </template>
 ```

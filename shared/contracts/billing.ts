@@ -69,13 +69,6 @@ export type SubscriptionPlanSummary = {
   isActive: boolean;
 };
 
-/** Prices shown when requesting a new card. */
-export type CardPricing = {
-  currency: string;
-  standardPlanPriceMinor: number;
-  premiumPlanPriceMinor: number;
-};
-
 export type BillingHistoryEntry = {
   id: string;
   paymentId: string;

@@ -45,12 +45,13 @@ Migrate to the new names; the compat shims will be removed in a future major. Re
 ```ts
 export default defineConfig({
   build: {
-    rolldownOptions: {  // was rollupOptions
+    rolldownOptions: {
+      // was rollupOptions
       external: ['vue'],
       output: { globals: { vue: 'Vue' } },
     },
   },
-})
+});
 ```
 
 Prefer the top-level [`input`](../references/core-config.md) option over `build.rolldownOptions.input` — it applies in dev too.
@@ -59,14 +60,15 @@ Prefer the top-level [`input`](../references/core-config.md) option over `build.
 
 ```ts
 export default defineConfig({
-  oxc: {  // was esbuild
+  oxc: {
+    // was esbuild
     jsx: {
       runtime: 'classic',
       pragma: 'h',
       pragmaFrag: 'Fragment',
     },
   },
-})
+});
 ```
 
 `esbuild.jsxFactory`→`oxc.jsx.pragma`, `jsxFragment`→`oxc.jsx.pragmaFrag`, `jsx: 'transform'`→`oxc.jsx: { runtime: 'classic' }`, `jsx: 'automatic'`→`{ runtime: 'automatic' }`. `esbuild.banner`/`footer` have no equivalent — use a custom plugin `transform` hook.
@@ -77,12 +79,12 @@ export default defineConfig({
 export default defineConfig({
   oxc: {
     jsx: {
-      runtime: 'automatic',  // or 'classic'
+      runtime: 'automatic', // or 'classic'
       importSource: 'react', // for automatic runtime
     },
-    jsxInject: `import React from 'react'`,  // auto-inject
+    jsxInject: `import React from 'react'`, // auto-inject
   },
-})
+});
 ```
 
 ### Custom Transform Targets
@@ -93,7 +95,7 @@ export default defineConfig({
     include: ['**/*.ts', '**/*.tsx'],
     exclude: ['node_modules/**'],
   },
-})
+});
 ```
 
 ## Notable Breaking Changes

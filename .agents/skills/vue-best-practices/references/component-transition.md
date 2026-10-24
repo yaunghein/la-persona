@@ -118,7 +118,9 @@ Avoid layout-triggering properties such as `height`, `margin`, or `top`. Use `tr
 ```css
 .slide-enter-active,
 .slide-leave-active {
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
 }
 
 .slide-enter-from {

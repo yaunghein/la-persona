@@ -23,9 +23,9 @@ Unlike v-model which provides two-way binding, interpolation only renders the in
 
 ```html
 <script setup>
-import { ref } from 'vue'
+  import { ref } from 'vue';
 
-const message = ref('Hello World')
+  const message = ref('Hello World');
 </script>
 
 <template>
@@ -43,9 +43,9 @@ const message = ref('Hello World')
 
 ```html
 <script setup>
-import { ref } from 'vue'
+  import { ref } from 'vue';
 
-const message = ref('Hello World')
+  const message = ref('Hello World');
 </script>
 
 <template>

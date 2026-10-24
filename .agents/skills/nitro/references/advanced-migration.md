@@ -46,14 +46,20 @@ Other renames:
 v2 auto-imported `defineEventHandler`, `useStorage`, `useRuntimeConfig`, `defineCachedFunction`, `defineNitroPlugin`, `#imports`, and your `server/utils/`. **All gone in v3** — the `imports` option, `#imports`, and `nitro-imports.d.ts` no longer exist. Add explicit imports everywhere, including relative imports from your own `utils/`:
 
 ```ts
-import { defineHandler, definePlugin, defineErrorHandler, HTTPError, serverFetch } from "nitro";
-import { useKV } from "nitro/kv";
-import { useRuntimeConfig } from "nitro/runtime-config";
-import { defineCachedFunction, defineCachedHandler } from "nitro/cache";
-import { useDatabase } from "nitro/database";
-import { defineTask, runTask } from "nitro/task";
-import { useNitroApp, useNitroHooks } from "nitro/app";
-import { getQuery, getCookie } from "nitro/h3";
+import {
+  defineHandler,
+  definePlugin,
+  defineErrorHandler,
+  HTTPError,
+  serverFetch,
+} from 'nitro';
+import { useKV } from 'nitro/kv';
+import { useRuntimeConfig } from 'nitro/runtime-config';
+import { defineCachedFunction, defineCachedHandler } from 'nitro/cache';
+import { useDatabase } from 'nitro/database';
+import { defineTask, runTask } from 'nitro/task';
+import { useNitroApp, useNitroHooks } from 'nitro/app';
+import { getQuery, getCookie } from 'nitro/h3';
 ```
 
 ## Server directory scanning is opt-in

@@ -17,7 +17,7 @@ export default defineNuxtConfig({
   // Configuration options
   devtools: { enabled: true },
   modules: ['@nuxt/ui'],
-})
+});
 ```
 
 ### Path Aliases
@@ -36,10 +36,8 @@ Reference root-level paths (modules, server handlers) with `~~` or `#server`:
 ```ts
 export default defineNuxtConfig({
   modules: ['~~/custom-modules/awesome.js'], // relative to rootDir
-  serverHandlers: [
-    { route: '/foo/**', handler: '#server/foohandler.ts' },
-  ],
-})
+  serverHandlers: [{ route: '/foo/**', handler: '#server/foohandler.ts' }],
+});
 ```
 
 ### `nuxt.config` Loading (Nuxt 5: no more `jiti`)
@@ -74,7 +72,7 @@ export default defineNuxtConfig({
       // Staging environment config
     },
   },
-})
+});
 ```
 
 Use `--envName` flag to select environment: `nuxt build --envName staging`
@@ -94,7 +92,7 @@ export default defineNuxtConfig({
       apiBase: '/api',
     },
   },
-})
+});
 ```
 
 Override with environment variables:
@@ -109,7 +107,7 @@ Access in components/composables:
 
 ```vue
 <script setup lang="ts">
-const config = useRuntimeConfig()
+const config = useRuntimeConfig();
 // Server: config.apiSecret, config.public.apiBase
 // Client: config.public.apiBase only
 </script>
@@ -129,14 +127,14 @@ export default defineAppConfig({
       primary: '#ff0000',
     },
   },
-})
+});
 ```
 
 Access in components:
 
 ```vue
 <script setup lang="ts">
-const appConfig = useAppConfig()
+const appConfig = useAppConfig();
 </script>
 ```
 
@@ -174,7 +172,7 @@ export default defineNuxtConfig({
   postcss: {
     // postcss options
   },
-})
+});
 ```
 
 ### Environment-specific Vite Config
@@ -185,13 +183,17 @@ Top-level `vite` options are shared. Use `$client` and `$server` to target a sin
 export default defineNuxtConfig({
   vite: {
     $client: {
-      build: { rollupOptions: { output: { manualChunks: { analytics: ['analytics-package'] } } } },
+      build: {
+        rollupOptions: {
+          output: { manualChunks: { analytics: ['analytics-package'] } },
+        },
+      },
     },
     $server: {
       build: { sourcemap: 'inline' },
     },
   },
-})
+});
 ```
 
 ## Vue Configuration
@@ -203,7 +205,7 @@ export default defineNuxtConfig({
   vue: {
     propsDestructure: true,
   },
-})
+});
 ```
 
 ## Nuxt 5 Default Changes
@@ -254,7 +256,7 @@ export default defineNuxtConfig({
       useAsyncData: { deep: true },
     },
   },
-})
+});
 ```
 
 <!--

@@ -53,7 +53,7 @@ The `app/` directory is the default `srcDir` in Nuxt 4 and holds all Vue applica
 // nuxt.config.ts - customize source directory
 export default defineNuxtConfig({
   srcDir: 'src/', // Use 'src/' instead of the default 'app/'
-})
+});
 ```
 
 **Aliases** (Nuxt 4 defaults):
@@ -115,7 +115,7 @@ Re-export nested composables:
 
 ```ts
 // composables/index.ts
-export { useHelper } from './nested/utils'
+export { useHelper } from './nested/utils';
 ```
 
 ### `app/pages/`
@@ -169,7 +169,7 @@ Use in pages:
 definePageMeta({
   layout: 'admin',
   // layout: false // Disable layout
-})
+});
 </script>
 ```
 
@@ -235,8 +235,8 @@ shared/
 Only top-level files in `shared/utils/` and `shared/types/` are auto-imported. Import anything else via the `#shared` alias:
 
 ```ts
-import { capitalize } from '#shared/utils/format'
-import lower from '#shared/formatters/lower'
+import { capitalize } from '#shared/utils/format';
+import lower from '#shared/formatters/lower';
 ```
 
 ### `public/` Directory

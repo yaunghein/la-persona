@@ -23,7 +23,8 @@ tags: [vue3, events, modifiers, v-on, click, form]
 <!-- WRONG: Unintended behavior - prevents clicks on children too -->
 <template>
   <div @click.prevent.self="handleClick">
-    <button>Child Button</button> <!-- Default also prevented here! -->
+    <button>Child Button</button>
+    <!-- Default also prevented here! -->
   </div>
 </template>
 ```
@@ -45,7 +46,8 @@ tags: [vue3, events, modifiers, v-on, click, form]
 <!-- CORRECT: Only prevent default on the element itself -->
 <template>
   <div @click.self.prevent="handleClick">
-    <button>Child Button</button> <!-- Default NOT prevented here -->
+    <button>Child Button</button>
+    <!-- Default NOT prevented here -->
   </div>
 </template>
 ```

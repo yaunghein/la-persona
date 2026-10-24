@@ -8,7 +8,7 @@ description: Cross-platform WebSocket handlers, pub/sub, namespaces, and Server-
 Nitro provides cross-platform WebSockets via [CrossWS](https://crossws.h3.dev/) (Node, Bun, Deno, Cloudflare). Enable the feature first:
 
 ```ts [nitro.config.ts]
-import { defineConfig } from "nitro";
+import { defineConfig } from 'nitro';
 
 export default defineConfig({
   features: { websocket: true },
@@ -20,18 +20,18 @@ export default defineConfig({
 Export a `defineWebSocketHandler` (from `nitro`) in a route file — same file-based routing as HTTP handlers (`routes/_ws.ts` → `/_ws`), so `serverDir` must be set.
 
 ```ts [routes/_ws.ts]
-import { defineWebSocketHandler } from "nitro";
+import { defineWebSocketHandler } from 'nitro';
 
 export default defineWebSocketHandler({
   open(peer) {
-    console.log("connected", peer.id);
-    peer.send("Welcome!");
+    console.log('connected', peer.id);
+    peer.send('Welcome!');
   },
   message(peer, message) {
     peer.send(`echo: ${message.text()}`);
   },
   close(peer, details) {
-    console.log("closed", details.code, details.reason);
+    console.log('closed', details.code, details.reason);
   },
   error(peer, error) {
     console.error(error);
@@ -44,16 +44,16 @@ export default defineWebSocketHandler({
 Runs before the connection opens — authenticate, set namespace, attach context. Throw a `Response` to reject.
 
 ```ts [routes/chat.ts]
-import { defineWebSocketHandler } from "nitro";
+import { defineWebSocketHandler } from 'nitro';
 
 export default defineWebSocketHandler({
   upgrade(request) {
-    const token = new URL(request.url).searchParams.get("token");
-    if (!isValid(token)) throw new Response("Unauthorized", { status: 401 });
+    const token = new URL(request.url).searchParams.get('token');
+    if (!isValid(token)) throw new Response('Unauthorized', { status: 401 });
     return { context: { userId: getUserId(token) } }; // also: headers, protocol, namespace, handled
   },
   open(peer) {
-    console.log("user", peer.context.userId);
+    console.log('user', peer.context.userId);
   },
 });
 ```
@@ -63,11 +63,11 @@ export default defineWebSocketHandler({
 `peer` (in all hooks except `upgrade`) exposes `id`, `namespace`, `context`, `request`, `peers`, `topics`, `remoteAddress`, `websocket`, plus methods:
 
 ```ts
-peer.send("text");                 // or an object -> JSON
-peer.subscribe("topic");
-peer.unsubscribe("topic");
-peer.publish("topic", data);       // broadcast to subscribers (not the sender)
-peer.close(1000, "bye");
+peer.send('text'); // or an object -> JSON
+peer.subscribe('topic');
+peer.unsubscribe('topic');
+peer.publish('topic', data); // broadcast to subscribers (not the sender)
+peer.close(1000, 'bye');
 peer.terminate();
 ```
 
@@ -76,18 +76,18 @@ The `message` object: `message.text()`, `message.json<T>()`, `message.uint8Array
 ## Pub/Sub & namespaces
 
 ```ts [routes/rooms/[room].ts]
-import { defineWebSocketHandler } from "nitro";
+import { defineWebSocketHandler } from 'nitro';
 
 export default defineWebSocketHandler({
   open(peer) {
-    peer.subscribe("messages");
-    peer.publish("messages", `${peer} joined ${peer.namespace}`);
+    peer.subscribe('messages');
+    peer.publish('messages', `${peer} joined ${peer.namespace}`);
   },
   message(peer, message) {
-    peer.publish("messages", `${peer}: ${message.text()}`); // only same namespace
+    peer.publish('messages', `${peer}: ${message.text()}`); // only same namespace
   },
   close(peer) {
-    peer.publish("messages", `${peer} left`);
+    peer.publish('messages', `${peer} left`);
   },
 });
 ```
@@ -99,8 +99,8 @@ Namespaces isolate pub/sub groups. By default the namespace is the request pathn
 Simpler server→client streaming over HTTP (auto-reconnects). Use `createEventStream` from `nitro/h3`:
 
 ```ts [routes/sse.ts]
-import { defineHandler } from "nitro";
-import { createEventStream } from "nitro/h3";
+import { defineHandler } from 'nitro';
+import { createEventStream } from 'nitro/h3';
 
 export default defineHandler((event) => {
   const stream = createEventStream(event);

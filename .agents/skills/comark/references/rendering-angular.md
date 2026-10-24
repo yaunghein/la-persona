@@ -22,16 +22,14 @@ Use the `Markdown` standalone component to render markdown:
 
 ```typescript
 // app.component.ts
-import { Component } from '@angular/core'
-import { Markdown } from '@comark/angular'
+import { Component } from '@angular/core';
+import { Markdown } from '@comark/angular';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [Markdown],
-  template: `
-    <comark-markdown [value]="content" />
-  `,
+  template: ` <comark-markdown [value]="content" /> `,
 })
 export class AppComponent {
   content = `
@@ -42,7 +40,7 @@ This is **markdown** content.
 ::alert{type="info"}
 Important message
 ::
-`
+`;
 }
 ```
 
@@ -51,10 +49,10 @@ Important message
 Use `MarkdownDocument` when you already have a parsed document:
 
 ```typescript
-import { Component } from '@angular/core'
-import { MarkdownDocument } from '@comark/angular'
-import { parseMarkdown } from 'comark'
-import type { MarkdownDocument as MarkdownDocumentType } from 'comark'
+import { Component } from '@angular/core';
+import { MarkdownDocument } from '@comark/angular';
+import { parseMarkdown } from 'comark';
+import type { MarkdownDocument as MarkdownDocumentType } from 'comark';
 
 @Component({
   selector: 'app-root',
@@ -62,15 +60,18 @@ import type { MarkdownDocument as MarkdownDocumentType } from 'comark'
   imports: [MarkdownDocument],
   template: `
     @if (document) {
-      <comark-markdown-document [value]="document" [components]="customComponents" />
+      <comark-markdown-document
+        [value]="document"
+        [components]="customComponents"
+      />
     }
   `,
 })
 export class AppComponent {
-  document: MarkdownDocumentType | null = null
+  document: MarkdownDocumentType | null = null;
 
   async ngOnInit() {
-    this.document = await parseMarkdown('# Hello World')
+    this.document = await parseMarkdown('# Hello World');
   }
 }
 ```
@@ -82,10 +83,10 @@ export class AppComponent {
 Map custom Angular components to Comark element tags:
 
 ```typescript
-import { Component, Type } from '@angular/core'
-import { Markdown } from '@comark/angular'
-import { CustomAlertComponent } from './custom-alert.component'
-import { CustomCardComponent } from './custom-card.component'
+import { Component, Type } from '@angular/core';
+import { Markdown } from '@comark/angular';
+import { CustomAlertComponent } from './custom-alert.component';
+import { CustomCardComponent } from './custom-card.component';
 
 @Component({
   selector: 'app-root',
@@ -96,12 +97,12 @@ import { CustomCardComponent } from './custom-card.component'
   `,
 })
 export class AppComponent {
-  content = '::alert{type="info"}\nHello\n::'
+  content = '::alert{type="info"}\nHello\n::';
 
   customComponents: Record<string, Type<any>> = {
     alert: CustomAlertComponent,
     card: CustomCardComponent,
-  }
+  };
 }
 ```
 
@@ -119,7 +120,7 @@ Custom components receive Comark element attributes as `@Input()` properties. Ch
 
 ```typescript
 // custom-alert.component.ts
-import { Component, Input, ChangeDetectionStrategy } from '@angular/core'
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'custom-alert',
@@ -130,22 +131,36 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core'
       <ng-content />
     </div>
   `,
-  styles: [`
-    .alert {
-      display: flex;
-      padding: 1rem;
-      border-radius: 0.5rem;
-      margin-bottom: 1rem;
-    }
-    .alert-info { background-color: #e3f2fd; color: #1976d2; }
-    .alert-warning { background-color: #fff3e0; color: #f57c00; }
-    .alert-error { background-color: #ffebee; color: #d32f2f; }
-    .alert-success { background-color: #e8f5e9; color: #388e3c; }
-  `],
+  styles: [
+    `
+      .alert {
+        display: flex;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+      }
+      .alert-info {
+        background-color: #e3f2fd;
+        color: #1976d2;
+      }
+      .alert-warning {
+        background-color: #fff3e0;
+        color: #f57c00;
+      }
+      .alert-error {
+        background-color: #ffebee;
+        color: #d32f2f;
+      }
+      .alert-success {
+        background-color: #e8f5e9;
+        color: #388e3c;
+      }
+    `,
+  ],
 })
 export class CustomAlertComponent {
-  @Input() type: string = 'info'
-  @Input() __node: any
+  @Input() type: string = 'info';
+  @Input() __node: any;
 }
 ```
 
@@ -153,7 +168,7 @@ export class CustomAlertComponent {
 
 ```typescript
 // custom-heading.component.ts
-import { Component, Input, ChangeDetectionStrategy } from '@angular/core'
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'custom-heading',
@@ -164,17 +179,19 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core'
       <ng-content />
     </h1>
   `,
-  styles: [`
-    .custom-heading {
-      font-family: 'Inter', sans-serif;
-      font-weight: 700;
-      margin-bottom: 1rem;
-    }
-  `],
+  styles: [
+    `
+      .custom-heading {
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        margin-bottom: 1rem;
+      }
+    `,
+  ],
 })
 export class CustomHeadingComponent {
-  @Input() id?: string
-  @Input() __node: any
+  @Input() id?: string;
+  @Input() __node: any;
 }
 ```
 
@@ -187,8 +204,8 @@ Components are resolved at runtime. The `components` input is a plain `Record<st
 The renderer uses Angular's `createComponent` API to dynamically instantiate components, and `reflectComponentType` to discover which `@Input()` properties the component accepts. Only matching inputs are set.
 
 ```typescript
-import { Component, Type } from '@angular/core'
-import { Markdown } from '@comark/angular'
+import { Component, Type } from '@angular/core';
+import { Markdown } from '@comark/angular';
 
 @Component({
   selector: 'app-docs',
@@ -199,18 +216,18 @@ import { Markdown } from '@comark/angular'
   `,
 })
 export class DocsComponent {
-  content = '::tabs\n#tab1\nContent 1\n#tab2\nContent 2\n::'
+  content = '::tabs\n#tab1\nContent 1\n#tab2\nContent 2\n::';
 
-  componentMap: Record<string, Type<any>> = {}
+  componentMap: Record<string, Type<any>> = {};
 
   async ngOnInit() {
     // Lazy-load components
-    const { TabsComponent } = await import('./tabs.component')
-    const { AlertComponent } = await import('./alert.component')
+    const { TabsComponent } = await import('./tabs.component');
+    const { AlertComponent } = await import('./alert.component');
     this.componentMap = {
       tabs: TabsComponent,
       alert: AlertComponent,
-    }
+    };
   }
 }
 ```
@@ -226,6 +243,7 @@ Comark named slots map to Angular's content projection. The renderer handles slo
 ```markdown
 ::card
 #header
+
 ## Card Title
 
 #content
@@ -242,7 +260,7 @@ Named slots are rendered into `<div slot="name" style="display: contents">` elem
 
 ```typescript
 // card.component.ts
-import { Component, ChangeDetectionStrategy } from '@angular/core'
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'custom-card',
@@ -261,24 +279,28 @@ import { Component, ChangeDetectionStrategy } from '@angular/core'
       </div>
     </div>
   `,
-  styles: [`
-    .card {
-      border: 1px solid #e5e7eb;
-      border-radius: 0.5rem;
-      overflow: hidden;
-    }
-    .card-header {
-      background-color: #f9fafb;
-      padding: 1rem;
-      border-bottom: 1px solid #e5e7eb;
-    }
-    .card-content { padding: 1rem; }
-    .card-footer {
-      background-color: #f9fafb;
-      padding: 1rem;
-      border-top: 1px solid #e5e7eb;
-    }
-  `],
+  styles: [
+    `
+      .card {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        overflow: hidden;
+      }
+      .card-header {
+        background-color: #f9fafb;
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      .card-content {
+        padding: 1rem;
+      }
+      .card-footer {
+        background-color: #f9fafb;
+        padding: 1rem;
+        border-top: 1px solid #e5e7eb;
+      }
+    `,
+  ],
 })
 export class CardComponent {}
 ```
@@ -288,11 +310,15 @@ export class CardComponent {}
 ```markdown
 ::tabs
 #tab1
+
 ### First Tab
+
 Content for tab 1
 
 #tab2
+
 ### Second Tab
+
 Content for tab 2
 ::
 ```
@@ -304,8 +330,8 @@ Content for tab 2
 Enable streaming mode for real-time rendering of content (e.g., AI-generated output):
 
 ```typescript
-import { Component } from '@angular/core'
-import { Markdown } from '@comark/angular'
+import { Component } from '@angular/core';
+import { Markdown } from '@comark/angular';
 
 @Component({
   selector: 'app-streaming',
@@ -320,21 +346,21 @@ import { Markdown } from '@comark/angular'
   `,
 })
 export class StreamingComponent {
-  content = ''
-  isStreaming = true
+  content = '';
+  isStreaming = true;
 
   async ngOnInit() {
-    const response = await fetch('/api/stream')
-    const reader = response.body!.getReader()
-    const decoder = new TextDecoder()
+    const response = await fetch('/api/stream');
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
 
     while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      this.content += decoder.decode(value)
+      const { done, value } = await reader.read();
+      if (done) break;
+      this.content += decoder.decode(value);
     }
 
-    this.isStreaming = false
+    this.isStreaming = false;
   }
 }
 ```
@@ -368,26 +394,24 @@ Render only content before `<!-- more -->`:
 The `MarkdownDocument` renders standard HTML elements natively. Override them with custom components using the `Prose` prefix:
 
 ```typescript
-import { Component, Type } from '@angular/core'
-import { Markdown } from '@comark/angular'
-import { ProseH1Component } from './prose/prose-h1.component'
-import { ProseCodeComponent } from './prose/prose-code.component'
+import { Component, Type } from '@angular/core';
+import { Markdown } from '@comark/angular';
+import { ProseH1Component } from './prose/prose-h1.component';
+import { ProseCodeComponent } from './prose/prose-code.component';
 
 @Component({
   selector: 'app-docs',
   standalone: true,
   imports: [Markdown],
-  template: `
-    <comark-markdown [value]="content" [components]="components" />
-  `,
+  template: ` <comark-markdown [value]="content" [components]="components" /> `,
 })
 export class DocsComponent {
-  content = '# Hello World'
+  content = '# Hello World';
 
   components: Record<string, Type<any>> = {
     ProseH1: ProseH1Component,
     ProseCode: ProseCodeComponent,
-  }
+  };
 }
 ```
 
@@ -399,7 +423,7 @@ Custom components receive Comark element attributes as `@Input()` properties. Th
 
 ```typescript
 // data-table.component.ts
-import { Component, Input, ChangeDetectionStrategy } from '@angular/core'
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'data-table',
@@ -423,9 +447,9 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core'
   `,
 })
 export class DataTableComponent {
-  @Input() columns?: string[]   // From {:columns='["Name","Age"]'}
-  @Input() sortable?: boolean   // From {sortable}
-  @Input() __node?: any         // Original Comark node
+  @Input() columns?: string[]; // From {:columns='["Name","Age"]'}
+  @Input() sortable?: boolean; // From {sortable}
+  @Input() __node?: any; // Original Comark node
 }
 ```
 
@@ -461,9 +485,9 @@ get nodeChildren() { return this.__node?.slice(2) || [] }
 The `data` input allows passing ambient data for `:binding` resolution in markdown:
 
 ```typescript
-import { Component } from '@angular/core'
-import { Markdown } from '@comark/angular'
-import binding, { Binding } from '@comark/angular/plugins/binding'
+import { Component } from '@angular/core';
+import { Markdown } from '@comark/angular';
+import binding, { Binding } from '@comark/angular/plugins/binding';
 
 @Component({
   selector: 'app-root',
@@ -479,14 +503,14 @@ import binding, { Binding } from '@comark/angular/plugins/binding'
   `,
 })
 export class AppComponent {
-  content = 'Hello {{ user.name }}, you have {{ count }} messages.'
+  content = 'Hello {{ user.name }}, you have {{ count }} messages.';
 
-  plugins = [binding()]
-  components = { Binding }
+  plugins = [binding()];
+  components = { Binding };
   data = {
     user: { name: 'Alice' },
     count: 42,
-  }
+  };
 }
 ```
 
@@ -500,33 +524,31 @@ Use `defineMarkdownComponent` or `defineMarkdownDocumentComponent` to create pre
 
 ```typescript
 // docs-markdown.component.ts
-import { defineMarkdownComponent } from '@comark/angular'
-import math, { Math } from '@comark/angular/plugins/math'
-import mermaid, { Mermaid } from '@comark/angular/plugins/mermaid'
+import { defineMarkdownComponent } from '@comark/angular';
+import math, { Math } from '@comark/angular/plugins/math';
+import mermaid, { Mermaid } from '@comark/angular/plugins/mermaid';
 
 export const DocsMarkdown = defineMarkdownComponent({
   plugins: [math(), mermaid()],
   components: { Math, Mermaid },
   class: 'prose dark:prose-invert',
-})
+});
 ```
 
 Use the pre-configured component:
 
 ```typescript
-import { Component } from '@angular/core'
-import { DocsMarkdown } from './docs-markdown.component'
+import { Component } from '@angular/core';
+import { DocsMarkdown } from './docs-markdown.component';
 
 @Component({
   selector: 'app-docs',
   standalone: true,
   imports: [DocsMarkdown],
-  template: `
-    <docs-markdown [value]="content" />
-  `,
+  template: ` <docs-markdown [value]="content" /> `,
 })
 export class DocsComponent {
-  content = '# Math: $E = mc^2$'
+  content = '# Math: $E = mc^2$';
 }
 ```
 
@@ -535,12 +557,12 @@ Instance-level `components` and `plugins` are merged with the config-level defau
 ### defineMarkdownDocumentComponent
 
 ```typescript
-import { defineMarkdownDocumentComponent } from '@comark/angular'
-import { Math } from '@comark/angular/plugins/math'
+import { defineMarkdownDocumentComponent } from '@comark/angular';
+import { Math } from '@comark/angular/plugins/math';
 
 export const DocsMarkdownDocument = defineMarkdownDocumentComponent({
   components: { Math },
-})
+});
 ```
 
 ---
@@ -550,22 +572,27 @@ export const DocsMarkdownDocument = defineMarkdownDocumentComponent({
 ### Math (KaTeX)
 
 ```typescript
-import { Component } from '@angular/core'
-import { Markdown } from '@comark/angular'
-import math, { Math } from '@comark/angular/plugins/math'
+import { Component } from '@angular/core';
+import { Markdown } from '@comark/angular';
+import math, { Math } from '@comark/angular/plugins/math';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [Markdown],
   template: `
-    <comark-markdown [value]="content" [plugins]="plugins" [components]="components" />
+    <comark-markdown
+      [value]="content"
+      [plugins]="plugins"
+      [components]="components"
+    />
   `,
 })
 export class AppComponent {
-  content = 'Inline $E = mc^2$ and block:\n\n$$\n\\int_0^\\infty e^{-x} dx = 1\n$$'
-  plugins = [math()]
-  components = { Math }
+  content =
+    'Inline $E = mc^2$ and block:\n\n$$\n\\int_0^\\infty e^{-x} dx = 1\n$$';
+  plugins = [math()];
+  components = { Math };
 }
 ```
 
@@ -574,22 +601,26 @@ export class AppComponent {
 ### Mermaid
 
 ````typescript
-import { Component } from '@angular/core'
-import { Markdown } from '@comark/angular'
-import mermaid, { Mermaid } from '@comark/angular/plugins/mermaid'
+import { Component } from '@angular/core';
+import { Markdown } from '@comark/angular';
+import mermaid, { Mermaid } from '@comark/angular/plugins/mermaid';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [Markdown],
   template: `
-    <comark-markdown [value]="content" [plugins]="plugins" [components]="components" />
+    <comark-markdown
+      [value]="content"
+      [plugins]="plugins"
+      [components]="components"
+    />
   `,
 })
 export class AppComponent {
-  content = '```mermaid\ngraph TD\n  A --> B\n```'
-  plugins = [mermaid()]
-  components = { Mermaid }
+  content = '```mermaid\ngraph TD\n  A --> B\n```';
+  plugins = [mermaid()];
+  components = { Mermaid };
 }
 ````
 
@@ -598,7 +629,7 @@ The Mermaid component includes automatic dark mode support: it watches the `<htm
 ### Binding
 
 ```typescript
-import binding, { Binding } from '@comark/angular/plugins/binding'
+import binding, { Binding } from '@comark/angular/plugins/binding';
 
 // See the "Data Binding" section above for full usage.
 ```

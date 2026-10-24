@@ -4,8 +4,7 @@ import { Application } from '@splinetool/runtime';
 const BESPOKE_SPLINE_URL =
   'https://prod.spline.design/PUnUYVF6idyub0GP/scene.splinecode';
 
-const PREMIUM_CARD_URL =
-  'https://m.me/61571393589144?text=Hello%20I%20want%20to%20know%20more';
+const emit = defineEmits<{ request: [] }>();
 
 const canvasEl = ref<HTMLCanvasElement | null>(null);
 let splineApp: Application | null = null;
@@ -66,10 +65,9 @@ onUnmounted(() => {
 
       <UButton
         label="Get Our Premium Card"
-        :to="PREMIUM_CARD_URL"
-        target="_blank"
         color="neutral"
-        class="h-10 shrink-0 justify-center rounded-full bg-white px-8 text-sm font-medium text-dark hover:bg-white/90"
+        class="h-10 shrink-0 cursor-pointer justify-center rounded-full bg-white px-8 text-sm font-medium text-dark hover:bg-white/90"
+        @click="emit('request')"
       />
     </div>
   </div>

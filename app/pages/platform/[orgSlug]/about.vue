@@ -8,7 +8,7 @@ definePageMeta({
 const toast = useToast();
 const { organizationSlug } = useOrganizationSlug();
 const { data, isLoading, isError, error, refetch } =
-  useCommunityAboutQuery(organizationSlug);
+  useCommunityQuery(organizationSlug);
 
 function retry() {
   refetch();

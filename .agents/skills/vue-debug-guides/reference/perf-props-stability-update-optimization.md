@@ -33,10 +33,12 @@ Move comparison logic to the parent and pass the boolean result instead. This is
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref } from 'vue';
 
-const list = ref([/* 100 items */])
-const activeId = ref(null)
+const list = ref([
+  /* 100 items */
+]);
+const activeId = ref(null);
 
 // When activeId changes from 1 to 2:
 // - ListItem 1 needs to re-render (was active, now not)
@@ -56,8 +58,8 @@ const activeId = ref(null)
 <script setup>
 defineProps({
   id: Number,
-  activeId: Number  // This prop changes for ALL items
-})
+  activeId: Number, // This prop changes for ALL items
+});
 </script>
 ```
 
@@ -75,10 +77,12 @@ defineProps({
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref } from 'vue';
 
-const list = ref([/* 100 items */])
-const activeId = ref(null)
+const list = ref([
+  /* 100 items */
+]);
+const activeId = ref(null);
 
 // When activeId changes from 1 to 2:
 // - ListItem 1: :active changed from true to false -> re-renders
@@ -98,8 +102,8 @@ const activeId = ref(null)
 <script setup>
 defineProps({
   id: Number,
-  active: Boolean  // This only changes for items that truly changed
-})
+  active: Boolean, // This only changes for items that truly changed
+});
 </script>
 ```
 

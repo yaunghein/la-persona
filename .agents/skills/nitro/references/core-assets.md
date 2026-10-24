@@ -23,14 +23,14 @@ public/
 ### Custom public directories
 
 ```ts [nitro.config.ts]
-import { defineConfig } from "nitro";
+import { defineConfig } from 'nitro';
 
 export default defineConfig({
   publicAssets: [
     {
-      baseURL: "build",       // served under /build/
-      dir: "public/build",    // source on disk
-      maxAge: 3600,           // Cache-Control: public, max-age=3600, immutable
+      baseURL: 'build', // served under /build/
+      dir: 'public/build', // source on disk
+      maxAge: 3600, // Cache-Control: public, max-age=3600, immutable
     },
   ],
 });
@@ -55,11 +55,11 @@ Only compressible MIME types ≥ 1 KB are compressed (`.map` files excluded; zst
 Inline any file into the server bundle with an import attribute (base64-encoded for binary). Prefer server assets for larger files.
 
 ```ts
-import logo from "./logo.png" with { type: "bytes" }; // Uint8Array
-import readme from "./README.md" with { type: "text" }; // string
+import logo from './logo.png' with { type: 'bytes' }; // Uint8Array
+import readme from './README.md' with { type: 'text' }; // string
 // or the raw: prefix
-import logo2 from "raw:./logo.png";   // Uint8Array
-import readme2 from "raw:./README.md"; // string
+import logo2 from 'raw:./logo.png'; // Uint8Array
+import readme2 from 'raw:./README.md'; // string
 ```
 
 ## Server assets
@@ -73,14 +73,14 @@ assets/
 ```
 
 ```ts [routes/index.ts]
-import { defineHandler } from "nitro";
-import { useKV } from "nitro/kv";
+import { defineHandler } from 'nitro';
+import { useKV } from 'nitro/kv';
 
 export default defineHandler(async () => {
-  const serverAssets = useKV("assets:server");
+  const serverAssets = useKV('assets:server');
   const keys = await serverAssets.getKeys();
-  const data = await serverAssets.getItem("data.json");
-  const meta = await serverAssets.getMeta("data.json"); // { type, etag, mtime }
+  const data = await serverAssets.getItem('data.json');
+  const meta = await serverAssets.getMeta('data.json'); // { type, etag, mtime }
   return { keys, data, meta };
 });
 ```
@@ -88,19 +88,17 @@ export default defineHandler(async () => {
 ### Custom server asset directories
 
 ```ts [nitro.config.ts]
-import { defineConfig } from "nitro";
+import { defineConfig } from 'nitro';
 
 export default defineConfig({
-  serverAssets: [
-    { baseName: "templates", dir: "./templates" },
-  ],
+  serverAssets: [{ baseName: 'templates', dir: './templates' }],
 });
 ```
 
 Access via the `assets:templates` mount:
 
 ```ts
-const html = await useKV("assets:templates").getItem("email.html");
+const html = await useKV('assets:templates').getItem('email.html');
 ```
 
 Entry options: `baseName`, `dir` (relative to `rootDir`), `pattern` (default `**/*`), `ignore`.

@@ -29,14 +29,14 @@ const content = ref({
     {
       type: 'heading',
       attrs: { level: 1 },
-      content: [{ type: 'text', text: 'Hello World' }]
+      content: [{ type: 'text', text: 'Hello World' }],
     },
     {
       type: 'paragraph',
-      content: [{ type: 'text', text: 'Start writing...' }]
-    }
-  ]
-})
+      content: [{ type: 'text', text: 'Start writing...' }],
+    },
+  ],
+});
 </script>
 
 <template>
@@ -46,8 +46,14 @@ const content = ref({
     <UEditorMentionMenu
       :editor="editor"
       :items="[
-        { label: 'Benjamin', avatar: { src: 'https://github.com/benjamincanac.png' } },
-        { label: 'Sébastien', avatar: { src: 'https://github.com/atinux.png' } }
+        {
+          label: 'Benjamin',
+          avatar: { src: 'https://github.com/benjamincanac.png' },
+        },
+        {
+          label: 'Sébastien',
+          avatar: { src: 'https://github.com/atinux.png' },
+        },
       ]"
     />
     <UEditorEmojiMenu :editor="editor" />
@@ -108,11 +114,13 @@ Combine with Dashboard layout for a multi-document editor:
       <template #default="{ collapsed }">
         <UNavigationMenu
           :collapsed="collapsed"
-          :items="documents.map(doc => ({
-            label: doc.title,
-            to: `/editor/${doc.id}`,
-            icon: 'i-lucide-file-text'
-          }))"
+          :items="
+            documents.map((doc) => ({
+              label: doc.title,
+              to: `/editor/${doc.id}`,
+              icon: 'i-lucide-file-text',
+            }))
+          "
           orientation="vertical"
         />
       </template>
@@ -125,9 +133,9 @@ Combine with Dashboard layout for a multi-document editor:
 
 ```vue [pages/editor/[id].vue]
 <script setup lang="ts">
-definePageMeta({ layout: 'editor' })
+definePageMeta({ layout: 'editor' });
 
-const content = ref({ type: 'doc', content: [] })
+const content = ref({ type: 'doc', content: [] });
 </script>
 
 <template>

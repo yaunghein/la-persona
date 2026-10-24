@@ -29,9 +29,10 @@ type RequestCardFormState = {
   prefilledLinks: PrefilledContactLinks;
 };
 
+const props = defineProps<{ organizationSlug: string }>();
 const emit = defineEmits<{ close: []; submitted: [] }>();
 
-const { organizationSlug } = useOrganizationSlug();
+const organizationSlug = toRef(props, 'organizationSlug');
 const toast = useToast();
 const {
   normalizeUrlWithHttps,
@@ -79,7 +80,6 @@ const success = ref(false);
 
 const { data: cards } = useOrganizationCardsQuery(organizationSlug);
 const { data: plans } = useSubscriptionPlansQuery();
-const { data: cardPaymentPricing } = useCardPricingQuery();
 const { mutate: submitCardRequest, isPending: isLoading } =
   useSubmitCardRequestMutation(organizationSlug);
 
@@ -120,18 +120,18 @@ const derivedPlan = computed(() =>
 );
 
 const premiumPlanMeta = computed(() =>
-  (plans.value || []).find((plan) => plan.code === 'premium')
+  (plans.value || []).find((plan) => plan.code === 'premium' && plan.isActive)
 );
 
 const showPricingSummary = computed(() => {
-  if (state.type === 'new_design') return Boolean(cardPaymentPricing.value);
+  if (state.type === 'new_design') return Boolean(premiumPlanMeta.value);
   return Boolean(state.sourceCardId && derivedPlan.value);
 });
 
 /** Amount shown on KBZ Pay QR line (premium plan price for new; source plan price for existing). */
 const requestPaymentTotalMinor = computed(() => {
-  if (state.type === 'new_design' && cardPaymentPricing.value) {
-    return cardPaymentPricing.value.premiumPlanPriceMinor;
+  if (state.type === 'new_design' && premiumPlanMeta.value) {
+    return premiumPlanMeta.value.priceMinor;
   }
   if (
     state.type === 'existing_design' &&
@@ -144,8 +144,8 @@ const requestPaymentTotalMinor = computed(() => {
 });
 
 const requestPaymentCurrency = computed(() => {
-  if (state.type === 'new_design' && cardPaymentPricing.value) {
-    return cardPaymentPricing.value.currency;
+  if (state.type === 'new_design' && premiumPlanMeta.value) {
+    return premiumPlanMeta.value.currency.toUpperCase();
   }
   if (derivedPlan.value) return derivedPlan.value.currency;
   return 'MMK';
@@ -843,13 +843,13 @@ function onFormError(event: FormErrorEvent) {
           >
             <span>Custom Design Fee</span>
             <span class="font-bold">
-              <template v-if="cardPaymentPricing">
+              <template v-if="premiumPlanMeta">
                 {{
-                  cardPaymentPricing.premiumPlanPriceMinor === 0
+                  premiumPlanMeta.priceMinor === 0
                     ? 'Free of charge'
                     : formatMinorAmount(
-                        cardPaymentPricing.premiumPlanPriceMinor,
-                        cardPaymentPricing.currency
+                        premiumPlanMeta.priceMinor,
+                        premiumPlanMeta.currency.toUpperCase()
                       )
                 }}
               </template>

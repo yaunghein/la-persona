@@ -4,7 +4,6 @@ import type {
   CardPaymentKind,
   CardPaymentQuote,
   CardPaymentReceipt,
-  CardPricing,
   CardSubscriptionOverview,
   CreateCardPaymentRequest,
   ListPaymentsQuery,
@@ -19,7 +18,6 @@ import { cardQueryKeys } from '~/features/card/composables/use-card-queries';
 export const billingQueryKeys = {
   all: ['billing'] as const,
   plans: () => [...billingQueryKeys.all, 'plans'] as const,
-  cardPricing: () => [...billingQueryKeys.all, 'card-pricing'] as const,
   cardSubscription: (cardSlug: string) =>
     [...billingQueryKeys.all, 'card-subscription', cardSlug] as const,
   paymentQuote: (cardSlug: string, kind: CardPaymentKind) =>
@@ -36,13 +34,6 @@ export function useSubscriptionPlansQuery() {
     queryFn: () =>
       $fetch<Collection<SubscriptionPlanSummary>>('/api/subscription-plans'),
     select: (collection) => collection.items,
-  });
-}
-
-export function useCardPricingQuery() {
-  return useQuery({
-    queryKey: billingQueryKeys.cardPricing(),
-    queryFn: () => $fetch<CardPricing>('/api/card-pricing'),
   });
 }
 

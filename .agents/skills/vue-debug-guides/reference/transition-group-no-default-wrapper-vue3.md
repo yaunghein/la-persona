@@ -3,7 +3,8 @@ title: TransitionGroup No Longer Renders Default Wrapper Element in Vue 3
 impact: MEDIUM
 impactDescription: Vue 2 to Vue 3 migration may break layouts relying on the default span wrapper
 type: gotcha
-tags: [vue3, transition-group, migration, vue2, breaking-change, wrapper-element]
+tags:
+  [vue3, transition-group, migration, vue2, breaking-change, wrapper-element]
 ---
 
 # TransitionGroup No Longer Renders Default Wrapper Element in Vue 3
@@ -151,7 +152,9 @@ When using in-DOM templates (not SFCs), remember to use kebab-case:
 </transition-group>
 
 <!-- NOT -->
-<TransitionGroup tag="ul" name="list">  <!-- Won't work in DOM templates -->
+<TransitionGroup tag="ul" name="list">
+  <!-- Won't work in DOM templates --></TransitionGroup
+>
 ```
 
 ## Reference

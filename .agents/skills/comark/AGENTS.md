@@ -17,31 +17,31 @@ LLMs stream markdown token-by-token. Standard markdown parsers expect complete i
 
 ```vue
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Markdown } from '@comark/vue'
+import { ref } from 'vue';
+import { Markdown } from '@comark/vue';
 
-const content = ref('')
-const streaming = ref(false)
+const content = ref('');
+const streaming = ref(false);
 
 async function generate(prompt: string) {
-  content.value = ''
-  streaming.value = true
+  content.value = '';
+  streaming.value = true;
 
   const res = await fetch('/api/chat', {
     method: 'POST',
     body: JSON.stringify({ prompt }),
-  })
+  });
 
-  const reader = res.body!.getReader()
-  const decoder = new TextDecoder()
+  const reader = res.body!.getReader();
+  const decoder = new TextDecoder();
 
   while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    content.value += decoder.decode(value, { stream: true })
+    const { done, value } = await reader.read();
+    if (done) break;
+    content.value += decoder.decode(value, { stream: true });
   }
 
-  streaming.value = false
+  streaming.value = false;
 }
 </script>
 
@@ -55,35 +55,39 @@ async function generate(prompt: string) {
 ## React
 
 ```tsx
-import { useState } from 'react'
-import { Markdown } from '@comark/react'
+import { useState } from 'react';
+import { Markdown } from '@comark/react';
 
 export default function Chat() {
-  const [content, setContent] = useState('')
-  const [streaming, setStreaming] = useState(false)
+  const [content, setContent] = useState('');
+  const [streaming, setStreaming] = useState(false);
 
   async function generate(prompt: string) {
-    setContent('')
-    setStreaming(true)
+    setContent('');
+    setStreaming(true);
 
     const res = await fetch('/api/chat', {
       method: 'POST',
       body: JSON.stringify({ prompt }),
-    })
+    });
 
-    const reader = res.body!.getReader()
-    const decoder = new TextDecoder()
+    const reader = res.body!.getReader();
+    const decoder = new TextDecoder();
 
     while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      setContent(prev => prev + decoder.decode(value, { stream: true }))
+      const { done, value } = await reader.read();
+      if (done) break;
+      setContent((prev) => prev + decoder.decode(value, { stream: true }));
     }
 
-    setStreaming(false)
+    setStreaming(false);
   }
 
-  return <Markdown streaming={streaming} caret>{content}</Markdown>
+  return (
+    <Markdown streaming={streaming} caret>
+      {content}
+    </Markdown>
+  );
 }
 ```
 
@@ -128,8 +132,8 @@ export default function Chat() {
 ## Angular
 
 ```typescript
-import { Component } from '@angular/core'
-import { Markdown } from '@comark/angular'
+import { Component } from '@angular/core';
+import { Markdown } from '@comark/angular';
 
 @Component({
   selector: 'app-chat',
@@ -144,28 +148,28 @@ import { Markdown } from '@comark/angular'
   `,
 })
 export class ChatComponent {
-  content = ''
-  streaming = false
+  content = '';
+  streaming = false;
 
   async generate(prompt: string) {
-    this.content = ''
-    this.streaming = true
+    this.content = '';
+    this.streaming = true;
 
     const res = await fetch('/api/chat', {
       method: 'POST',
       body: JSON.stringify({ prompt }),
-    })
+    });
 
-    const reader = res.body!.getReader()
-    const decoder = new TextDecoder()
+    const reader = res.body!.getReader();
+    const decoder = new TextDecoder();
 
     while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      this.content += decoder.decode(value, { stream: true })
+      const { done, value } = await reader.read();
+      if (done) break;
+      this.content += decoder.decode(value, { stream: true });
     }
 
-    this.streaming = false
+    this.streaming = false;
   }
 }
 ```
@@ -177,22 +181,22 @@ export class ChatComponent {
 Use `@comark/ansi` to render LLM markdown output in terminal-based agents:
 
 ```typescript
-import { printAnsi } from '@comark/ansi'
+import { printAnsi } from '@comark/ansi';
 
 // Print a complete LLM response to stdout with ANSI styling
-await printAnsi(llmResponse)
+await printAnsi(llmResponse);
 ```
 
 For repeated terminal output, use `createAnsiPrinter` with a custom `writer` function:
 
 ```typescript
-import { createAnsiPrinter } from '@comark/ansi'
+import { createAnsiPrinter } from '@comark/ansi';
 
 const writeMarkdown = createAnsiPrinter({
   writer: (output) => process.stdout.write(output),
-})
+});
 
-await writeMarkdown(markdown)
+await writeMarkdown(markdown);
 ```
 
 ---
@@ -202,11 +206,16 @@ await writeMarkdown(markdown)
 The `caret` prop appends a blinking cursor to the last text node while `streaming` is `true`. Customize it with a CSS class:
 
 ```vue
-<Markdown :streaming="streaming" :caret="{ class: 'animate-blink' }">{{ content }}</Markdown>
+<Markdown
+  :streaming="streaming"
+  :caret="{ class: 'animate-blink' }"
+>{{ content }}</Markdown>
 ```
 
 ```tsx
-<Markdown streaming={streaming} caret={{ class: 'animate-blink' }}>{content}</Markdown>
+<Markdown streaming={streaming} caret={{ class: 'animate-blink' }}>
+  {content}
+</Markdown>
 ```
 
 ```svelte
@@ -215,7 +224,11 @@ The `caret` prop appends a blinking cursor to the last text node while `streamin
 
 ```html
 <!-- Angular -->
-<comark-markdown [value]="content" [streaming]="streaming" [caret]="{ class: 'animate-blink' }" />
+<comark-markdown
+  [value]="content"
+  [streaming]="streaming"
+  [caret]="{ class: 'animate-blink' }"
+/>
 ```
 
 ---
@@ -226,13 +239,17 @@ If your LLM produces Comark component syntax (e.g., `::alert`), register compone
 
 ```vue
 <script setup lang="ts">
-import { Markdown } from '@comark/vue'
-import Alert from './Alert.vue'
-import CodeBlock from './CodeBlock.vue'
+import { Markdown } from '@comark/vue';
+import Alert from './Alert.vue';
+import CodeBlock from './CodeBlock.vue';
 </script>
 
 <template>
-  <Markdown :components="{ alert: Alert, pre: CodeBlock }" :streaming="streaming" caret>
+  <Markdown
+    :components="{ alert: Alert, pre: CodeBlock }"
+    :streaming="streaming"
+    caret
+  >
     {{ content }}
   </Markdown>
 </template>
@@ -246,33 +263,35 @@ Syntax highlighting works during streaming: each re-parse will highlight newly c
 
 ```vue
 <script setup lang="ts">
-import { Markdown } from '@comark/vue'
-import shiki from '@comark/vue/plugins/shiki'
-import githubDark from '@shikijs/themes/github-dark'
+import { Markdown } from '@comark/vue';
+import shiki from '@comark/vue/plugins/shiki';
+import githubDark from '@shikijs/themes/github-dark';
 
-const plugins = [shiki({ themes: { light: githubDark, dark: githubDark } })]
+const plugins = [shiki({ themes: { light: githubDark, dark: githubDark } })];
 </script>
 
 <template>
   <Suspense>
-    <Markdown :plugins="plugins" :streaming="streaming" caret>{{ content }}</Markdown>
+    <Markdown :plugins="plugins" :streaming="streaming" caret>{{
+      content
+    }}</Markdown>
   </Suspense>
 </template>
 ```
 
 ```tsx
-import { Markdown } from '@comark/react'
-import shiki from '@comark/react/plugins/shiki'
-import githubDark from '@shikijs/themes/github-dark'
+import { Markdown } from '@comark/react';
+import shiki from '@comark/react/plugins/shiki';
+import githubDark from '@shikijs/themes/github-dark';
 
-const plugins = [shiki({ themes: { light: githubDark, dark: githubDark } })]
+const plugins = [shiki({ themes: { light: githubDark, dark: githubDark } })];
 
 export default function Chat({ content, streaming }) {
   return (
     <Markdown plugins={plugins} streaming={streaming} caret>
       {content}
     </Markdown>
-  )
+  );
 }
 ```
 
@@ -284,21 +303,18 @@ Pre-configure a Comark component for your AI chat UI once, then reuse it everywh
 
 ```typescript
 // markdown.ts
-import { defineMarkdownComponent } from '@comark/vue'
-import shiki from '@comark/vue/plugins/shiki'
-import math, { Math } from '@comark/vue/plugins/math'
-import githubDark from '@shikijs/themes/github-dark'
-import Alert from './components/Alert.vue'
+import { defineMarkdownComponent } from '@comark/vue';
+import shiki from '@comark/vue/plugins/shiki';
+import math, { Math } from '@comark/vue/plugins/math';
+import githubDark from '@shikijs/themes/github-dark';
+import Alert from './components/Alert.vue';
 
 export const ChatMarkdown = defineMarkdownComponent({
   name: 'ChatMarkdown',
-  plugins: [
-    math(),
-    shiki({ themes: { light: githubDark, dark: githubDark } }),
-  ],
+  plugins: [math(), shiki({ themes: { light: githubDark, dark: githubDark } })],
   components: { Math, alert: Alert },
   autoClose: true,
-})
+});
 ```
 
 ```vue

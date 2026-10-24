@@ -36,7 +36,7 @@ export default defineNuxtConfig({
       },
     ],
   },
-})
+});
 ```
 
 Use:
@@ -62,7 +62,7 @@ export default defineNuxtConfig({
       { code: 'fr', language: 'fr-FR', file: 'fr.json' },
     ],
   },
-})
+});
 ```
 
 Fallbacks and number or date formats belong in `i18n/i18n.config.ts`:
@@ -70,7 +70,7 @@ Fallbacks and number or date formats belong in `i18n/i18n.config.ts`:
 ```ts
 export default defineI18nConfig(() => ({
   fallbackLocale: 'en',
-}))
+}));
 ```
 
 `defaultLocale` selects the default route locale. `fallbackLocale` selects messages when the active locale lacks a key; configure both deliberately.
@@ -89,7 +89,7 @@ export default defineNuxtConfig({
       redirectOn: 'root',
     },
   },
-})
+});
 ```
 
 Set `detectBrowserLanguage: false` when the application, account, domain, or upstream middleware owns locale selection. Preserve a user's explicit choice through `setLocale()` or localized navigation, and reserve detection for the entry points that need it.
@@ -106,7 +106,7 @@ export default defineNuxtConfig({
       { code: 'fr', files: ['fr/common.json', 'fr/app.json'] },
     ],
   },
-})
+});
 ```
 
 Files load in array order, and later files override earlier keys. Put shared messages first and narrower overrides last.

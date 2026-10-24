@@ -54,22 +54,24 @@ Use `asSeoCollection()` for automatic sitemap, og-image, and schema-org from fro
 
 ```ts
 // content.config.ts
-import { defineCollection, defineContentConfig } from '@nuxt/content'
-import { asSeoCollection } from '@nuxtjs/seo/content'
+import { defineCollection, defineContentConfig } from '@nuxt/content';
+import { asSeoCollection } from '@nuxtjs/seo/content';
 
 export default defineContentConfig({
   collections: {
-    posts: defineCollection(asSeoCollection({ type: 'page', source: 'posts/**' }))
-  }
-})
+    posts: defineCollection(
+      asSeoCollection({ type: 'page', source: 'posts/**' })
+    ),
+  },
+});
 ```
 
 **Important:** Load `@nuxtjs/seo` before `@nuxt/content` in modules array:
 
 ```ts
 export default defineNuxtConfig({
-  modules: ['@nuxtjs/seo', '@nuxt/content']
-})
+  modules: ['@nuxtjs/seo', '@nuxt/content'],
+});
 ```
 
 Frontmatter fields: `ogImage`, `sitemap`, `robots`, `schemaOrg`.

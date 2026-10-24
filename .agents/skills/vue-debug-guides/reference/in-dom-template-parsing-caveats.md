@@ -106,7 +106,12 @@ Some HTML elements have strict rules about valid children. Invalid elements are 
 ```html
 <!-- Use is="vue:component-name" on a valid native element -->
 <table>
-  <tr is="vue:blog-post-row" v-for="post in posts" :key="post.id" :post="post"></tr>
+  <tr
+    is="vue:blog-post-row"
+    v-for="post in posts"
+    :key="post.id"
+    :post="post"
+  ></tr>
 </table>
 ```
 
@@ -142,7 +147,7 @@ The simplest solution is to use Single-File Components (`.vue` files) which comp
 ```vue
 <!-- MyComponent.vue - All issues avoided -->
 <script setup>
-import BlogPost from './BlogPost.vue'
+import BlogPost from './BlogPost.vue';
 </script>
 
 <template>

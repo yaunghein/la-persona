@@ -2,7 +2,7 @@
 name: api-design
 description: RESTful web API design best practices (Microsoft Azure Architecture Center) — resource URIs, HTTP methods and status codes, media types, async operations, pagination/filtering/sorting, partial responses, HATEOAS, versioning, multitenancy, tracing, OpenAPI. Use when designing, adding, renaming, or reviewing routes under server/api, choosing status codes or response shapes, or adding list endpoints, long-running jobs, or org-scoped APIs.
 metadata:
-  version: "2026.10.17"
+  version: '2026.10.17'
   source: https://learn.microsoft.com/en-us/azure/architecture/best-practices/api-design
 ---
 
@@ -33,64 +33,69 @@ Routes are files: `server/api/<collection>/index.get.ts`, `index.post.ts`, `[id]
 
 Semantics depend on whether the target is a collection or an item (an API need not implement all):
 
-| Resource | POST | GET | PUT | DELETE |
-| --- | --- | --- | --- | --- |
-| `/customers` | Create customer | List customers | Bulk update | Remove all |
-| `/customers/1` | Error | Get customer 1 | Replace customer 1 (if exists) | Remove customer 1 |
-| `/customers/1/orders` | Create order for customer 1 | List orders of customer 1 | Bulk update orders | Remove all orders |
+| Resource              | POST                        | GET                       | PUT                            | DELETE            |
+| --------------------- | --------------------------- | ------------------------- | ------------------------------ | ----------------- |
+| `/customers`          | Create customer             | List customers            | Bulk update                    | Remove all        |
+| `/customers/1`        | Error                       | Get customer 1            | Replace customer 1 (if exists) | Remove customer 1 |
+| `/customers/1/orders` | Create order for customer 1 | List orders of customer 1 | Bulk update orders             | Remove all orders |
 
 ### GET — retrieve
-| Code | When |
-| --- | --- |
-| 200 | Resource returned |
-| 204 | No body (e.g. search with no matches) |
-| 404 | Resource not found |
+
+| Code | When                                  |
+| ---- | ------------------------------------- |
+| 200  | Resource returned                     |
+| 204  | No body (e.g. search with no matches) |
+| 404  | Resource not found                    |
 
 ### POST — create (server assigns URI) or submit data for processing
+
 Clients POST to the **collection** URI; they must not choose the new resource's URI (POST to a specific item URI → 400/405).
 
-| Code | When |
-| --- | --- |
-| 200 | Processing done, no new resource; result may be in body |
-| 201 | Created. **`Location` header = new resource URI**; body = representation |
-| 204 | Done, no body |
-| 400 | Invalid data; body explains (or links to details) |
-| 405 | URI doesn't support POST |
+| Code | When                                                                     |
+| ---- | ------------------------------------------------------------------------ |
+| 200  | Processing done, no new resource; result may be in body                  |
+| 201  | Created. **`Location` header = new resource URI**; body = representation |
+| 204  | Done, no body                                                            |
+| 400  | Invalid data; body explains (or links to details)                        |
+| 405  | URI doesn't support POST                                                 |
 
 ### PUT — full replace (or create if client can reliably own the URI)
+
 Body is the **complete** representation. Applies to items, not collections (except deliberate bulk PUT to a collection to cut chattiness). If clients can't meaningfully assign URIs, create with POST, update with PUT/PATCH.
 
 **PUT must be idempotent** — repeating it yields the same state. POST and PATCH are not guaranteed idempotent.
 
-| Code | When |
-| --- | --- |
-| 200 | Updated |
-| 201 | Created |
-| 204 | Updated, no body |
-| 409 | Conflicts with current resource state |
+| Code | When                                  |
+| ---- | ------------------------------------- |
+| 200  | Updated                               |
+| 201  | Created                               |
+| 204  | Updated, no body                      |
+| 409  | Conflicts with current resource state |
 
 ### PATCH — partial update
+
 Body is a patch document; format comes from `Content-Type`:
 
 - **JSON Merge Patch** (RFC 7396, `application/merge-patch+json`): same shape as the resource, only changed fields; `null` deletes a field. Unsuitable when the resource legitimately stores `null`, and has no ordering.
   ```json
   // original {"name":"gizmo","category":"widgets","color":"blue","price":10}
-  {"price":12,"color":null,"size":"small"}  // update price, delete color, add size
+  { "price": 12, "color": null, "size": "small" } // update price, delete color, add size
   ```
 - **JSON Patch** (RFC 6902, `application/json-patch+json`): ordered operations — `add`, `remove`, `replace`, `copy`, `move`, `test`.
 
-| Code | When |
-| --- | --- |
-| 200 | Updated |
-| 400 | Malformed patch document |
-| 409 | Valid patch, but can't apply to current state |
-| 415 | Patch format not supported |
+| Code | When                                          |
+| ---- | --------------------------------------------- |
+| 200  | Updated                                       |
+| 400  | Malformed patch document                      |
+| 409  | Valid patch, but can't apply to current state |
+| 415  | Patch format not supported                    |
 
 ### DELETE
-| Code | When |
-| --- | --- |
-| 204 | Deleted, no body |
-| 404 | Resource doesn't exist |
+
+| Code | When                   |
+| ---- | ---------------------- |
+| 204  | Deleted, no body       |
+| 404  | Resource doesn't exist |
 
 ## 3. Media types & content negotiation
 
@@ -105,7 +110,14 @@ When POST/PUT/PATCH/DELETE would take too long to complete inline:
 1. Return **202 Accepted** with `Location: /api/status/{id}`.
 2. `GET` the status endpoint → `200` with current state, optionally ETA and a cancel link:
    ```json
-   {"status":"In progress","link":{"rel":"cancel","method":"delete","href":"/api/status/12345"}}
+   {
+     "status": "In progress",
+     "link": {
+       "rel": "cancel",
+       "method": "delete",
+       "href": "/api/status/12345"
+     }
+   }
    ```
 3. If the job created a resource, once complete the status endpoint returns **303 See Other** with `Location: /api/orders/12345`.
 
@@ -128,11 +140,23 @@ Responses include links to related resources and the operations available on the
 
 ```json
 {
-  "orderID": 3, "quantity": 4, "orderValue": 16.60,
+  "orderID": 3,
+  "quantity": 4,
+  "orderValue": 16.6,
   "links": [
-    {"rel":"customer","href":"/customers/3","action":"GET","types":["application/json"]},
-    {"rel":"self","href":"/orders/3","action":"PUT","types":["application/json"]},
-    {"rel":"self","href":"/orders/3","action":"DELETE","types":[]}
+    {
+      "rel": "customer",
+      "href": "/customers/3",
+      "action": "GET",
+      "types": ["application/json"]
+    },
+    {
+      "rel": "self",
+      "href": "/orders/3",
+      "action": "PUT",
+      "types": ["application/json"]
+    },
+    { "rel": "self", "href": "/orders/3", "action": "DELETE", "types": [] }
   ]
 }
 ```
@@ -143,13 +167,13 @@ The set of links can change with resource state (the "engine of application stat
 
 Additive changes (new fields) are usually non-breaking if clients ignore unknown fields. Removing/renaming fields or restructuring relationships is breaking. Options:
 
-| Strategy | Example | Trade-offs |
-| --- | --- | --- |
-| None | — | Simplest; fine for internal APIs. Represent big changes as new resources/links |
-| URI | `/v2/customers/3` | Simple, cache-friendly. Many versions get unwieldy; links must carry version; same resource ≠ same URI |
-| Query string | `/customers/3?version=2` (default to 1) | Same URI per resource, cache-friendly; some old proxies skip caching query URLs |
-| Header | `Custom-Header: api-version=2` (default to 1) | Clean URIs; links must carry header; caches must vary on header |
-| Media type | `Accept: application/vnd.contoso.v1+json` | Best fit for HATEOAS; server echoes via `Content-Type`; 406 or default for unknown types; caches must vary on `Accept` |
+| Strategy     | Example                                       | Trade-offs                                                                                                             |
+| ------------ | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| None         | —                                             | Simplest; fine for internal APIs. Represent big changes as new resources/links                                         |
+| URI          | `/v2/customers/3`                             | Simple, cache-friendly. Many versions get unwieldy; links must carry version; same resource ≠ same URI                 |
+| Query string | `/customers/3?version=2` (default to 1)       | Same URI per resource, cache-friendly; some old proxies skip caching query URLs                                        |
+| Header       | `Custom-Header: api-version=2` (default to 1) | Clean URIs; links must carry header; caches must vary on header                                                        |
+| Media type   | `Accept: application/vnd.contoso.v1+json`     | Best fit for HATEOAS; server echoes via `Content-Type`; 406 or default for unknown types; caches must vary on `Accept` |
 
 Old versions keep returning their original schema.
 

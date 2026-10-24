@@ -25,13 +25,13 @@ tags: [vue3, sfc, export, script-block, composition-api]
 // BAD: Named exports don't work for the component itself
 export const MyComponent = {
   data() {
-    return { count: 0 }
-  }
-}
+    return { count: 0 };
+  },
+};
 
 // BAD: Exporting multiple things from component script
-export const CONSTANT = 42
-export function helper() { }
+export const CONSTANT = 42;
+export function helper() {}
 </script>
 
 <template>
@@ -47,9 +47,9 @@ export function helper() { }
 // GOOD: Single default export
 export default {
   data() {
-    return { count: 0 }
-  }
-}
+    return { count: 0 };
+  },
+};
 </script>
 
 <template>
@@ -61,9 +61,9 @@ export default {
 <!-- MyComponent.vue - Composition API with script setup -->
 <script setup>
 // GOOD: No export needed, component is auto-exported
-import { ref } from 'vue'
+import { ref } from 'vue';
 
-const count = ref(0)
+const count = ref(0);
 </script>
 
 <template>
@@ -79,18 +79,18 @@ For TypeScript, use a separate regular script block for type exports:
 <script lang="ts">
 // Regular script block for exports
 export interface User {
-  id: number
-  name: string
+  id: number;
+  name: string;
 }
 
-export type Status = 'pending' | 'active' | 'inactive'
+export type Status = 'pending' | 'active' | 'inactive';
 </script>
 
 <script setup lang="ts">
 // Setup script for component logic
-import { ref } from 'vue'
+import { ref } from 'vue';
 
-const users = ref<User[]>([])
+const users = ref<User[]>([]);
 </script>
 
 <template>
@@ -106,16 +106,16 @@ Don't put shared code in component script blocks. Create separate files:
 
 ```typescript
 // utils/constants.ts
-export const ITEMS_PER_PAGE = 20
-export const API_BASE_URL = '/api/v1'
+export const ITEMS_PER_PAGE = 20;
+export const API_BASE_URL = '/api/v1';
 
 // utils/helpers.ts
 export function formatDate(date: Date): string {
-  return date.toLocaleDateString()
+  return date.toLocaleDateString();
 }
 
 export function formatCurrency(amount: number): string {
-  return `$${amount.toFixed(2)}`
+  return `$${amount.toFixed(2)}`;
 }
 ```
 
@@ -123,11 +123,11 @@ export function formatCurrency(amount: number): string {
 <!-- ProductList.vue -->
 <script setup>
 // GOOD: Import shared utilities from external files
-import { ITEMS_PER_PAGE } from '@/utils/constants'
-import { formatCurrency } from '@/utils/helpers'
-import { ref } from 'vue'
+import { ITEMS_PER_PAGE } from '@/utils/constants';
+import { formatCurrency } from '@/utils/helpers';
+import { ref } from 'vue';
 
-const products = ref([])
+const products = ref([]);
 </script>
 ```
 
@@ -141,7 +141,7 @@ Vue's SFC compiler and build tools expect:
 
 ```javascript
 // How Vue tooling processes SFCs internally
-import MyComponent from './MyComponent.vue'
+import MyComponent from './MyComponent.vue';
 // ^ Always expects the default export to be the component
 ```
 
@@ -165,19 +165,19 @@ Instead, use composables:
 // composables/useSharedLogic.ts
 export function useSharedLogic() {
   // Shared reactive logic
-  const state = ref(0)
-  const increment = () => state.value++
+  const state = ref(0);
+  const increment = () => state.value++;
 
-  return { state, increment }
+  return { state, increment };
 }
 ```
 
 ```vue
 <!-- ComponentA.vue -->
 <script setup>
-import { useSharedLogic } from '@/composables/useSharedLogic'
+import { useSharedLogic } from '@/composables/useSharedLogic';
 
-const { state, increment } = useSharedLogic()
+const { state, increment } = useSharedLogic();
 </script>
 ```
 

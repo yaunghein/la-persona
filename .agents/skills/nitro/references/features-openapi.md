@@ -8,7 +8,7 @@ description: Auto-generated OpenAPI spec, defineRouteMeta, Scalar/Swagger UIs, a
 Nitro scans route handlers, reads metadata from `defineRouteMeta`, and generates an OpenAPI 3.1.0 spec plus interactive UIs ([Scalar](https://scalar.com/) and Swagger UI). **Experimental** — enable the flag.
 
 ```ts [nitro.config.ts]
-import { defineConfig } from "nitro";
+import { defineConfig } from 'nitro';
 
 export default defineConfig({
   experimental: { openAPI: true },
@@ -28,36 +28,34 @@ Dev endpoints once enabled:
 `defineRouteMeta` is a build-time macro (no runtime overhead). Its `openAPI` field accepts a standard OpenAPI Operation Object.
 
 ```ts [routes/api/users/[id].get.ts]
-import { defineRouteMeta, defineHandler } from "nitro";
+import { defineRouteMeta, defineHandler } from 'nitro';
 
 defineRouteMeta({
   openAPI: {
-    tags: ["users"],
-    description: "Get a user by ID",
-    parameters: [
-      { in: "query", name: "include", schema: { type: "string" } },
-    ],
+    tags: ['users'],
+    description: 'Get a user by ID',
+    parameters: [{ in: 'query', name: 'include', schema: { type: 'string' } }],
     responses: {
       200: {
-        description: "User found",
+        description: 'User found',
         content: {
-          "application/json": {
-            schema: { $ref: "#/components/schemas/User" },
+          'application/json': {
+            schema: { $ref: '#/components/schemas/User' },
           },
         },
       },
-      404: { description: "Not found" },
+      404: { description: 'Not found' },
     },
     // Hoist reusable schemas into the top-level components section
     $global: {
       components: {
         schemas: {
           User: {
-            type: "object",
+            type: 'object',
             properties: {
-              id: { type: "string" },
-              name: { type: "string" },
-              email: { type: "string", format: "email" },
+              id: { type: 'string' },
+              name: { type: 'string' },
+              email: { type: 'string', format: 'email' },
             },
           },
         },
@@ -68,7 +66,7 @@ defineRouteMeta({
 
 export default defineHandler((event) => {
   const { id } = event.context.params!;
-  return { id, name: "Alice", email: "alice@example.com" };
+  return { id, name: 'Alice', email: 'alice@example.com' };
 });
 ```
 
@@ -79,18 +77,18 @@ export default defineHandler((event) => {
 ## Configuration
 
 ```ts [nitro.config.ts]
-import { defineConfig } from "nitro";
+import { defineConfig } from 'nitro';
 
 export default defineConfig({
   experimental: { openAPI: true },
   openAPI: {
-    meta: { title: "My API", description: "...", version: "2.0.0" },
-    route: "/_docs/openapi.json",          // override JSON path
+    meta: { title: 'My API', description: '...', version: '2.0.0' },
+    route: '/_docs/openapi.json', // override JSON path
     ui: {
-      scalar: { route: "/_docs/scalar", theme: "purple" },
-      swagger: false,                       // disable a UI
+      scalar: { route: '/_docs/scalar', theme: 'purple' },
+      swagger: false, // disable a UI
     },
-    production: "runtime",                   // expose in production
+    production: 'runtime', // expose in production
   },
 });
 ```

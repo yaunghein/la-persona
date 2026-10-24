@@ -58,7 +58,7 @@ tags: [vue3, events, components, emit, click, migration]
 </template>
 
 <script setup>
-defineEmits(['click'])
+  defineEmits(['click']);
 </script>
 
 <!-- Parent.vue -->
@@ -94,9 +94,9 @@ defineEmits(['click'])
 </template>
 
 <script setup>
-defineOptions({
-  inheritAttrs: false
-})
+  defineOptions({
+    inheritAttrs: false,
+  });
 </script>
 ```
 
@@ -125,13 +125,13 @@ defineOptions({
 
 ```javascript
 // In Vue 3, if you declare an event in emits:
-defineEmits(['click'])
+defineEmits(['click']);
 
 // Then @click on the component ONLY listens to emitted events
 // NOT native click events
 
 // If you don't declare 'click' in emits:
-defineEmits(['custom-event'])
+defineEmits(['custom-event']);
 
 // Then @click on single-root component will:
 // 1. Fall through to root element as native listener
@@ -143,14 +143,14 @@ defineEmits(['custom-event'])
 ```vue
 <script setup>
 // Define what events this component emits
-const emit = defineEmits(['click', 'update', 'delete'])
+const emit = defineEmits(['click', 'update', 'delete']);
 
 function handleClick(event) {
   // Do component logic
-  processClick()
+  processClick();
 
   // Then emit to parent
-  emit('click', event)
+  emit('click', event);
 }
 </script>
 

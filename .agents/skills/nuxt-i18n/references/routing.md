@@ -27,9 +27,11 @@ Use `<NuxtLinkLocale>` for application links:
 Use `useLocalePath()` when code needs the localized URL:
 
 ```ts
-const localePath = useLocalePath()
+const localePath = useLocalePath();
 
-await navigateTo(localePath({ name: 'products-id', params: { id: product.id } }))
+await navigateTo(
+  localePath({ name: 'products-id', params: { id: product.id } })
+);
 ```
 
 Named routes preserve custom localized paths more reliably than hand-built strings.
@@ -40,11 +42,11 @@ Use `<SwitchLocalePathLink>` to navigate to the current page in another locale:
 
 ```vue
 <script setup lang="ts">
-const { locale, locales } = useI18n()
+const { locale, locales } = useI18n();
 
 const availableLocales = computed(() => {
-  return locales.value.filter(entry => entry.code !== locale.value)
-})
+  return locales.value.filter((entry) => entry.code !== locale.value);
+});
 </script>
 
 <template>
@@ -75,7 +77,7 @@ definePageMeta({
       fr: '/a-propos',
     },
   },
-})
+});
 </script>
 ```
 
@@ -85,14 +87,14 @@ For translated dynamic parameters, register each locale's value after loading th
 
 ```vue
 <script setup lang="ts">
-const route = useRoute()
-const { data: product } = await useFetch(`/api/products/${route.params.slug}`)
+const route = useRoute();
+const { data: product } = await useFetch(`/api/products/${route.params.slug}`);
 
-const setI18nParams = useSetI18nParams()
+const setI18nParams = useSetI18nParams();
 setI18nParams({
   en: { slug: product.value?.slugs.en },
   fr: { slug: product.value?.slugs.fr },
-})
+});
 </script>
 ```
 
@@ -111,20 +113,20 @@ export default defineNuxtConfig({
       { code: 'fr', language: 'fr-FR', file: 'fr.json' },
     ],
   },
-})
+});
 ```
 
 Apply locale metadata once in `app.vue` or the default layout:
 
 ```vue
 <script setup lang="ts">
-const i18nHead = useLocaleHead({ seo: true })
+const i18nHead = useLocaleHead({ seo: true });
 
 useHead(() => ({
   htmlAttrs: i18nHead.value.htmlAttrs,
   link: i18nHead.value.link,
   meta: i18nHead.value.meta,
-}))
+}));
 </script>
 ```
 

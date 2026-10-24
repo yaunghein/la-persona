@@ -10,7 +10,7 @@ Nitro is configured via `nitro.config.ts` (loaded with [c12](https://github.com/
 ## Config file
 
 ```ts [nitro.config.ts]
-import { defineConfig } from "nitro";
+import { defineConfig } from 'nitro';
 
 export default defineConfig({
   // Nitro options
@@ -18,8 +18,8 @@ export default defineConfig({
 ```
 
 ```ts [vite.config.ts]
-import { defineConfig } from "vite";
-import { nitro } from "nitro/vite";
+import { defineConfig } from 'vite';
+import { nitro } from 'nitro/vite';
 
 export default defineConfig({
   plugins: [nitro()],
@@ -36,9 +36,9 @@ export default defineConfig({
 ```ts [nitro.config.ts]
 export default defineConfig({
   logLevel: 3,
-  $development: { debug: true },   // only during `nitro dev`
-  $production: { minify: true },   // only during `nitro build`
-  extends: "./base.config",        // inherit from another config/preset
+  $development: { debug: true }, // only during `nitro dev`
+  $production: { minify: true }, // only during `nitro build`
+  extends: './base.config', // inherit from another config/preset
 });
 ```
 
@@ -52,7 +52,7 @@ Config can also live under `.config/nitro.ts` or in a `.nitrorc` (`key=value`) f
 
 ```ts [nitro.config.ts]
 export default defineConfig({
-  serverDir: "./server", // or "." for the v2 root layout; true = "server"
+  serverDir: './server', // or "." for the v2 root layout; true = "server"
 });
 ```
 
@@ -91,12 +91,12 @@ export default defineConfig({
 Define defaults in config; override at runtime with `NITRO_`-prefixed env vars. Only keys declared in `runtimeConfig` can be overridden — env vars cannot introduce new keys.
 
 ```ts [nitro.config.ts]
-import { defineConfig } from "nitro";
+import { defineConfig } from 'nitro';
 
 export default defineConfig({
   runtimeConfig: {
-    apiToken: "dev_token",
-    database: { host: "localhost", port: 5432 },
+    apiToken: 'dev_token',
+    database: { host: 'localhost', port: 5432 },
   },
 });
 ```
@@ -104,8 +104,8 @@ export default defineConfig({
 Access it (note the dedicated subpath import):
 
 ```ts [routes/example.get.ts]
-import { defineHandler } from "nitro";
-import { useRuntimeConfig } from "nitro/runtime-config";
+import { defineHandler } from 'nitro';
+import { useRuntimeConfig } from 'nitro/runtime-config';
 
 export default defineHandler((event) => {
   return useRuntimeConfig().apiToken;

@@ -3,7 +3,7 @@ name: vite
 description: Vite build tool configuration, plugin API, SSR, and Vite 8 Rolldown migration. Use when working with Vite projects, vite.config.ts, Vite plugins, or building libraries/SSR apps with Vite.
 metadata:
   author: Anthony Fu
-  version: "2026.9.25"
+  version: '2026.9.25'
   source: Generated from https://github.com/vitejs/vite, scripts at https://github.com/antfu/skills
 ---
 
@@ -53,14 +53,14 @@ vite build --ssr  # SSR build
 ### Common Config
 
 ```ts
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [],
   resolve: { alias: { '@': '/src' } },
   server: { port: 3000, proxy: { '/api': 'http://localhost:8080' } },
   build: { target: 'esnext', outDir: 'dist' },
-})
+});
 ```
 
 ### Official Plugins

@@ -23,16 +23,16 @@ IME (Input Method Editor) allows users to compose complex characters by typing m
 
 ```html
 <script setup>
-import { ref } from 'vue'
+  import { ref } from 'vue';
 
-const searchQuery = ref('')
-const charCount = ref(0)
+  const searchQuery = ref('');
+  const charCount = ref(0);
 </script>
 
 <template>
   <!-- PROBLEM: During IME composition, searchQuery won't update -->
   <!-- Chinese user types "ni hao" -> sees no results until they press space/enter -->
-  <input v-model="searchQuery" placeholder="Live search...">
+  <input v-model="searchQuery" placeholder="Live search..." />
   <p>{{ searchQuery.length }} characters</p>
 
   <!-- Character counter stays at 0 during IME input -->
@@ -43,14 +43,14 @@ const charCount = ref(0)
 
 ```html
 <script setup>
-import { ref } from 'vue'
+  import { ref } from 'vue';
 
-const searchQuery = ref('')
+  const searchQuery = ref('');
 
-// This captures EVERY input event, including during IME composition
-function handleInput(event) {
-  searchQuery.value = event.target.value
-}
+  // This captures EVERY input event, including during IME composition
+  function handleInput(event) {
+    searchQuery.value = event.target.value;
+  }
 </script>
 
 <template>
@@ -59,7 +59,7 @@ function handleInput(event) {
     :value="searchQuery"
     @input="handleInput"
     placeholder="Live search..."
-  >
+  />
   <p>{{ searchQuery.length }} characters</p>
 </template>
 ```
@@ -69,7 +69,7 @@ function handleInput(event) {
 <input
   :value="searchQuery"
   @input="event => searchQuery = event.target.value"
->
+/>
 ```
 
 **When v-model behavior IS correct:**
@@ -77,7 +77,7 @@ function handleInput(event) {
 ```html
 <!-- For form submission, waiting for composition IS usually better -->
 <!-- User expects to confirm their character selection before it's "official" -->
-<input v-model="formName" placeholder="Enter your name">
+<input v-model="formName" placeholder="Enter your name" />
 
 <!-- The final composed characters will be submitted, not intermediate states -->
 ```

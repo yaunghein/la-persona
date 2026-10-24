@@ -5,11 +5,11 @@
 Wrap initial render queries in `useAsyncData` or `useFetch` so Nuxt can transfer the result in its payload.
 
 ```ts
-const route = useRoute()
+const route = useRoute();
 
 const { data: page } = await useAsyncData(route.path, () => {
-  return queryCollection('docs').path(route.path).first()
-})
+  return queryCollection('docs').path(route.path).first();
+});
 
 const { data: posts } = await useAsyncData('published-posts', () => {
   return queryCollection('blog')
@@ -17,8 +17,8 @@ const { data: posts } = await useAsyncData('published-posts', () => {
     .order('date', 'DESC')
     .select('path', 'title', 'description', 'date')
     .limit(12)
-    .all()
-})
+    .all();
+});
 ```
 
 The builder supports `where`, `andWhere`, `orWhere`, `order`, `select`, `skip`, `limit`, `all`, `first`, and `count`. Use grouped conditions when SQL precedence matters.
@@ -26,10 +26,10 @@ The builder supports `where`, `andWhere`, `orWhere`, `order`, `select`, `skip`, 
 ```ts
 const posts = await queryCollection('blog')
   .where('published', '=', true)
-  .andWhere(group => group
-    .where('date', '>', '2026-01-01')
-    .where('category', '=', 'news'))
-  .all()
+  .andWhere((group) =>
+    group.where('date', '>', '2026-01-01').where('category', '=', 'news')
+  )
+  .all();
 ```
 
 ## Nitro queries
@@ -38,9 +38,9 @@ Pass the event as the first argument on the server so the query uses the request
 
 ```ts
 export default defineEventHandler(async (event) => {
-  const { slug } = getRouterParams(event)
-  return queryCollection(event, 'docs').path(`/${slug}`).first()
-})
+  const { slug } = getRouterParams(event);
+  return queryCollection(event, 'docs').path(`/${slug}`).first();
+});
 ```
 
 Extend `../.nuxt/tsconfig.server.json` from `server/tsconfig.json` when server-side collection types are missing.
@@ -52,13 +52,13 @@ const navigation = await queryCollectionNavigation('docs', [
   'title',
   'description',
   'icon',
-])
+]);
 
 const [previous, next] = await queryCollectionItemSurroundings(
   'docs',
   route.path,
-  { fields: ['title', 'description'] },
-)
+  { fields: ['title', 'description'] }
+);
 ```
 
 Navigation reads page paths plus `.navigation.yml` metadata. Surroundings returns a two-item tuple, with `null` at either boundary.
@@ -72,8 +72,8 @@ const { data: sections } = await useAsyncData('docs-search', () => {
   return queryCollectionSearchSections('docs', {
     ignoredTags: ['style', 'script'],
     extraFields: ['description'],
-  })
-})
+  });
+});
 ```
 
 Use `useSearchCollection` when the app needs reactive, built-in search over a collection rather than managing an external index. Load the search data once per stable collection and avoid rebuilding an index on every keystroke.

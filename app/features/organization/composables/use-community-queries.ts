@@ -4,7 +4,6 @@ import type {
   CommunityAbout,
   CommunityInvitationPreview,
   CommunityMember,
-  CommunitySettings,
   CreateInvitationRequest,
   InvitationReviewResult,
   JoinLink,
@@ -122,16 +121,15 @@ export function useReviewInvitationMutation(
   });
 }
 
-export function useCommunitySettingsQuery(
-  organizationSlug: MaybeRefOrGetter<string>
-) {
+/** Community profile: the settings form fields plus About page counts. */
+export function useCommunityQuery(organizationSlug: MaybeRefOrGetter<string>) {
   return useQuery({
     queryKey: computed(() =>
-      organizationQueryKeys.settings(toValue(organizationSlug))
+      organizationQueryKeys.detail(toValue(organizationSlug))
     ),
     queryFn: () =>
-      $fetch<CommunitySettings>(
-        organizationUrl(toValue(organizationSlug), 'settings')
+      $fetch<CommunityAbout>(
+        `/api/organizations/${toValue(organizationSlug)}` as string
       ),
     enabled: () => !!toValue(organizationSlug),
   });
@@ -143,38 +141,23 @@ export function useUpdateCommunitySettingsMutation(
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (changes: UpdateCommunitySettingsRequest) =>
-      $fetch<CommunitySettings>(
-        organizationUrl(toValue(organizationSlug), 'settings'),
+      $fetch<CommunityAbout>(
+        `/api/organizations/${toValue(organizationSlug)}` as string,
         {
           method: 'PATCH',
           body: changes,
         }
       ),
-    onSuccess: async (settings) => {
+    onSuccess: async (community) => {
       queryClient.setQueryData(
-        organizationQueryKeys.settings(toValue(organizationSlug)),
-        settings
+        organizationQueryKeys.detail(toValue(organizationSlug)),
+        community
       );
-      // Name and logo show up in the nav and the about page.
+      // Name and logo show up in the nav.
       await queryClient.invalidateQueries({
         queryKey: organizationQueryKeys.all,
       });
     },
-  });
-}
-
-export function useCommunityAboutQuery(
-  organizationSlug: MaybeRefOrGetter<string>
-) {
-  return useQuery({
-    queryKey: computed(() =>
-      organizationQueryKeys.about(toValue(organizationSlug))
-    ),
-    queryFn: () =>
-      $fetch<CommunityAbout>(
-        organizationUrl(toValue(organizationSlug), 'about')
-      ),
-    enabled: () => !!toValue(organizationSlug),
   });
 }
 

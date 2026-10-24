@@ -200,6 +200,7 @@ Comark components with named slots work in Svelte using the `children` snippet p
 ```markdown
 ::card
 #header
+
 ## Card Title
 
 #default
@@ -372,8 +373,8 @@ const config = {
   compilerOptions: {
     experimental: { async: true },
   },
-}
-export default config
+};
+export default config;
 ```
 
 Usage with `<svelte:boundary>`:

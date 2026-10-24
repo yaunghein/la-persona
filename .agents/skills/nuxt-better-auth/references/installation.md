@@ -37,27 +37,27 @@ BETTER_AUTH_SECRETS=2:current-secret-must-be-at-least-32-characters,1:previous-s
 ```ts
 export default defineNuxtConfig({
   modules: ['@nuxtjs/better-auth'],
-})
+});
 ```
 
 ## Minimal server config
 
 ```ts
-import { defineServerAuth } from '@nuxtjs/better-auth/config'
+import { defineServerAuth } from '@nuxtjs/better-auth/config';
 
 export default defineServerAuth({
   emailAndPassword: {
     enabled: true,
   },
-})
+});
 ```
 
 ## Minimal client config
 
 ```ts
-import { defineClientAuth } from '@nuxtjs/better-auth/config'
+import { defineClientAuth } from '@nuxtjs/better-auth/config';
 
-export default defineClientAuth({})
+export default defineClientAuth({});
 ```
 
 ## Module-owned values
@@ -73,7 +73,7 @@ export default defineClientAuth({})
 export default defineNuxtConfig({
   modules: ['@nuxthub/core', '@nuxtjs/better-auth'],
   hub: { db: 'sqlite' },
-})
+});
 ```
 
 See [references/database.md](database.md) for schema setup.
@@ -88,7 +88,7 @@ export default defineNuxtConfig({
   auth: {
     clientOnly: true,
   },
-})
+});
 ```
 
 See [references/client-only.md](client-only.md) for full setup.

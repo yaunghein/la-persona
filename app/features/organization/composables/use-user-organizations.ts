@@ -9,10 +9,8 @@ export const organizationQueryKeys = {
     [...organizationQueryKeys.all, 'members', organizationSlug] as const,
   joinLink: (organizationSlug: string) =>
     [...organizationQueryKeys.all, 'join-link', organizationSlug] as const,
-  settings: (organizationSlug: string) =>
-    [...organizationQueryKeys.all, 'settings', organizationSlug] as const,
-  about: (organizationSlug: string) =>
-    [...organizationQueryKeys.all, 'about', organizationSlug] as const,
+  detail: (organizationSlug: string) =>
+    [...organizationQueryKeys.all, 'detail', organizationSlug] as const,
   invitation: (invitationId: string) =>
     [...organizationQueryKeys.all, 'invitation', invitationId] as const,
   joinLinkPreview: (token: string) =>

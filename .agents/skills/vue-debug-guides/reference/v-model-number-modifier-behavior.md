@@ -33,28 +33,28 @@ Understanding these differences is crucial when working with numeric forms, espe
 
 ```html
 <script setup>
-import { ref, computed } from 'vue'
+  import { ref, computed } from 'vue';
 
-const price = ref(0)
-const quantity = ref(1)
+  const price = ref(0);
+  const quantity = ref(1);
 
-const total = computed(() => {
-  // PROBLEM: price might be '' (empty string) when input is cleared
-  return price.value * quantity.value  // '' * 1 = 0, but typeof is still number
-})
+  const total = computed(() => {
+    // PROBLEM: price might be '' (empty string) when input is cleared
+    return price.value * quantity.value; // '' * 1 = 0, but typeof is still number
+  });
 
-function validatePrice() {
-  // PROBLEM: This check fails when input is empty
-  if (typeof price.value !== 'number') {
-    // Never enters here! '' is still treated as "processed"
+  function validatePrice() {
+    // PROBLEM: This check fails when input is empty
+    if (typeof price.value !== 'number') {
+      // Never enters here! '' is still treated as "processed"
+    }
+
+    // PROBLEM: parseFloat("$100") returns NaN, but "100abc" returns 100
   }
-
-  // PROBLEM: parseFloat("$100") returns NaN, but "100abc" returns 100
-}
 </script>
 
 <template>
-  <input v-model.number="price" type="number">
+  <input v-model.number="price" type="number" />
   <!-- When user clears input, price.value becomes '' not 0 or NaN -->
 </template>
 ```
@@ -63,26 +63,26 @@ function validatePrice() {
 
 ```html
 <script setup>
-import { ref, computed } from 'vue'
+  import { ref, computed } from 'vue';
 
-const price = ref(0)
-const quantity = ref(1)
+  const price = ref(0);
+  const quantity = ref(1);
 
-const total = computed(() => {
-  // CORRECT: Handle empty string case
-  const priceNum = price.value === '' ? 0 : price.value
-  return priceNum * quantity.value
-})
+  const total = computed(() => {
+    // CORRECT: Handle empty string case
+    const priceNum = price.value === '' ? 0 : price.value;
+    return priceNum * quantity.value;
+  });
 
-// Or use a wrapper computed for safer access
-const safePrice = computed(() => {
-  if (price.value === '' || price.value === null) return 0
-  return Number(price.value) || 0
-})
+  // Or use a wrapper computed for safer access
+  const safePrice = computed(() => {
+    if (price.value === '' || price.value === null) return 0;
+    return Number(price.value) || 0;
+  });
 </script>
 
 <template>
-  <input v-model.number="price" type="number" min="0">
+  <input v-model.number="price" type="number" min="0" />
   <p>Total: ${{ total.toFixed(2) }}</p>
 </template>
 ```
@@ -91,35 +91,31 @@ const safePrice = computed(() => {
 
 ```html
 <script setup>
-import { ref } from 'vue'
+  import { ref } from 'vue';
 
-const price = ref(0)
+  const price = ref(0);
 
-function handlePriceInput(event) {
-  const value = event.target.value
+  function handlePriceInput(event) {
+    const value = event.target.value;
 
-  // Strict parsing - only accept valid numbers
-  const parsed = parseFloat(value)
+    // Strict parsing - only accept valid numbers
+    const parsed = parseFloat(value);
 
-  if (value === '') {
-    price.value = 0  // Or null, depending on your needs
-  } else if (!isNaN(parsed) && isFinite(parsed)) {
-    // Additional check: ensure entire string is numeric
-    if (/^-?\d*\.?\d+$/.test(value.trim())) {
-      price.value = parsed
+    if (value === '') {
+      price.value = 0; // Or null, depending on your needs
+    } else if (!isNaN(parsed) && isFinite(parsed)) {
+      // Additional check: ensure entire string is numeric
+      if (/^-?\d*\.?\d+$/.test(value.trim())) {
+        price.value = parsed;
+      }
     }
+    // Invalid input - keep previous value
   }
-  // Invalid input - keep previous value
-}
 </script>
 
 <template>
   <!-- Manual binding for strict numeric control -->
-  <input
-    :value="price"
-    @input="handlePriceInput"
-    type="number"
-  >
+  <input :value="price" @input="handlePriceInput" type="number" />
 </template>
 ```
 

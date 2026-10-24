@@ -117,18 +117,18 @@ For cascading list animations, pass the index to JavaScript hooks and compute de
 
 <script setup>
 function onBeforeEnter(el) {
-  el.style.opacity = 0
-  el.style.transform = 'translateY(12px)'
+  el.style.opacity = 0;
+  el.style.transform = 'translateY(12px)';
 }
 
 function onEnter(el, done) {
-  const delay = Number(el.dataset.index) * 80
+  const delay = Number(el.dataset.index) * 80;
   setTimeout(() => {
-    el.style.transition = 'all 0.25s ease'
-    el.style.opacity = 1
-    el.style.transform = 'translateY(0)'
-    setTimeout(done, 250)
-  }, delay)
+    el.style.transition = 'all 0.25s ease';
+    el.style.opacity = 1;
+    el.style.transform = 'translateY(0)';
+    setTimeout(done, 250);
+  }, delay);
 }
 </script>
 ```

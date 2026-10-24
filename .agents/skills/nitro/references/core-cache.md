@@ -14,11 +14,14 @@ Nitro's cache layer (powered by [ocache](https://ocache.unjs.io)) builds on the 
 `defineCachedHandler` works like `defineHandler` plus a cache-options argument.
 
 ```ts [routes/cached.ts]
-import { defineCachedHandler } from "nitro/cache";
+import { defineCachedHandler } from 'nitro/cache';
 
-export default defineCachedHandler((event) => {
-  return "I am cached for an hour";
-}, { maxAge: 60 * 60 });
+export default defineCachedHandler(
+  (event) => {
+    return 'I am cached for an hour';
+  },
+  { maxAge: 60 * 60 }
+);
 ```
 
 Behavior:
@@ -45,17 +48,22 @@ Use `shouldBypassCache` for requests that must reach the handler untouched (not 
 Cache any async function (e.g. an upstream API call) and reuse it across handlers.
 
 ```ts [routes/api/stars/[...repo].ts]
-import { defineHandler, type H3Event } from "nitro";
-import { defineCachedFunction } from "nitro/cache";
+import { defineHandler, type H3Event } from 'nitro';
+import { defineCachedFunction } from 'nitro/cache';
 
-const cachedGHStars = defineCachedFunction(async (repo: string) => {
-  const data = await fetch(`https://api.github.com/repos/${repo}`).then((r) => r.json());
-  return data.stargazers_count;
-}, {
-  maxAge: 60 * 60,
-  name: "ghStars",
-  getKey: (repo: string) => repo,
-});
+const cachedGHStars = defineCachedFunction(
+  async (repo: string) => {
+    const data = await fetch(`https://api.github.com/repos/${repo}`).then((r) =>
+      r.json()
+    );
+    return data.stargazers_count;
+  },
+  {
+    maxAge: 60 * 60,
+    name: 'ghStars',
+    getKey: (repo: string) => repo,
+  }
+);
 
 export default defineHandler(async (event) => {
   const { repo } = event.context.params;
@@ -73,14 +81,14 @@ Cached values are JSON-serialized — don't return Symbols, Maps, or Sets (use `
 Wrap handlers in caching by glob pattern without touching handler code:
 
 ```ts [nitro.config.ts]
-import { defineConfig } from "nitro";
+import { defineConfig } from 'nitro';
 
 export default defineConfig({
-  kv: { redis: { driver: "redis", url: "redis://localhost:6379" } },
+  kv: { redis: { driver: 'redis', url: 'redis://localhost:6379' } },
   routeRules: {
-    "/blog/**": { swr: 3600 },                       // SWR, 1h (swr:true = 1s default)
-    "/heavy/**": { cache: { maxAge: 3600, base: "redis" } }, // custom mountpoint
-    "/api/realtime/**": { cache: false },            // disable
+    '/blog/**': { swr: 3600 }, // SWR, 1h (swr:true = 1s default)
+    '/heavy/**': { cache: { maxAge: 3600, base: 'redis' } }, // custom mountpoint
+    '/api/realtime/**': { cache: false }, // disable
   },
 });
 ```
@@ -127,10 +135,10 @@ Key pattern: `` `${base}:${group}:${name}:${getKey(...args)}.json` `` (`group`/`
 Cached **functions** expose on-demand methods:
 
 ```ts
-await cachedGHStars("unjs/nitro");              // populate
-await cachedGHStars.expire("unjs/nitro");       // mark stale (SWR: served while refreshing)
-await cachedGHStars.invalidate("unjs/nitro");   // remove entirely
-await cachedGHStars.resolveKeys("unjs/nitro");  // storage key(s) for these args
+await cachedGHStars('unjs/nitro'); // populate
+await cachedGHStars.expire('unjs/nitro'); // mark stale (SWR: served while refreshing)
+await cachedGHStars.invalidate('unjs/nitro'); // remove entirely
+await cachedGHStars.resolveKeys('unjs/nitro'); // storage key(s) for these args
 ```
 
 > `defineCachedHandler` returns a plain handler and does **not** expose these methods — move expensive work into a `defineCachedFunction` (called from a plain `defineHandler`) and invalidate the function when you need on-demand invalidation.
@@ -140,11 +148,11 @@ await cachedGHStars.resolveKeys("unjs/nitro");  // storage key(s) for these args
 Entries live under the `cache:` prefix. By default they sit in the in-memory root storage (**not persisted**). Configure a persistent backend by mounting a `cache` point via the `kv` option (see [core-storage](core-storage.md)):
 
 ```ts [nitro.config.ts]
-import { defineConfig } from "nitro";
+import { defineConfig } from 'nitro';
 
 export default defineConfig({
-  kv: { cache: { driver: "redis" /* options */ } },
-  $development: { kv: { cache: { driver: "fs", base: "./.data/cache" } } },
+  kv: { cache: { driver: 'redis' /* options */ } },
+  $development: { kv: { cache: { driver: 'fs', base: './.data/cache' } } },
 });
 ```
 

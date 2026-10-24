@@ -12,23 +12,23 @@ Nitro maps files in `routes/` and `api/` to HTTP routes at build time (no runtim
 ## Event handlers
 
 ```ts [routes/hello.ts]
-import { defineHandler } from "nitro";
+import { defineHandler } from 'nitro';
 
 export default defineHandler((event) => {
-  return { hello: "world" };
+  return { hello: 'world' };
 });
 ```
 
 `defineHandler` gives type inference. A plain `(event) => ...` function also works. The `event` is web-standard based:
 
 ```ts
-event.req            // web Request
-event.res            // response init (headers, status)
-event.url            // URL object (event.url.pathname, event.url.searchParams)
-event.path           // request path
-event.method         // HTTP method
-event.context        // mutable per-request context (params, custom data)
-event.context.params // route params
+event.req; // web Request
+event.res; // response init (headers, status)
+event.url; // URL object (event.url.pathname, event.url.searchParams)
+event.path; // request path
+event.method; // HTTP method
+event.context; // mutable per-request context (params, custom data)
+event.context.params; // route params
 ```
 
 Read the body with native `Request` methods (H3 v2 dropped `readBody`):
@@ -59,7 +59,7 @@ routes/
 Append the method to match only that verb (`get`, `post`, `put`, `delete`, `patch`, `head`, `options`, `query`, `connect`, `trace`):
 
 ```ts [routes/users.post.ts]
-import { defineHandler } from "nitro";
+import { defineHandler } from 'nitro';
 
 export default defineHandler(async (event) => {
   const body = await event.req.json();
@@ -91,10 +91,10 @@ export default defineHandler((event) => {
 Files in `middleware/` run on every request before route matching. They modify the event and **must not return** (returning ends the request).
 
 ```ts [middleware/auth.ts]
-import { defineHandler } from "nitro";
+import { defineHandler } from 'nitro';
 
 export default defineHandler((event) => {
-  event.context.user = { name: "Nitro" };
+  event.context.user = { name: 'Nitro' };
 });
 ```
 
@@ -103,7 +103,7 @@ Control execution order with numeric prefixes (`1.logger.ts`, `2.auth.ts` — pa
 ```ts [nitro.config.ts]
 export default defineConfig({
   handlers: [
-    { route: "/api/**", handler: "./utils/api-auth.ts", middleware: true },
+    { route: '/api/**', handler: './utils/api-auth.ts', middleware: true },
   ],
 });
 ```
@@ -115,11 +115,15 @@ Register handlers/middleware in config in addition to (or instead of) the filesy
 ```ts [nitro.config.ts]
 export default defineConfig({
   routes: {
-    "/api/hello": "./routes/api/hello.ts",
-    "/api/custom": { handler: "./routes/custom.ts", method: "POST", lazy: true },
+    '/api/hello': './routes/api/hello.ts',
+    '/api/custom': {
+      handler: './routes/custom.ts',
+      method: 'POST',
+      lazy: true,
+    },
   },
   handlers: [
-    { route: "/blog/**", handler: "./handlers/blog.ts", method: "get" },
+    { route: '/blog/**', handler: './handlers/blog.ts', method: 'get' },
   ],
 });
 ```
@@ -131,12 +135,12 @@ Handler options: `handler`, `method`, `lazy`, `middleware`, `format` (`"web"` | 
 Throw `HTTPError` (replaces v2 `createError`):
 
 ```ts
-import { defineHandler, HTTPError } from "nitro";
+import { defineHandler, HTTPError } from 'nitro';
 
 export default defineHandler((event) => {
   const user = findUser(event.context.params!.id);
   if (!user) {
-    throw new HTTPError({ status: 404, message: "User not found" });
+    throw new HTTPError({ status: 404, message: 'User not found' });
   }
   return user;
 });
@@ -151,22 +155,24 @@ In dev, browsers (Accept: text/html) get an HTML error page; production always r
 Apply per-route behavior (caching, headers, redirects, proxy, CORS) by glob pattern (rou3 syntax). Rules merge least-specific to most-specific; set a rule to `false` to disable an inherited one. When `cache` is set, matching handlers are auto-wrapped with `defineCachedHandler`.
 
 ```ts [nitro.config.ts]
-import { defineConfig } from "nitro";
+import { defineConfig } from 'nitro';
 
 export default defineConfig({
   routeRules: {
-    "/blog/**": { swr: 600 },                   // stale-while-revalidate w/ maxAge
-    "/api/data/**": { cache: { maxAge: 60 } },  // full cache options
-    "/api/realtime/**": { cache: false },       // disable caching
-    "/assets/**": { headers: { "cache-control": "s-maxage=0" } },
-    "/api/public/**": { cors: true },           // permissive CORS defaults
-    "/api/v1/**": { cors: { origin: ["https://app.example.com"], credentials: true } },
-    "/old-page": { redirect: "/new-page" },     // 307 by default
-    "/legacy": { redirect: { to: "https://example.com/", status: 308 } },
-    "/old-blog/**": { redirect: "https://blog.example.com/**" }, // wildcard preserves suffix
-    "/proxy/**": { proxy: "https://api.example.com/**" },
-    "/about": { prerender: true },
-    "/isr/**": { isr: 60 },                      // Vercel ISR
+    '/blog/**': { swr: 600 }, // stale-while-revalidate w/ maxAge
+    '/api/data/**': { cache: { maxAge: 60 } }, // full cache options
+    '/api/realtime/**': { cache: false }, // disable caching
+    '/assets/**': { headers: { 'cache-control': 's-maxage=0' } },
+    '/api/public/**': { cors: true }, // permissive CORS defaults
+    '/api/v1/**': {
+      cors: { origin: ['https://app.example.com'], credentials: true },
+    },
+    '/old-page': { redirect: '/new-page' }, // 307 by default
+    '/legacy': { redirect: { to: 'https://example.com/', status: 308 } },
+    '/old-blog/**': { redirect: 'https://blog.example.com/**' }, // wildcard preserves suffix
+    '/proxy/**': { proxy: 'https://api.example.com/**' },
+    '/about': { prerender: true },
+    '/isr/**': { isr: 60 }, // Vercel ISR
   },
 });
 ```
@@ -176,10 +182,10 @@ Route rule keys: `headers`, `redirect`, `proxy`, `cors`, `cache`, `swr`, `static
 > **No `auth`/`basicAuth` route rule.** Auth needs executable logic → use [middleware](#middleware). For a single route use h3's `basicAuth` from `nitro/h3` in the handler's `middleware` array:
 >
 > ```ts
-> import { defineHandler } from "nitro";
-> import { basicAuth } from "nitro/h3";
+> import { defineHandler } from 'nitro';
+> import { basicAuth } from 'nitro/h3';
 > export default defineHandler({
->   middleware: [basicAuth({ username: "admin", password: "secret" })],
+>   middleware: [basicAuth({ username: 'admin', password: 'secret' })],
 >   handler: (event) => `Hello, ${event.context.basicAuth?.username}!`,
 > });
 > ```

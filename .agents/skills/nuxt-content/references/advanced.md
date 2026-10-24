@@ -9,17 +9,18 @@ export default defineNuxtConfig({
   hooks: {
     'content:file:beforeParse'(ctx) {
       if (ctx.file.id.endsWith('.md')) {
-        ctx.file.body = ctx.file.body.replaceAll('Old name', 'New name')
+        ctx.file.body = ctx.file.body.replaceAll('Old name', 'New name');
       }
     },
     'content:file:afterParse'(ctx) {
-      const words = typeof ctx.file.body === 'string'
-        ? ctx.file.body.trim().split(/\s+/).length
-        : 0
-      ctx.content.readingTime = Math.ceil(words / 180)
+      const words =
+        typeof ctx.file.body === 'string'
+          ? ctx.file.body.trim().split(/\s+/).length
+          : 0;
+      ctx.content.readingTime = Math.ceil(words / 180);
     },
   },
-})
+});
 ```
 
 Fields added after parsing must exist in the target collection schema or typed queries will discard their contract.
@@ -30,15 +31,15 @@ Use a transformer when parsing or enrichment is a reusable content-processing un
 
 ```ts
 // transformers/title-suffix.ts
-import { defineTransformer } from '@nuxt/content'
+import { defineTransformer } from '@nuxt/content';
 
 export default defineTransformer({
   name: 'title-suffix',
   extensions: ['.md'],
   transform(file) {
-    return { ...file, title: `${file.title} · Docs` }
+    return { ...file, title: `${file.title} · Docs` };
   },
-})
+});
 ```
 
 ```ts
@@ -48,7 +49,7 @@ export default defineNuxtConfig({
       transformers: ['~~/transformers/title-suffix'],
     },
   },
-})
+});
 ```
 
 ## Custom sources
@@ -56,17 +57,21 @@ export default defineNuxtConfig({
 Use `defineCollectionSource` for APIs or stores that can expose a deterministic key inventory and fetch each item by key.
 
 ```ts
-import { defineCollection, defineCollectionSource, defineContentConfig } from '@nuxt/content'
-import { z } from 'zod'
+import {
+  defineCollection,
+  defineCollectionSource,
+  defineContentConfig,
+} from '@nuxt/content';
+import { z } from 'zod';
 
 const releases = defineCollectionSource({
   async getKeys() {
-    return await $fetch<string[]>('https://example.com/releases/keys')
+    return await $fetch<string[]>('https://example.com/releases/keys');
   },
   async getItem(key) {
-    return await $fetch(`https://example.com/releases/${key}`)
+    return await $fetch(`https://example.com/releases/${key}`);
   },
-})
+});
 
 export default defineContentConfig({
   collections: {
@@ -76,7 +81,7 @@ export default defineContentConfig({
       schema: z.object({ title: z.string(), publishedAt: z.string() }),
     }),
   },
-})
+});
 ```
 
 Stable keys are the incremental-build identity. Authentication stays in the build environment because source collection happens during content generation.

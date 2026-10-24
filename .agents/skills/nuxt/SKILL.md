@@ -3,7 +3,7 @@ name: nuxt
 description: Nuxt full-stack Vue framework with SSR, auto-imports, and file-based routing. Use when working with Nuxt apps, server routes, useFetch, middleware, or hybrid rendering.
 metadata:
   author: Anthony Fu
-  version: "2026.9.25"
+  version: '2026.9.25'
   source: Generated from https://github.com/nuxt/nuxt, scripts located at https://github.com/antfu/skills
 ---
 

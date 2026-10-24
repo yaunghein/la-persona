@@ -58,10 +58,10 @@ Use `v-once` for truly static content and `v-memo` for conditionally-static cont
 
 <script setup>
 // These values are set once at component creation
-const termsVersion = '2.1'
-const termsContent = fetchedTermsHTML
-const copyrightYear = 2024
-const companyName = 'Acme Corp'
+const termsVersion = '2.1';
+const termsContent = fetchedTermsHTML;
+const copyrightYear = 2024;
+const companyName = 'Acme Corp';
 </script>
 ```
 
@@ -85,11 +85,7 @@ const companyName = 'Acme Corp'
 ```vue
 <template>
   <!-- GOOD: Items only re-render when their selection state changes -->
-  <div
-    v-for="item in list"
-    :key="item.id"
-    v-memo="[item.id === selectedId]"
-  >
+  <div v-for="item in list" :key="item.id" v-memo="[item.id === selectedId]">
     <div :class="{ selected: item.id === selectedId }">
       <ExpensiveComponent :data="item" />
     </div>
@@ -97,10 +93,12 @@ const companyName = 'Acme Corp'
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref } from 'vue';
 
-const list = ref([/* many items */])
-const selectedId = ref(null)
+const list = ref([
+  /* many items */
+]);
+const selectedId = ref(null);
 
 // When selectedId changes:
 // - Only the previously-selected item re-renders (selected: true -> false)
@@ -128,9 +126,11 @@ const selectedId = ref(null)
 </template>
 
 <script setup>
-const selectedId = ref(null)
-const editingId = ref(null)
-const items = ref([/* ... */])
+const selectedId = ref(null);
+const editingId = ref(null);
+const items = ref([
+  /* ... */
+]);
 </script>
 ```
 
@@ -151,16 +151,19 @@ const items = ref([/* ... */])
 <template>
   <!-- DON'T: Content that DOES need to update -->
   <div v-once>
-    <span>Count: {{ count }}</span>  <!-- count won't update! -->
+    <span>Count: {{ count }}</span>
+    <!-- count won't update! -->
   </div>
 
   <!-- DON'T: When child components have their own reactive state -->
   <div v-memo="[selected]">
-    <InputField v-model="item.name" />  <!-- v-model won't work properly -->
+    <InputField v-model="item.name" />
+    <!-- v-model won't work properly -->
   </div>
 
   <!-- DON'T: When the memoization benefit is minimal -->
-  <span v-once>{{ simpleText }}</span>  <!-- Overhead not worth it -->
+  <span v-once>{{ simpleText }}</span>
+  <!-- Overhead not worth it -->
 </template>
 ```
 
@@ -176,11 +179,11 @@ const items = ref([/* ... */])
 
 ```vue
 <script setup>
-import { onUpdated } from 'vue'
+import { onUpdated } from 'vue';
 
 // This won't fire if v-memo prevents update
 onUpdated(() => {
-  console.log('Component updated')
-})
+  console.log('Component updated');
+});
 </script>
 ```

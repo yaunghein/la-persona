@@ -8,10 +8,10 @@ description: On-demand and scheduled (cron) tasks in Nitro, defineTask, runTask,
 Tasks are one-off runtime operations (migrations, cleanups, cache refresh). **Experimental** — enable the flag first. Tasks are scanned from `serverDir`, which must also be set.
 
 ```ts [nitro.config.ts]
-import { defineConfig } from "nitro";
+import { defineConfig } from 'nitro';
 
 export default defineConfig({
-  serverDir: "./server",
+  serverDir: './server',
   experimental: { tasks: true },
 });
 ```
@@ -21,16 +21,16 @@ export default defineConfig({
 Files in `<serverDir>/tasks/[name].ts`. Nested dirs join with `:` (e.g. `tasks/db/migrate.ts` → `db:migrate`). Import `defineTask` from `nitro/task` (no auto-imports in v3).
 
 ```ts [server/tasks/db/migrate.ts]
-import { defineTask } from "nitro/task";
+import { defineTask } from 'nitro/task';
 
 export default defineTask({
   meta: {
-    name: "db:migrate",
-    description: "Run database migrations",
+    name: 'db:migrate',
+    description: 'Run database migrations',
   },
   run({ payload, context }) {
-    console.log("Running DB migration...");
-    return { result: "Success" };
+    console.log('Running DB migration...');
+    return { result: 'Success' };
   },
 });
 ```
@@ -40,17 +40,17 @@ export default defineTask({
 Tasks can also be registered in config (config `handler` wins over a scanned file of the same name):
 
 ```ts [nitro.config.ts]
-import { fileURLToPath } from "node:url";
+import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
-  serverDir: "./server",
+  serverDir: './server',
   experimental: { tasks: true },
   tasks: {
-    "db:migrate": { description: "Describe a scanned task" },
+    'db:migrate': { description: 'Describe a scanned task' },
     // A config handler is imported as-is (NOT resolved against rootDir) — use an absolute path:
-    "db:seed": {
-      handler: fileURLToPath(new URL("scripts/seed.ts", import.meta.url)),
-      description: "Seed the database",
+    'db:seed': {
+      handler: fileURLToPath(new URL('scripts/seed.ts', import.meta.url)),
+      description: 'Seed the database',
     },
   },
 });
@@ -61,13 +61,13 @@ export default defineConfig({
 Map cron expressions to task name(s). Multiple tasks under one expression run in parallel; scheduled runs get a `payload.scheduledTime` timestamp.
 
 ```ts [nitro.config.ts]
-import { defineConfig } from "nitro";
+import { defineConfig } from 'nitro';
 
 export default defineConfig({
   scheduledTasks: {
-    "* * * * *": ["cms:update"],        // every minute
-    "0 0 * * *": "db:cleanup",          // daily (string shorthand)
-    "*/5 * * * *": ["health:check", "metrics:collect"],
+    '* * * * *': ['cms:update'], // every minute
+    '0 0 * * *': 'db:cleanup', // daily (string shorthand)
+    '*/5 * * * *': ['health:check', 'metrics:collect'],
   },
 });
 ```
@@ -81,13 +81,13 @@ Platform support:
 ## Running tasks programmatically
 
 ```ts [api/migrate.post.ts]
-import { defineHandler } from "nitro";
-import { runTask } from "nitro/task";
+import { defineHandler } from 'nitro';
+import { runTask } from 'nitro/task';
 
 export default defineHandler(async (event) => {
   // IMPORTANT: authenticate and validate before running!
   const payload = Object.fromEntries(event.url.searchParams);
-  const { result } = await runTask("db:migrate", { payload });
+  const { result } = await runTask('db:migrate', { payload });
   return { result };
 });
 ```
@@ -97,13 +97,13 @@ export default defineHandler(async (event) => {
 ## Background work with `waitUntil`
 
 ```ts [tasks/sync.ts]
-import { defineTask } from "nitro/task";
+import { defineTask } from 'nitro/task';
 
 export default defineTask({
   run({ context }) {
-    const promise = fetch("https://api.example.com/sync");
+    const promise = fetch('https://api.example.com/sync');
     context.waitUntil?.(promise);
-    return promise.then(() => ({ result: "ok" }));
+    return promise.then(() => ({ result: 'ok' }));
   },
 });
 ```

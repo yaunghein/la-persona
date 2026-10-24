@@ -3,7 +3,18 @@ title: Suspense Component Best Practices
 impact: MEDIUM
 impactDescription: Suspense coordinates async dependencies with fallback UI; misconfiguration leads to missing loading states or confusing UX
 type: best-practice
-tags: [vue3, suspense, async-components, async-setup, loading, fallback, router, transition, keepalive]
+tags:
+  [
+    vue3,
+    suspense,
+    async-components,
+    async-setup,
+    loading,
+    fallback,
+    router,
+    transition,
+    keepalive,
+  ]
 ---
 
 # Suspense Component Best Practices
@@ -71,9 +82,7 @@ When Suspense is already resolved and new async work starts, the previous conten
   <Suspense>
     <component :is="currentView" :key="viewKey" />
 
-    <template #fallback>
-      Loading...
-    </template>
+    <template #fallback> Loading... </template>
   </Suspense>
 </template>
 ```
@@ -85,9 +94,7 @@ When Suspense is already resolved and new async work starts, the previous conten
   <Suspense :timeout="200">
     <component :is="currentView" :key="viewKey" />
 
-    <template #fallback>
-      Loading...
-    </template>
+    <template #fallback> Loading... </template>
   </Suspense>
 </template>
 ```
@@ -106,9 +113,7 @@ Once resolved, Suspense only re-enters pending when the root node of the default
       <AsyncSettings v-else />
     </TabContainer>
 
-    <template #fallback>
-      Loading...
-    </template>
+    <template #fallback> Loading... </template>
   </Suspense>
 </template>
 ```
@@ -120,9 +125,7 @@ Once resolved, Suspense only re-enters pending when the root node of the default
   <Suspense>
     <component :is="tabs[tab]" :key="tab" />
 
-    <template #fallback>
-      Loading...
-    </template>
+    <template #fallback> Loading... </template>
   </Suspense>
 </template>
 ```
@@ -171,17 +174,17 @@ Use `@pending`, `@resolve`, and `@fallback` for analytics, global loading indica
 
 ```vue
 <script setup>
-import { ref } from 'vue'
+import { ref } from 'vue';
 
-const isLoading = ref(false)
+const isLoading = ref(false);
 
 const onPending = () => {
-  isLoading.value = true
-}
+  isLoading.value = true;
+};
 
 const onResolve = () => {
-  isLoading.value = false
-}
+  isLoading.value = false;
+};
 </script>
 
 <template>

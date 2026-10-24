@@ -47,7 +47,7 @@ This is a common bug when wrapping native elements or migrating from Vue 2 to Vu
 
 <script setup>
 function handleClick() {
-  console.log('clicked') // Logs twice!
+  console.log('clicked'); // Logs twice!
 }
 </script>
 ```
@@ -68,7 +68,7 @@ function handleClick() {
 <!-- MyButton.vue -->
 <script setup>
 // Declare 'click' as a component event
-const emit = defineEmits(['click'])
+const emit = defineEmits(['click']);
 </script>
 
 <template>
@@ -104,10 +104,10 @@ export default {
 
   methods: {
     handleClick(event) {
-      this.$emit('click', event)
-    }
-  }
-}
+      this.$emit('click', event);
+    },
+  },
+};
 </script>
 ```
 
@@ -119,7 +119,7 @@ export default {
 <!-- CustomInput.vue -->
 <script setup>
 // Declare all events you re-emit
-const emit = defineEmits(['input', 'change', 'focus', 'blur'])
+const emit = defineEmits(['input', 'change', 'focus', 'blur']);
 </script>
 
 <template>
@@ -137,7 +137,7 @@ const emit = defineEmits(['input', 'change', 'focus', 'blur'])
 ```vue
 <!-- IconButton.vue -->
 <script setup>
-const emit = defineEmits(['click'])
+const emit = defineEmits(['click']);
 </script>
 
 <template>
@@ -156,7 +156,7 @@ If your component has a single root element and you want native event behavior:
 <!-- MyButton.vue -->
 <script setup>
 // Don't declare 'click' - let it fall through naturally
-const emit = defineEmits(['custom-action'])
+const emit = defineEmits(['custom-action']);
 </script>
 
 <template>
@@ -186,9 +186,9 @@ This works because:
 ```vue
 <script setup>
 function handleClick(event) {
-  console.log('Event type:', event?.type)
-  console.log('Is native:', event instanceof Event)
-  console.trace('Click handler called')
+  console.log('Event type:', event?.type);
+  console.log('Is native:', event instanceof Event);
+  console.trace('Click handler called');
 }
 </script>
 ```

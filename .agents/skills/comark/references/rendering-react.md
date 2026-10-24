@@ -20,7 +20,7 @@ Complete guide for rendering Markdown documents in React applications.
 Use the `Markdown` component to render markdown:
 
 ```tsx
-import { Markdown } from '@comark/react'
+import { Markdown } from '@comark/react';
 
 const content = `
 # Hello World
@@ -30,10 +30,10 @@ This is **markdown** content.
 ::alert{type="info"}
 Important message
 ::
-`
+`;
 
 export default function App() {
-  return <Markdown>{content}</Markdown>
+  return <Markdown>{content}</Markdown>;
 }
 ```
 
@@ -44,24 +44,20 @@ export default function App() {
 Map custom React components to Comark elements:
 
 ```tsx
-import { Markdown } from '@comark/react'
-import CustomHeading from './CustomHeading'
-import CustomAlert from './CustomAlert'
-import CustomCard from './CustomCard'
+import { Markdown } from '@comark/react';
+import CustomHeading from './CustomHeading';
+import CustomAlert from './CustomAlert';
+import CustomCard from './CustomCard';
 
 const customComponents = {
   h1: CustomHeading,
   h2: CustomHeading,
   alert: CustomAlert,
   card: CustomCard,
-}
+};
 
 export default function App({ content }) {
-  return (
-    <Markdown
-      components={customComponents}
-    >{content}</Markdown>
-  )
+  return <Markdown components={customComponents}>{content}</Markdown>;
 }
 ```
 
@@ -69,48 +65,48 @@ export default function App({ content }) {
 
 ```tsx
 // CustomHeading.tsx
-import React from 'react'
+import React from 'react';
 
 interface Props {
-  __node: any  // Comark node
-  id?: string
-  children: React.ReactNode
+  __node: any; // Comark node
+  id?: string;
+  children: React.ReactNode;
 }
 
 export default function CustomHeading({ __node, id, children }: Props) {
-  const tag = __node[0]  // h1, h2, etc.
-  const Component = tag as keyof JSX.IntrinsicElements
+  const tag = __node[0]; // h1, h2, etc.
+  const Component = tag as keyof JSX.IntrinsicElements;
 
   return (
     <Component id={id} className="custom-heading">
       {children}
     </Component>
-  )
+  );
 }
 ```
 
 **Styled Component:**
 
 ```tsx
-import styled from 'styled-components'
+import styled from 'styled-components';
 
 const StyledHeading = styled.h1<{ level: number }>`
   font-family: 'Inter', sans-serif;
   font-weight: 700;
-  font-size: ${props => 3 - props.level * 0.25}rem;
+  font-size: ${(props) => 3 - props.level * 0.25}rem;
   margin-bottom: 1rem;
   color: #1a202c;
-`
+`;
 
 export default function CustomHeading({ __node, children }: Props) {
-  const tag = __node[0]
-  const level = parseInt(tag[1])  // Extract level from 'h1', 'h2', etc.
+  const tag = __node[0];
+  const level = parseInt(tag[1]); // Extract level from 'h1', 'h2', etc.
 
   return (
     <StyledHeading as={tag} level={level}>
       {children}
     </StyledHeading>
-  )
+  );
 }
 ```
 
@@ -118,12 +114,12 @@ export default function CustomHeading({ __node, children }: Props) {
 
 ```tsx
 // CustomAlert.tsx
-import React from 'react'
-import './Alert.css'
+import React from 'react';
+import './Alert.css';
 
 interface AlertProps {
-  type?: 'info' | 'warning' | 'error' | 'success'
-  children: React.ReactNode
+  type?: 'info' | 'warning' | 'error' | 'success';
+  children: React.ReactNode;
 }
 
 export default function CustomAlert({ type = 'info', children }: AlertProps) {
@@ -132,14 +128,14 @@ export default function CustomAlert({ type = 'info', children }: AlertProps) {
     warning: '⚠️',
     error: '❌',
     success: '✅',
-  }
+  };
 
   return (
     <div className={`alert alert-${type}`} role="alert">
       <div className="alert-icon">{icons[type]}</div>
       <div className="alert-content">{children}</div>
     </div>
-  )
+  );
 }
 ```
 
@@ -150,27 +146,23 @@ export default function CustomAlert({ type = 'info', children }: AlertProps) {
 Load components dynamically using `componentsManifest`:
 
 ```tsx
-import { Markdown } from '@comark/react'
+import { Markdown } from '@comark/react';
 
 const componentMap = {
-  'alert': () => import('./Alert'),
-  'card': () => import('./Card'),
-  'button': () => import('./Button'),
-}
+  alert: () => import('./Alert'),
+  card: () => import('./Card'),
+  button: () => import('./Button'),
+};
 
 async function loadComponent(name: string) {
   if (componentMap[name]) {
-    return componentMap[name]()
+    return componentMap[name]();
   }
-  throw new Error(`Component ${name} not found`)
+  throw new Error(`Component ${name} not found`);
 }
 
 export default function App({ content }) {
-  return (
-    <Markdown
-      componentsManifest={loadComponent}
-    >{content}</Markdown>
-  )
+  return <Markdown componentsManifest={loadComponent}>{content}</Markdown>;
 }
 ```
 
@@ -240,37 +232,37 @@ React renderer handles HTML attribute conversion automatically:
 Use the `Markdown` component with reactive state for streaming content:
 
 ```tsx
-import { useState, useEffect } from 'react'
-import { Markdown } from '@comark/react'
+import { useState, useEffect } from 'react';
+import { Markdown } from '@comark/react';
 
 export default function StreamingContent() {
-  const [content, setContent] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
+  const [content, setContent] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function loadContent() {
-      const response = await fetch('/api/content.md')
-      const reader = response.body!.getReader()
-      const decoder = new TextDecoder()
+      const response = await fetch('/api/content.md');
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
 
       while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        setContent(prev => prev + decoder.decode(value))
+        const { done, value } = await reader.read();
+        if (done) break;
+        setContent((prev) => prev + decoder.decode(value));
       }
 
-      setIsLoading(false)
+      setIsLoading(false);
     }
 
-    loadContent()
-  }, [])
+    loadContent();
+  }, []);
 
   return (
     <>
       {isLoading && <div>Loading...</div>}
       <Markdown>{content}</Markdown>
     </>
-  )
+  );
 }
 ```
 
@@ -281,29 +273,29 @@ export default function StreamingContent() {
 The `Markdown` component uses built-in prose styling automatically. You can override with custom components:
 
 ```tsx
-import { Markdown } from '@comark/react'
-import CustomAlert from './CustomAlert'
+import { Markdown } from '@comark/react';
+import CustomAlert from './CustomAlert';
 
 const components = {
-  alert: CustomAlert,  // Override or add custom components
-}
+  alert: CustomAlert, // Override or add custom components
+};
 
 export default function App({ content }) {
-  return <Markdown components={components}>{content}</Markdown>
+  return <Markdown components={components}>{content}</Markdown>;
 }
 ```
 
 ### Tailwind CSS Prose
 
 ```tsx
-import { Markdown } from '@comark/react'
+import { Markdown } from '@comark/react';
 
 export default function App({ content }) {
   return (
     <article className="prose prose-lg dark:prose-dark max-w-none">
       <Markdown>{content}</Markdown>
     </article>
-  )
+  );
 }
 ```
 
@@ -316,12 +308,12 @@ Access props in custom components:
 ```tsx
 // CustomAlert.tsx
 interface AlertProps {
-  type?: string        // From {type="info"}
-  bool?: boolean       // From {bool} → :bool="true"
-  count?: number       // From {:count="5"}
-  data?: object        // From {:data='{"key":"val"}'}
-  __node?: any         // Original Comark node
-  children: React.ReactNode
+  type?: string; // From {type="info"}
+  bool?: boolean; // From {bool} → :bool="true"
+  count?: number; // From {:count="5"}
+  data?: object; // From {:data='{"key":"val"}'}
+  __node?: any; // Original Comark node
+  children: React.ReactNode;
 }
 
 export default function CustomAlert({
@@ -330,7 +322,7 @@ export default function CustomAlert({
   count,
   data,
   __node,
-  children
+  children,
 }: AlertProps) {
   return (
     <div
@@ -342,7 +334,7 @@ export default function CustomAlert({
     >
       {children}
     </div>
-  )
+  );
 }
 ```
 
@@ -357,21 +349,17 @@ export default function CustomAlert({
 
 ```tsx
 interface Props {
-  __node?: any
-  children: React.ReactNode
+  __node?: any;
+  children: React.ReactNode;
 }
 
 export default function Component({ __node, children }: Props) {
   // Node structure: [tag, props, ...children]
-  const tag = __node?.[0]
-  const nodeProps = __node?.[1] || {}
-  const nodeChildren = __node?.slice(2) || []
+  const tag = __node?.[0];
+  const nodeProps = __node?.[1] || {};
+  const nodeChildren = __node?.slice(2) || [];
 
-  return (
-    <div data-tag={tag}>
-      {children}
-    </div>
-  )
+  return <div data-tag={tag}>{children}</div>;
 }
 ```
 
@@ -380,17 +368,17 @@ export default function Component({ __node, children }: Props) {
 ```tsx
 // DataTable.tsx
 interface DataTableProps {
-  columns?: string[]   // From {:columns='["Name","Age"]'}
-  sortable?: boolean   // From {sortable}
-  striped?: boolean    // From {striped}
-  children: React.ReactNode
+  columns?: string[]; // From {:columns='["Name","Age"]'}
+  sortable?: boolean; // From {sortable}
+  striped?: boolean; // From {striped}
+  children: React.ReactNode;
 }
 
 export default function DataTable({
   columns = [],
   sortable = false,
   striped = false,
-  children
+  children,
 }: DataTableProps) {
   return (
     <table className={striped ? 'table-striped' : ''}>
@@ -408,7 +396,7 @@ export default function DataTable({
       )}
       <tbody>{children}</tbody>
     </table>
-  )
+  );
 }
 ```
 
@@ -427,17 +415,15 @@ Table content here
 Add custom wrapper class:
 
 ```tsx
-<Markdown
-  className="prose dark:prose-dark"
->{content}</Markdown>
+<Markdown className="prose dark:prose-dark">{content}</Markdown>
 ```
 
 ### With Tailwind CSS
 
 ```tsx
-<Markdown
-  className="prose prose-slate lg:prose-xl dark:prose-invert max-w-none"
->{content}</Markdown>
+<Markdown className="prose prose-slate lg:prose-xl dark:prose-invert max-w-none">
+  {content}
+</Markdown>
 ```
 
 ---

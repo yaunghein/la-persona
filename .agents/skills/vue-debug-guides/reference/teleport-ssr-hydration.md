@@ -27,9 +27,7 @@ This is a critical issue for Nuxt, Quasar SSR, and custom Vue SSR setups.
   <!-- Client expects teleported content at #modals -->
   <!-- = Hydration mismatch -->
   <Teleport to="#modals">
-    <div v-if="showModal" class="modal">
-      Modal content
-    </div>
+    <div v-if="showModal" class="modal">Modal content</div>
   </Teleport>
 </template>
 ```
@@ -50,9 +48,7 @@ server rendered element contains fewer child nodes than client vdom.
   <!-- Only render on client, avoiding SSR -->
   <ClientOnly>
     <Teleport to="body">
-      <div v-if="showModal" class="modal">
-        Modal content
-      </div>
+      <div v-if="showModal" class="modal">Modal content</div>
     </Teleport>
   </ClientOnly>
 </template>
@@ -66,21 +62,19 @@ server rendered element contains fewer child nodes than client vdom.
 
   <!-- Only render after component mounts on client -->
   <Teleport v-if="isMounted" to="body">
-    <div v-if="showModal" class="modal">
-      Modal content
-    </div>
+    <div v-if="showModal" class="modal">Modal content</div>
   </Teleport>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted } from 'vue';
 
-const showModal = ref(false)
-const isMounted = ref(false)
+const showModal = ref(false);
+const isMounted = ref(false);
 
 onMounted(() => {
-  isMounted.value = true
-})
+  isMounted.value = true;
+});
 </script>
 ```
 
@@ -91,9 +85,7 @@ onMounted(() => {
   <!-- Suppress hydration warnings for intentional mismatches -->
   <div data-allow-mismatch>
     <Teleport to="body">
-      <div v-if="showModal" class="modal">
-        Modal content
-      </div>
+      <div v-if="showModal" class="modal">Modal content</div>
     </Teleport>
   </div>
 </template>
@@ -140,9 +132,7 @@ Many UI libraries use Teleport internally. Element Plus components that use Tele
 <template>
   <!-- These need special SSR handling -->
   <ClientOnly>
-    <ElDialog v-model="visible">
-      Dialog content
-    </ElDialog>
+    <ElDialog v-model="visible"> Dialog content </ElDialog>
   </ClientOnly>
 </template>
 ```

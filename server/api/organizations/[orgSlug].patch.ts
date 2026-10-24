@@ -1,5 +1,8 @@
 import { authorizeCommunityAccess } from '~~/server/features/organization/organization.policy';
-import { updateCommunitySettings } from '~~/server/features/organization/community.service';
+import {
+  describeCommunityAbout,
+  updateCommunitySettings,
+} from '~~/server/features/organization/community.service';
 import {
   OrganizationRouteParams,
   UpdateCommunitySettingsRequest,
@@ -12,6 +15,8 @@ export default defineEventHandler(async (event) => {
     orgSlug,
     'organization:update'
   );
+  enrichLog(event, { organization: { id: organization.id } });
   const changes = await parseRequestBody(event, UpdateCommunitySettingsRequest);
-  return updateCommunitySettings(organization.id, changes);
+  await updateCommunitySettings(organization.id, changes);
+  return describeCommunityAbout(organization.id);
 });

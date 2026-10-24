@@ -15,11 +15,11 @@ Use `useI18n()` in script and `$t` in templates:
 
 ```vue
 <script setup lang="ts">
-const { t } = useI18n()
-const name = ref('Ada')
-const itemCount = ref(2)
+const { t } = useI18n();
+const name = ref('Ada');
+const itemCount = ref(2);
 
-const greeting = computed(() => t('greeting', { name: name.value }))
+const greeting = computed(() => t('greeting', { name: name.value }));
 </script>
 
 <template>
@@ -52,12 +52,12 @@ export default defineI18nConfig(() => ({
       currency: { style: 'currency', currency: 'EUR' },
     },
   },
-}))
+}));
 ```
 
 ```vue
 <script setup lang="ts">
-const { d, n } = useI18n()
+const { d, n } = useI18n();
 </script>
 
 <template>
@@ -94,8 +94,8 @@ Use `defineI18nLocale()` when a locale resource comes from an API:
 ```ts
 // i18n/locales/en.ts
 export default defineI18nLocale((locale) => {
-  return $fetch(`/api/locales/${locale}`)
-})
+  return $fetch(`/api/locales/${locale}`);
+});
 ```
 
 Configure that resource with `file: 'en.ts'`, and keep response shapes identical across locales so message paths remain predictable.
@@ -103,10 +103,10 @@ Configure that resource with `file: 'en.ts'`, and keep response shapes identical
 Use `loadLocaleMessages(locale)` when the current view needs a non-active locale:
 
 ```ts
-const { loadLocaleMessages, t } = useI18n()
+const { loadLocaleMessages, t } = useI18n();
 
-await loadLocaleMessages('fr')
-const frenchTitle = computed(() => t('title', 1, { locale: 'fr' }))
+await loadLocaleMessages('fr');
+const frenchTitle = computed(() => t('title', 1, { locale: 'fr' }));
 ```
 
 Cache and reuse remote results at the owning API boundary. Repeated manual loading adds latency and makes fallback behavior harder to reason about.

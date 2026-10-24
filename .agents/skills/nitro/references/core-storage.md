@@ -12,19 +12,19 @@ Nitro ships a runtime-agnostic key-value layer powered by [unstorage](https://un
 ## Usage
 
 ```ts
-import { useKV } from "nitro/kv";
+import { useKV } from 'nitro/kv';
 
 // Default storage (in-memory, not persisted across restarts)
-await useKV().setItem("test:foo", { hello: "world" });
-const value = await useKV().getItem("test:foo");
+await useKV().setItem('test:foo', { hello: 'world' });
+const value = await useKV().getItem('test:foo');
 
 // Scope to a base/mountpoint
-const test = useKV("test");
-await test.setItem("foo", { hello: "world" });
+const test = useKV('test');
+await test.setItem('foo', { hello: 'world' });
 
 // Type the return value
-await useKV<{ hello: string }>("test").getItem("foo");
-await useKV("test").getItem<{ hello: string }>("foo");
+await useKV<{ hello: string }>('test').getItem('foo');
+await useKV('test').getItem<{ hello: string }>('foo');
 ```
 
 ### Common methods
@@ -48,16 +48,16 @@ Aliases: `get`, `set`, `has`, `del`, `remove`, `keys`.
 Mount drivers by name via the `kv` option; the key is the mount point, the value is the driver config.
 
 ```ts [nitro.config.ts]
-import { defineConfig } from "nitro";
+import { defineConfig } from 'nitro';
 
 export default defineConfig({
   kv: {
-    redis: { driver: "redis", url: "redis://localhost:6379" },
+    redis: { driver: 'redis', url: 'redis://localhost:6379' },
   },
   // Override mounts in dev (e.g. when the prod driver isn't available locally)
   $development: {
     kv: {
-      redis: { driver: "fs", base: "./.data/redis" },
+      redis: { driver: 'fs', base: './.data/redis' },
     },
   },
 });
@@ -81,17 +81,20 @@ Then `useKV("redis")`. See the [unstorage drivers list](https://unstorage.unjs.i
 When credentials are only known at runtime, mount a driver from a [plugin](features-plugins.md):
 
 ```ts [plugins/storage.ts]
-import { definePlugin } from "nitro";
-import { useKV } from "nitro/kv";
-import redisDriver from "unstorage/drivers/redis";
+import { definePlugin } from 'nitro';
+import { useKV } from 'nitro/kv';
+import redisDriver from 'unstorage/drivers/redis';
 
 export default definePlugin(() => {
-  useKV().mount("redis", redisDriver({
-    base: "redis",
-    host: process.env.REDIS_HOST,
-    port: Number(process.env.REDIS_PORT),
-    lib: () => import("ioredis"), // pass the lib explicitly so it is bundled
-  }));
+  useKV().mount(
+    'redis',
+    redisDriver({
+      base: 'redis',
+      host: process.env.REDIS_HOST,
+      port: Number(process.env.REDIS_PORT),
+      lib: () => import('ioredis'), // pass the lib explicitly so it is bundled
+    })
+  );
 });
 ```
 

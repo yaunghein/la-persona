@@ -27,8 +27,8 @@ This is a common mistake when learning Vue 3 with TypeScript.
 <script setup lang="ts">
 // ERROR: Cannot use both type argument and runtime argument
 const emit = defineEmits<{
-  submit: [data: FormData]
-}>(['submit'])  // This array argument causes the error!
+  submit: [data: FormData];
+}>(['submit']); // This array argument causes the error!
 </script>
 ```
 
@@ -45,10 +45,10 @@ Use one or the other.
 <script setup lang="ts">
 // ERROR: Same problem with object syntax
 const emit = defineEmits<{
-  submit: [data: FormData]
+  submit: [data: FormData];
 }>({
-  submit: (data) => !!data
-})
+  submit: (data) => !!data,
+});
 </script>
 ```
 
@@ -58,14 +58,14 @@ const emit = defineEmits<{
 <script setup lang="ts">
 // CORRECT: Type argument only, no runtime argument
 const emit = defineEmits<{
-  submit: [data: FormData]
-  cancel: []
-  'update:modelValue': [value: string]
-}>()
+  submit: [data: FormData];
+  cancel: [];
+  'update:modelValue': [value: string];
+}>();
 
-emit('submit', formData)  // TypeScript validates this
-emit('cancel')
-emit('unknown')  // TypeScript error: unknown event
+emit('submit', formData); // TypeScript validates this
+emit('cancel');
+emit('unknown'); // TypeScript error: unknown event
 </script>
 ```
 
@@ -74,10 +74,10 @@ emit('unknown')  // TypeScript error: unknown event
 ```vue
 <script setup lang="ts">
 const emit = defineEmits<{
-  (e: 'submit', data: FormData): void
-  (e: 'cancel'): void
-  (e: 'update:modelValue', value: string): void
-}>()
+  (e: 'submit', data: FormData): void;
+  (e: 'cancel'): void;
+  (e: 'update:modelValue', value: string): void;
+}>();
 </script>
 ```
 
@@ -88,10 +88,10 @@ const emit = defineEmits<{
 ```vue
 <script setup>
 // CORRECT: Runtime array, no type argument
-const emit = defineEmits(['submit', 'cancel', 'update:modelValue'])
+const emit = defineEmits(['submit', 'cancel', 'update:modelValue']);
 
-emit('submit', formData)
-emit('cancel')
+emit('submit', formData);
+emit('cancel');
 </script>
 ```
 
@@ -103,13 +103,13 @@ emit('cancel')
 const emit = defineEmits({
   submit: (data) => {
     if (!data?.email) {
-      console.warn('Missing email')
-      return false
+      console.warn('Missing email');
+      return false;
     }
-    return true
+    return true;
   },
-  cancel: null  // No validation
-})
+  cancel: null, // No validation
+});
 </script>
 ```
 
@@ -120,22 +120,22 @@ If you want TypeScript types AND runtime validation, define the validator separa
 ```vue
 <script setup lang="ts">
 interface FormData {
-  email: string
-  message: string
+  email: string;
+  message: string;
 }
 
 // Type-based declaration for TypeScript
 const emit = defineEmits<{
-  submit: [data: FormData]
-}>()
+  submit: [data: FormData];
+}>();
 
 // Separate validation function
 function emitSubmit(data: FormData) {
   if (!data.email.includes('@')) {
-    console.warn('Invalid email format')
-    return
+    console.warn('Invalid email format');
+    return;
   }
-  emit('submit', data)
+  emit('submit', data);
 }
 </script>
 
@@ -161,13 +161,13 @@ This restriction also applies to `defineProps`:
 ```vue
 <script setup lang="ts">
 // ERROR: Cannot mix
-const props = defineProps<{ name: string }>({ name: String })
+const props = defineProps<{ name: string }>({ name: String });
 
 // CORRECT: Type-based only
-const props = defineProps<{ name: string }>()
+const props = defineProps<{ name: string }>();
 
 // CORRECT: Runtime only
-const props = defineProps({ name: String })
+const props = defineProps({ name: String });
 </script>
 ```
 

@@ -184,25 +184,31 @@ defineProps({
   mode: {
     type: String,
     default: 'out-in',
-    validator: (v) => ['out-in', 'in-out', ''].includes(v)
+    validator: (v) => ['out-in', 'in-out', ''].includes(v),
   },
   appear: {
     type: Boolean,
-    default: false
-  }
-})
+    default: false,
+  },
+});
 
 defineEmits([
-  'before-enter', 'enter', 'after-enter',
-  'before-leave', 'leave', 'after-leave'
-])
+  'before-enter',
+  'enter',
+  'after-enter',
+  'before-leave',
+  'leave',
+  'after-leave',
+]);
 </script>
 
 <!-- Unscoped so styles apply to slotted content -->
 <style>
 .slide-enter-active,
 .slide-leave-active {
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
 }
 
 .slide-enter-from {
@@ -222,9 +228,7 @@ Usage:
 ```vue
 <template>
   <SlideTransition>
-    <div v-if="show" class="content">
-      This will properly animate!
-    </div>
+    <div v-if="show" class="content">This will properly animate!</div>
   </SlideTransition>
 </template>
 ```

@@ -8,14 +8,14 @@ Foundation module providing shared configuration for all SEO modules.
 // nuxt.config.ts
 export default defineNuxtConfig({
   site: {
-    url: 'https://example.com',       // Required for absolute URLs
-    name: 'My Site',                  // Site name (used in titles, schema)
-    description: 'Site description',  // Default meta description
-    defaultLocale: 'en',              // Default language
-    indexable: true,                  // Allow search engine indexing
-    trailingSlash: false,             // URL trailing slash preference
-  }
-})
+    url: 'https://example.com', // Required for absolute URLs
+    name: 'My Site', // Site name (used in titles, schema)
+    description: 'Site description', // Default meta description
+    defaultLocale: 'en', // Default language
+    indexable: true, // Allow search engine indexing
+    trailingSlash: false, // URL trailing slash preference
+  },
+});
 ```
 
 ## Environment-Based Indexing
@@ -41,9 +41,9 @@ export default defineNuxtConfig({
   site: {
     url: process.env.NUXT_SITE_URL,
     // Explicit: only index when explicitly set to 'true'
-    indexable: process.env.NUXT_SITE_INDEXABLE === 'true'
-  }
-})
+    indexable: process.env.NUXT_SITE_INDEXABLE === 'true',
+  },
+});
 ```
 
 **Note:** `!== 'false'` defaults to `true` when env var is undefined - use `=== 'true'` for fail-safe behavior.
@@ -51,8 +51,8 @@ export default defineNuxtConfig({
 ## Runtime Access
 
 ```ts
-const site = useSiteConfig()
-console.log(site.url, site.name, site.description)
+const site = useSiteConfig();
+console.log(site.url, site.name, site.description);
 ```
 
 Works in components, composables, and server routes.
@@ -71,9 +71,9 @@ export default defineNuxtConfig({
     locales: [
       { code: 'en', language: 'en-US' },
       { code: 'fr', language: 'fr-FR' },
-    ]
-  }
-})
+    ],
+  },
+});
 ```
 
 Locale-specific overrides in `site` object:
@@ -95,7 +95,7 @@ Use route rules for page-specific config:
 export default defineNuxtConfig({
   routeRules: {
     '/admin/**': { site: { indexable: false } },
-    '/fr/**': { site: { name: 'Mon Site', defaultLocale: 'fr' } }
-  }
-})
+    '/fr/**': { site: { name: 'Mon Site', defaultLocale: 'fr' } },
+  },
+});
 ```

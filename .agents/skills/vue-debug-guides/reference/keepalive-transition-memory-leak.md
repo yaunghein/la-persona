@@ -64,10 +64,7 @@ Use Chrome DevTools to detect the leak:
 ```vue
 <template>
   <KeepAlive :max="5">
-    <component
-      :is="currentView"
-      :class="{ 'fade-enter': isTransitioning }"
-    />
+    <component :is="currentView" :class="{ 'fade-enter': isTransitioning }" />
   </KeepAlive>
 </template>
 
@@ -77,8 +74,12 @@ Use Chrome DevTools to detect the leak:
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 </style>
 ```
@@ -103,14 +104,14 @@ Force fresh instances when needed:
 
 ```vue
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed } from 'vue';
 
-const currentView = ref('Dashboard')
-const cacheKey = ref(0)
+const currentView = ref('Dashboard');
+const cacheKey = ref(0);
 
 function switchViewFresh(view) {
-  currentView.value = view
-  cacheKey.value++ // Force new instance
+  currentView.value = view;
+  cacheKey.value++; // Force new instance
 }
 </script>
 

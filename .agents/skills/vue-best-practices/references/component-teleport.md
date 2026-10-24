@@ -67,9 +67,9 @@ Use `:disabled` to render inline on mobile and teleport on larger screens:
 
 ```vue
 <script setup>
-import { useMediaQuery } from '@vueuse/core'
+import { useMediaQuery } from '@vueuse/core';
 
-const isMobile = useMediaQuery('(max-width: 768px)')
+const isMobile = useMediaQuery('(max-width: 768px)');
 </script>
 
 <template>

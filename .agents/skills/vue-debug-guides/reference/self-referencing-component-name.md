@@ -22,19 +22,15 @@ tags: [vue3, component-registration, self-reference, recursive-components, sfc]
 <!-- TreeItem.vue -->
 <script setup>
 defineProps({
-  item: Object
-})
+  item: Object,
+});
 </script>
 
 <template>
   <div class="tree-item">
     <span>{{ item.name }}</span>
     <!-- Self-reference using filename -->
-    <TreeItem
-      v-for="child in item.children"
-      :key="child.id"
-      :item="child"
-    />
+    <TreeItem v-for="child in item.children" :key="child.id" :item="child" />
   </div>
 </template>
 ```
@@ -43,8 +39,8 @@ defineProps({
 <!-- Comment.vue - recursive comments -->
 <script setup>
 defineProps({
-  comment: Object
-})
+  comment: Object,
+});
 </script>
 
 <template>
@@ -68,7 +64,7 @@ defineProps({
 <!-- FooBar.vue -->
 <script setup>
 // If you import a component named FooBar, it takes precedence
-import FooBar from './different/FooBar.vue'
+import FooBar from './different/FooBar.vue';
 </script>
 
 <template>
@@ -82,7 +78,7 @@ To explicitly self-reference when there's a naming conflict:
 ```vue
 <!-- FooBar.vue -->
 <script setup>
-import OtherFooBar from './different/FooBar.vue'
+import OtherFooBar from './different/FooBar.vue';
 // No way to explicitly import "self" in script setup
 // Must rename the import to avoid conflict
 </script>
@@ -103,9 +99,9 @@ import OtherFooBar from './different/FooBar.vue'
 export default {
   name: 'RecursiveList', // Explicit name for self-reference
   props: {
-    items: Array
-  }
-}
+    items: Array,
+  },
+};
 </script>
 
 <template>
@@ -133,8 +129,8 @@ export default {
 defineProps({
   node: Object,
   maxDepth: { type: Number, default: 10 },
-  currentDepth: { type: Number, default: 0 }
-})
+  currentDepth: { type: Number, default: 0 },
+});
 </script>
 
 <template>

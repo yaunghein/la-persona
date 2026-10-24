@@ -76,12 +76,12 @@ tags: [vue3, events, modifiers, scroll, touch, performance]
 </template>
 
 <script setup>
-function handleTouchMove(event) {
-  if (shouldPreventScroll.value) {
-    event.preventDefault()
+  function handleTouchMove(event) {
+    if (shouldPreventScroll.value) {
+      event.preventDefault();
+    }
+    // ... handle touch
   }
-  // ... handle touch
-}
 </script>
 ```
 
@@ -97,7 +97,7 @@ function handleTouchMove(event) {
 // 3. Reduce jank and stuttering
 
 // Equivalent to:
-element.addEventListener('scroll', handler, { passive: true })
+element.addEventListener('scroll', handler, { passive: true });
 ```
 
 ## When to Use .passive
@@ -107,12 +107,12 @@ element.addEventListener('scroll', handler, { passive: true })
 
 <!-- Scroll tracking analytics -->
 <div @scroll.passive="trackScrollPosition">
-
-<!-- Touch gesture detection (no prevention needed) -->
-<div @touchmove.passive="detectGesture">
-
-<!-- Wheel event monitoring -->
-<div @wheel.passive="monitorWheel">
+  <!-- Touch gesture detection (no prevention needed) -->
+  <div @touchmove.passive="detectGesture">
+    <!-- Wheel event monitoring -->
+    <div @wheel.passive="monitorWheel"></div>
+  </div>
+</div>
 ```
 
 ## When to Use .prevent (Without .passive)
@@ -122,12 +122,12 @@ element.addEventListener('scroll', handler, { passive: true })
 
 <!-- Form submission -->
 <form @submit.prevent="handleSubmit">
-
-<!-- Link clicks with custom navigation -->
-<a @click.prevent="navigate">
-
-<!-- Preventing context menu -->
-<div @contextmenu.prevent="showCustomMenu">
+  <!-- Link clicks with custom navigation -->
+  <a @click.prevent="navigate">
+    <!-- Preventing context menu -->
+    <div @contextmenu.prevent="showCustomMenu"></div
+  ></a>
+</form>
 ```
 
 ## Browser Warning

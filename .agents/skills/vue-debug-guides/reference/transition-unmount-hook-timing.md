@@ -3,7 +3,8 @@ title: Unmount Hooks May Not Fire Inside Transitions During Fast Replacement
 impact: MEDIUM
 impactDescription: Components inside transitions can be destroyed without unmount hooks firing under race conditions
 type: gotcha
-tags: [vue3, lifecycle, transition, onUnmounted, unmounted, cleanup, race-condition]
+tags:
+  [vue3, lifecycle, transition, onUnmounted, unmounted, cleanup, race-condition]
 ---
 
 # Unmount Hooks May Not Fire Inside Transitions During Fast Replacement
@@ -37,21 +38,21 @@ This is a known edge case that occurs when the timing is specific - if a parent 
 // Child component - unmount hooks may not fire if parent changes quickly
 export default {
   setup() {
-    const socket = new WebSocket('wss://example.com')
+    const socket = new WebSocket('wss://example.com');
 
     onMounted(() => {
-      console.log('Mounted - this will run')
-      socket.connect()
-    })
+      console.log('Mounted - this will run');
+      socket.connect();
+    });
 
     onUnmounted(() => {
       // WARNING: This may NOT run if component is inside transition
       // and parent navigates away during mounting phase!
-      console.log('Unmounted - might not run')
-      socket.close()
-    })
-  }
-}
+      console.log('Unmounted - might not run');
+      socket.close();
+    });
+  },
+};
 ```
 
 **Safer Patterns:**
@@ -108,25 +109,25 @@ export default {
 // SAFER: Use AbortController pattern for cancellable operations
 export default {
   setup() {
-    const abortController = new AbortController()
+    const abortController = new AbortController();
 
     onMounted(() => {
       fetch('/api/data', { signal: abortController.signal })
         .then(handleData)
-        .catch(err => {
+        .catch((err) => {
           if (err.name !== 'AbortError') {
-            handleError(err)
+            handleError(err);
           }
-        })
-    })
+        });
+    });
 
     onUnmounted(() => {
       // If this doesn't fire, request continues but response is ignored
       // Not a memory leak - just potentially wasted network call
-      abortController.abort()
-    })
-  }
-}
+      abortController.abort();
+    });
+  },
+};
 ```
 
 ## Testing for This Issue
@@ -135,10 +136,10 @@ export default {
 // Test by rapidly switching components during async loading
 async function testUnmountHooks() {
   // Mount component A (has async setup)
-  await mountComponent('A')
+  await mountComponent('A');
 
   // Immediately switch to B before A finishes mounting
-  await mountComponent('B')
+  await mountComponent('B');
 
   // Check if A's unmount hooks fired
   // They may not have!

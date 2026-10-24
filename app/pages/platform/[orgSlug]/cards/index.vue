@@ -42,7 +42,6 @@ const { mutateAsync: deleteCard, isPending: isDeleting } =
   useDeleteCardMutation();
 
 const isRequestOpen = ref(false);
-const requestForm = useTemplateRef('requestForm');
 const pendingCardName = ref<string | null>(null);
 const isPendingInfoOpen = computed({
   get: () => pendingCardName.value !== null,
@@ -64,10 +63,6 @@ function openGuide() {
 
 function openRequestForm() {
   isRequestOpen.value = true;
-}
-
-function closeRequestForm() {
-  isRequestOpen.value = false;
 }
 
 async function confirmDelete() {
@@ -121,34 +116,7 @@ async function confirmDelete() {
       />
     </div>
 
-    <USlideover
-      v-model:open="isRequestOpen"
-      side="right"
-      inset
-      title="REQUEST NEW CARD"
-      :ui="{
-        header: 'border-b-2 border-[#232323] px-6 py-6',
-        title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
-        body: 'px-6',
-        content: 'bg-[#171717]',
-      }"
-    >
-      <template #body>
-        <CardRequestForm ref="requestForm" @close="closeRequestForm" />
-      </template>
-
-      <template v-if="!requestForm?.success" #footer>
-        <UButton
-          type="submit"
-          form="card-request-form"
-          label="Send Request"
-          leading-icon="i-lucide-send"
-          color="neutral"
-          :loading="requestForm?.isSubmitting"
-          class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
-        />
-      </template>
-    </USlideover>
+    <CardRequestSlideover v-model:open="isRequestOpen" />
 
     <UiFeatureGuideModal
       v-model:open="isGuideOpen"
@@ -181,7 +149,7 @@ async function confirmDelete() {
         @show-pending-info="pendingCardName = $event"
       />
 
-      <BillingPremiumCardCta />
+      <BillingPremiumCardCta @request="openRequestForm" />
     </div>
 
     <UContainer v-else class="h-[calc(100vh-10rem)] min-h-96">

@@ -13,12 +13,12 @@ In Nuxt 5, Nitro's server helpers (`defineEventHandler`, `getQuery`, `readBody`,
 
 ```ts
 // server/api/hello.ts
-import { defineEventHandler, getQuery } from 'nuxt/server'
+import { defineEventHandler, getQuery } from 'nuxt/server';
 
 export default defineEventHandler((event) => {
-  const { name } = getQuery<{ name?: string }>(event)
-  return { message: `Hello, ${name ?? 'world'}!` }
-})
+  const { name } = getQuery<{ name?: string }>(event);
+  return { message: `Hello, ${name ?? 'world'}!` };
+});
 ```
 
 - Your own exports from `server/utils/` and `shared/utils/` are still auto-imported.
@@ -33,11 +33,11 @@ Create files in `server/api/` directory:
 
 ```ts
 // server/api/hello.ts
-import { defineEventHandler } from 'nuxt/server'
+import { defineEventHandler } from 'nuxt/server';
 
 export default defineEventHandler((event) => {
-  return { message: 'Hello World' }
-})
+  return { message: 'Hello World' };
+});
 ```
 
 Access at `/api/hello`. Return typing flows automatically to `$fetch('/api/hello')`.
@@ -49,27 +49,27 @@ Access at `/api/hello`. Return typing flows automatically to `$fetch('/api/hello
 ```ts
 // server/api/users.get.ts - GET /api/users
 export default defineEventHandler(() => {
-  return getUsers()
-})
+  return getUsers();
+});
 
 // server/api/users.post.ts - POST /api/users
 export default defineEventHandler(async (event) => {
-  const body = await readBody(event)
-  return createUser(body)
-})
+  const body = await readBody(event);
+  return createUser(body);
+});
 
 // server/api/users/[id].put.ts - PUT /api/users/:id
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id')
-  const body = await readBody(event)
-  return updateUser(id, body)
-})
+  const id = getRouterParam(event, 'id');
+  const body = await readBody(event);
+  return updateUser(id, body);
+});
 
 // server/api/users/[id].delete.ts - DELETE /api/users/:id
 export default defineEventHandler((event) => {
-  const id = getRouterParam(event, 'id')
-  return deleteUser(id)
-})
+  const id = getRouterParam(event, 'id');
+  return deleteUser(id);
+});
 ```
 
 ### Route Parameters
@@ -77,15 +77,15 @@ export default defineEventHandler((event) => {
 ```ts
 // server/api/posts/[id].ts
 export default defineEventHandler((event) => {
-  const id = getRouterParam(event, 'id')
-  return getPost(id)
-})
+  const id = getRouterParam(event, 'id');
+  return getPost(id);
+});
 
 // Catch-all: server/api/[...path].ts
 export default defineEventHandler((event) => {
-  const path = getRouterParam(event, 'path')
-  return { path }
-})
+  const path = getRouterParam(event, 'path');
+  return { path };
+});
 ```
 
 ### Query Parameters
@@ -94,10 +94,10 @@ export default defineEventHandler((event) => {
 // server/api/search.ts
 // GET /api/search?q=nuxt&page=1
 export default defineEventHandler((event) => {
-  const query = getQuery(event)
+  const query = getQuery(event);
   // { q: 'nuxt', page: '1' }
-  return search(query.q, Number(query.page))
-})
+  return search(query.q, Number(query.page));
+});
 ```
 
 ### Request Body
@@ -105,37 +105,42 @@ export default defineEventHandler((event) => {
 ```ts
 // server/api/submit.post.ts
 export default defineEventHandler(async (event) => {
-  const body = await readBody(event)
+  const body = await readBody(event);
   // Validate and process body
-  return { success: true, data: body }
-})
+  return { success: true, data: body };
+});
 ```
 
 ### Headers and Cookies
 
 ```ts
 // server/api/auth.ts
-import { defineEventHandler, getCookie, getRequestHeader, setCookie } from 'nuxt/server'
+import {
+  defineEventHandler,
+  getCookie,
+  getRequestHeader,
+  setCookie,
+} from 'nuxt/server';
 
 export default defineEventHandler((event) => {
   // Read a request header
-  const auth = getRequestHeader(event, 'authorization')
+  const auth = getRequestHeader(event, 'authorization');
 
   // Read a cookie
-  const token = getCookie(event, 'token')
+  const token = getCookie(event, 'token');
 
   // Set a response header (Web Headers API)
-  event.res.headers.set('X-Custom-Header', 'value')
+  event.res.headers.set('X-Custom-Header', 'value');
 
   // Set a cookie
   setCookie(event, 'token', 'new-token', {
     httpOnly: true,
     secure: true,
     maxAge: 60 * 60 * 24, // 1 day
-  })
+  });
 
-  return { authenticated: !!token }
-})
+  return { authenticated: !!token };
+});
 ```
 
 ## Server Middleware
@@ -145,16 +150,16 @@ Runs on every request before routes:
 ```ts
 // server/middleware/auth.ts
 export default defineEventHandler((event) => {
-  const token = getCookie(event, 'token')
+  const token = getCookie(event, 'token');
 
   // Attach data to event context
-  event.context.user = token ? verifyToken(token) : null
-})
+  event.context.user = token ? verifyToken(token) : null;
+});
 
 // server/middleware/log.ts
 export default defineEventHandler((event) => {
-  console.log(`${event.req.method} ${event.url.pathname}`)
-})
+  console.log(`${event.req.method} ${event.url.pathname}`);
+});
 ```
 
 Access context in routes:
@@ -162,12 +167,12 @@ Access context in routes:
 ```ts
 // server/api/profile.ts
 export default defineEventHandler((event) => {
-  const user = event.context.user
+  const user = event.context.user;
   if (!user) {
-    throw createError({ status: 401, message: 'Unauthorized' })
+    throw createError({ status: 401, message: 'Unauthorized' });
   }
-  return user
-})
+  return user;
+});
 ```
 
 ## Error Handling
@@ -176,21 +181,21 @@ Nitro v3 / h3 v2 rename the error fields to Web-standard names: `status`/`status
 
 ```ts
 // server/api/users/[id].ts
-import { createError, defineEventHandler, getRouterParam } from 'nuxt/server'
+import { createError, defineEventHandler, getRouterParam } from 'nuxt/server';
 
 export default defineEventHandler((event) => {
-  const id = getRouterParam(event, 'id')
-  const user = findUser(id)
+  const id = getRouterParam(event, 'id');
+  const user = findUser(id);
 
   if (!user) {
     throw createError({
       status: 404,
       statusText: 'User not found',
-    })
+    });
   }
 
-  return user
-})
+  return user;
+});
 ```
 
 Notes for Nitro v3:
@@ -205,13 +210,13 @@ Notes for Nitro v3:
 
 ```ts
 // server/api/users.post.ts
-import { defineEventHandler, readValidatedBody } from 'nuxt/server'
-import { z } from 'zod'
+import { defineEventHandler, readValidatedBody } from 'nuxt/server';
+import { z } from 'zod';
 
 export default defineEventHandler(async (event) => {
-  const user = await readValidatedBody(event, z.object({ name: z.string() }))
-  return { created: user.name }
-})
+  const user = await readValidatedBody(event, z.object({ name: z.string() }));
+  return { created: user.name };
+});
 ```
 
 Invalid input is rejected with a `400` whose `data.issues` lists the failures.
@@ -222,13 +227,13 @@ Invalid input is rejected with a `400` whose `data.issues` lists the failures.
 
 ```ts
 // server/api/visits.ts
-import { defineEventHandler, useSession } from 'nuxt/server'
+import { defineEventHandler, useSession } from 'nuxt/server';
 
 export default defineEventHandler(async (event) => {
-  const session = await useSession<{ visits: number }>(event)
-  await session.update(data => ({ visits: (data.visits ?? 0) + 1 }))
-  return { visits: session.data.visits }
-})
+  const session = await useSession<{ visits: number }>(event);
+  await session.update((data) => ({ visits: (data.visits ?? 0) + 1 }));
+  return { visits: session.data.visits };
+});
 ```
 
 > h3 ships its own same-named session helpers (`import { useSession } from 'nitro/h3'`); they are a separate, non-interchangeable implementation (cookie name `h3`).
@@ -240,16 +245,16 @@ Auto-imported in `server/utils/`:
 ```ts
 // server/utils/db.ts
 export function useDb() {
-  return createDbConnection()
+  return createDbConnection();
 }
 ```
 
 ```ts
 // server/api/users.ts
 export default defineEventHandler(() => {
-  const db = useDb() // Auto-imported
-  return db.query('SELECT * FROM users')
-})
+  const db = useDb(); // Auto-imported
+  return db.query('SELECT * FROM users');
+});
 ```
 
 ## Server Plugins
@@ -258,17 +263,17 @@ Run once when server starts. In Nitro v3 the factory is `definePlugin` from `nit
 
 ```ts
 // server/plugins/db.ts
-import { definePlugin } from 'nitro'
+import { definePlugin } from 'nitro';
 
 export default definePlugin((nitroApp) => {
   // Initialize database connection
-  const db = createDbConnection()
+  const db = createDbConnection();
 
   // Add to context
   nitroApp.hooks.hook('request', (event) => {
-    event.context.db = db
-  })
-})
+    event.context.db = db;
+  });
+});
 ```
 
 > The `beforeResponse`/`afterResponse` hooks are replaced by a single `response` hook in Nitro v3.
@@ -278,22 +283,22 @@ export default definePlugin((nitroApp) => {
 ```ts
 // server/api/stream.ts
 export default defineEventHandler((event) => {
-  event.res.headers.set('Content-Type', 'text/event-stream')
-  event.res.headers.set('Cache-Control', 'no-cache')
-  event.res.headers.set('Connection', 'keep-alive')
+  event.res.headers.set('Content-Type', 'text/event-stream');
+  event.res.headers.set('Cache-Control', 'no-cache');
+  event.res.headers.set('Connection', 'keep-alive');
 
   const stream = new ReadableStream({
     async start(controller) {
       for (let i = 0; i < 10; i++) {
-        controller.enqueue(`data: ${JSON.stringify({ count: i })}\n\n`)
-        await new Promise(r => setTimeout(r, 1000))
+        controller.enqueue(`data: ${JSON.stringify({ count: i })}\n\n`);
+        await new Promise((r) => setTimeout(r, 1000));
       }
-      controller.close()
+      controller.close();
     },
-  })
+  });
 
-  return stream
-})
+  return stream;
+});
 ```
 
 ## Server Storage
@@ -302,20 +307,20 @@ Key-value storage with multiple drivers. In Nitro v3, `useStorage` comes from `n
 
 ```ts
 // server/api/cache.ts
-import { defineEventHandler } from 'nuxt/server'
-import { useStorage } from 'nitro/storage'
+import { defineEventHandler } from 'nuxt/server';
+import { useStorage } from 'nitro/storage';
 
 export default defineEventHandler(async (event) => {
-  const storage = useStorage()
+  const storage = useStorage();
 
   // Set value
-  await storage.setItem('key', { data: 'value' })
+  await storage.setItem('key', { data: 'value' });
 
   // Get value
-  const data = await storage.getItem('key')
+  const data = await storage.getItem('key');
 
-  return data
-})
+  return data;
+});
 ```
 
 Configure storage drivers in `nuxt.config.ts`:
@@ -330,7 +335,7 @@ export default defineNuxtConfig({
       },
     },
   },
-})
+});
 ```
 
 <!--

@@ -83,9 +83,7 @@ Server and client generate different random values.
 ```vue
 <template>
   <!-- WRONG: Different ID on server vs client -->
-  <div :id="'field-' + Math.random()">
-    Form field
-  </div>
+  <div :id="'field-' + Math.random()">Form field</div>
 
   <!-- WRONG: Random order differs -->
   <div v-for="item in shuffledItems" :key="item.id">
@@ -94,14 +92,16 @@ Server and client generate different random values.
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed } from 'vue';
 
-const items = [/* ... */]
+const items = [
+  /* ... */
+];
 
 // WRONG: Random shuffle runs differently on server and client
 const shuffledItems = computed(() =>
   [...items].sort(() => Math.random() - 0.5)
-)
+);
 </script>
 ```
 
@@ -109,9 +109,7 @@ const shuffledItems = computed(() =>
 
 ```vue
 <template>
-  <div :id="fieldId">
-    Form field
-  </div>
+  <div :id="fieldId">Form field</div>
 
   <div v-for="item in displayItems" :key="item.id">
     {{ item.name }}
@@ -119,19 +117,21 @@ const shuffledItems = computed(() =>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted } from 'vue';
 
-const items = [/* ... */]
+const items = [
+  /* ... */
+];
 
 // CORRECT: Start with deterministic value
-const fieldId = ref('field-default')
-const displayItems = ref(items) // Original order on server
+const fieldId = ref('field-default');
+const displayItems = ref(items); // Original order on server
 
 onMounted(() => {
   // Randomize only on client
-  fieldId.value = 'field-' + Math.random().toString(36).slice(2)
-  displayItems.value = [...items].sort(() => Math.random() - 0.5)
-})
+  fieldId.value = 'field-' + Math.random().toString(36).slice(2);
+  displayItems.value = [...items].sort(() => Math.random() - 0.5);
+});
 </script>
 ```
 
@@ -140,15 +140,15 @@ onMounted(() => {
 ```javascript
 // utils/seededRandom.js
 export function createSeededRandom(seed) {
-  return function() {
-    seed = (seed * 9301 + 49297) % 233280
-    return seed / 233280
-  }
+  return function () {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
 }
 
 // Use same seed on server and client
-const seed = 12345 // Could be based on user ID, page, etc.
-const random = createSeededRandom(seed)
+const seed = 12345; // Could be based on user ID, page, etc.
+const random = createSeededRandom(seed);
 ```
 
 ## Cause 3: Timezone and Date Differences
@@ -168,7 +168,7 @@ Server may be in different timezone than client.
 
 <script setup>
 function formatDate(date) {
-  return new Date(date).toLocaleDateString()
+  return new Date(date).toLocaleDateString();
 }
 </script>
 ```
@@ -185,29 +185,29 @@ function formatDate(date) {
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue';
 
-const props = defineProps(['article'])
-const displayTime = ref(null)
-const isClient = ref(false)
+const props = defineProps(['article']);
+const displayTime = ref(null);
+const isClient = ref(false);
 
 onMounted(() => {
-  displayTime.value = new Date().toLocaleTimeString()
-  isClient.value = true
-})
+  displayTime.value = new Date().toLocaleTimeString();
+  isClient.value = true;
+});
 
 // CORRECT: Server renders UTC, client converts to local
 const formattedDate = computed(() => {
-  if (!props.article?.createdAt) return ''
+  if (!props.article?.createdAt) return '';
 
   if (isClient.value) {
     // Client: user's local timezone
-    return new Date(props.article.createdAt).toLocaleDateString()
+    return new Date(props.article.createdAt).toLocaleDateString();
   } else {
     // Server: consistent UTC format
-    return new Date(props.article.createdAt).toISOString().split('T')[0]
+    return new Date(props.article.createdAt).toISOString().split('T')[0];
   }
-})
+});
 </script>
 ```
 
@@ -258,20 +258,20 @@ Valid `data-allow-mismatch` values:
 // vite.config.js
 export default {
   define: {
-    __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: true
-  }
-}
+    __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: true,
+  },
+};
 ```
 
 ```vue
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted } from 'vue';
 
 // Debug: Compare server HTML with client expectation
 onMounted(() => {
-  const serverHTML = document.getElementById('app').innerHTML
-  console.log('Server rendered:', serverHTML)
-})
+  const serverHTML = document.getElementById('app').innerHTML;
+  console.log('Server rendered:', serverHTML);
+});
 </script>
 ```
 

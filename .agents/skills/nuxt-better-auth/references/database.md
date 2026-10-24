@@ -10,7 +10,7 @@ export default defineNuxtConfig({
   hub: {
     db: 'sqlite',
   },
-})
+});
 ```
 
 ## What the module does with NuxtHub
@@ -28,7 +28,7 @@ export default defineNuxtConfig({
   auth: {
     hubSecondaryStorage: 'custom',
   },
-})
+});
 ```
 
 Important:

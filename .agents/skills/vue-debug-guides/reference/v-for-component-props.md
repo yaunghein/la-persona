@@ -30,10 +30,7 @@ This isolation is intentional - it keeps components reusable and their data depe
 
 ```html
 <!-- WRONG: Key provided but no data passed -->
-<UserCard
-  v-for="user in users"
-  :key="user.id"
-/>
+<UserCard v-for="user in users" :key="user.id" />
 <!-- UserCard has no user data to display -->
 ```
 
@@ -41,11 +38,7 @@ This isolation is intentional - it keeps components reusable and their data depe
 
 ```html
 <!-- CORRECT: Explicitly pass the item as a prop -->
-<TodoItem
-  v-for="todo in todos"
-  :key="todo.id"
-  :todo="todo"
-/>
+<TodoItem v-for="todo in todos" :key="todo.id" :todo="todo" />
 ```
 
 ```html
@@ -65,17 +58,17 @@ This isolation is intentional - it keeps components reusable and their data depe
 defineProps({
   user: {
     type: Object,
-    required: true
+    required: true,
   },
   index: {
     type: Number,
-    required: true
+    required: true,
   },
   isFirst: {
     type: Boolean,
-    default: false
-  }
-})
+    default: false,
+  },
+});
 </script>
 
 <template>

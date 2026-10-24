@@ -17,10 +17,12 @@ Animate enter/leave of a single element or component.
 </template>
 
 <style>
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
   transition: opacity 0.3s ease;
 }
-.fade-enter-from, .fade-leave-to {
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
 }
 </style>
@@ -62,7 +64,7 @@ Animate enter/leave of a single element or component.
 <script setup lang="ts">
 function onEnter(el: Element, done: () => void) {
   // Animate with JS library
-  gsap.to(el, { opacity: 1, onComplete: done })
+  gsap.to(el, { opacity: 1, onComplete: done });
 }
 </script>
 ```
@@ -89,10 +91,12 @@ Animate list items. Each child must have a unique `key`.
 </template>
 
 <style>
-.list-enter-active, .list-leave-active {
+.list-enter-active,
+.list-leave-active {
   transition: all 0.3s ease;
 }
-.list-enter-from, .list-leave-to {
+.list-enter-from,
+.list-leave-to {
   opacity: 0;
   transform: translateX(30px);
 }
@@ -112,9 +116,7 @@ Render content to a different DOM location.
   <button @click="open = true">Open Modal</button>
 
   <Teleport to="body">
-    <div v-if="open" class="modal">
-      Modal content rendered at body
-    </div>
+    <div v-if="open" class="modal">Modal content rendered at body</div>
   </Teleport>
 </template>
 ```
@@ -163,18 +165,14 @@ Suspense waits for:
 ```vue
 <!-- AsyncComponent.vue -->
 <script setup lang="ts">
-const data = await fetch('/api/data').then(r => r.json())
+const data = await fetch('/api/data').then((r) => r.json());
 </script>
 ```
 
 ### Events
 
 ```vue
-<Suspense
-  @pending="onPending"
-  @resolve="onResolve"
-  @fallback="onFallback"
->
+<Suspense @pending="onPending" @resolve="onResolve" @fallback="onFallback">
   ...
 </Suspense>
 ```
@@ -209,17 +207,17 @@ Cache component instances when toggled.
 ### Lifecycle Hooks
 
 ```ts
-import { onActivated, onDeactivated } from 'vue'
+import { onActivated, onDeactivated } from 'vue';
 
 onActivated(() => {
   // Called when component is inserted from cache
-  fetchLatestData()
-})
+  fetchLatestData();
+});
 
 onDeactivated(() => {
   // Called when component is removed to cache
-  pauseTimers()
-})
+  pauseTimers();
+});
 ```
 
 ## v-memo
@@ -256,23 +254,23 @@ Create reusable DOM manipulations.
 ```ts
 // Directive definition
 const vFocus: Directive<HTMLElement> = {
-  mounted: (el) => el.focus()
-}
+  mounted: (el) => el.focus(),
+};
 
 // Full hooks
 const vColor: Directive<HTMLElement, string> = {
   created(el, binding, vnode, prevVnode) {},
   beforeMount(el, binding) {},
   mounted(el, binding) {
-    el.style.color = binding.value
+    el.style.color = binding.value;
   },
   beforeUpdate(el, binding) {},
   updated(el, binding) {
-    el.style.color = binding.value
+    el.style.color = binding.value;
   },
   beforeUnmount(el, binding) {},
-  unmounted(el, binding) {}
-}
+  unmounted(el, binding) {},
+};
 ```
 
 ### Directive Arguments & Modifiers
@@ -300,18 +298,18 @@ const vColor: Directive<HTMLElement, string> = {
 ```ts
 // main.ts
 app.directive('focus', {
-  mounted: (el) => el.focus()
-})
+  mounted: (el) => el.focus(),
+});
 ```
 
 Type global directives by extending the `GlobalDirectives` interface (not `ComponentCustomProperties`):
 
 ```ts
-import type { Directive } from 'vue'
+import type { Directive } from 'vue';
 
 declare module 'vue' {
   interface GlobalDirectives {
-    vFocus: Directive<HTMLElement>
+    vFocus: Directive<HTMLElement>;
   }
 }
 ```

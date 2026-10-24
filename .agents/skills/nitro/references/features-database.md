@@ -8,7 +8,7 @@ description: Built-in SQL database layer via db0, useDatabase, connectors, and d
 Nitro ships a lightweight SQL layer powered by [db0](https://db0.unjs.io). It defaults to SQLite (`.data/db.sqlite`) and works out of the box in dev and Node.js production. **Experimental** — enable the flag.
 
 ```ts [nitro.config.ts]
-import { defineConfig } from "nitro";
+import { defineConfig } from 'nitro';
 
 export default defineConfig({
   experimental: { database: true },
@@ -20,8 +20,8 @@ export default defineConfig({
 Import `useDatabase()` from `nitro/database` (no auto-imports in v3). It returns a connection; the optional name defaults to `"default"`.
 
 ```ts [routes/users.ts]
-import { defineHandler } from "nitro";
-import { useDatabase } from "nitro/database";
+import { defineHandler } from 'nitro';
+import { useDatabase } from 'nitro/database';
 
 export default defineHandler(async () => {
   const db = useDatabase();
@@ -45,15 +45,15 @@ Connections are created lazily and cached per name.
 ```ts
 // Tagged template with safe parameter binding
 const { rows } = await db.sql`SELECT * FROM users WHERE id = ${id}`;
-const res = await db.sql`INSERT INTO posts (title) VALUES (${"Hello"})`;
+const res = await db.sql`INSERT INTO posts (title) VALUES (${'Hello'})`;
 // res.rows, res.changes, res.lastInsertRowid
 
 // Raw string execution
-await db.exec("CREATE TABLE IF NOT EXISTS t (id TEXT)");
+await db.exec('CREATE TABLE IF NOT EXISTS t (id TEXT)');
 
 // Prepared statement
-const stmt = db.prepare("SELECT * FROM users WHERE id = ?");
-const result = await stmt.bind("1001").all();
+const stmt = db.prepare('SELECT * FROM users WHERE id = ?');
+const result = await stmt.bind('1001').all();
 ```
 
 > Always use `db.sql` tagged templates (or `prepare().bind()`) for user input — they parameterize and prevent SQL injection.
@@ -61,20 +61,20 @@ const result = await stmt.bind("1001").all();
 ## Configuration
 
 ```ts [nitro.config.ts]
-import { defineConfig } from "nitro";
+import { defineConfig } from 'nitro';
 
 export default defineConfig({
   experimental: { database: true },
   database: {
-    default: { connector: "sqlite", options: { name: "db" } },
+    default: { connector: 'sqlite', options: { name: 'db' } },
     users: {
-      connector: "postgresql",
-      options: { url: "postgresql://user:pass@host:5432/db" },
+      connector: 'postgresql',
+      options: { url: 'postgresql://user:pass@host:5432/db' },
     },
   },
   // Use a local SQLite db in development while prod uses Postgres
   devDatabase: {
-    default: { connector: "sqlite", options: { name: "dev-db" } },
+    default: { connector: 'sqlite', options: { name: 'dev-db' } },
   },
 });
 ```

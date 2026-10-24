@@ -10,7 +10,7 @@ import type {
   AuthRouteRules,
   RequireSessionOptions,
   AuthSocialProviderId,
-} from '#nuxt-better-auth'
+} from '#nuxt-better-auth';
 ```
 
 ## Key guarantees
@@ -24,11 +24,11 @@ import type {
 Only add manual module augmentation if inference is not enough or you need to declare project-specific fields in advance.
 
 ```ts
-import '#nuxt-better-auth'
+import '#nuxt-better-auth';
 
 declare module '#nuxt-better-auth' {
   interface AuthUser {
-    customField?: string
+    customField?: string;
   }
 }
 ```
@@ -38,7 +38,7 @@ declare module '#nuxt-better-auth' {
 ```ts
 await requireUserSession(event, {
   user: { role: 'admin' },
-})
+});
 ```
 
 The same user matcher shape works in route rules and page meta.

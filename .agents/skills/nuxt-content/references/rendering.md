@@ -6,13 +6,13 @@ Query a page document, handle the missing state at the route boundary, then pass
 
 ```vue
 <script setup lang="ts">
-const route = useRoute()
+const route = useRoute();
 const { data: page } = await useAsyncData(route.path, () => {
-  return queryCollection('docs').path(route.path).first()
-})
+  return queryCollection('docs').path(route.path).first();
+});
 
 if (!page.value) {
-  throw createError({ statusCode: 404, statusMessage: 'Page not found' })
+  throw createError({ statusCode: 404, statusMessage: 'Page not found' });
 }
 </script>
 
@@ -85,7 +85,7 @@ export default defineNuxtConfig({
       anchorLinks: { h2: true, h3: true },
     },
   },
-})
+});
 ```
 
 Load only the Shiki languages used by the content set. When custom remark or rehype plugins are involved, verify the rendered AST and the final SSR HTML.

@@ -25,7 +25,7 @@ Use the `Markdown` component to render markdown:
 </template>
 
 <script setup lang="ts">
-import { Markdown } from '@comark/vue'
+import { Markdown } from '@comark/vue';
 
 const content = `
 # Hello World
@@ -35,7 +35,7 @@ This is **markdown** content.
 ::alert{type="info"}
 Important message
 ::
-`
+`;
 </script>
 ```
 
@@ -51,17 +51,17 @@ Map custom Vue components to Comark elements:
 </template>
 
 <script setup lang="ts">
-import { Markdown } from '@comark/vue'
-import CustomHeading from './CustomHeading.vue'
-import CustomAlert from './CustomAlert.vue'
-import CustomCard from './CustomCard.vue'
+import { Markdown } from '@comark/vue';
+import CustomHeading from './CustomHeading.vue';
+import CustomAlert from './CustomAlert.vue';
+import CustomCard from './CustomCard.vue';
 
 const customComponents = {
   h1: CustomHeading,
   h2: CustomHeading,
   alert: CustomAlert,
   card: CustomCard,
-}
+};
 </script>
 ```
 
@@ -76,14 +76,14 @@ const customComponents = {
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed } from 'vue';
 
 const props = defineProps<{
-  __node: any  // Comark node
-}>()
+  __node: any; // Comark node
+}>();
 
-const tag = computed(() => props.__node[0])
-const id = computed(() => props.__node[1]?.id)
+const tag = computed(() => props.__node[0]);
+const id = computed(() => props.__node[1]?.id);
 </script>
 
 <style scoped>
@@ -111,22 +111,27 @@ const id = computed(() => props.__node[1]?.id)
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed } from 'vue';
 
 const props = defineProps<{
-  type?: 'info' | 'warning' | 'error' | 'success'
-  __node?: any
-}>()
+  type?: 'info' | 'warning' | 'error' | 'success';
+  __node?: any;
+}>();
 
 const iconName = computed(() => {
   switch (props.type) {
-    case 'info': return 'info-circle'
-    case 'warning': return 'exclamation-triangle'
-    case 'error': return 'times-circle'
-    case 'success': return 'check-circle'
-    default: return 'info-circle'
+    case 'info':
+      return 'info-circle';
+    case 'warning':
+      return 'exclamation-triangle';
+    case 'error':
+      return 'times-circle';
+    case 'success':
+      return 'check-circle';
+    default:
+      return 'info-circle';
   }
-})
+});
 </script>
 
 <style scoped>
@@ -157,25 +162,23 @@ Load components dynamically using `componentsManifest`:
 
 ```vue
 <template>
-  <Markdown
-    :components-manifest="loadComponent"
-  >{{ content }}</Markdown>
+  <Markdown :components-manifest="loadComponent">{{ content }}</Markdown>
 </template>
 
 <script setup lang="ts">
-import { Markdown } from '@comark/vue'
+import { Markdown } from '@comark/vue';
 
 const componentMap = {
-  'alert': () => import('./Alert.vue'),
-  'card': () => import('./Card.vue'),
-  'button': () => import('./Button.vue'),
-}
+  alert: () => import('./Alert.vue'),
+  card: () => import('./Card.vue'),
+  button: () => import('./Button.vue'),
+};
 
 async function loadComponent(name: string) {
   if (componentMap[name]) {
-    return componentMap[name]()
+    return componentMap[name]();
   }
-  throw new Error(`Component ${name} not found`)
+  throw new Error(`Component ${name} not found`);
 }
 </script>
 ```
@@ -191,6 +194,7 @@ Comark components with slots work seamlessly in Vue:
 ```markdown
 ::card
 #header
+
 ## Card Title
 
 #content
@@ -251,11 +255,15 @@ Footer text
 ```markdown
 ::tabs
 #tab1
+
 ### First Tab
+
 Content for tab 1
 
 #tab2
+
 ### Second Tab
+
 Content for tab 2
 ::
 ```
@@ -281,9 +289,9 @@ Content for tab 2
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref } from 'vue';
 
-const activeTab = ref('tab1')
+const activeTab = ref('tab1');
 </script>
 ```
 
@@ -302,27 +310,27 @@ The `Markdown` component can be used with reactive content for streaming scenari
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Markdown } from '@comark/vue'
+import { ref } from 'vue';
+import { Markdown } from '@comark/vue';
 
-const content = ref('')
-const isLoading = ref(true)
+const content = ref('');
+const isLoading = ref(true);
 
 async function loadContent() {
-  const response = await fetch('/api/content.md')
-  const reader = response.body!.getReader()
-  const decoder = new TextDecoder()
+  const response = await fetch('/api/content.md');
+  const reader = response.body!.getReader();
+  const decoder = new TextDecoder();
 
   while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    content.value += decoder.decode(value)
+    const { done, value } = await reader.read();
+    if (done) break;
+    content.value += decoder.decode(value);
   }
 
-  isLoading.value = false
+  isLoading.value = false;
 }
 
-loadContent()
+loadContent();
 </script>
 ```
 
@@ -340,12 +348,12 @@ The `Markdown` component uses built-in prose styling automatically. You can over
 </template>
 
 <script setup lang="ts">
-import { Markdown } from '@comark/vue'
-import CustomAlert from './CustomAlert.vue'
+import { Markdown } from '@comark/vue';
+import CustomAlert from './CustomAlert.vue';
 
 const components = {
-  alert: CustomAlert,  // Override or add custom components
-}
+  alert: CustomAlert, // Override or add custom components
+};
 </script>
 ```
 
@@ -361,13 +369,13 @@ The `MarkdownDocument` component has built-in error capture via Vue's `onErrorCa
 </template>
 
 <script setup lang="ts">
-import { onErrorCaptured } from 'vue'
-import { Markdown } from '@comark/vue'
+import { onErrorCaptured } from 'vue';
+import { Markdown } from '@comark/vue';
 
 onErrorCaptured((error) => {
-  console.error('Component error:', error)
-  return false // prevent propagation
-})
+  console.error('Component error:', error);
+  return false; // prevent propagation
+});
 </script>
 ```
 
@@ -386,21 +394,21 @@ Custom components receive the original Comark node and parsed props:
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed } from 'vue';
 
 const props = defineProps<{
-  type?: string        // From {type="info"}
-  bool?: boolean       // From {bool} → :bool="true"
-  count?: number       // From {:count="5"}
-  data?: object        // From {:data='{"key":"val"}'}
-  __node?: any         // Original Comark node
-}>()
+  type?: string; // From {type="info"}
+  bool?: boolean; // From {bool} → :bool="true"
+  count?: number; // From {:count="5"}
+  data?: object; // From {:data='{"key":"val"}'}
+  __node?: any; // Original Comark node
+}>();
 
 const alertClasses = computed(() => [
   'alert',
   `alert-${props.type || 'info'}`,
-  { 'alert-important': props.bool }
-])
+  { 'alert-important': props.bool },
+]);
 </script>
 ```
 
@@ -414,12 +422,12 @@ const alertClasses = computed(() => [
 
 ```vue
 <script setup lang="ts">
-const props = defineProps<{ __node?: any }>()
+const props = defineProps<{ __node?: any }>();
 
 // Node structure: [tag, props, ...children]
-const tag = computed(() => props.__node?.[0])
-const nodeProps = computed(() => props.__node?.[1] || {})
-const children = computed(() => props.__node?.slice(2) || [])
+const tag = computed(() => props.__node?.[0]);
+const nodeProps = computed(() => props.__node?.[1] || {});
+const children = computed(() => props.__node?.slice(2) || []);
 </script>
 ```
 
@@ -442,10 +450,10 @@ const children = computed(() => props.__node?.slice(2) || [])
 
 <script setup lang="ts">
 const props = defineProps<{
-  columns?: string[]  // From {:columns='["Name","Age"]'}
-  sortable?: boolean  // From {sortable}
-  __node?: any
-}>()
+  columns?: string[]; // From {:columns='["Name","Age"]'}
+  sortable?: boolean; // From {sortable}
+  __node?: any;
+}>();
 </script>
 ```
 

@@ -92,7 +92,8 @@ The `defer` prop only waits for elements rendered in the **same mount/update tic
 
   <!-- If this component loads asynchronously, defer won't work -->
   <Suspense>
-    <AsyncComponent />  <!-- Contains #async-container -->
+    <AsyncComponent />
+    <!-- Contains #async-container -->
   </Suspense>
 </template>
 ```

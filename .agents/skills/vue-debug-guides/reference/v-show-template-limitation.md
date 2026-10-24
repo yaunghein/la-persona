@@ -34,7 +34,8 @@ tags: [vue3, conditional-rendering, v-show, template, limitations]
 <!-- WRONG: v-else with v-show - v-else is not supported -->
 <template>
   <div v-show="isLoggedIn">Welcome!</div>
-  <div v-else>Please log in</div>  <!-- This v-else won't work -->
+  <div v-else>Please log in</div>
+  <!-- This v-else won't work -->
 </template>
 ```
 
@@ -42,7 +43,8 @@ tags: [vue3, conditional-rendering, v-show, template, limitations]
 <!-- WRONG: Mixing v-show and v-else expectations -->
 <template>
   <span v-show="status === 'success'">Success!</span>
-  <span v-else-if="status === 'error'">Error</span>  <!-- Not supported -->
+  <span v-else-if="status === 'error'">Error</span>
+  <!-- Not supported -->
 </template>
 ```
 

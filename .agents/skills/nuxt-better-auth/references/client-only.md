@@ -10,7 +10,7 @@ export default defineNuxtConfig({
   auth: {
     clientOnly: true,
   },
-})
+});
 ```
 
 ```ini
@@ -22,7 +22,7 @@ The site URL is the default auth client base URL. An explicit client config valu
 ```ts
 export default defineClientAuth({
   baseURL: 'https://auth.example.com',
-})
+});
 ```
 
 ## What changes

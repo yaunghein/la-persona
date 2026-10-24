@@ -17,7 +17,7 @@ export default defineNuxtConfig({
     '/login': { auth: { only: 'guest', redirectTo: '/app' } },
     '/admin/**': { auth: { only: 'user', user: { role: 'admin' } } },
   },
-})
+});
 ```
 
 The same auth keys work under `nitro.routeRules`. If both `routeRules` and `nitro.routeRules` are set, the module reads `nitro.routeRules`.
@@ -48,7 +48,7 @@ export default defineNuxtConfig({
     preserveRedirect: true,
     redirectQueryKey: 'redirect',
   },
-})
+});
 ```
 
 - Per-route `redirectTo` takes precedence over `auth.redirects.login` and `auth.redirects.guest`.
@@ -80,7 +80,7 @@ definePageMeta({
     redirectTo: '/login',
     user: { role: ['admin', 'owner'] },
   },
-})
+});
 </script>
 ```
 

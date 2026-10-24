@@ -17,6 +17,7 @@ const emit = defineEmits<{
   share: [event: CommunityEvent];
   view: [event: CommunityEvent];
   register: [event: CommunityEvent];
+  'request-card': [];
 }>();
 
 type EventsTab = 'upcoming' | 'past' | 'registered';
@@ -275,7 +276,10 @@ function unavailableLabel(event: CommunityEvent) {
         </div>
       </article>
 
-      <BillingPremiumCardCta v-if="pagedEvents.length" />
+      <BillingPremiumCardCta
+        v-if="pagedEvents.length"
+        @request="emit('request-card')"
+      />
 
       <div
         v-if="!pagedEvents.length"

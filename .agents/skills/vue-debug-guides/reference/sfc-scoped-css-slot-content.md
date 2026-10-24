@@ -146,8 +146,10 @@ Both work, but have subtle differences:
 }
 
 /* For nested elements in slot content, must use :deep() */
-:slotted(.wrapper h2) { }  /* Won't work for nested h2 */
-.card-body :deep(.wrapper h2) { }  /* Works for nested */
+:slotted(.wrapper h2) {
+} /* Won't work for nested h2 */
+.card-body :deep(.wrapper h2) {
+} /* Works for nested */
 </style>
 ```
 

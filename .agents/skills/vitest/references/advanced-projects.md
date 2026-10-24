@@ -14,8 +14,8 @@ Run different test configurations in the same Vitest process.
 - **Inline projects share the declaring config's Vite server by default** ([`sharedViteServer`](core-config.md)) — the declaring config runs once, so plugin `config` hooks no longer run per project. A project gets its own server only when it changes the Vite config (`plugins`, `alias`, `css`, `deps.optimizer`, `root`, `browser`, `mode`). Set `sharedViteServer: false` if a plugin must be re-instantiated per project.
 
 ```ts
-import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()], // inherited by every inline project (v4 needed extends: true)
@@ -26,7 +26,7 @@ export default defineConfig({
       './packages/app/vitest.config.ts', // -> "app (unit)", "app (e2e)", ...
     ],
   },
-})
+});
 ```
 
 ## Basic Projects Setup
@@ -56,7 +56,7 @@ defineConfig({
       },
     ],
   },
-})
+});
 ```
 
 ## Monorepo Pattern
@@ -71,14 +71,14 @@ defineConfig({
       'packages/utils',
     ],
   },
-})
+});
 ```
 
 Package config:
 
 ```ts
 // packages/core/vitest.config.ts
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
@@ -86,7 +86,7 @@ export default defineConfig({
     include: ['src/**/*.test.ts'],
     environment: 'node',
   },
-})
+});
 ```
 
 ## Different Environments
@@ -115,7 +115,7 @@ defineConfig({
       },
     ],
   },
-})
+});
 ```
 
 ## Browser + Node Projects
@@ -144,7 +144,7 @@ defineConfig({
       },
     ],
   },
-})
+});
 ```
 
 ## Shared Configuration
@@ -154,10 +154,10 @@ defineConfig({
 export const sharedConfig = {
   testTimeout: 10000,
   setupFiles: ['./tests/setup.ts'],
-}
+};
 
 // vitest.config.ts
-import { sharedConfig } from './vitest.shared'
+import { sharedConfig } from './vitest.shared';
 
 defineConfig({
   test: {
@@ -178,7 +178,7 @@ defineConfig({
       },
     ],
   },
-})
+});
 ```
 
 ## Project-Specific Dependencies
@@ -201,7 +201,7 @@ defineConfig({
       },
     ],
   },
-})
+});
 ```
 
 ## Running Specific Projects
@@ -252,15 +252,15 @@ defineConfig({
       },
     ],
   },
-})
+});
 
 // In tests, use inject
-import { inject } from 'vitest'
+import { inject } from 'vitest';
 
 test('uses correct api', () => {
-  const url = inject('apiUrl')
-  expect(url).toContain('api.com')
-})
+  const url = inject('apiUrl');
+  expect(url).toContain('api.com');
+});
 ```
 
 ## With Fixtures
@@ -268,11 +268,11 @@ test('uses correct api', () => {
 ```ts
 const test = base.extend({
   apiUrl: ['/default', { injected: true }],
-})
+});
 
 test('uses injected url', ({ apiUrl }) => {
   // apiUrl comes from project's provide config
-})
+});
 ```
 
 ## Per-Project Pool & Isolation (v4)
@@ -286,7 +286,7 @@ defineConfig({
       {
         test: {
           name: 'unit',
-          isolate: false,                 // fast, non-isolated unit tests
+          isolate: false, // fast, non-isolated unit tests
           exclude: ['**/*.integration.test.ts'],
         },
       },
@@ -294,7 +294,7 @@ defineConfig({
         test: {
           name: 'sequential',
           include: ['**/*.sequential.test.ts'],
-          fileParallelism: false,         // run these files one at a time
+          fileParallelism: false, // run these files one at a time
         },
       },
       {
@@ -305,7 +305,7 @@ defineConfig({
       },
     ],
   },
-})
+});
 ```
 
 ## Global Setup per Project
@@ -322,7 +322,7 @@ defineConfig({
       },
     ],
   },
-})
+});
 ```
 
 ## Key Points

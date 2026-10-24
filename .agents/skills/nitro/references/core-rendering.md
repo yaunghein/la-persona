@@ -17,8 +17,8 @@ Auto-detected from `server.ts` (or `.js/.mjs/.mts/.tsx/.jsx`) in `serverDir` (if
 export default {
   async fetch(req: Request) {
     const url = new URL(req.url);
-    if (url.pathname === "/health") {
-      return new Response("OK", { status: 200 });
+    if (url.pathname === '/health') {
+      return new Response('OK', { status: 200 });
     }
     // return nothing -> continue to routes/renderer
   },
@@ -28,7 +28,7 @@ export default {
 Or use `defineHandler` for the H3 event + context:
 
 ```ts [server.ts]
-import { defineHandler } from "nitro";
+import { defineHandler } from 'nitro';
 
 export default defineHandler((event) => {
   event.context.requestId = crypto.randomUUID();
@@ -40,7 +40,7 @@ Configure explicitly with `serverEntry` (a string, or `{ handler, format }`, or 
 
 ```ts [nitro.config.ts]
 export default defineConfig({
-  serverEntry: { handler: "./server.ts", format: "web" }, // "web" (default) or "node"
+  serverEntry: { handler: './server.ts', format: 'web' }, // "web" (default) or "node"
 });
 ```
 
@@ -49,10 +49,10 @@ export default defineConfig({
 When the default export is a plain object, use `defineServerEntry` for typed [srvx](https://srvx.h3.dev/) server options (`port`, `hostname`, `tls`, `maxRequestBodySize`, ...), applied by the Node/Bun/Deno presets:
 
 ```ts [server.ts]
-import { defineServerEntry } from "nitro";
+import { defineServerEntry } from 'nitro';
 
 export default defineServerEntry({
-  fetch: (req) => new Response("Hello"),
+  fetch: (req) => new Response('Hello'),
   port: 8080,
   maxRequestBodySize: 1024 * 1024,
 });
@@ -65,18 +65,18 @@ export default defineServerEntry({
 Any framework exposing a web `fetch(request): Response` works as a server entry:
 
 ```ts [server.ts]
-import { Hono } from "hono";
+import { Hono } from 'hono';
 const app = new Hono();
-app.get("/", (c) => c.text("Hello from Hono!"));
+app.get('/', (c) => c.text('Hello from Hono!'));
 export default app;
 ```
 
 For Node-style `(req, res)` frameworks (Express, Fastify), name the file `server.node.ts` (or set `format: "node"`) — Nitro converts it via [srvx](https://srvx.h3.dev/):
 
 ```ts [server.node.ts]
-import Express from "express";
+import Express from 'express';
 const app = Express();
-app.use("/", (_req, res) => res.send("Hello from Express!"));
+app.use('/', (_req, res) => res.send('Hello from Express!'));
 export default app;
 ```
 
@@ -87,9 +87,9 @@ A catch-all that serves HTML/SSR for unmatched routes. Configured via `renderer`
 ```ts [nitro.config.ts]
 export default defineConfig({
   renderer: {
-    template: "./index.html", // HTML template
-    handler: "./renderer.ts", // OR a custom handler (template ignored if set)
-    static: false,            // serve template as-is, skip processing
+    template: './index.html', // HTML template
+    handler: './renderer.ts', // OR a custom handler (template ignored if set)
+    static: false, // serve template as-is, skip processing
   },
 });
 ```
@@ -107,7 +107,7 @@ export default function renderer({ req }: { req: Request }) {
   const url = new URL(req.url);
   return new Response(
     `<!DOCTYPE html><html><body><h1>${url.pathname}</h1></body></html>`,
-    { headers: { "content-type": "text/html; charset=utf-8" } },
+    { headers: { 'content-type': 'text/html; charset=utf-8' } }
   );
 }
 ```
@@ -118,7 +118,9 @@ HTML templates support the [rendu](https://github.com/h3js/rendu) preprocessor:
 
 ```html [index.html]
 <h1>Hello {{ $URL.pathname }}</h1>
-<? if ($METHOD === "POST") { ?><p>Submitted!</p><? } ?>
+<? if ($METHOD === "POST") { ?>
+<p>Submitted!</p>
+<? } ?>
 <script server>
   const data = await fetch("https://api.example.com/data").then((r) => r.json());
 </script>

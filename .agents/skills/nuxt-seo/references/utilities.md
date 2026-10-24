@@ -9,18 +9,18 @@ Automatic canonical URLs based on site config.
 ```ts
 export default defineNuxtConfig({
   seoUtils: {
-    canonicalQueryWhitelist: ['page', 'sort'],  // Keep these query params
-    redirectToCanonicalSiteUrl: true  // 301 to canonical domain
-  }
-})
+    canonicalQueryWhitelist: ['page', 'sort'], // Keep these query params
+    redirectToCanonicalSiteUrl: true, // 301 to canonical domain
+  },
+});
 ```
 
 Override per-page:
 
 ```ts
 useHead({
-  link: [{ rel: 'canonical', href: 'https://example.com/preferred-url' }]
-})
+  link: [{ rel: 'canonical', href: 'https://example.com/preferred-url' }],
+});
 ```
 
 ## Breadcrumbs
@@ -28,7 +28,7 @@ useHead({
 Generate breadcrumb items from current route:
 
 ```ts
-const items = useBreadcrumbItems()
+const items = useBreadcrumbItems();
 // [{ label: 'Home', to: '/' }, { label: 'Blog', to: '/blog' }, { label: 'My Post' }]
 ```
 
@@ -54,8 +54,8 @@ Customize labels in route meta:
 ```ts
 // pages/blog/[slug].vue
 definePageMeta({
-  breadcrumb: { label: 'Article' }
-})
+  breadcrumb: { label: 'Article' },
+});
 ```
 
 ## Title Templates
@@ -67,10 +67,10 @@ Set site-wide title template:
 export default defineNuxtConfig({
   app: {
     head: {
-      titleTemplate: '%s | My Site'
-    }
-  }
-})
+      titleTemplate: '%s | My Site',
+    },
+  },
+});
 ```
 
 Override per-page:
@@ -78,8 +78,8 @@ Override per-page:
 ```ts
 useHead({
   title: 'Page Title',
-  titleTemplate: '%s - Different Template'
-})
+  titleTemplate: '%s - Different Template',
+});
 ```
 
 ## Meta Defaults
@@ -91,11 +91,11 @@ export default defineNuxtConfig({
     head: {
       meta: [
         { name: 'author', content: 'My Name' },
-        { property: 'og:site_name', content: 'My Site' }
-      ]
-    }
-  }
-})
+        { property: 'og:site_name', content: 'My Site' },
+      ],
+    },
+  },
+});
 ```
 
 ## Link Checker
@@ -105,12 +105,12 @@ Build-time validation of links.
 ```ts
 export default defineNuxtConfig({
   linkChecker: {
-    failOnError: true,  // Default: fail build on errors
+    failOnError: true, // Default: fail build on errors
     exclude: ['/api/**'],
     skipInspections: ['missing-hash'],
-    report: { html: true }  // Generate HTML report
-  }
-})
+    report: { html: true }, // Generate HTML report
+  },
+});
 ```
 
 **Inspections:**
@@ -169,8 +169,8 @@ useSeoMeta({
   title: 'Page Title',
   description: 'Page description',
   ogImage: '/images/page-og.png',
-  twitterCard: 'summary_large_image'
-})
+  twitterCard: 'summary_large_image',
+});
 ```
 
 ## Trailing Slash Redirect
@@ -180,9 +180,9 @@ Enforce consistent URLs:
 ```ts
 export default defineNuxtConfig({
   site: {
-    trailingSlash: false  // Redirect /blog/ to /blog
-  }
-})
+    trailingSlash: false, // Redirect /blog/ to /blog
+  },
+});
 ```
 
 ## Debug Panel
@@ -191,8 +191,8 @@ Enable comprehensive debug panel:
 
 ```ts
 export default defineNuxtConfig({
-  seo: { debug: true }
-})
+  seo: { debug: true },
+});
 ```
 
 Shows in dev:

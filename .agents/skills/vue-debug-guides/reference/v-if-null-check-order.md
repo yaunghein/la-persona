@@ -22,9 +22,7 @@ tags: [vue3, conditional-rendering, v-if, null-check, defensive-programming]
 ```html
 <!-- WRONG: Accessing property before checking object exists -->
 <template>
-  <div v-if="user.isAdmin">
-    Admin Panel
-  </div>
+  <div v-if="user.isAdmin">Admin Panel</div>
   <!-- Error if user is null/undefined: Cannot read property 'isAdmin' of undefined -->
 </template>
 ```
@@ -42,9 +40,7 @@ tags: [vue3, conditional-rendering, v-if, null-check, defensive-programming]
 ```html
 <!-- WRONG: Array access without existence check -->
 <template>
-  <div v-if="items[0].name === 'Featured'">
-    {{ items[0].description }}
-  </div>
+  <div v-if="items[0].name === 'Featured'">{{ items[0].description }}</div>
   <!-- Error if items is empty array -->
 </template>
 ```
@@ -54,18 +50,14 @@ tags: [vue3, conditional-rendering, v-if, null-check, defensive-programming]
 ```html
 <!-- CORRECT: Check object exists first with && -->
 <template>
-  <div v-if="user && user.isAdmin">
-    Admin Panel
-  </div>
+  <div v-if="user && user.isAdmin">Admin Panel</div>
 </template>
 ```
 
 ```html
 <!-- CORRECT: Optional chaining (Vue 3) -->
 <template>
-  <div v-if="user?.isAdmin">
-    Admin Panel
-  </div>
+  <div v-if="user?.isAdmin">Admin Panel</div>
 </template>
 ```
 
@@ -86,9 +78,7 @@ tags: [vue3, conditional-rendering, v-if, null-check, defensive-programming]
   </div>
 
   <!-- Or with optional chaining -->
-  <div v-if="items?.[0]?.name === 'Featured'">
-    {{ items[0].description }}
-  </div>
+  <div v-if="items?.[0]?.name === 'Featured'">{{ items[0].description }}</div>
 </template>
 ```
 

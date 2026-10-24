@@ -40,7 +40,7 @@ A high-performance markdown parser with Comark (Components in Markdown) support,
 ### Basic Usage
 
 ```typescript
-import { parseMarkdown } from 'comark'
+import { parseMarkdown } from 'comark';
 
 const content = `---
 title: Hello World
@@ -53,12 +53,12 @@ This is **markdown** with :icon component.
 ::alert{type="info"}
 Important message
 ::
-`
+`;
 
-const result = await parseMarkdown(content)
-console.log(result.nodes)       // Markdown AST
-console.log(result.frontmatter) // { title: 'Hello World' }
-console.log(result.meta)    // Additional metadata
+const result = await parseMarkdown(content);
+console.log(result.nodes); // Markdown AST
+console.log(result.frontmatter); // { title: 'Hello World' }
+console.log(result.meta); // Additional metadata
 ```
 
 ### Vue Rendering
@@ -69,19 +69,19 @@ console.log(result.meta)    // Additional metadata
 </template>
 
 <script setup lang="ts">
-import { Markdown } from '@comark/vue'
+import { Markdown } from '@comark/vue';
 
-const content = `# Hello World`
+const content = `# Hello World`;
 </script>
 ```
 
 ### React Rendering
 
 ```tsx
-import { Markdown } from '@comark/react'
+import { Markdown } from '@comark/react';
 
 export default function App() {
-  return <Markdown value={content} />
+  return <Markdown value={content} />;
 }
 ```
 
@@ -100,8 +100,8 @@ export default function App() {
 ### Angular Rendering
 
 ```typescript
-import { Component } from '@angular/core'
-import { Markdown } from '@comark/angular'
+import { Component } from '@angular/core';
+import { Markdown } from '@comark/angular';
 
 @Component({
   selector: 'app-root',
@@ -110,7 +110,7 @@ import { Markdown } from '@comark/angular'
   template: `<comark-markdown [value]="content" />`,
 })
 export class AppComponent {
-  content = `# Hello World`
+  content = `# Hello World`;
 }
 ```
 
@@ -238,16 +238,20 @@ Comark extends markdown with custom components while preserving readability:
 
 ```markdown
 <!-- Block Component -->
+
 ::alert{type="warning" .important}
 This is a **warning** message with markdown support.
 ::
 
 <!-- Inline Component -->
+
 Check out this :icon-star{.text-yellow} component.
 
 <!-- Component with Slots -->
+
 ::card
 #header
+
 ## Title
 
 #content
@@ -265,12 +269,12 @@ Lightweight array-based structure for efficient processing:
 ```typescript
 interface MarkdownDocument {
   nodes: [
-    ["h1", { "id": "hello" }, "Hello"],
-    ["p", {}, "Text with ", ["strong", {}, "bold"], " word"],
-    ["alert", { "type": "info" }, "Message"]
-  ],
-  frontmatter: {},
-  meta: {}
+    ['h1', { id: 'hello' }, 'Hello'],
+    ['p', {}, 'Text with ', ['strong', {}, 'bold'], ' word'],
+    ['alert', { type: 'info' }, 'Message'],
+  ];
+  frontmatter: {};
+  meta: {};
 }
 ```
 
@@ -279,12 +283,12 @@ interface MarkdownDocument {
 ### 1. Static Site Generator
 
 ```typescript
-import { parseMarkdown } from 'comark'
-import { renderHtmlFromDocument } from '@comark/html'
-import shiki from '@comark/html/plugins/shiki'
+import { parseMarkdown } from 'comark';
+import { renderHtmlFromDocument } from '@comark/html';
+import shiki from '@comark/html/plugins/shiki';
 
 async function processMarkdownFile(filePath: string) {
-  const content = await readFile(filePath, 'utf-8')
+  const content = await readFile(filePath, 'utf-8');
 
   const doc = await parseMarkdown(content, {
     plugins: [
@@ -292,52 +296,52 @@ async function processMarkdownFile(filePath: string) {
         themes: { light: 'github-dark', dark: 'github-dark' },
       }),
     ],
-  })
+  });
 
   return {
     html: await renderHtmlFromDocument(doc),
     frontmatter: doc.frontmatter,
-    toc: doc.meta.toc
-  }
+    toc: doc.meta.toc,
+  };
 }
 ```
 
 ### 2. Real-time Markdown Editor
 
 ```tsx
-import { useState } from 'react'
-import { Markdown } from '@comark/react'
+import { useState } from 'react';
+import { Markdown } from '@comark/react';
 
 export default function Editor() {
-  const [content, setContent] = useState('# Hello')
+  const [content, setContent] = useState('# Hello');
 
   return (
     <div className="split-editor">
-      <textarea value={content} onChange={e => setContent(e.target.value)} />
+      <textarea value={content} onChange={(e) => setContent(e.target.value)} />
       <Markdown value={content} />
     </div>
-  )
+  );
 }
 ```
 
 ### 3. Batch File Processing
 
 ```typescript
-import { readFile } from 'node:fs/promises'
-import { parseMarkdown } from 'comark'
+import { readFile } from 'node:fs/promises';
+import { parseMarkdown } from 'comark';
 
 async function processMultipleFiles(files: string[]) {
   const results = await Promise.all(
     files.map(async (file) => {
-      const content = await readFile(file, 'utf-8')
-      return await parseMarkdown(content)
+      const content = await readFile(file, 'utf-8');
+      return await parseMarkdown(content);
     })
-  )
+  );
 
   results.forEach((result, i) => {
-    console.log(`File ${files[i]}:`)
-    console.log(`  - ${result.nodes.length} nodes`)
-  })
+    console.log(`File ${files[i]}:`);
+    console.log(`  - ${result.nodes.length} nodes`);
+  });
 }
 ```
 
@@ -351,8 +355,8 @@ async function processMultipleFiles(files: string[]) {
 </template>
 
 <script setup lang="ts">
-import { Markdown } from '@comark/vue'
-import { docComponents } from './components'
+import { Markdown } from '@comark/vue';
+import { docComponents } from './components';
 </script>
 ```
 
@@ -417,11 +421,7 @@ createHtmlRenderer(options?: ParserOptions & RendererOptions): (markdown: string
 Full TypeScript definitions included:
 
 ```typescript
-import type {
-  MarkdownDocument,
-  Node,
-  ParserOptions,
-} from 'comark'
+import type { MarkdownDocument, Node, ParserOptions } from 'comark';
 ```
 
 ## Architecture Overview

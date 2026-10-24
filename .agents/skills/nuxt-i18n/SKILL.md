@@ -40,7 +40,7 @@ export default defineNuxtConfig({
       { code: 'fr', language: 'fr-FR', name: 'Français', file: 'fr.json' },
     ],
   },
-})
+});
 ```
 
 ```json

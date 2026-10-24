@@ -21,6 +21,7 @@ const isCreateOpen = ref(false);
 const isEditOpen = ref(false);
 const isViewOpen = ref(false);
 const isRegisterOpen = ref(false);
+const isRequestCardOpen = ref(false);
 const editingEvent = ref<EventListItemDTO | null>(null);
 const viewingEvent = ref<EventListItemDTO | null>(null);
 const registeringEvent = ref<EventListItemDTO | null>(null);
@@ -262,6 +263,7 @@ function onViewOrganizer() {
       @share="onShare"
       @view="onView"
       @register="onRegister"
+      @request-card="isRequestCardOpen = true"
     />
   </div>
 
@@ -288,4 +290,5 @@ function onViewOrganizer() {
     :organizer="organizer"
     @view-organizer="onViewOrganizer"
   />
+  <CardRequestSlideover v-model:open="isRequestCardOpen" />
 </template>

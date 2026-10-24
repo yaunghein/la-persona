@@ -22,7 +22,7 @@ tags: [vue3, slots, component-composition, wrapper-components, slot-forwarding]
 ```vue
 <!-- EnhancedButton.vue - Wrapper component -->
 <script setup>
-import BaseButton from './BaseButton.vue'
+import BaseButton from './BaseButton.vue';
 </script>
 
 <template>
@@ -41,7 +41,7 @@ import BaseButton from './BaseButton.vue'
 
 ```vue
 <script setup>
-import EnhancedButton from './EnhancedButton.vue'
+import EnhancedButton from './EnhancedButton.vue';
 </script>
 
 <template>
@@ -50,9 +50,7 @@ import EnhancedButton from './EnhancedButton.vue'
     <template #icon>
       <IconCheck />
     </template>
-    <template #default>
-      Click me
-    </template>
+    <template #default> Click me </template>
   </EnhancedButton>
 </template>
 ```
@@ -64,9 +62,9 @@ When the child component provides slot props, you must forward them:
 ```vue
 <!-- DataTableWrapper.vue -->
 <script setup>
-import DataTable from './DataTable.vue'
+import DataTable from './DataTable.vue';
 
-const props = defineProps(['data'])
+const props = defineProps(['data']);
 </script>
 
 <template>

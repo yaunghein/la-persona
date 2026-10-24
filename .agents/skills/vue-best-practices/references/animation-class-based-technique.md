@@ -41,19 +41,19 @@ tags: [vue3, animation, css, class-binding, state]
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref } from 'vue';
 
-const showError = ref(false)
+const showError = ref(false);
 
 function submitForm() {
   if (!isValid()) {
     // Trigger shake animation
-    showError.value = true
+    showError.value = true;
 
     // Auto-remove class after animation completes
     setTimeout(() => {
-      showError.value = false
-    }, 820)  // Match animation duration
+      showError.value = false;
+    }, 820); // Match animation duration
   }
 }
 </script>
@@ -61,14 +61,27 @@ function submitForm() {
 <style>
 .shake {
   animation: shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-  transform: translate3d(0, 0, 0);  /* Enable GPU acceleration */
+  transform: translate3d(0, 0, 0); /* Enable GPU acceleration */
 }
 
 @keyframes shake {
-  10%, 90% { transform: translate3d(-1px, 0, 0); }
-  20%, 80% { transform: translate3d(2px, 0, 0); }
-  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-  40%, 60% { transform: translate3d(4px, 0, 0); }
+  10%,
+  90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+  20%,
+  80% {
+    transform: translate3d(2px, 0, 0);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+  40%,
+  60% {
+    transform: translate3d(4px, 0, 0);
+  }
 }
 </style>
 ```
@@ -79,23 +92,20 @@ function submitForm() {
 
 ```vue
 <template>
-  <button
-    @click="save"
-    :class="{ pulse: saved }"
-  >
+  <button @click="save" :class="{ pulse: saved }">
     {{ saved ? 'Saved!' : 'Save' }}
   </button>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref } from 'vue';
 
-const saved = ref(false)
+const saved = ref(false);
 
 async function save() {
-  await saveData()
-  saved.value = true
-  setTimeout(() => saved.value = false, 1000)
+  await saveData();
+  saved.value = true;
+  setTimeout(() => (saved.value = false), 1000);
 }
 </script>
 
@@ -105,8 +115,13 @@ async function save() {
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
 }
 </style>
 ```
@@ -115,23 +130,19 @@ async function save() {
 
 ```vue
 <template>
-  <div
-    :class="{ highlight: justUpdated }"
-  >
-    Value: {{ value }}
-  </div>
+  <div :class="{ highlight: justUpdated }">Value: {{ value }}</div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch } from 'vue';
 
-const value = ref(0)
-const justUpdated = ref(false)
+const value = ref(0);
+const justUpdated = ref(false);
 
 watch(value, () => {
-  justUpdated.value = true
-  setTimeout(() => justUpdated.value = false, 1000)
-})
+  justUpdated.value = true;
+  setTimeout(() => (justUpdated.value = false), 1000);
+});
 </script>
 
 <style>
@@ -140,8 +151,12 @@ watch(value, () => {
 }
 
 @keyframes highlight {
-  0% { background-color: yellow; }
-  100% { background-color: transparent; }
+  0% {
+    background-color: yellow;
+  }
+  100% {
+    background-color: transparent;
+  }
 }
 </style>
 ```
@@ -159,12 +174,12 @@ watch(value, () => {
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref } from 'vue';
 
-const needsAttention = ref(false)
+const needsAttention = ref(false);
 
 function notifyUser() {
-  needsAttention.value = true
+  needsAttention.value = true;
   // No setTimeout needed - using animationend event
 }
 </script>
@@ -175,8 +190,13 @@ function notifyUser() {
 }
 
 @keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 </style>
 ```
@@ -187,21 +207,18 @@ Instead of `setTimeout`, use the `animationend` event for cleaner code:
 
 ```vue
 <template>
-  <div
-    :class="{ animate: isAnimating }"
-    @animationend="isAnimating = false"
-  >
+  <div :class="{ animate: isAnimating }" @animationend="isAnimating = false">
     Content
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref } from 'vue';
 
-const isAnimating = ref(false)
+const isAnimating = ref(false);
 
 function triggerAnimation() {
-  isAnimating.value = true
+  isAnimating.value = true;
   // Class is automatically removed when animation ends
 }
 </script>
@@ -211,45 +228,39 @@ function triggerAnimation() {
 
 ```javascript
 // composables/useAnimation.js
-import { ref } from 'vue'
+import { ref } from 'vue';
 
 export function useAnimation(duration = 500) {
-  const isAnimating = ref(false)
+  const isAnimating = ref(false);
 
   function trigger() {
-    isAnimating.value = true
+    isAnimating.value = true;
     setTimeout(() => {
-      isAnimating.value = false
-    }, duration)
+      isAnimating.value = false;
+    }, duration);
   }
 
   return {
     isAnimating,
-    trigger
-  }
+    trigger,
+  };
 }
 ```
 
 ```vue
 <script setup>
-import { useAnimation } from '@/composables/useAnimation'
+import { useAnimation } from '@/composables/useAnimation';
 
-const shake = useAnimation(820)
-const pulse = useAnimation(500)
+const shake = useAnimation(820);
+const pulse = useAnimation(500);
 </script>
 
 <template>
-  <button
-    :class="{ shake: shake.isAnimating.value }"
-    @click="shake.trigger()"
-  >
+  <button :class="{ shake: shake.isAnimating.value }" @click="shake.trigger()">
     Shake me
   </button>
 
-  <button
-    :class="{ pulse: pulse.isAnimating.value }"
-    @click="pulse.trigger()"
-  >
+  <button :class="{ pulse: pulse.isAnimating.value }" @click="pulse.trigger()">
     Pulse me
   </button>
 </template>

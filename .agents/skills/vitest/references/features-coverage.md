@@ -33,10 +33,7 @@ defineConfig({
       include: ['src/**/*.{ts,tsx}'],
 
       // Exclusion is applied to files matched by `include`
-      exclude: [
-        '**/*.d.ts',
-        '**/*.test.ts',
-      ],
+      exclude: ['**/*.d.ts', '**/*.test.ts'],
 
       // Thresholds
       thresholds: {
@@ -51,7 +48,7 @@ defineConfig({
       autoAttachSubprocess: false,
     },
   },
-})
+});
 ```
 
 ## Providers
@@ -126,7 +123,7 @@ coverage: {
 ```ts
 /* v8 ignore next -- @preserve */
 function ignored() {
-  return 'not covered'
+  return 'not covered';
 }
 
 /* v8 ignore start -- @preserve */

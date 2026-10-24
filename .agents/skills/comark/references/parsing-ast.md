@@ -16,7 +16,7 @@ Complete guide for parsing Comark content and working with the serializable `Mar
 The primary way to parse Comark content is using the `parseMarkdown()` function:
 
 ```typescript
-import { parseMarkdown } from 'comark'
+import { parseMarkdown } from 'comark';
 
 const content = `---
 title: My Document
@@ -29,22 +29,22 @@ This is **markdown** with :icon-star component.
 ::alert{type="info"}
 Important message here
 ::
-`
+`;
 
-const result = await parseMarkdown(content)
+const result = await parseMarkdown(content);
 ```
 
 ### Result Structure
 
 ```typescript
 interface MarkdownDocument {
-  nodes: Node[]                   // Parsed AST nodes
-  frontmatter: Record<string, any>      // YAML frontmatter data
+  nodes: Node[]; // Parsed AST nodes
+  frontmatter: Record<string, any>; // YAML frontmatter data
   meta: {
-    toc?: any                           // Table of contents (from toc plugin)
-    summary?: Node[]              // Summary content (from summary plugin)
-    [key: string]: any                  // Other plugin metadata
-  }
+    toc?: any; // Table of contents (from toc plugin)
+    summary?: Node[]; // Summary content (from summary plugin)
+    [key: string]: any; // Other plugin metadata
+  };
 }
 ```
 
@@ -52,9 +52,9 @@ interface MarkdownDocument {
 
 ```typescript
 interface ParserOptions {
-  autoUnwrap?: boolean      // Remove unnecessary <p> wrappers (default: true)
-  autoClose?: boolean       // Auto-close unclosed syntax (default: true)
-  plugins?: ComarkPlugin[]  // Enable plugins (e.g., highlight, emoji, toc)
+  autoUnwrap?: boolean; // Remove unnecessary <p> wrappers (default: true)
+  autoClose?: boolean; // Auto-close unclosed syntax (default: true)
+  plugins?: ComarkPlugin[]; // Enable plugins (e.g., highlight, emoji, toc)
 }
 ```
 
@@ -62,19 +62,19 @@ interface ParserOptions {
 
 ```typescript
 // Default parsing
-const result = await parseMarkdown(content)
+const result = await parseMarkdown(content);
 
 // Disable auto-unwrap
-const result = await parseMarkdown(content, { autoUnwrap: false })
+const result = await parseMarkdown(content, { autoUnwrap: false });
 
 // Disable auto-close
-const result = await parseMarkdown(content, { autoClose: false })
+const result = await parseMarkdown(content, { autoClose: false });
 
 // Both disabled
 const result = await parseMarkdown(content, {
   autoUnwrap: false,
-  autoClose: false
-})
+  autoClose: false,
+});
 ```
 
 ### Auto-Unwrap Feature
@@ -100,21 +100,21 @@ Auto-unwrap applies to any component whose only child is a single paragraph.
 Auto-close automatically closes unclosed markdown syntax, essential for streaming:
 
 ```typescript
-import { autoCloseMarkdown } from 'comark'
+import { autoCloseMarkdown } from 'comark';
 
 // Unclosed bold
-const partial = '**bold text'
-const closed = autoCloseMarkdown(partial)
+const partial = '**bold text';
+const closed = autoCloseMarkdown(partial);
 // Result: '**bold text**'
 
 // Unclosed component
-const component = '::alert{type="info"}\nMessage'
-const closedComponent = autoCloseMarkdown(component)
+const component = '::alert{type="info"}\nMessage';
+const closedComponent = autoCloseMarkdown(component);
 // Result: '::alert{type="info"}\nMessage\n::'
 
 // Unclosed properties
-const props = 'Text {prop="value'
-const closedProps = autoCloseMarkdown(props)
+const props = 'Text {prop="value';
+const closedProps = autoCloseMarkdown(props);
 // Result: 'Text {prop="value"}'
 ```
 
@@ -132,8 +132,8 @@ const closedProps = autoCloseMarkdown(props)
 For syntax highlighting support, use the `highlight` plugin:
 
 ```typescript
-import { parseMarkdown } from 'comark'
-import shiki from 'comark/plugins/shiki'
+import { parseMarkdown } from 'comark';
+import shiki from 'comark/plugins/shiki';
 
 const content = `
 # Code Example
@@ -143,12 +143,12 @@ function hello() {
   console.log("Hello!")
 }
 \`\`\`
-`
+`;
 
 // Enable syntax highlighting
 const result = await parseMarkdown(content, {
-  plugins: [shiki()]
-})
+  plugins: [shiki()],
+});
 
 // With custom Shiki options
 const result = await parseMarkdown(content, {
@@ -156,12 +156,12 @@ const result = await parseMarkdown(content, {
     shiki({
       themes: {
         light: 'github-light',
-        dark: 'github-dark'
+        dark: 'github-dark',
       },
-      languages: ['javascript', 'typescript', 'python']
-    })
-  ]
-})
+      languages: ['javascript', 'typescript', 'python'],
+    }),
+  ],
+});
 ```
 
 ### Highlight Plugin Options
@@ -169,44 +169,45 @@ const result = await parseMarkdown(content, {
 ```typescript
 // Standard entry: comark/plugins/shiki
 interface ShikiOptions {
-  registerDefaultLanguages?: boolean  // default: true
-  registerDefaultThemes?: boolean     // default: true
+  registerDefaultLanguages?: boolean; // default: true
+  registerDefaultThemes?: boolean; // default: true
   themes?: {
-    light?: ThemeRegistration         // default: material-theme-lighter
-    dark?: ThemeRegistration          // default: material-theme-palenight
-  }
-  languages?: Array<LanguageRegistration | LanguageRegistration[]>  // merged onto default set
-  transformers?: ShikiTransformer[]
-  preStyles?: boolean
+    light?: ThemeRegistration; // default: material-theme-lighter
+    dark?: ThemeRegistration; // default: material-theme-palenight
+  };
+  languages?: Array<LanguageRegistration | LanguageRegistration[]>; // merged onto default set
+  transformers?: ShikiTransformer[];
+  preStyles?: boolean;
 }
 
 // Core entry: comark/plugins/shiki/core — no defaults / no registerDefault*
 interface ShikiCoreOptions {
-  themes: {                           // required
-    light?: ThemeRegistration
-    dark?: ThemeRegistration
-  }
-  languages: Array<LanguageRegistration | LanguageRegistration[]>  // required
-  transformers?: ShikiTransformer[]
-  preStyles?: boolean
+  themes: {
+    // required
+    light?: ThemeRegistration;
+    dark?: ThemeRegistration;
+  };
+  languages: Array<LanguageRegistration | LanguageRegistration[]>; // required
+  transformers?: ShikiTransformer[];
+  preStyles?: boolean;
 }
 ```
 
 ### Dual Theme Support
 
 ```typescript
-import shiki from 'comark/plugins/shiki'
+import shiki from 'comark/plugins/shiki';
 
 const result = await parseMarkdown(content, {
   plugins: [
     shiki({
       themes: {
         light: 'github-light',
-        dark: 'github-dark'
-      }
-    })
-  ]
-})
+        dark: 'github-dark',
+      },
+    }),
+  ],
+});
 ```
 
 ---
@@ -219,18 +220,18 @@ Comark returns a serializable `MarkdownDocument` with compact array-based nodes.
 
 ```typescript
 interface MarkdownDocument {
-  nodes: Node[]                   // Parsed AST nodes
-  frontmatter: Record<string, any>      // YAML frontmatter data
+  nodes: Node[]; // Parsed AST nodes
+  frontmatter: Record<string, any>; // YAML frontmatter data
   meta: {
-    toc?: any                           // Table of contents (from toc plugin)
-    summary?: Node[]              // Summary content (from summary plugin)
-    [key: string]: any                  // Other plugin metadata
-  }
+    toc?: any; // Table of contents (from toc plugin)
+    summary?: Node[]; // Summary content (from summary plugin)
+    [key: string]: any; // Other plugin metadata
+  };
 }
 
 type Node =
-  | string                    // Text nodes
-  | [tag: string, props?: Record<string, any>, ...children: Node[]]
+  | string // Text nodes
+  | [tag: string, props?: Record<string, any>, ...children: Node[]];
 ```
 
 ### Node Structure
@@ -291,7 +292,7 @@ title: Example
 
 # Hello World
 
-This is **bold** and *italic* text.
+This is **bold** and _italic_ text.
 
 ::alert{type="warning"}
 Warning message
@@ -303,11 +304,7 @@ Warning message
 ```json
 {
   "nodes": [
-    [
-      "h1",
-      { "id": "hello-world" },
-      "Hello World"
-    ],
+    ["h1", { "id": "hello-world" }, "Hello World"],
     [
       "p",
       {},
@@ -317,11 +314,7 @@ Warning message
       ["em", {}, "italic"],
       " text."
     ],
-    [
-      "alert",
-      { "type": "warning" },
-      ["p", {}, "Warning message"]
-    ]
+    ["alert", { "type": "warning" }, ["p", {}, "Warning message"]]
   ],
   "frontmatter": {
     "title": "Example"
@@ -345,14 +338,14 @@ Warning message
 ### Render to HTML
 
 ```typescript
-import { parseMarkdown } from 'comark'
-import { renderHtmlFromDocument } from '@comark/html'
+import { parseMarkdown } from 'comark';
+import { renderHtmlFromDocument } from '@comark/html';
 
-const content = '# Hello World\n\nThis is **markdown**.'
-const doc = await parseMarkdown(content)
+const content = '# Hello World\n\nThis is **markdown**.';
+const doc = await parseMarkdown(content);
 
-const html = await renderHtmlFromDocument(doc)
-console.log(html)
+const html = await renderHtmlFromDocument(doc);
+console.log(html);
 ```
 
 **Output:**
@@ -367,14 +360,14 @@ console.log(html)
 Convert AST back to Comark markdown:
 
 ```typescript
-import { parseMarkdown } from 'comark'
-import { renderMarkdown } from 'comark/render'
+import { parseMarkdown } from 'comark';
+import { renderMarkdown } from 'comark/render';
 
-const content = '# Hello\n\n::alert{type="info"}\nMessage\n::'
-const document = await parseMarkdown(content)
+const content = '# Hello\n\n::alert{type="info"}\nMessage\n::';
+const document = await parseMarkdown(content);
 
-const markdown = await renderMarkdown(document)
-console.log(markdown)
+const markdown = await renderMarkdown(document);
+console.log(markdown);
 ```
 
 **Output:**

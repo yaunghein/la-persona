@@ -11,13 +11,13 @@ Vitest reads configuration from `vitest.config.ts` or `vite.config.ts`. It share
 
 ```ts
 // vitest.config.ts
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
     // test options
   },
-})
+});
 ```
 
 ## Using with Existing Vite Config
@@ -27,14 +27,14 @@ Add Vitest types reference and use the `test` property:
 ```ts
 // vite.config.ts
 /// <reference types="vitest/config" />
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vite';
 
 export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
   },
-})
+});
 ```
 
 ## Merging Configs
@@ -43,14 +43,17 @@ If you have separate config files, use `mergeConfig`:
 
 ```ts
 // vitest.config.ts
-import { defineConfig, mergeConfig } from 'vitest/config'
-import viteConfig from './vite.config'
+import { defineConfig, mergeConfig } from 'vitest/config';
+import viteConfig from './vite.config';
 
-export default mergeConfig(viteConfig, defineConfig({
-  test: {
-    environment: 'jsdom',
-  },
-}))
+export default mergeConfig(
+  viteConfig,
+  defineConfig({
+    test: {
+      environment: 'jsdom',
+    },
+  })
+);
 ```
 
 ## Common Options
@@ -114,7 +117,7 @@ defineConfig({
     // v5: repeat every test N times regardless of result (flaky-hunting)
     repeats: 0,
   },
-})
+});
 ```
 
 ## v5 Performance Config
@@ -139,7 +142,7 @@ defineConfig({
     // Detect async resources leaking past a test file (slow; debugging only)
     detectAsyncLeaks: false,
   },
-})
+});
 ```
 
 ## v4/v5 Config Changes
@@ -169,7 +172,7 @@ export default defineConfig(({ mode }) => ({
   test: {
     // test options
   },
-}))
+}));
 ```
 
 ## Projects (Monorepos)
@@ -197,7 +200,7 @@ defineConfig({
       },
     ],
   },
-})
+});
 ```
 
 ## Key Points
