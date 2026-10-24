@@ -227,16 +227,34 @@ export const AdminOrganizationRouteParams = z.object({
 
 const ORGANIZATION_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-export const CreateOrganizationRequest = z.object({
-  name: z.string().trim().min(1, 'Name is required').max(120),
-  type: z.enum(['personal', 'community']),
-  slug: z.string().trim().max(200).optional(),
-  ownerUserId: z.string().trim().min(1).optional(),
-});
+export const CreateOrganizationRequest = z
+  .object({
+    name: z.string().trim().min(1, 'Name is required').max(120),
+    type: z.enum(['personal', 'community']),
+    slug: z.string().trim().max(200).optional(),
+    ownerUserId: z.string().trim().min(1).optional(),
+    ownerEmail: z.email('Enter a valid email').trim().toLowerCase().optional(),
+  })
+  .refine(
+    (request) =>
+      request.type === 'community' ? !request.ownerUserId : !request.ownerEmail,
+    {
+      message:
+        'Communities take an owner email; personal spaces an owner user.',
+      path: ['ownerEmail'],
+    }
+  );
 
 export type CreateOrganizationRequest = z.infer<
   typeof CreateOrganizationRequest
 >;
+
+/** Thakhin repair: give a community member the community card they lack. */
+export const CreateMemberCardRequest = z.object({
+  userId: z.string().trim().min(1),
+});
+
+export type CreateMemberCardRequest = z.infer<typeof CreateMemberCardRequest>;
 
 const optionalAsset = StoredImageReference.optional();
 const optionalRichText = richText.optional();

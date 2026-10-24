@@ -2,15 +2,27 @@ import { createOrganization } from '~~/server/features/organization/organization
 import { CreateOrganizationRequest } from '~~/shared/contracts/organization';
 
 export default defineEventHandler(async (event) => {
-  authorizePlatformAccess(event, 'organization:create');
+  const principal = authorizePlatformAccess(event, 'organization:create');
   const request = await parseRequestBody(event, CreateOrganizationRequest);
-  const created = await createOrganization(request);
+  const { summary, ownerInvitation, emails } = await createOrganization(
+    request,
+    principal.user.id
+  );
   enrichLog(event, {
-    organization: { id: created.id, slug: created.slug, type: created.type },
+    organization: { id: summary.id, slug: summary.slug, type: summary.type },
+    ...(ownerInvitation && {
+      invitation: {
+        id: ownerInvitation.id,
+        email: ownerInvitation.email,
+        role: ownerInvitation.role,
+      },
+      email: { attempted: true, to: [ownerInvitation.email] },
+    }),
   });
+  if (emails) trackEmailSends(event, emails);
   return respondCreated(
     event,
-    `/api/admin/organizations/${created.id}`,
-    created
+    `/api/admin/organizations/${summary.id}`,
+    summary
   );
 });

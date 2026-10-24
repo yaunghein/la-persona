@@ -255,6 +255,22 @@ export function listPendingInvitations(organizationId: string) {
     );
 }
 
+/** Owner invitations are sent by platform admins, who are not members, so they bypass better-auth's createInvitation. */
+export async function insertInvitation(values: {
+  organizationId: string;
+  email: string;
+  role: OrganizationMemberRole;
+  inviterId: string;
+  expiresAt: Date;
+}) {
+  const [row] = await db
+    .insert(invitation)
+    .values({ id: nanoid(), status: 'pending', ...values })
+    .returning();
+  if (!row) throw new Error('Invitation insert returned no row.');
+  return row;
+}
+
 export async function findInvitationById(invitationId: string) {
   const [row] = await db
     .select()

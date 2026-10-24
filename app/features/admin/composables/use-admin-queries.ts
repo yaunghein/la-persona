@@ -151,6 +151,11 @@ export const adminApi = {
     ),
   deleteOrganization: (organizationId: string) =>
     $fetch<void>(url(`organizations/${organizationId}`), { method: 'DELETE' }),
+  createMemberCard: (organizationId: string, userId: string) =>
+    $fetch<{ id: string; slug: string }>(
+      url(`organizations/${organizationId}/cards`),
+      { method: 'POST', body: { userId } }
+    ),
 
   getUser: (userId: string) => $fetch<AdminUserDetail>(url(`users/${userId}`)),
   createUser: (request: CreateUserRequest) =>

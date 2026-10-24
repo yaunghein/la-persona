@@ -16,8 +16,12 @@ import {
   findCommunitySettingByOrganizationId,
   upsertCommunitySettingByOrganizationId,
 } from '~~/server/features/organization/community-setting.repository';
-import { updateCommunityCardsBrand } from '~~/server/features/organization/community.repository';
+import {
+  insertInvitation,
+  updateCommunityCardsBrand,
+} from '~~/server/features/organization/community.repository';
 import { ensureCommunityCard } from '~~/server/features/organization/community.service';
+import { sendOwnerInvitationEmail } from '~~/server/features/organization/invitation.notifications';
 import { sanitizeRichText } from '~~/server/lib/html-sanitizer';
 import type { Collection } from '~~/shared/contracts/collection';
 import {
@@ -34,6 +38,7 @@ import {
 import { slugify } from '~~/shared/utils/slugify';
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const OWNER_INVITATION_DAYS = 7;
 
 function toSummary(
   row: Awaited<ReturnType<typeof listOrganizationsWithCounts>>[number]
@@ -56,7 +61,14 @@ export async function listOrganizations(): Promise<
   return { items: (await listOrganizationsWithCounts()).map(toSummary) };
 }
 
-export async function createOrganization(request: CreateOrganizationRequest) {
+/**
+ * Personal spaces get their owner at once. A community starts empty and its
+ * owner is invited by email; accepting adds them and their community card.
+ */
+export async function createOrganization(
+  request: CreateOrganizationRequest,
+  inviterId: string
+) {
   const isPersonal = request.type === ORGANIZATION_TYPES.PERSONAL;
   let slug = slugify(request.slug || request.name);
   if (!slug || !SLUG_PATTERN.test(slug)) {
@@ -85,15 +97,58 @@ export async function createOrganization(request: CreateOrganizationRequest) {
     type: request.type,
     ownerUserId,
   });
-  // Every community member, including its first owner, holds a community card.
-  if (ownerUserId && !isPersonal)
-    await ensureCommunityCard(ownerUserId, created.id);
 
-  return toSummary({
-    ...created,
-    memberCount: ownerUserId ? 1 : 0,
-    cardCount: isPersonal ? 0 : ownerUserId ? 1 : 0,
-  });
+  const ownerInvitation =
+    !isPersonal && request.ownerEmail
+      ? await insertInvitation({
+          organizationId: created.id,
+          email: request.ownerEmail,
+          role: 'owner',
+          inviterId,
+          expiresAt: new Date(
+            Date.now() + OWNER_INVITATION_DAYS * 24 * 60 * 60 * 1000
+          ),
+        })
+      : null;
+  const emails = ownerInvitation
+    ? sendOwnerInvitationEmail({
+        to: ownerInvitation.email,
+        organizationName: created.name,
+        invitationId: ownerInvitation.id,
+      })
+    : null;
+
+  return {
+    summary: toSummary({
+      ...created,
+      memberCount: ownerUserId ? 1 : 0,
+      cardCount: 0,
+    }),
+    ownerInvitation,
+    emails,
+  };
+}
+
+/** Creates the community card a member is missing (e.g. owners from before cards came with membership). */
+export async function createMemberCommunityCard(
+  organizationId: string,
+  userId: string
+) {
+  const detail = await findOrganizationDetail(organizationId);
+  if (!detail) throw notFound('Organization');
+  if (detail.organization.type !== ORGANIZATION_TYPES.COMMUNITY) {
+    throw conflict(
+      'Only community members hold community cards.',
+      'not_community'
+    );
+  }
+  const holder = detail.members.find((row) => row.userId === userId);
+  if (!holder) throw notFound('Member');
+  if (detail.cards.some((row) => row.userId === userId)) {
+    throw conflict('This member already has a community card.', 'card_exists');
+  }
+  const card = await ensureCommunityCard(userId, organizationId);
+  return { card, holderEmail: holder.userEmail };
 }
 
 export async function describeOrganization(

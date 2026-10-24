@@ -137,6 +137,13 @@ export async function reviewInvitation(
       'invitation_decided'
     );
   }
+  // Owner invitations come from Thakhin; only the invitee can accept them.
+  if (status === 'accepted' && invitation.role === 'owner') {
+    throw forbidden(
+      'Only the invited owner can accept this invitation.',
+      'owner_invitation'
+    );
+  }
 
   if (status === 'canceled') {
     await auth.api.cancelInvitation({

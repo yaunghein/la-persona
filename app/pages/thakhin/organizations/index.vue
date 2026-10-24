@@ -58,7 +58,11 @@ const createForm = reactive({
   slug: '',
   type: ORGANIZATION_TYPES.COMMUNITY as OrganizationType,
   ownerUserId: undefined as string | undefined,
+  ownerEmail: '',
 });
+const isCreatingCommunity = computed(
+  () => createForm.type === ORGANIZATION_TYPES.COMMUNITY
+);
 
 const typeItems = [
   {
@@ -147,6 +151,7 @@ function openCreate() {
   createForm.slug = '';
   createForm.type = ORGANIZATION_TYPES.COMMUNITY;
   createForm.ownerUserId = undefined;
+  createForm.ownerEmail = '';
   isCreateOpen.value = true;
 }
 
@@ -227,17 +232,24 @@ async function onCreate() {
     return;
   }
 
+  const ownerEmail = createForm.ownerEmail.trim();
   isCreating.value = true;
   try {
     await adminApi.createOrganization({
       name,
       type: createForm.type,
       slug: createForm.slug.trim() || undefined,
-      ownerUserId: createForm.ownerUserId || undefined,
+      ...(isCreatingCommunity.value
+        ? { ownerEmail: ownerEmail || undefined }
+        : { ownerUserId: createForm.ownerUserId || undefined }),
     });
     await invalidateAdmin();
     toast.add({
       title: 'Organization created',
+      description:
+        isCreatingCommunity.value && ownerEmail
+          ? `Owner invitation sent to ${ownerEmail}.`
+          : undefined,
       color: 'success',
     });
     closeCreate();
@@ -294,6 +306,36 @@ async function openOrg(row: OrgRow) {
     });
   } finally {
     orgLoading.value = false;
+  }
+}
+
+const creatingCardFor = ref<string | null>(null);
+
+function needsCommunityCard(userId: string) {
+  const detail = orgDetail.value;
+  return (
+    detail?.type === ORGANIZATION_TYPES.COMMUNITY &&
+    !detail.cards.some((item) => item.userId === userId)
+  );
+}
+
+async function createMemberCard(userId: string) {
+  const detail = orgDetail.value;
+  if (!detail) return;
+  creatingCardFor.value = userId;
+  try {
+    await adminApi.createMemberCard(detail.id, userId);
+    orgDetail.value = await adminApi.getOrganization(detail.id);
+    await invalidateAdmin();
+    toast.add({ title: 'Community card created', color: 'success' });
+  } catch (error) {
+    toast.add({
+      title: 'Could not create card',
+      description: apiErrorMessage(error),
+      color: 'error',
+    });
+  } finally {
+    creatingCardFor.value = null;
   }
 }
 
@@ -569,7 +611,21 @@ const selectMenuUi = {
                 :ui="inputUi"
               />
             </UFormField>
-            <UFormField label="Owner" :class="formFieldClass">
+            <UFormField
+              v-if="isCreatingCommunity"
+              label="Owner email"
+              :class="formFieldClass"
+            >
+              <UInput
+                v-model="createForm.ownerEmail"
+                type="email"
+                placeholder="We'll email them an invitation"
+                class="w-full"
+                size="xl"
+                :ui="inputUi"
+              />
+            </UFormField>
+            <UFormField v-else label="Owner" :class="formFieldClass">
               <USelectMenu
                 v-model="createForm.ownerUserId"
                 value-key="id"
@@ -894,13 +950,22 @@ const selectMenuUi = {
                     {{ member.userEmail }}
                   </p>
                 </div>
-                <UBadge
-                  color="neutral"
-                  variant="subtle"
-                  class="shrink-0 capitalize"
-                >
-                  {{ member.role }}
-                </UBadge>
+                <div class="flex shrink-0 items-center gap-2">
+                  <UButton
+                    v-if="needsCommunityCard(member.userId)"
+                    label="Create card"
+                    size="xs"
+                    color="neutral"
+                    variant="soft"
+                    icon="i-lucide-id-card"
+                    :loading="creatingCardFor === member.userId"
+                    :disabled="!!creatingCardFor"
+                    @click="createMemberCard(member.userId)"
+                  />
+                  <UBadge color="neutral" variant="subtle" class="capitalize">
+                    {{ member.role }}
+                  </UBadge>
+                </div>
               </li>
             </ul>
           </section>
