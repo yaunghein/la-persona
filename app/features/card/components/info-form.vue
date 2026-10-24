@@ -539,7 +539,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="rounded-[8px] bg-[#171717] p-4 sm:p-8">
+  <div class="rounded-[8px] bg-surface p-4 sm:p-8">
     <div v-if="isLoading" class="space-y-8">
       <div class="flex items-center gap-4">
         <USkeleton class="h-24 w-24 rounded-full" />
@@ -559,11 +559,11 @@ onBeforeUnmount(() => {
     >
       <div class="space-y-2">
         <h2
-          class="text-md sm:text-xl font-medium uppercase tracking-widest text-white"
+          class="text-md sm:text-xl font-medium uppercase tracking-widest text-ink"
         >
           Contact Information
         </h2>
-        <p class="max-w-160 text-sm leading-5.25 text-[#8b8b8b]">
+        <p class="max-w-160 text-sm leading-5.25 text-subtle">
           This information will be visible on your persona card and exchange
           contact profile. Please share only what you are comfortable.
         </p>
@@ -585,7 +585,7 @@ onBeforeUnmount(() => {
             variant="solid"
             size="sm"
             icon="i-lucide-trash-2"
-            class="scale-80 sm:scale-100 absolute -bottom-1 sm:bottom-0 -right-1 sm:right-0 rounded-full border-2 border-white dark:border-gray-900"
+            class="scale-80 sm:scale-100 absolute -bottom-1 sm:bottom-0 -right-1 sm:right-0 rounded-full border-2 border-surface dark:border-gray-900"
             aria-label="Remove photo"
             @click="openRemovePhotoConfirm"
           />
@@ -605,7 +605,7 @@ onBeforeUnmount(() => {
               icon="i-lucide-upload"
               color="neutral"
               variant="soft"
-              class="h-10 text-sm rounded-full bg-[#232323] px-4 text-white hover:bg-[#2a2a2a]"
+              class="h-10 text-sm rounded-full bg-raised px-4 text-ink hover:bg-line"
               @click="triggerFilePicker"
             />
             <!-- <span
@@ -615,7 +615,7 @@ onBeforeUnmount(() => {
               Ready to upload
             </span> -->
           </div>
-          <p class="text-xs text-[#8b8b8b]">
+          <p class="text-xs text-subtle">
             JPG, PNG or WebP. Prefer under 800KB.
           </p>
         </div>
@@ -625,92 +625,92 @@ onBeforeUnmount(() => {
         <UFormField
           label="First Name"
           name="firstName"
-          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
           <UInput
             v-model="state.firstName"
             class="w-full"
             :ui="{
-              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+              base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
             }"
           />
         </UFormField>
         <UFormField
           label="Last Name"
           name="lastName"
-          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
           <UInput
             v-model="state.lastName"
             class="w-full"
             :ui="{
-              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+              base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
             }"
           />
         </UFormField>
         <UFormField
           label="Professional Title / Role"
           name="position"
-          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
           <UInput
             v-model="state.position"
             class="w-full"
             :ui="{
-              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+              base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
             }"
           />
         </UFormField>
         <UFormField
           label="Company / Brand Name"
           name="company"
-          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
           <UInput
             v-model="state.company"
             class="w-full"
             :ui="{
-              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+              base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
             }"
           />
         </UFormField>
         <UFormField
           label="Phone Number"
           name="phone"
-          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
           <UiPhoneField
             v-model="state.phone"
             v-model:country-code="state.phoneCountryCode"
             name="phone"
             :ui="{
-              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+              base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
             }"
           />
         </UFormField>
         <UFormField
           label="Email Address"
           name="email"
-          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
           <UInput
             v-model="state.email"
             class="w-full"
             :ui="{
-              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+              base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
             }"
           />
         </UFormField>
         <UFormField
           label="Personal Website / Portfolio"
           name="website"
-          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
           <UInput
             v-model="state.website"
             class="w-full"
             :ui="{
-              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+              base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
             }"
           />
         </UFormField>
@@ -718,7 +718,7 @@ onBeforeUnmount(() => {
 
       <div class="space-y-4 pt-3 sm:pt-6">
         <div class="flex items-center justify-between">
-          <h3 class="text-sm font-medium text-white">
+          <h3 class="text-sm font-medium text-ink">
             Social / Professional Links
           </h3>
           <UButton
@@ -727,7 +727,7 @@ onBeforeUnmount(() => {
             icon="i-lucide-plus"
             variant="soft"
             size="sm"
-            class="rounded-full bg-[#232323] text-xs px-3 text-white hover:bg-[#2a2a2a]"
+            class="rounded-full bg-raised text-xs px-3 text-ink hover:bg-line"
             @click="openCreateLinkSlideover"
           />
         </div>
@@ -735,20 +735,20 @@ onBeforeUnmount(() => {
           <div
             v-for="(link, index) in state.socials"
             :key="`${index}-${link.label}-${link.value}`"
-            class="sortable-link-row relative flex items-center gap-3 rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-3"
+            class="sortable-link-row relative flex items-center gap-3 rounded-[6px] border border-line bg-raised p-3"
           >
             <button
               type="button"
-              class="drag-handle inline-flex h-10 w-9 cursor-grab items-center justify-center rounded-[4px] text-[#8b8b8b] hover:bg-[#171717] active:cursor-grabbing"
+              class="drag-handle inline-flex h-10 w-9 cursor-grab items-center justify-center rounded-[4px] text-subtle hover:bg-surface active:cursor-grabbing"
               aria-label="Drag to reorder link"
             >
               <UIcon name="i-lucide-grip-vertical" class="size-5" />
             </button>
             <div class="min-w-0 flex-1">
-              <p class="truncate text-sm font-medium text-white">
+              <p class="truncate text-sm font-medium text-ink">
                 {{ resolveSocialLabel(link) || 'Untitled Link' }}
               </p>
-              <p class="truncate text-sm text-[#8b8b8b]">
+              <p class="truncate text-sm text-subtle">
                 {{ link.value || 'No URL added yet' }}
               </p>
             </div>
@@ -759,7 +759,7 @@ onBeforeUnmount(() => {
                 icon="i-lucide-pen-square"
                 color="neutral"
                 variant="ghost"
-                class="text-[#8b8b8b] hover:bg-[#171717] hover:text-white"
+                class="text-subtle hover:bg-surface hover:text-ink"
                 @click="openEditLinkSlideover(index)"
               />
               <UButton
@@ -782,14 +782,14 @@ onBeforeUnmount(() => {
           color="neutral"
           variant="ghost"
           icon="i-lucide-eye"
-          class="mr-3 h-10 text-sm rounded-full px-4 text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          class="mr-3 h-10 text-sm rounded-full px-4 text-subtle hover:bg-raised hover:text-ink"
           @click="openPreviewModal"
         >
           Preview Your Card
         </UButton>
         <UButton
           type="submit"
-          class="h-10 text-sm rounded-full bg-[#232323] px-6 text-white hover:bg-[#2a2a2a] disabled:bg-white/20 active:bg-[#2a2a2a] cursor-pointer"
+          class="h-10 text-sm rounded-full bg-raised px-6 text-ink hover:bg-line disabled:bg-ink/20 active:bg-line cursor-pointer"
           icon="i-lucide-square-pen"
           :loading="isSaving"
         >
@@ -807,10 +807,10 @@ onBeforeUnmount(() => {
       socialEditorMode === 'create' ? 'ADD SOCIAL LINK' : 'EDIT SOCIAL LINK'
     "
     :ui="{
-      content: 'bg-[#171717] overflow-hidden',
-      header: 'border-b-2 border-[#232323] px-6 py-6',
-      title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
-      body: 'bg-[#171717] px-6 py-6',
+      content: 'bg-surface overflow-hidden',
+      header: 'border-b-2 border-raised px-6 py-6',
+      title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
+      body: 'bg-surface px-6 py-6',
     }"
   >
     <template #body>
@@ -818,7 +818,7 @@ onBeforeUnmount(() => {
         <UFormField
           label="Link Type"
           name="socialDraft.label"
-          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
           <USelectMenu
             v-model="socialDraft.label"
@@ -827,7 +827,7 @@ onBeforeUnmount(() => {
             class="w-full"
             placeholder="Select Link Type"
             :ui="{
-              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white',
+              base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink',
             }"
           />
         </UFormField>
@@ -836,14 +836,14 @@ onBeforeUnmount(() => {
           v-if="socialDraft.label === 'Custom'"
           label="Custom Label"
           name="socialDraft.customLabel"
-          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
           <UInput
             v-model="socialDraft.customLabel"
             placeholder="Custom Label"
             class="w-full"
             :ui="{
-              base: 'h-12 border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+              base: 'h-12 border-line bg-raised text-sm text-ink placeholder:text-ink/50',
             }"
           />
         </UFormField>
@@ -851,14 +851,14 @@ onBeforeUnmount(() => {
         <UFormField
           label="Link"
           name="socialDraft.value"
-          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
           <UInput
             v-model="socialDraft.value"
             placeholder="www.example.com"
             class="w-full"
             :ui="{
-              base: 'h-12 border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+              base: 'h-12 border-line bg-raised text-sm text-ink placeholder:text-ink/50',
             }"
           />
         </UFormField>
@@ -871,7 +871,7 @@ onBeforeUnmount(() => {
         label="Cancel"
         color="neutral"
         variant="ghost"
-        class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+        class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-subtle hover:bg-raised hover:text-ink"
         @click="closeSocialSlideover"
       />
       <UButton
@@ -879,7 +879,7 @@ onBeforeUnmount(() => {
         :label="socialEditorMode === 'create' ? 'Add Link' : 'Save Link'"
         leading-icon="i-lucide-check"
         color="neutral"
-        class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+        class="h-10 cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
         @click="saveSocialDraft"
       />
     </template>
@@ -889,14 +889,14 @@ onBeforeUnmount(() => {
     v-model:open="isDeleteSocialConfirmOpen"
     title="Delete Link?"
     :ui="{
-      content: 'bg-[#171717] max-w-md',
-      title: 'text-white',
+      content: 'bg-surface max-w-md',
+      title: 'text-ink',
       body: 'pt-4',
       footer: 'justify-end gap-2',
     }"
   >
     <template #body>
-      <p class="text-sm leading-relaxed text-[#bcbcbc]">
+      <p class="text-sm leading-relaxed text-soft">
         This action cannot be undone. The selected social link will be removed.
       </p>
     </template>
@@ -932,16 +932,16 @@ onBeforeUnmount(() => {
     v-model:open="isPreviewModalOpen"
     title="Card Preview"
     :ui="{
-      content: 'max-w-xl bg-[#171717] overflow-hidden',
-      header: 'border-b border-[#232323] px-4 py-4 sm:px-6',
-      title: 'text-white',
+      content: 'max-w-xl bg-surface overflow-hidden',
+      header: 'border-b border-raised px-4 py-4 sm:px-6',
+      title: 'text-ink',
       body: 'p-4 sm:p-6',
     }"
   >
     <template #body>
       <div class="space-y-4">
         <div
-          class="relative h-[70vh] min-h-105 overflow-hidden rounded-lg border border-white/10 bg-[#0b0b0b]"
+          class="relative h-[70vh] min-h-105 overflow-hidden rounded-lg border border-ink/10 bg-[#0b0b0b]"
         >
           <canvas ref="previewCanvasEl" class="h-full w-full"></canvas>
 

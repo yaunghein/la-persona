@@ -125,10 +125,10 @@ const onMagicLink = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-dark">
+  <div class="min-h-screen bg-canvas">
     <div class="mx-auto flex min-h-screen flex-col sm:flex-row p-4 sm:p-0">
       <div
-        class="w-full sm:w-1/2 bg-dark relative overflow-hidden min-h-[28dvh] flex-1 sm:flex-none sm:min-h-full"
+        class="w-full sm:w-1/2 bg-canvas relative overflow-hidden min-h-[28dvh] flex-1 sm:flex-none sm:min-h-full"
       >
         <canvas
           id="login-spline"
@@ -137,12 +137,12 @@ const onMagicLink = async () => {
       </div>
 
       <div
-        class="relative w-full sm:w-1/2 flex items-center justify-center bg-[#171717] px-6 py-10 sm:py-16 min-h-[58dvh] sm:min-h-full rounded-lg sm:rounded-none"
+        class="relative w-full sm:w-1/2 flex items-center justify-center bg-surface px-6 py-10 sm:py-16 min-h-[58dvh] sm:min-h-full rounded-lg sm:rounded-none"
       >
         <div class="w-full max-w-121.25 space-y-8 mb-12">
           <div class="mx-auto max-w-63.5 space-y-6 text-center">
             <h1
-              class="text-[1.75rem] font-medium leading-none tracking-widest text-white uppercase"
+              class="text-[1.75rem] font-medium leading-none tracking-widest text-ink uppercase"
             >
               Sign In
             </h1>
@@ -156,7 +156,7 @@ const onMagicLink = async () => {
               block
               color="neutral"
               :loading="isGoogleSigningIn"
-              class="h-10 text-sm justify-center rounded-full bg-white font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
+              class="h-10 text-sm justify-center rounded-full bg-ink font-medium text-ink-inverse hover:bg-ink/90 active:hover:bg-ink/80"
               @click="onGoogle"
             >
               <template #leading>
@@ -169,7 +169,7 @@ const onMagicLink = async () => {
               block
               color="neutral"
               :loading="isLinkedInSigningIn"
-              class="h-10 text-sm justify-center rounded-full bg-white font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
+              class="h-10 text-sm justify-center rounded-full bg-ink font-medium text-ink-inverse hover:bg-ink/90 active:hover:bg-ink/80"
               @click="onLinkedIn"
             >
               <template #leading>
@@ -180,16 +180,16 @@ const onMagicLink = async () => {
           </div>
 
           <div class="flex items-center gap-2">
-            <div class="h-px flex-1 bg-[#2a2a2a]" />
-            <span class="px-2 text-sm leading-5.25 text-[#8b8b8b]">or</span>
-            <div class="h-px flex-1 bg-[#2a2a2a]" />
+            <div class="h-px flex-1 bg-line" />
+            <span class="px-2 text-sm leading-5.25 text-subtle">or</span>
+            <div class="h-px flex-1 bg-line" />
           </div>
 
           <div class="space-y-4">
             <UFormField
               label="Email"
               name="email"
-              class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+              class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
             >
               <UInput
                 v-model="email"
@@ -198,7 +198,7 @@ const onMagicLink = async () => {
                 size="xl"
                 class="w-full"
                 :ui="{
-                  base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+                  base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
                 }"
               />
             </UFormField>
@@ -207,7 +207,7 @@ const onMagicLink = async () => {
               block
               color="neutral"
               :loading="isMagicLinkSending"
-              class="h-10 text-sm justify-center rounded-full bg-white font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
+              class="h-10 text-sm justify-center rounded-full bg-ink font-medium text-ink-inverse hover:bg-ink/90 active:hover:bg-ink/80"
               @click="onMagicLink"
             >
               <template #leading>
@@ -219,7 +219,7 @@ const onMagicLink = async () => {
         </div>
 
         <p
-          class="absolute bottom-6 left-1/2 w-full text-xs max-w-121.25 -translate-x-1/2 px-6 text-center sm:text-sm leading-5.25 text-[#8b8b8b]"
+          class="absolute bottom-6 left-1/2 w-full text-xs max-w-121.25 -translate-x-1/2 px-6 text-center sm:text-sm leading-5.25 text-subtle"
         >
           By continuing, you agree to La Persona's
           <NuxtLink href="/privacy-policy" class="underline underline-offset-2">

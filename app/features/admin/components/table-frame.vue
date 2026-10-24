@@ -15,12 +15,10 @@ const pageCount = computed(() =>
 </script>
 
 <template>
-  <section
-    class="overflow-hidden rounded-xl border border-white/10 bg-[#121212]"
-  >
+  <section class="overflow-hidden rounded-xl border border-ink/10 bg-canvas">
     <div
       v-if="$slots.toolbar"
-      class="flex flex-wrap items-center gap-2 border-b border-white/10 px-4 py-3"
+      class="flex flex-wrap items-center gap-2 border-b border-ink/10 px-4 py-3"
     >
       <slot name="toolbar" />
     </div>
@@ -28,9 +26,9 @@ const pageCount = computed(() =>
       <slot />
     </div>
     <footer
-      class="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 px-4 py-3"
+      class="flex flex-wrap items-center justify-between gap-3 border-t border-ink/10 px-4 py-3"
     >
-      <p class="text-sm text-white/45">Page {{ page }} of {{ pageCount }}</p>
+      <p class="text-sm text-ink/45">Page {{ page }} of {{ pageCount }}</p>
       <UPagination
         :page="page"
         :total="total"

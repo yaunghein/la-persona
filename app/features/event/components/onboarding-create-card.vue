@@ -91,10 +91,10 @@ const linkTypeItems = computed(() =>
 );
 
 const formFieldClass =
-  '[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white';
+  '[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink';
 
 const inputUi = {
-  base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+  base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
 };
 
 function resolveSocialLabel(link: SocialFormLink) {
@@ -305,11 +305,11 @@ watch(
       <div class="mx-auto flex w-full max-w-120 flex-col gap-8 sm:max-w-md">
         <div class="flex flex-col gap-6">
           <h1
-            class="text-[1.75rem] font-medium leading-tight tracking-[0.175rem] uppercase text-white"
+            class="text-[1.75rem] font-medium leading-tight tracking-[0.175rem] uppercase text-ink"
           >
             Create your Persona card
           </h1>
-          <p class="text-sm leading-normal text-[#8b8b8b]">
+          <p class="text-sm leading-normal text-subtle">
             Don't worry about getting everything perfect. You can edit your
             information anytime.
           </p>
@@ -383,10 +383,10 @@ watch(
           <div class="flex flex-col gap-4">
             <div class="flex items-center justify-between gap-3">
               <div class="flex flex-col gap-3">
-                <p class="text-sm font-medium text-white">
+                <p class="text-sm font-medium text-ink">
                   Social / Professional Links
                 </p>
-                <p class="text-sm leading-normal text-[#8b8b8b]">
+                <p class="text-sm leading-normal text-subtle">
                   Add a profile so other members can connect with you.
                 </p>
               </div>
@@ -396,7 +396,7 @@ watch(
                 icon="i-lucide-plus"
                 variant="soft"
                 size="sm"
-                class="shrink-0 rounded-full bg-[#232323] px-3 text-xs text-white hover:bg-[#2a2a2a]"
+                class="shrink-0 rounded-full bg-raised px-3 text-xs text-ink hover:bg-line"
                 @click="openCreateLinkSlideover"
               />
             </div>
@@ -406,13 +406,13 @@ watch(
                 <div
                   v-for="(link, index) in state.socials"
                   :key="`${index}-${link.label}-${link.value}`"
-                  class="flex items-center gap-3 rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-3"
+                  class="flex items-center gap-3 rounded-[6px] border border-line bg-raised p-3"
                 >
                   <div class="min-w-0 flex-1">
-                    <p class="truncate text-sm font-medium text-white">
+                    <p class="truncate text-sm font-medium text-ink">
                       {{ resolveSocialLabel(link) || 'Untitled Link' }}
                     </p>
-                    <p class="truncate text-sm text-[#8b8b8b]">
+                    <p class="truncate text-sm text-subtle">
                       {{ link.value || 'No URL added yet' }}
                     </p>
                   </div>
@@ -423,7 +423,7 @@ watch(
                       icon="i-lucide-pen-square"
                       color="neutral"
                       variant="ghost"
-                      class="text-[#8b8b8b] hover:bg-[#171717] hover:text-white"
+                      class="text-subtle hover:bg-surface hover:text-ink"
                       :aria-label="`Edit ${resolveSocialLabel(link)}`"
                       @click="openEditLinkSlideover(index)"
                     />
@@ -444,18 +444,18 @@ watch(
           </div>
         </div>
 
-        <p class="text-sm leading-normal text-[#8b8b8b]">
+        <p class="text-sm leading-normal text-subtle">
           By creating a La Persona account, you agree to our
           <NuxtLink
             href="/privacy-policy"
-            class="text-white underline underline-offset-2"
+            class="text-ink underline underline-offset-2"
           >
             E-sign Consent
           </NuxtLink>
           and
           <NuxtLink
             href="/privacy-policy"
-            class="text-white underline underline-offset-2"
+            class="text-ink underline underline-offset-2"
           >
             User Agreement
           </NuxtLink>
@@ -481,10 +481,10 @@ watch(
       socialEditorMode === 'create' ? 'ADD SOCIAL LINK' : 'EDIT SOCIAL LINK'
     "
     :ui="{
-      content: 'bg-[#171717] overflow-hidden',
-      header: 'border-b-2 border-[#232323] px-6 py-6',
-      title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
-      body: 'bg-[#171717] px-6 py-6',
+      content: 'bg-surface overflow-hidden',
+      header: 'border-b-2 border-raised px-6 py-6',
+      title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
+      body: 'bg-surface px-6 py-6',
     }"
   >
     <template #body>
@@ -497,7 +497,7 @@ watch(
           label="Link Type"
           name="socialDraft.label"
           :error="socialDraftErrors.label || false"
-          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
           <USelectMenu
             v-model="socialDraft.label"
@@ -506,7 +506,7 @@ watch(
             class="w-full"
             placeholder="Select Link Type"
             :ui="{
-              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white',
+              base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink',
             }"
           />
         </UFormField>
@@ -516,14 +516,14 @@ watch(
           label="Custom Label"
           name="socialDraft.customLabel"
           :error="socialDraftErrors.customLabel || false"
-          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
           <UInput
             v-model="socialDraft.customLabel"
             placeholder="Custom Label"
             class="w-full"
             :ui="{
-              base: 'h-12 border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+              base: 'h-12 border-line bg-raised text-sm text-ink placeholder:text-ink/50',
             }"
           />
         </UFormField>
@@ -532,14 +532,14 @@ watch(
           label="Link"
           name="socialDraft.value"
           :error="socialDraftErrors.value || false"
-          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
           <UInput
             v-model="socialDraft.value"
             placeholder="www.example.com"
             class="w-full"
             :ui="{
-              base: 'h-12 border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+              base: 'h-12 border-line bg-raised text-sm text-ink placeholder:text-ink/50',
             }"
           />
         </UFormField>
@@ -552,7 +552,7 @@ watch(
         label="Cancel"
         color="neutral"
         variant="ghost"
-        class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+        class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-subtle hover:bg-raised hover:text-ink"
         @click="closeSocialSlideover"
       />
       <UButton
@@ -561,7 +561,7 @@ watch(
         :label="socialEditorMode === 'create' ? 'Add Link' : 'Save Link'"
         leading-icon="i-lucide-check"
         color="neutral"
-        class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+        class="h-10 cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
       />
     </template>
   </USlideover>
@@ -570,14 +570,14 @@ watch(
     v-model:open="isDeleteSocialConfirmOpen"
     title="Delete Link?"
     :ui="{
-      content: 'bg-[#171717] max-w-md',
-      title: 'text-white',
+      content: 'bg-surface max-w-md',
+      title: 'text-ink',
       body: 'pt-4',
       footer: 'justify-end gap-2',
     }"
   >
     <template #body>
-      <p class="text-sm leading-relaxed text-[#bcbcbc]">
+      <p class="text-sm leading-relaxed text-soft">
         This removes the selected social link from your community card.
       </p>
     </template>

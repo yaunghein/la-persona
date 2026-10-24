@@ -97,7 +97,7 @@ watch(
   <div v-if="orgs.length" class="flex flex-col gap-4">
     <p
       v-if="!collapsed"
-      class="px-2 text-sm font-medium uppercase tracking-[1.4px] text-white"
+      class="px-2 text-sm font-medium uppercase tracking-[1.4px] text-ink"
     >
       Communities
     </p>
@@ -107,7 +107,7 @@ watch(
         v-for="org in orgs"
         :key="org.slug"
         :content="{ align: 'start', side: 'right', sideOffset: 8 }"
-        :ui="{ content: 'border border-[#2a2a2a] bg-[#171717] p-2' }"
+        :ui="{ content: 'border border-line bg-surface p-2' }"
       >
         <UButton
           color="neutral"
@@ -116,7 +116,7 @@ watch(
           class="size-9 justify-center rounded-full p-0"
           :aria-label="org.name"
         >
-          <NuxtImg
+          <UiSkeletonImage
             :src="communityLogoSrc(org.logo, org.name)"
             :alt="org.name"
             width="20"
@@ -126,7 +126,7 @@ watch(
         </UButton>
         <template #content>
           <div class="flex min-w-44 flex-col gap-1">
-            <p class="px-2.5 py-1 text-sm font-medium text-white">
+            <p class="px-2.5 py-1 text-sm font-medium text-ink">
               {{ org.name }}
             </p>
             <NuxtLink
@@ -136,8 +136,8 @@ watch(
               class="rounded px-2.5 py-1.5 text-sm font-medium"
               :class="
                 isActive(link)
-                  ? 'bg-[#232323] text-white'
-                  : 'text-[#8b8b8b] hover:text-white'
+                  ? 'bg-raised text-ink'
+                  : 'text-subtle hover:text-ink'
               "
               @click="onSelect"
             >
@@ -158,7 +158,7 @@ watch(
           @mouseenter="hoveredSlug = org.slug"
           @mouseleave="hoveredSlug = null"
         >
-          <NuxtImg
+          <UiSkeletonImage
             :src="communityLogoSrc(org.logo, org.name)"
             :alt="org.name"
             width="20"
@@ -166,20 +166,20 @@ watch(
             class="size-5 shrink-0 rounded-full object-cover"
           />
           <UiOverflowMarquee
-            class="min-w-0 flex-1 text-sm font-medium text-white"
+            class="min-w-0 flex-1 text-sm font-medium text-ink"
             :text="org.name"
             :play="hoveredSlug === org.slug"
           />
           <UIcon
             name="i-lucide-chevron-down"
-            class="size-5 shrink-0 text-white transition-transform duration-200"
+            class="size-5 shrink-0 text-ink transition-transform duration-200"
             :class="isExpanded(org.slug) ? 'rotate-180' : ''"
           />
         </button>
 
         <div v-if="isExpanded(org.slug)" class="flex items-stretch">
           <div class="ml-2.5 flex w-5 shrink-0 justify-center">
-            <div class="h-full w-px bg-[#2a2a2a]" />
+            <div class="h-full w-px bg-line" />
           </div>
           <div class="flex min-w-0 flex-1 flex-col gap-2">
             <NuxtLink
@@ -189,8 +189,8 @@ watch(
               class="flex h-8 items-center rounded px-2.5 text-sm font-medium"
               :class="
                 isActive(link)
-                  ? 'bg-[#232323] text-white'
-                  : 'text-[#8b8b8b] hover:text-white'
+                  ? 'bg-raised text-ink'
+                  : 'text-subtle hover:text-ink'
               "
               @click="onSelect"
             >

@@ -542,9 +542,12 @@ function onFormError(event: FormErrorEvent) {
     <div
       class="text-center flex flex-col items-center justify-center max-w-60 mx-auto"
     >
-      <Icon name="i-material-symbols:verified" class="text-[#8BF667] size-24" />
+      <Icon
+        name="i-material-symbols:verified"
+        class="text-success-ink size-24"
+      />
       <div
-        class="text-[#8BF667] uppercase text-xl font-semibold leading-none tracking-[2px] mt-8 mb-4"
+        class="text-success-ink uppercase text-xl font-semibold leading-none tracking-[2px] mt-8 mb-4"
       >
         Request Received
       </div>
@@ -572,10 +575,10 @@ function onFormError(event: FormErrorEvent) {
     class="space-y-8"
   >
     <!-- <div class="space-y-4">
-      <h1 class="text-[20px] font-medium uppercase tracking-widest text-white">
+      <h1 class="text-[20px] font-medium uppercase tracking-widest text-ink">
         NEW CARD REQUEST FORM
       </h1>
-      <p class="text-sm leading-[21px] text-[#8b8b8b]">
+      <p class="text-sm leading-[21px] text-subtle">
         Whether you're creating a new identity or reusing an existing design,
         we'll take care of the rest.
       </p>
@@ -584,7 +587,7 @@ function onFormError(event: FormErrorEvent) {
     <UFormField
       label="What would you like to create?"
       name="type"
-      class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+      class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
     >
       <URadioGroup
         v-model="state.type"
@@ -595,9 +598,9 @@ function onFormError(event: FormErrorEvent) {
         class="w-full [&_label]:mb-0!"
         :ui="{
           fieldset: 'space-y-0',
-          item: 'border-[#2a2a2a] bg-[#171717] px-4 py-3 -mb-px last:mb-0 rounded-none first:rounded-t-[4px] last:rounded-b-[4px]',
-          label: 'text-sm text-white',
-          description: 'mt-2 text-sm text-[#8b8b8b]',
+          item: 'border-line bg-surface px-4 py-3 -mb-px last:mb-0 rounded-none first:rounded-t-[4px] last:rounded-b-[4px]',
+          label: 'text-sm text-ink',
+          description: 'mt-2 text-sm text-subtle',
           container: 'items-start',
         }"
       />
@@ -607,7 +610,7 @@ function onFormError(event: FormErrorEvent) {
       v-if="state.type === 'existing_design'"
       label="Choose one of the designs"
       name="sourceCardId"
-      class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+      class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
     >
       <URadioGroup
         v-model="state.sourceCardId"
@@ -618,25 +621,25 @@ function onFormError(event: FormErrorEvent) {
         class="w-full [&_label]:mb-0!"
         :ui="{
           fieldset: 'space-y-0',
-          item: 'border-[#2a2a2a] bg-[#171717] px-4 py-3 -mb-px last:mb-0 rounded-none first:rounded-t-[4px] last:rounded-b-[4px]',
+          item: 'border-line bg-surface px-4 py-3 -mb-px last:mb-0 rounded-none first:rounded-t-[4px] last:rounded-b-[4px]',
           container: 'items-start gap-2',
-          label: 'text-sm text-white',
-          description: 'mt-2 text-sm text-[#8b8b8b]',
+          label: 'text-sm text-ink',
+          description: 'mt-2 text-sm text-subtle',
         }"
       >
         <template #description="{ item }">
           <div class="mt-2 space-y-2">
-            <!-- <p class="text-sm text-[#8b8b8b]">Use this card back design</p> -->
-            <NuxtImg
+            <!-- <p class="text-sm text-subtle">Use this card back design</p> -->
+            <UiSkeletonImage
               v-if="item.cardBackUrl"
               :src="resolveObjectStorageUrl(item.cardBackUrl)"
               :alt="`${item.firstName} card back`"
               width="448"
-              class="w-full aspect-[1/0.57] rounded bg-[#1f1f1f]"
+              class="w-full aspect-[1/0.57] rounded bg-[#ececef] dark:bg-[#1f1f1f]"
             />
             <div
               v-else
-              class="flex h-30.25 w-50 items-center justify-center rounded-[4px] bg-[#2a2a2a] text-xs text-[#8b8b8b]"
+              class="flex h-30.25 w-50 items-center justify-center rounded-[4px] bg-line text-xs text-subtle"
             >
               No card back image
             </div>
@@ -645,7 +648,7 @@ function onFormError(event: FormErrorEvent) {
       </URadioGroup>
     </UFormField>
 
-    <p class="text-sm leading-5.25 text-white">
+    <p class="text-sm leading-5.25 text-ink">
       Please provide the details you'd like to appear on this card.
     </p>
 
@@ -653,14 +656,14 @@ function onFormError(event: FormErrorEvent) {
       <UFormField
         label="Full Name"
         name="name"
-        class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
       >
         <UInput
           v-model="state.name"
           class="w-full"
           placeholder="John Doe"
           :ui="{
-            base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
           }"
         />
       </UFormField>
@@ -668,14 +671,14 @@ function onFormError(event: FormErrorEvent) {
       <UFormField
         label="Professional Title / Role"
         name="position"
-        class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
       >
         <UInput
           v-model="state.position"
           class="w-full"
           placeholder="Senior Designer"
           :ui="{
-            base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
           }"
         />
       </UFormField>
@@ -683,14 +686,14 @@ function onFormError(event: FormErrorEvent) {
       <UFormField
         label="Company / Brand Name"
         name="company"
-        class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
       >
         <UInput
           v-model="state.company"
           class="w-full"
           placeholder="Acme Inc."
           :ui="{
-            base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
           }"
         />
       </UFormField>
@@ -698,7 +701,7 @@ function onFormError(event: FormErrorEvent) {
       <UFormField
         label="Phone Number"
         name="phone"
-        class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         @focusout="prefillContactLink('Phone')"
       >
         <UiPhoneField
@@ -707,7 +710,7 @@ function onFormError(event: FormErrorEvent) {
           name="phone"
           placeholder="Phone number"
           :ui="{
-            base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
           }"
         />
       </UFormField>
@@ -715,7 +718,7 @@ function onFormError(event: FormErrorEvent) {
       <UFormField
         label="Email Address"
         name="email"
-        class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         @focusout="prefillContactLink('Gmail')"
       >
         <UInput
@@ -723,7 +726,7 @@ function onFormError(event: FormErrorEvent) {
           class="w-full"
           placeholder="john@example.com"
           :ui="{
-            base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
           }"
         />
       </UFormField>
@@ -731,7 +734,7 @@ function onFormError(event: FormErrorEvent) {
       <UFormField
         label="Personal Website / Portfolio"
         name="website"
-        class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="w-full [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         @focusout="prefillContactLink('Website')"
       >
         <UInput
@@ -739,7 +742,7 @@ function onFormError(event: FormErrorEvent) {
           class="w-full"
           placeholder="https://johndoe.com"
           :ui="{
-            base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
           }"
         />
       </UFormField>
@@ -747,7 +750,7 @@ function onFormError(event: FormErrorEvent) {
 
     <div class="space-y-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-sm font-medium text-white">
+        <h3 class="text-sm font-medium text-ink">
           Social / Professional Links
         </h3>
         <UButton
@@ -756,7 +759,7 @@ function onFormError(event: FormErrorEvent) {
           size="sm"
           variant="soft"
           label="Add Link"
-          class="rounded-full bg-[#232323] text-white hover:bg-[#2a2a2a]"
+          class="rounded-full bg-raised text-ink hover:bg-line"
           @click="openCreateLinkSlideover"
         />
       </div>
@@ -765,20 +768,20 @@ function onFormError(event: FormErrorEvent) {
         <div
           v-for="(link, index) in state.socials"
           :key="`${index}-${link.label}-${link.value}`"
-          class="sortable-link-row relative flex items-center gap-3 rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-3"
+          class="sortable-link-row relative flex items-center gap-3 rounded-[6px] border border-line bg-raised p-3"
         >
           <button
             type="button"
-            class="drag-handle inline-flex h-10 w-9 cursor-grab items-center justify-center rounded-[4px] text-[#8b8b8b] hover:bg-[#171717] active:cursor-grabbing"
+            class="drag-handle inline-flex h-10 w-9 cursor-grab items-center justify-center rounded-[4px] text-subtle hover:bg-surface active:cursor-grabbing"
             aria-label="Drag to reorder link"
           >
             <UIcon name="i-lucide-grip-vertical" class="size-5" />
           </button>
           <div class="min-w-0 flex-1">
-            <p class="truncate text-sm font-medium text-white">
+            <p class="truncate text-sm font-medium text-ink">
               {{ resolveSocialLabel(link) || 'Untitled Link' }}
             </p>
-            <p class="mt-1 truncate text-sm text-[#8b8b8b]">
+            <p class="mt-1 truncate text-sm text-subtle">
               {{ link.value || 'No URL added yet' }}
             </p>
           </div>
@@ -789,7 +792,7 @@ function onFormError(event: FormErrorEvent) {
               icon="i-lucide-pen-square"
               color="neutral"
               variant="ghost"
-              class="text-[#8b8b8b] hover:bg-[#171717] hover:text-white"
+              class="text-subtle hover:bg-surface hover:text-ink"
               @click="openEditLinkSlideover(index)"
             />
             <UButton
@@ -808,8 +811,8 @@ function onFormError(event: FormErrorEvent) {
 
     <div v-if="showPricingSummary">
       <div role="region" aria-label="Pricing breakdown">
-        <div class="rounded-[4px] border-b border-[#2a2a2a] px-4 py-3">
-          <div class="flex items-center justify-between text-sm text-white">
+        <div class="rounded-[4px] border-b border-line px-4 py-3">
+          <div class="flex items-center justify-between text-sm text-ink">
             <span>Membership Period</span>
             <span class="font-bold">
               {{
@@ -820,10 +823,8 @@ function onFormError(event: FormErrorEvent) {
             </span>
           </div>
         </div>
-        <div class="rounded-[4px] px-4 py-0 border-b border-[#2a2a2a]">
-          <div
-            class="flex items-center justify-between py-3 text-sm text-white"
-          >
+        <div class="rounded-[4px] px-4 py-0 border-b border-line">
+          <div class="flex items-center justify-between py-3 text-sm text-ink">
             <span>Hosting Fee</span>
             <span class="font-bold">
               {{
@@ -838,9 +839,7 @@ function onFormError(event: FormErrorEvent) {
           v-if="state.type === 'new_design'"
           class="rounded-[4px] px-4 py-0 -mt-2 sm:mt-0"
         >
-          <div
-            class="flex items-center justify-between py-4 text-sm text-white"
-          >
+          <div class="flex items-center justify-between py-4 text-sm text-ink">
             <span>Custom Design Fee</span>
             <span class="font-bold">
               <template v-if="premiumPlanMeta">
@@ -862,24 +861,22 @@ function onFormError(event: FormErrorEvent) {
     <div v-if="showPricingSummary" class="space-y-8">
       <p class="text-sm leading-5.25 text-muted">
         Please scan the QR code below to complete your payment. Make sure that
-        account name is <span class="font-bold text-white">Yan Aung Hein</span>.
+        account name is <span class="font-bold text-ink">Yan Aung Hein</span>.
       </p>
 
       <div class="space-y-3">
-        <p class="text-sm font-medium text-white">KBZ Pay QR Code</p>
-        <div
-          class="rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4 text-center"
-        >
-          <p class="text-sm text-white/50">Scan to Pay</p>
+        <p class="text-sm font-medium text-ink">KBZ Pay QR Code</p>
+        <div class="rounded-[6px] border border-line bg-raised p-4 text-center">
+          <p class="text-sm text-ink/50">Scan to Pay</p>
           <div class="mx-auto my-3 size-40 overflow-hidden bg-[#d9d9d9]">
-            <NuxtImg
+            <UiSkeletonImage
               src="/images/kpay.jpg"
               alt="KBZ Pay QR Code"
               width="160"
               class="h-full w-full object-contain"
             />
           </div>
-          <p class="text-sm font-bold text-white">
+          <p class="text-sm font-bold text-ink">
             {{ requestQrAmountLabel }}
           </p>
         </div>
@@ -888,7 +885,7 @@ function onFormError(event: FormErrorEvent) {
       <UFormField
         label="Upload Payment Receipt"
         name="receiptFile"
-        class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
       >
         <UFileUpload
           v-model="receiptFile"
@@ -899,9 +896,9 @@ function onFormError(event: FormErrorEvent) {
           class="w-full min-h-42"
           :ui="{
             root: '[&_img]:object-contain',
-            base: 'rounded-[4px] border-[#2a2a2a] bg-[#232323]',
-            label: 'text-sm text-white',
-            description: 'text-xs text-[#8b8b8b]',
+            base: 'rounded-[4px] border-line bg-raised',
+            label: 'text-sm text-ink',
+            description: 'text-xs text-subtle',
           }"
         />
       </UFormField>
@@ -916,9 +913,9 @@ function onFormError(event: FormErrorEvent) {
     inset
     :title="socialEditorMode === 'create' ? 'ADD LINK' : 'EDIT LINK'"
     :ui="{
-      header: 'border-b-2 border-[#232323] px-6 py-6',
-      title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
-      content: 'bg-[#171717]',
+      header: 'border-b-2 border-raised px-6 py-6',
+      title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
+      content: 'bg-surface',
     }"
   >
     <template #body>
@@ -926,7 +923,7 @@ function onFormError(event: FormErrorEvent) {
         <UFormField
           label="Link Type"
           name="socialDraft.label"
-          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
           <USelectMenu
             v-model="socialDraft.label"
@@ -935,7 +932,7 @@ function onFormError(event: FormErrorEvent) {
             class="w-full"
             placeholder="Select Link Type"
             :ui="{
-              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white',
+              base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink',
             }"
           />
         </UFormField>
@@ -944,14 +941,14 @@ function onFormError(event: FormErrorEvent) {
           v-if="socialDraft.label === 'Custom'"
           label="Custom Label"
           name="socialDraft.customLabel"
-          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
           <UInput
             v-model="socialDraft.customLabel"
             placeholder="Custom Label"
             class="w-full"
             :ui="{
-              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+              base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
             }"
           />
         </UFormField>
@@ -959,14 +956,14 @@ function onFormError(event: FormErrorEvent) {
         <UFormField
           label="Link"
           name="socialDraft.value"
-          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
           <UInput
             v-model="socialDraft.value"
             placeholder="www.example.com"
             class="w-full"
             :ui="{
-              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+              base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
             }"
           />
         </UFormField>
@@ -979,7 +976,7 @@ function onFormError(event: FormErrorEvent) {
         label="Cancel"
         color="neutral"
         variant="ghost"
-        class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+        class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-subtle hover:bg-raised hover:text-ink"
         @click="closeSocialSlideover"
       />
       <UButton
@@ -987,7 +984,7 @@ function onFormError(event: FormErrorEvent) {
         :label="socialEditorMode === 'create' ? 'Add Link' : 'Save Link'"
         leading-icon="i-lucide-check"
         color="neutral"
-        class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+        class="h-10 cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
         @click="saveSocialDraft"
       />
     </template>
@@ -997,14 +994,14 @@ function onFormError(event: FormErrorEvent) {
     v-model:open="isDeleteSocialConfirmOpen"
     title="Delete Link?"
     :ui="{
-      content: 'bg-[#171717] max-w-md',
-      title: 'text-white',
+      content: 'bg-surface max-w-md',
+      title: 'text-ink',
       body: 'pt-4',
       footer: 'justify-end gap-2',
     }"
   >
     <template #body>
-      <p class="text-sm leading-relaxed text-[#bcbcbc]">
+      <p class="text-sm leading-relaxed text-soft">
         This action cannot be undone. The selected social link will be removed.
       </p>
     </template>

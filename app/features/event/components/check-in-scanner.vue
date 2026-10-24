@@ -70,7 +70,7 @@ const showCameraRetry = computed(
 );
 
 const primaryActionButtonClass =
-  'h-10 cursor-pointer justify-center rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90';
+  'h-10 cursor-pointer justify-center rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90';
 
 function closeSlideover() {
   open.value = false;
@@ -529,10 +529,10 @@ onBeforeUnmount(() => {
     close-icon="i-material-symbols:close-small"
     unmount-on-hide
     :ui="{
-      content: 'bg-[#171717]',
-      header: 'border-b-2 border-[#232323] px-6 py-6',
-      title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
-      description: 'mt-2 text-sm text-[#8b8b8b]',
+      content: 'bg-surface',
+      header: 'border-b-2 border-raised px-6 py-6',
+      title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
+      description: 'mt-2 text-sm text-subtle',
       body: 'flex flex-1 flex-col p-0!',
     }"
   >
@@ -543,10 +543,10 @@ onBeforeUnmount(() => {
       >
         <div class="m-auto flex w-full max-w-md flex-col items-center gap-6">
           <div
-            class="relative size-50 shrink-0 overflow-hidden rounded-xl border border-[#232323] bg-dark"
+            class="relative size-50 shrink-0 overflow-hidden rounded-xl border border-raised bg-canvas"
           >
             <div
-              class="absolute inset-2 overflow-hidden rounded-[4px] border border-[#8b8b8b] bg-dark"
+              class="absolute inset-2 overflow-hidden rounded-[4px] border border-subtle bg-canvas"
             >
               <video
                 ref="videoEl"
@@ -567,7 +567,7 @@ onBeforeUnmount(() => {
             v-if="cameraPhase === 'idle' || cameraPhase === 'requesting'"
             class="flex w-full flex-col items-center gap-4 text-center"
           >
-            <p class="text-sm text-[#8b8b8b]">
+            <p class="text-sm text-subtle">
               Camera access is used to read attendee QR codes.
             </p>
             <UButton
@@ -582,7 +582,7 @@ onBeforeUnmount(() => {
 
           <p
             v-else-if="cameraPhase === 'live'"
-            class="text-sm font-medium text-[#8b8b8b]"
+            class="text-sm font-medium text-subtle"
           >
             Place QR code inside frame
           </p>
@@ -591,7 +591,7 @@ onBeforeUnmount(() => {
             v-else
             class="flex w-full flex-col items-center gap-4 text-center"
           >
-            <p class="text-sm text-[#8b8b8b]">
+            <p class="text-sm text-subtle">
               {{ cameraError }}
             </p>
             <UButton
@@ -616,7 +616,7 @@ onBeforeUnmount(() => {
         >
           <UIcon
             name="i-lucide-loader-circle"
-            class="size-6 animate-spin text-[#8b8b8b]"
+            class="size-6 animate-spin text-subtle"
           />
         </div>
       </div>
@@ -625,12 +625,12 @@ onBeforeUnmount(() => {
         v-else
         class="flex h-full flex-col items-center justify-center gap-8 py-8"
       >
-        <UIcon name="i-lucide-user-x" class="size-12 text-[#8b8b8b]" />
+        <UIcon name="i-lucide-user-x" class="size-12 text-subtle" />
         <div class="flex max-w-108 flex-col items-center gap-3 text-center">
-          <p class="text-xl font-medium tracking-[2px] uppercase text-white">
+          <p class="text-xl font-medium tracking-[2px] uppercase text-ink">
             Attendee not found
           </p>
-          <p class="text-sm text-[#8b8b8b]">
+          <p class="text-sm text-subtle">
             This QR code does not match a registered attendee. Close the scanner
             and register them as a walk-in instead.
           </p>
@@ -643,7 +643,7 @@ onBeforeUnmount(() => {
         v-if="state === 'scanning' || state === 'not-found'"
         label="Close scanner"
         color="neutral"
-        class="h-10 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+        class="h-10 cursor-pointer rounded-full bg-raised px-5 text-sm font-medium text-ink hover:bg-line"
         @click="closeSlideover"
       />
       <template v-else-if="state === 'success'">
@@ -651,14 +651,14 @@ onBeforeUnmount(() => {
           label="Cancel"
           color="neutral"
           variant="ghost"
-          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-subtle hover:bg-raised hover:text-ink"
           @click="resumeScanning"
         />
         <UButton
           label="Check-in"
           leading-icon="i-lucide-check"
           color="neutral"
-          class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
           @click="confirmCheckIn"
         />
       </template>
@@ -666,7 +666,7 @@ onBeforeUnmount(() => {
         v-else
         label="Got it"
         color="neutral"
-        class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+        class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
         @click="resumeScanning"
       />
     </template>

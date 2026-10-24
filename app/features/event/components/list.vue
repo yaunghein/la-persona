@@ -159,7 +159,7 @@ function unavailableLabel(event: CommunityEvent) {
       >
         <div class="flex items-center gap-3">
           <h1
-            class="text-xl font-normal leading-tight tracking-widest uppercase text-white sm:text-2xl"
+            class="text-xl font-normal leading-tight tracking-widest uppercase text-ink sm:text-2xl"
           >
             {{ data.title }}
           </h1>
@@ -167,7 +167,7 @@ function unavailableLabel(event: CommunityEvent) {
             icon="i-material-symbols:info-outline"
             color="neutral"
             variant="ghost"
-            class="size-5 cursor-pointer p-0 text-white hover:bg-transparent"
+            class="size-5 cursor-pointer p-0 text-ink hover:bg-transparent"
             aria-label="Open events information"
             @click="openInfo"
           />
@@ -178,7 +178,7 @@ function unavailableLabel(event: CommunityEvent) {
           label="Create Event"
           leading-icon="i-lucide-plus"
           color="neutral"
-          class="fixed bottom-6 left-1/2 z-10 -translate-x-1/2 shadow-lg sm:static sm:translate-x-0 sm:shadow-none h-10 w-fit cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="fixed bottom-6 left-1/2 z-10 -translate-x-1/2 shadow-lg sm:static sm:translate-x-0 sm:shadow-none h-10 w-fit cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
           @click="emit('create')"
         />
       </div>
@@ -192,9 +192,9 @@ function unavailableLabel(event: CommunityEvent) {
           variant="soft"
           class="w-full flex-1"
           :ui="{
-            base: 'h-10 rounded-full border-0 bg-[#232323] px-5 text-sm font-medium text-white ring-0 placeholder:text-[#8b8b8b] focus-visible:ring-0',
+            base: 'h-10 rounded-full border-0 bg-raised px-5 text-sm font-medium text-ink ring-0 placeholder:text-subtle focus-visible:ring-0',
             trailing: 'pe-4',
-            trailingIcon: 'size-4 text-[#8b8b8b]',
+            trailingIcon: 'size-4 text-subtle',
           }"
         />
 
@@ -206,10 +206,10 @@ function unavailableLabel(event: CommunityEvent) {
           variant="pill"
           :ui="{
             root: 'w-full sm:w-fit',
-            list: 'bg-[#171717] w-full sm:w-fit rounded-lg p-1',
-            indicator: 'bg-[#232323]',
+            list: 'bg-surface w-full sm:w-fit rounded-lg p-1',
+            indicator: 'bg-raised',
             trigger:
-              'data-[state=active]:text-white data-[state=inactive]:text-[#8b8b8b] rounded-md px-4 py-2.5 grow-0 text-center sm:text-left w-full sm:w-fit',
+              'data-[state=active]:text-ink data-[state=inactive]:text-subtle rounded-md px-4 py-2.5 grow-0 text-center sm:text-left w-full sm:w-fit',
           }"
         />
       </div>
@@ -221,14 +221,14 @@ function unavailableLabel(event: CommunityEvent) {
       <article
         v-for="event in pagedEvents"
         :key="event.id"
-        class="flex aspect-[1/0.9] w-full cursor-pointer flex-col overflow-hidden rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+        class="flex aspect-[1/0.9] w-full cursor-pointer flex-col overflow-hidden rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ink/30"
         tabindex="0"
         @click="onView(event)"
         @keydown.enter.prevent="onView(event)"
         @keydown.space.prevent="onView(event)"
       >
         <div class="relative min-h-0 flex-1 overflow-hidden">
-          <NuxtImg
+          <UiSkeletonImage
             :src="event.imageUrl"
             :alt="event.title"
             width="640"
@@ -242,15 +242,13 @@ function unavailableLabel(event: CommunityEvent) {
         </div>
 
         <div
-          class="flex shrink-0 justify-between gap-4 bg-[#171717] px-5 pt-5 pb-6"
+          class="flex shrink-0 justify-between gap-4 bg-surface px-5 pt-5 pb-6"
         >
           <div class="flex min-w-0 flex-col gap-1">
-            <h2 class="line-clamp-1 text-base leading-5 text-white">
+            <h2 class="line-clamp-1 text-base leading-5 text-ink">
               {{ event.title }}
             </h2>
-            <p
-              class="flex items-center gap-x-2 text-xs leading-5 text-[#8b8b8b]"
-            >
+            <p class="flex items-center gap-x-2 text-xs leading-5 text-subtle">
               <span class="whitespace-nowrap">{{ event.dateLabel }}</span>
               <span>•</span>
               <span class="line-clamp-1">{{ event.location }}</span>
@@ -262,7 +260,7 @@ function unavailableLabel(event: CommunityEvent) {
               v-if="canRegister(event)"
               label="Register"
               color="neutral"
-              class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+              class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
               @click.stop="onRegister(event)"
             />
             <UButton
@@ -270,7 +268,7 @@ function unavailableLabel(event: CommunityEvent) {
               :label="unavailableLabel(event)"
               color="neutral"
               disabled
-              class="pointer-events-none h-10 rounded-full bg-white/10 px-5 text-sm font-medium text-white/50 disabled:bg-white/10 disabled:opacity-100"
+              class="pointer-events-none h-10 rounded-full bg-ink/10 px-5 text-sm font-medium text-ink/50 disabled:bg-ink/10 disabled:opacity-100"
             />
           </div>
         </div>
@@ -283,7 +281,7 @@ function unavailableLabel(event: CommunityEvent) {
 
       <div
         v-if="!pagedEvents.length"
-        class="col-span-full flex items-center justify-center py-20 text-sm text-[#8b8b8b]"
+        class="col-span-full flex items-center justify-center py-20 text-sm text-subtle"
       >
         {{
           searchQuery.trim()
@@ -312,8 +310,8 @@ function unavailableLabel(event: CommunityEvent) {
     v-model:open="isInfoOpen"
     title="What are events?"
     :ui="{
-      content: 'sm:max-w-120 rounded-lg bg-[#171717]',
-      title: 'text-sm font-medium uppercase tracking-widest text-white',
+      content: 'sm:max-w-120 rounded-lg bg-surface',
+      title: 'text-sm font-medium uppercase tracking-widest text-ink',
       body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"
   >
@@ -321,11 +319,11 @@ function unavailableLabel(event: CommunityEvent) {
       <div class="space-y-5 sm:space-y-6">
         <div class="space-y-2">
           <h3
-            class="text-lg font-medium leading-tight tracking-widest uppercase text-white sm:text-xl"
+            class="text-lg font-medium leading-tight tracking-widest uppercase text-ink sm:text-xl"
           >
             Host community events
           </h3>
-          <p class="text-sm leading-relaxed text-[#8b8b8b]">
+          <p class="text-sm leading-relaxed text-subtle">
             Create events, manage registration, and keep your community coming
             back.
           </p>
@@ -337,19 +335,17 @@ function unavailableLabel(event: CommunityEvent) {
             :key="item.title"
             class="py-3 sm:py-3.5"
             :class="
-              index < data.infoItems.length - 1
-                ? 'border-b border-[#2a2a2a]'
-                : ''
+              index < data.infoItems.length - 1 ? 'border-b border-line' : ''
             "
           >
             <div class="flex items-start gap-3">
               <UIcon
                 :name="item.icon"
-                class="mt-0.5 size-4.5 shrink-0 text-white sm:size-5"
+                class="mt-0.5 size-4.5 shrink-0 text-ink sm:size-5"
               />
               <div class="min-w-0">
-                <p class="text-sm font-medium text-white">{{ item.title }}</p>
-                <p class="mt-1.5 text-sm leading-relaxed text-[#8b8b8b]">
+                <p class="text-sm font-medium text-ink">{{ item.title }}</p>
+                <p class="mt-1.5 text-sm leading-relaxed text-subtle">
                   {{ item.description }}
                 </p>
               </div>
@@ -361,7 +357,7 @@ function unavailableLabel(event: CommunityEvent) {
           <UButton
             label="Understood"
             color="neutral"
-            class="h-10 text-sm justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+            class="h-10 text-sm justify-center rounded-full bg-ink px-5 font-medium text-ink-inverse hover:bg-ink/90"
             @click="closeInfo"
           />
         </div>

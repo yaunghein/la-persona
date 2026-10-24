@@ -105,13 +105,13 @@ function onDelete() {
     <USkeleton class="min-h-96 w-full rounded-lg" />
   </div>
   <div v-else-if="isError" class="flex flex-col items-start gap-4">
-    <p class="text-sm text-[#8b8b8b]">
+    <p class="text-sm text-subtle">
       {{ apiErrorMessage(error, 'Could not load community settings.') }}
     </p>
     <UButton
       label="Try again"
       color="neutral"
-      class="h-10 rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+      class="h-10 rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
       @click="retry"
     />
   </div>

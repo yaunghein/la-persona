@@ -53,7 +53,7 @@ const fields = [
 ] as const;
 
 const inputUi = {
-  base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+  base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
 };
 
 async function onSubmit(event: FormSubmitEvent<CreateManualContactRequest>) {
@@ -103,7 +103,7 @@ defineExpose({ isPending });
         :key="field.name"
         :label="field.label"
         :name="field.name"
-        class="[&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="[&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         :class="layout === 'wide' ? '[&_label]:mb-3' : '[&_label]:mb-1'"
       >
         <UInput
@@ -117,7 +117,7 @@ defineExpose({ isPending });
       <UFormField
         label="Phone Number"
         name="phone"
-        class="[&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="[&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         :class="layout === 'wide' ? '[&_label]:mb-3' : '[&_label]:mb-1'"
       >
         <UiPhoneField
@@ -132,7 +132,7 @@ defineExpose({ isPending });
       <UFormField
         label="Email Address"
         name="email"
-        class="[&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="[&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         :class="layout === 'wide' ? '[&_label]:mb-3' : '[&_label]:mb-1'"
       >
         <UInput
@@ -152,7 +152,7 @@ defineExpose({ isPending });
         leading-icon="i-lucide-plus"
         :loading="isPending"
         color="neutral"
-        class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+        class="h-10 cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
       />
     </div>
   </UForm>

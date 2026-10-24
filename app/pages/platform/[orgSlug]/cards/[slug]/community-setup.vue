@@ -178,17 +178,17 @@ async function finishSetup() {
 </script>
 
 <template>
-  <div class="flex h-dvh overflow-hidden bg-[#171717]">
-    <div class="flex h-full min-h-0 w-full flex-col bg-[#171717]">
+  <div class="flex h-dvh overflow-hidden bg-surface">
+    <div class="flex h-full min-h-0 w-full flex-col bg-surface">
       <div v-if="pending" class="flex flex-1 items-center justify-center">
         <UIcon
           name="i-lucide-loader-circle"
-          class="size-6 animate-spin text-[#8b8b8b]"
+          class="size-6 animate-spin text-subtle"
         />
       </div>
       <div
         v-else-if="error || !card"
-        class="flex flex-1 items-center justify-center px-6 text-center text-sm text-[#8b8b8b]"
+        class="flex flex-1 items-center justify-center px-6 text-center text-sm text-subtle"
       >
         This community card could not be loaded.
       </div>
@@ -213,7 +213,7 @@ async function finishSetup() {
       >
         <UIcon
           name="i-lucide-loader-circle"
-          class="size-6 animate-spin text-[#8b8b8b]"
+          class="size-6 animate-spin text-subtle"
         />
       </div>
       <EventOnboardingSettingUp

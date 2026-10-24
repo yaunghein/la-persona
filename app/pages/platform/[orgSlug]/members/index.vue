@@ -169,7 +169,7 @@ function exportMembers() {
     @confirm="confirmRemove"
   >
     This cannot be undone. Removing
-    <span class="font-medium text-white">{{ memberToRemove?.name }}</span>
+    <span class="font-medium text-ink">{{ memberToRemove?.name }}</span>
     deletes their community card, its analytics and contact exchanges, and their
     event registrations in this community. Their LA PERSONA account and personal
     card stay.

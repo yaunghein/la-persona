@@ -53,10 +53,10 @@ const actionText = computed(() =>
 <template>
   <div
     v-if="message"
-    class="-mx-4 -mt-4 flex items-center justify-center bg-[#232323] px-8 py-2 sm:-mx-6 sm:-mt-6"
+    class="-mx-4 -mt-4 flex items-center justify-center bg-raised px-8 py-2 sm:-mx-6 sm:-mt-6"
   >
     <p
-      class="text-center text-xs font-medium uppercase tracking-widest text-white sm:text-sm"
+      class="text-center text-xs font-medium uppercase tracking-widest text-ink sm:text-sm"
     >
       <template v-if="message === 'trial-ending'">
         Your trial period is going to end in

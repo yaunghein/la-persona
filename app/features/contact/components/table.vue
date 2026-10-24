@@ -16,7 +16,7 @@ defineEmits<{
   delete: [contact: ContactSummary];
 }>();
 
-const headerClass = 'text-sm font-medium uppercase tracking-widest text-white';
+const headerClass = 'text-sm font-medium uppercase tracking-widest text-ink';
 const mutedCellClass = 'text-sm font-medium text-muted';
 
 const columns = computed<TableColumn<ContactSummary>[]>(() => [
@@ -64,8 +64,8 @@ const columns = computed<TableColumn<ContactSummary>[]>(() => [
     :data="contacts"
     :columns="columns"
     :ui="{
-      th: 'px-4 py-4 border-b border-[#232323]',
-      td: 'px-4 py-3 border-b border-[#232323]',
+      th: 'px-4 py-4 border-b border-raised',
+      td: 'px-4 py-3 border-b border-raised',
       tr: 'bg-transparent',
       empty: 'py-16 text-center text-sm text-muted',
     }"
@@ -73,7 +73,7 @@ const columns = computed<TableColumn<ContactSummary>[]>(() => [
   >
     <template #name-cell="{ row }">
       <div class="leading-[1.35]">
-        <p class="flex items-center gap-1 text-sm font-medium text-white">
+        <p class="flex items-center gap-1 text-sm font-medium text-ink">
           {{ row.original.name }}
           <ContactPersonaBadge
             v-if="row.original.personaCardSlug"

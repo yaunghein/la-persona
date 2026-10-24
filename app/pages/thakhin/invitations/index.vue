@@ -225,17 +225,17 @@ const columns: TableColumn<InvitationRow>[] = [
 
 /** Matches thakhin cards slideover + `app/components/form/manual-contact.vue` */
 const formFieldClass =
-  '[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white';
+  '[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink';
 
 const inputUi = {
-  base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+  base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
 };
 
 const selectUi = {
-  base: 'h-[47px] w-full rounded-[4px] border-[#2a2a2a] bg-[#232323] px-3 text-sm text-white',
-  content: 'border border-[#2a2a2a] bg-[#232323]',
-  item: 'text-white data-[highlighted]:bg-[#232323]',
-  value: 'text-white',
+  base: 'h-[47px] w-full rounded-[4px] border-line bg-raised px-3 text-sm text-ink',
+  content: 'border border-line bg-raised',
+  item: 'text-ink data-[highlighted]:bg-raised',
+  value: 'text-ink',
 };
 </script>
 
@@ -291,7 +291,7 @@ const selectUi = {
         class="w-full min-w-[56rem]"
       >
         <template #email-cell="{ row }">
-          <span class="font-medium text-white">{{ row.original.email }}</span>
+          <span class="font-medium text-ink">{{ row.original.email }}</span>
         </template>
         <template #cardName-cell="{ row }">
           {{
@@ -299,12 +299,12 @@ const selectUi = {
           }}
         </template>
         <template #expiresAt-cell="{ row }">
-          <span class="text-white/55">{{
+          <span class="text-ink/55">{{
             formatDate(row.original.expiresAt)
           }}</span>
         </template>
         <template #lastSentAt-cell="{ row }">
-          <span class="text-white/55">{{
+          <span class="text-ink/55">{{
             formatDate(row.original.lastSentAt)
           }}</span>
         </template>
@@ -325,8 +325,8 @@ const selectUi = {
       inset
       title="CREATE ONBOARDING INVITATION"
       :ui="{
-        header: 'border-b-2 border-[#232323] px-6 py-6',
-        title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+        header: 'border-b-2 border-raised px-6 py-6',
+        title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
         body: 'px-6',
       }"
     >
@@ -409,7 +409,7 @@ const selectUi = {
                 v-model="createState.sendNow"
                 label="Send invitation email now"
                 :ui="{
-                  label: 'text-sm font-medium text-white',
+                  label: 'text-sm font-medium text-ink',
                 }"
               />
             </div>
@@ -422,7 +422,7 @@ const selectUi = {
           label="Cancel"
           color="neutral"
           variant="ghost"
-          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-subtle hover:bg-raised hover:text-ink"
           @click="
             () => {
               isCreateOpen = false;
@@ -433,7 +433,7 @@ const selectUi = {
           label="Create Invitation"
           color="neutral"
           :loading="isCreating"
-          class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
           @click="onCreateInvitation"
         />
       </template>

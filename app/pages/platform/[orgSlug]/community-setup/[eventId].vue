@@ -65,13 +65,13 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex h-dvh items-center justify-center bg-[#171717]">
+  <div class="flex h-dvh items-center justify-center bg-surface">
     <div class="flex flex-col items-center gap-3">
       <UIcon
         name="i-lucide-loader-circle"
-        class="size-8 animate-spin text-white"
+        class="size-8 animate-spin text-ink"
       />
-      <p class="text-sm text-[#8b8b8b]">Setting up your community card...</p>
+      <p class="text-sm text-subtle">Setting up your community card...</p>
     </div>
   </div>
 </template>

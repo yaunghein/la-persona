@@ -37,14 +37,14 @@ const benefits = [
     >
       <div class="mx-auto flex w-full max-w-120 flex-col gap-6 sm:max-w-112">
         <h1
-          class="text-[1.75rem] font-medium leading-tight tracking-[0.175rem] uppercase text-white"
+          class="text-[1.75rem] font-medium leading-tight tracking-[0.175rem] uppercase text-ink"
         >
           Mingalarbar
         </h1>
 
-        <div class="flex flex-col gap-3 text-sm leading-normal text-[#8b8b8b]">
+        <div class="flex flex-col gap-3 text-sm leading-normal text-subtle">
           <p>
-            Welcome to <span class="text-white">{{ organizerName }}</span
+            Welcome to <span class="text-ink">{{ organizerName }}</span
             >.
           </p>
           <p>
@@ -54,10 +54,10 @@ const benefits = [
         </div>
 
         <div class="flex flex-col gap-3">
-          <p class="text-sm leading-normal text-[#8b8b8b]">
+          <p class="text-sm leading-normal text-subtle">
             With the community persona card, you can;
           </p>
-          <div class="flex flex-col divide-y divide-[#2a2a2a]">
+          <div class="flex flex-col divide-y divide-line">
             <div
               v-for="item in benefits"
               :key="item.lead"
@@ -65,11 +65,11 @@ const benefits = [
             >
               <UIcon
                 :name="item.icon"
-                class="mt-0.5 shrink-0 text-white"
+                class="mt-0.5 shrink-0 text-ink"
                 :class="item.iconClass"
               />
-              <p class="text-sm leading-normal text-[#8b8b8b]">
-                <span class="text-white">{{ item.lead }}</span
+              <p class="text-sm leading-normal text-subtle">
+                <span class="text-ink">{{ item.lead }}</span
                 >{{ item.rest(organizerName) }}
               </p>
             </div>

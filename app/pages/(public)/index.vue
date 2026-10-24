@@ -457,7 +457,7 @@ const premiumPlanFeatures = [
 
 <template>
   <header
-    class="z-30 flex h-15 sm:h-30 justify-center items-center border-b border-white/10 bg-dark px-4 sm:px-18"
+    class="z-30 flex h-15 sm:h-30 justify-center items-center border-b border-ink/10 bg-canvas px-4 sm:px-18"
   >
     <NuxtLink
       to="/"
@@ -469,7 +469,7 @@ const premiumPlanFeatures = [
   </header>
 
   <nav
-    class="sticky top-0 z-30 hidden items-center justify-between bg-dark px-4 sm:flex sm:px-18"
+    class="sticky top-0 z-30 hidden items-center justify-between bg-canvas px-4 sm:flex sm:px-18"
   >
     <button
       v-for="item in V2_NAV_LINKS"
@@ -478,13 +478,13 @@ const premiumPlanFeatures = [
       class="cursor-pointer relative py-6 text-sm font-light uppercase leading-[1.1] tracking-[0.28rem] transition-colors duration-300"
       :class="
         currentSection === item.id
-          ? 'text-white'
-          : 'text-white/40 hover:text-white/70'
+          ? 'text-ink'
+          : 'text-ink/40 hover:text-ink/70'
       "
     >
       {{ item.label }}
       <div
-        class="absolute inset-0 top-auto h-px w-full bg-white transition-all duration-1000"
+        class="absolute inset-0 top-auto h-px w-full bg-ink transition-all duration-1000"
         :class="{
           'scale-x-100': currentSection === item.id,
           'scale-x-0': currentSection !== item.id,
@@ -492,7 +492,7 @@ const premiumPlanFeatures = [
       ></div>
     </button>
     <div
-      class="absolute inset-0 top-auto h-px w-full bg-white/10 transition-all duration-1000"
+      class="absolute inset-0 top-auto h-px w-full bg-ink/10 transition-all duration-1000"
       :class="{
         'scale-x-100': !isHeaderVisible,
         'scale-x-0': isHeaderVisible,
@@ -500,7 +500,7 @@ const premiumPlanFeatures = [
     ></div>
   </nav>
 
-  <main class="min-h-screen bg-dark text-white">
+  <main class="min-h-screen bg-canvas text-ink">
     <!-- Header: centered logo (Figma); Sign in aligned for product continuity -->
 
     <!-- Hero -->
@@ -518,7 +518,7 @@ const premiumPlanFeatures = [
             Meet the right people. At the right time.
           </h1>
           <p
-            class="mx-auto max-w-80 sm:max-w-140 text-xs font-light leading-normal tracking-[0.04rem] text-white/50 sm:text-base"
+            class="mx-auto max-w-80 sm:max-w-140 text-xs font-light leading-normal tracking-[0.04rem] text-ink/50 sm:text-base"
           >
             La Persona transforms how professionals introduce themselves,
             connect, and unlock opportunities—starting from a single
@@ -531,7 +531,7 @@ const premiumPlanFeatures = [
           <UButton
             :to="heroCtaTo"
             size="xl"
-            class="whitespace-nowrap h-10 sm:h-12 justify-center rounded-full bg-white px-10 text-xs font-light uppercase tracking-[0.1rem] text-neutral-950 sm:text-sm sm:tracking-[0.0875rem]"
+            class="whitespace-nowrap h-10 sm:h-12 justify-center rounded-full bg-ink px-10 text-xs font-light uppercase tracking-[0.1rem] text-ink-inverse sm:text-sm sm:tracking-[0.0875rem]"
           >
             {{ heroCtaLabel }}
           </UButton>
@@ -539,7 +539,7 @@ const premiumPlanFeatures = [
             to="/#features"
             variant="outline"
             size="xl"
-            class="whitespace-nowrap h-10 sm:h-12 justify-center px-6 rounded-full border-white/10 bg-transparent text-xs font-light uppercase tracking-[0.1rem] text-white sm:text-sm sm:tracking-[0.0875rem]"
+            class="whitespace-nowrap h-10 sm:h-12 justify-center px-6 rounded-full border-ink/10 bg-transparent text-xs font-light uppercase tracking-[0.1rem] text-ink sm:text-sm sm:tracking-[0.0875rem]"
           >
             See How It Works
           </UButton>
@@ -547,12 +547,12 @@ const premiumPlanFeatures = [
       </div>
 
       <div class="w-full max-w-7xl">
-        <NuxtImg
+        <UiSkeletonImage
           src="/images/landing-v2/hero-visual-mobile.webp"
           alt="La Persona platform preview"
           class="block h-auto w-full sm:hidden -mt-8"
         />
-        <NuxtImg
+        <UiSkeletonImage
           src="/images/landing-v2/hero-visual-desktop.webp"
           alt="La Persona platform preview"
           class="hidden h-auto w-full sm:block px-4 sm:pl-10"
@@ -577,7 +577,7 @@ const premiumPlanFeatures = [
           v-for="line in storyLines"
           :key="line.key"
           class="mx-auto text-xl font-light uppercase leading-normal tracking-[0.15rem] sm:text-[2rem] sm:leading-snug sm:tracking-[0.15rem]"
-          :class="line.gold ? 'text-gold' : 'text-white'"
+          :class="line.gold ? 'text-gold' : 'text-ink'"
           :style="{ maxWidth: line.maxWidth, width: '100%' }"
         >
           {{ line.text }}
@@ -603,7 +603,7 @@ const premiumPlanFeatures = [
                   v-for="(word, wi) in storyWords[bi]"
                   :key="`${line.key}-${wi}`"
                   class="landing-v2-story-word inline-block opacity-0 text-xl font-light uppercase leading-snug tracking-[0.15rem] will-change-transform sm:text-[2rem] sm:tracking-[0.15rem]"
-                  :class="line.gold ? 'text-gold' : 'text-white'"
+                  :class="line.gold ? 'text-gold' : 'text-ink'"
                   :data-beat="bi"
                   :data-wi="wi"
                 >
@@ -625,7 +625,7 @@ const premiumPlanFeatures = [
       <div
         class="relative mx-auto aspect-square w-full max-h-[min(100dvh,52.5rem)] max-w-360 sm:aspect-[1/0.58] sm:max-h-none"
       >
-        <NuxtImg
+        <UiSkeletonImage
           src="/images/landing-v2/feature-visual.png"
           alt=""
           class="absolute inset-0 h-full w-full object-cover"
@@ -640,7 +640,7 @@ const premiumPlanFeatures = [
         <div
           class="sticky top-0 sm:top-16 z-0 w-full h-dvh sm:h-[calc(100dvh-4rem)]"
         >
-          <NuxtImg
+          <UiSkeletonImage
             src="/images/landing-v2/feature-visual.png"
             alt=""
             class="absolute inset-0 h-full w-full object-cover"
@@ -650,7 +650,7 @@ const premiumPlanFeatures = [
           />
           <div
             id="landing-v2-reveal-mask"
-            class="relative box-border h-full w-full border-solid border-[5.5rem] border-dark sm:border-[12rem]"
+            class="relative box-border h-full w-full border-solid border-[5.5rem] border-canvas sm:border-[12rem]"
           ></div>
         </div>
       </div>
@@ -668,7 +668,7 @@ const premiumPlanFeatures = [
             What Changes With La Persona
           </h2>
           <p
-            class="text-xs max-w-68 sm:max-w-110 mx-auto font-light leading-normal tracking-[0.035rem] text-white/50 sm:text-sm sm:tracking-[0.056rem]"
+            class="text-xs max-w-68 sm:max-w-110 mx-auto font-light leading-normal tracking-[0.035rem] text-ink/50 sm:text-sm sm:tracking-[0.056rem]"
           >
             With La Persona, your professional life starts to shift in small but
             powerful—ways:
@@ -692,7 +692,7 @@ const premiumPlanFeatures = [
                 :style="{ transitionDuration: `${FEATURE_FADE_MS}ms` }"
               />
             </div>
-            <NuxtImg
+            <UiSkeletonImage
               src="/images/landing-v2/iphone-frame.webp"
               alt=""
               class="relative z-10 h-auto w-full"
@@ -718,14 +718,14 @@ const premiumPlanFeatures = [
               class="shrink-0 flex flex-col items-center gap-2 border-none bg-transparent p-0 text-center text-xs font-light uppercase tracking-[0.175rem] sm:text-sm sm:tracking-[0.175rem]"
               :class="
                 activeFeatureIndex === i
-                  ? 'text-white'
-                  : 'text-white/60 hover:text-white/80'
+                  ? 'text-ink'
+                  : 'text-ink/60 hover:text-ink/80'
               "
               @click="selectFeature(i)"
             >
               {{ f.label }}
               <span
-                class="block h-px w-full origin-left bg-white"
+                class="block h-px w-full origin-left bg-ink"
                 :style="{
                   transform:
                     activeFeatureIndex === i
@@ -739,7 +739,7 @@ const premiumPlanFeatures = [
             <p
               v-for="(f, i) in changeFeatures"
               :key="f.id"
-              class="text-center text-xs font-light leading-normal tracking-[0.035rem] text-white/50 sm:text-sm sm:tracking-[0.056rem] transition-opacity"
+              class="text-center text-xs font-light leading-normal tracking-[0.035rem] text-ink/50 sm:text-sm sm:tracking-[0.056rem] transition-opacity"
               :class="[
                 activeFeatureIndex === i ? 'opacity-100' : 'opacity-0',
                 i === 0 ? 'relative' : 'absolute inset-0',
@@ -768,12 +768,12 @@ const premiumPlanFeatures = [
         >
           <template v-for="(item, i) in whyItems" :key="item.title">
             <div
-              class="hidden w-px shrink-0 self-stretch bg-white/10 sm:block"
+              class="hidden w-px shrink-0 self-stretch bg-ink/10 sm:block"
               aria-hidden="true"
             />
             <div
               class="flex flex-1 flex-col gap-6 px-4 py-10 sm:gap-8 sm:border-none sm:px-13 sm:py-16"
-              :class="i > 0 ? 'border-t border-white/10' : ''"
+              :class="i > 0 ? 'border-t border-ink/10' : ''"
             >
               <h3
                 class="text-base font-light uppercase leading-normal tracking-[0.125rem] sm:text-xl sm:tracking-[0.125rem]"
@@ -781,7 +781,7 @@ const premiumPlanFeatures = [
                 {{ item.title }}
               </h3>
               <p
-                class="max-w-80 text-xs font-light leading-normal tracking-[0.0875rem] text-white/40 sm:text-sm sm:tracking-[0.0875rem]"
+                class="max-w-80 text-xs font-light leading-normal tracking-[0.0875rem] text-ink/40 sm:text-sm sm:tracking-[0.0875rem]"
               >
                 {{ item.body }}
               </p>
@@ -804,7 +804,7 @@ const premiumPlanFeatures = [
               Bespoke Persona Cards
             </h2>
             <p
-              class="max-w-76 sm:max-w-105 mx-auto text-xs font-light leading-normal tracking-[0.035rem] text-white/50 sm:text-sm sm:tracking-[0.056rem]"
+              class="max-w-76 sm:max-w-105 mx-auto text-xs font-light leading-normal tracking-[0.035rem] text-ink/50 sm:text-sm sm:tracking-[0.056rem]"
             >
               Explore how professionals present themselves through
               custom-designed cards. Each one crafted to reflect their own
@@ -814,7 +814,7 @@ const premiumPlanFeatures = [
           <NuxtLink
             to="https://m.me/61571393589144?text=Hello%20I%20want%20to%20know%20more"
             target="_blank"
-            class="inline-flex h-10 sm:h-12 items-center justify-center rounded-full border border-white/10 px-10 text-xs font-light uppercase tracking-[0.1rem] hover:bg-white hover:text-dark sm:text-sm sm:tracking-[0.0875rem]"
+            class="inline-flex h-10 sm:h-12 items-center justify-center rounded-full border border-ink/10 px-10 text-xs font-light uppercase tracking-[0.1rem] hover:bg-ink hover:text-ink-inverse sm:text-sm sm:tracking-[0.0875rem]"
           >
             Talk to Us
           </NuxtLink>
@@ -844,7 +844,7 @@ const premiumPlanFeatures = [
         </h2>
         <div class="grid w-full grid-cols-1 gap-6 sm:grid-cols-2">
           <div
-            class="flex flex-col gap-4 rounded-xl border border-white/10 bg-dark p-8 sm:p-10"
+            class="flex flex-col gap-4 rounded-xl border border-ink/10 bg-canvas p-8 sm:p-10"
           >
             <div class="flex flex-col gap-2">
               <p
@@ -857,12 +857,12 @@ const premiumPlanFeatures = [
               </p>
             </div>
             <p
-              class="text-[0.8125rem] font-light leading-snug tracking-[0.024rem] text-white/40"
+              class="text-[0.8125rem] font-light leading-snug tracking-[0.024rem] text-ink/40"
             >
               Explore the platform and start connecting.
             </p>
             <ul
-              class="list-disc space-y-1 pl-5 text-[0.8125rem] font-light leading-snug tracking-[0.024rem] text-white/40"
+              class="list-disc space-y-1 pl-5 text-[0.8125rem] font-light leading-snug tracking-[0.024rem] text-ink/40"
             >
               <li v-for="feat in freePlanFeatures" :key="feat">
                 {{ feat }}
@@ -870,14 +870,14 @@ const premiumPlanFeatures = [
             </ul>
             <NuxtLink
               to="/sign-in"
-              class="mt-5 inline-flex h-10 sm:h-12 w-fit items-center justify-center rounded-full border border-white/10 px-8 text-xs font-light uppercase tracking-[0.1rem] hover:bg-white hover:text-dark sm:text-sm sm:tracking-[0.0875rem]"
+              class="mt-5 inline-flex h-10 sm:h-12 w-fit items-center justify-center rounded-full border border-ink/10 px-8 text-xs font-light uppercase tracking-[0.1rem] hover:bg-ink hover:text-ink-inverse sm:text-sm sm:tracking-[0.0875rem]"
             >
               Try Free
             </NuxtLink>
           </div>
 
           <div
-            class="flex flex-col justify-between gap-4 rounded-xl border border-gold bg-dark p-8 sm:p-10"
+            class="flex flex-col justify-between gap-4 rounded-xl border border-gold bg-canvas p-8 sm:p-10"
           >
             <div class="flex flex-col gap-4">
               <div class="flex flex-col gap-2">
@@ -891,12 +891,12 @@ const premiumPlanFeatures = [
                 </p>
               </div>
               <p
-                class="text-[0.8125rem] font-light leading-snug tracking-[0.024rem] text-white/40"
+                class="text-[0.8125rem] font-light leading-snug tracking-[0.024rem] text-ink/40"
               >
                 Elevate your presence with a custom-designed persona card.
               </p>
               <ul
-                class="list-disc space-y-1 pl-5 text-[0.8125rem] font-light leading-snug tracking-[0.024rem] text-white/40"
+                class="list-disc space-y-1 pl-5 text-[0.8125rem] font-light leading-snug tracking-[0.024rem] text-ink/40"
               >
                 <li v-for="feat in premiumPlanFeatures" :key="feat">
                   {{ feat }}
@@ -907,7 +907,7 @@ const premiumPlanFeatures = [
               to="https://m.me/61571393589144?text=Hello%20I%20want%20to%20know%20more"
               target="_blank"
               size="xl"
-              class="h-10 sm:h-12 w-fit justify-center rounded-full bg-white px-8 text-xs font-light uppercase tracking-[0.1rem] text-neutral-950 sm:text-sm sm:tracking-[0.0875rem]"
+              class="h-10 sm:h-12 w-fit justify-center rounded-full bg-ink px-8 text-xs font-light uppercase tracking-[0.1rem] text-ink-inverse sm:text-sm sm:tracking-[0.0875rem]"
             >
               Talk to Us
             </UButton>
@@ -929,7 +929,7 @@ const premiumPlanFeatures = [
         <UButton
           to="/sign-in"
           size="xl"
-          class="h-11 justify-center rounded-full bg-white px-10 text-xs font-light uppercase tracking-[0.1rem] text-neutral-950 sm:text-sm sm:tracking-[0.0875rem]"
+          class="h-11 justify-center rounded-full bg-ink px-10 text-xs font-light uppercase tracking-[0.1rem] text-ink-inverse sm:text-sm sm:tracking-[0.0875rem]"
         >
           Get Started Now
         </UButton>
@@ -946,28 +946,28 @@ const premiumPlanFeatures = [
       <UButton
         to="/sign-in"
         size="xl"
-        class="h-10 sm:h-12 rounded-full bg-white px-10 text-xs font-light uppercase tracking-[0.1rem] text-neutral-950 shadow-lg sm:text-sm sm:tracking-[0.0875rem]"
+        class="h-10 sm:h-12 rounded-full bg-ink px-10 text-xs font-light uppercase tracking-[0.1rem] text-ink-inverse shadow-lg sm:text-sm sm:tracking-[0.0875rem]"
       >
         Try Free
       </UButton>
     </div>
   </main>
   <footer
-    class="border-t border-white/10 px-4 pt-5 sm:pt-12 pb-5 sm:pb-10 sm:px-12"
+    class="border-t border-ink/10 px-4 pt-5 sm:pt-12 pb-5 sm:pb-10 sm:px-12"
   >
     <div
       class="mx-auto flex max-w-360 flex-col gap-6 sm:flex-row items-center sm:justify-between"
     >
       <nav
-        class="flex flex-wrap items-center gap-6 text-xs font-light uppercase tracking-[0.075rem] text-white/40"
+        class="flex flex-wrap items-center gap-6 text-xs font-light uppercase tracking-[0.075rem] text-ink/40"
         aria-label="Footer"
       >
-        <a href="#" class="hover:text-white">Contact</a>
-        <a href="/privacy-policy" class="hover:text-white">Terms</a>
-        <a href="/privacy-policy" class="hover:text-white">Privacy</a>
+        <a href="#" class="hover:text-ink">Contact</a>
+        <a href="/privacy-policy" class="hover:text-ink">Terms</a>
+        <a href="/privacy-policy" class="hover:text-ink">Privacy</a>
       </nav>
       <p
-        class="text-[0.6875rem] font-light uppercase tracking-[0.06875rem] text-white/30"
+        class="text-[0.6875rem] font-light uppercase tracking-[0.06875rem] text-ink/30"
       >
         © la persona. All rights reserved.
       </p>

@@ -115,8 +115,8 @@ function onViewPersona() {
     inset
     :title="isPending ? 'PENDING MEMBER PROFILE' : 'MEMBER PROFILE'"
     :ui="{
-      header: 'border-b-2 border-[#232323] px-6 py-6',
-      title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+      header: 'border-b-2 border-raised px-6 py-6',
+      title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
       body: 'px-6',
     }"
   >
@@ -127,11 +127,11 @@ function onViewPersona() {
           :key="field.label"
           class="flex items-start justify-between gap-6 py-3"
           :class="
-            index < pendingFields.length - 1 ? 'border-b border-[#232323]' : ''
+            index < pendingFields.length - 1 ? 'border-b border-raised' : ''
           "
         >
-          <span class="shrink-0 text-sm text-[#8b8b8b]">{{ field.label }}</span>
-          <span class="text-right text-sm break-all text-white">{{
+          <span class="shrink-0 text-sm text-subtle">{{ field.label }}</span>
+          <span class="text-right text-sm break-all text-ink">{{
             field.value || '—'
           }}</span>
         </div>
@@ -144,25 +144,23 @@ function onViewPersona() {
             :alt="member.name"
             icon="i-lucide-user"
             :ui="{
-              root: 'size-20 bg-[#232323]',
-              icon: 'size-8 text-[#8b8b8b]',
+              root: 'size-20 bg-raised',
+              icon: 'size-8 text-subtle',
             }"
           />
           <div class="space-y-1">
-            <h2
-              class="text-lg font-medium tracking-widest uppercase text-white"
-            >
+            <h2 class="text-lg font-medium tracking-widest uppercase text-ink">
               {{ member.name }}
             </h2>
             <p
               v-if="member.role || member.company"
-              class="flex items-center justify-center gap-x-2 text-sm text-[#8b8b8b]"
+              class="flex items-center justify-center gap-x-2 text-sm text-subtle"
             >
               <span v-if="member.role">{{ member.role }}</span>
               <span v-if="member.role && member.company">•</span>
               <span v-if="member.company">{{ member.company }}</span>
             </p>
-            <p v-if="member.email" class="text-sm text-[#8b8b8b]">
+            <p v-if="member.email" class="text-sm text-subtle">
               {{ member.email }}
             </p>
           </div>
@@ -170,15 +168,15 @@ function onViewPersona() {
 
         <div>
           <div
-            class="flex items-center justify-between border-b border-[#232323] py-3"
+            class="flex items-center justify-between border-b border-raised py-3"
           >
-            <span class="text-sm text-[#8b8b8b]">Membership Status</span>
-            <span class="text-sm text-white">{{ membershipStatusLabel }}</span>
+            <span class="text-sm text-subtle">Membership Status</span>
+            <span class="text-sm text-ink">{{ membershipStatusLabel }}</span>
           </div>
           <div
-            class="flex items-center justify-between gap-6 border-b border-[#232323] py-3"
+            class="flex items-center justify-between gap-6 border-b border-raised py-3"
           >
-            <span class="text-sm text-[#8b8b8b]">Community Role</span>
+            <span class="text-sm text-subtle">Community Role</span>
             <USelect
               v-if="editableRole"
               :model-value="editableRole"
@@ -186,35 +184,33 @@ function onViewPersona() {
               size="sm"
               class="w-36"
               :ui="{
-                base: 'rounded-[4px] border-[#2a2a2a] bg-[#232323] text-white',
+                base: 'rounded-[4px] border-line bg-raised text-ink',
               }"
               @update:model-value="onChangeRole"
             />
-            <span v-else class="text-sm text-white">{{
+            <span v-else class="text-sm text-ink">{{
               formatCommunityRole(member.memberRole)
             }}</span>
           </div>
           <div class="flex items-center justify-between py-3">
-            <span class="text-sm text-[#8b8b8b]">Joined</span>
-            <span class="text-sm text-white">{{
+            <span class="text-sm text-subtle">Joined</span>
+            <span class="text-sm text-ink">{{
               formatDateLabel(member.joinedAt)
             }}</span>
           </div>
         </div>
 
         <section>
-          <h3 class="pb-2 text-sm font-medium text-white">
-            Community Activity
-          </h3>
+          <h3 class="pb-2 text-sm font-medium text-ink">Community Activity</h3>
           <div
-            class="flex items-center justify-between border-b border-[#232323] py-3"
+            class="flex items-center justify-between border-b border-raised py-3"
           >
-            <span class="text-sm text-[#8b8b8b]">Events Attended</span>
-            <span class="text-sm text-white">{{ member.eventsAttended }}</span>
+            <span class="text-sm text-subtle">Events Attended</span>
+            <span class="text-sm text-ink">{{ member.eventsAttended }}</span>
           </div>
           <div class="flex items-center justify-between py-3">
-            <span class="text-sm text-[#8b8b8b]">Connections Made</span>
-            <span class="text-sm text-white">{{ member.connections }}</span>
+            <span class="text-sm text-subtle">Connections Made</span>
+            <span class="text-sm text-ink">{{ member.connections }}</span>
           </div>
         </section>
       </div>
@@ -227,7 +223,7 @@ function onViewPersona() {
           leading-icon="i-lucide-x"
           color="neutral"
           :ui="{ leadingIcon: 'size-4' }"
-          class="h-10 cursor-pointer justify-center rounded-full bg-[#232323] pr-6 pl-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+          class="h-10 cursor-pointer justify-center rounded-full bg-raised pr-6 pl-5 text-sm font-medium text-ink hover:bg-line"
           @click="onReject"
         />
       </div>
@@ -247,7 +243,7 @@ function onViewPersona() {
           :to="personaCardUrl"
           :target="personaCardUrl ? '_blank' : undefined"
           :ui="{ leadingIcon: 'size-4' }"
-          class="h-10 cursor-pointer justify-center rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer justify-center rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
           @click="onViewPersona"
         />
       </div>

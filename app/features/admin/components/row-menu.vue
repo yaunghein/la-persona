@@ -15,7 +15,7 @@ defineProps<{
         variant="ghost"
         size="sm"
         aria-label="Open menu"
-        class="text-white/45"
+        class="text-ink/45"
       />
     </UDropdownMenu>
   </div>

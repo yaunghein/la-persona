@@ -40,7 +40,7 @@ const isHtml = computed(() => /<[a-z][^>]*>/i.test(props.content));
 }
 
 .community-rich-text-view :deep(strong) {
-  color: #ffffff;
+  color: var(--lp-ink);
 }
 
 .community-rich-text-view :deep(a) {

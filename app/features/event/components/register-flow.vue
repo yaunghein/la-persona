@@ -204,7 +204,7 @@ onBeforeUnmount(() => {
         :class="isPage ? 'max-w-120 sm:max-w-md' : ''"
       >
         <div
-          class="relative aspect-[1/0.75] w-full overflow-hidden rounded-lg bg-[#232323]"
+          class="relative aspect-[1/0.75] w-full overflow-hidden rounded-lg bg-raised"
         >
           <UCarousel
             v-if="galleryImages.length > 1"
@@ -219,17 +219,17 @@ onBeforeUnmount(() => {
               container: 'ms-0 h-full items-stretch',
               item: 'relative h-full min-h-0 basis-full overflow-hidden ps-0',
               dots: 'absolute inset-x-0 bottom-3 z-10 flex items-center justify-center gap-2',
-              dot: 'size-2 rounded-full bg-white/40 data-[state=active]:bg-white',
+              dot: 'size-2 rounded-full bg-ink/40 data-[state=active]:bg-ink',
             }"
           >
-            <NuxtImg
+            <UiSkeletonImage
               :src="item"
               :alt="event.title"
               width="480"
               class="absolute inset-0 size-full object-cover"
             />
           </UCarousel>
-          <NuxtImg
+          <UiSkeletonImage
             v-else-if="galleryImages[0]"
             :src="galleryImages[0]"
             :alt="event.title"
@@ -241,28 +241,28 @@ onBeforeUnmount(() => {
         <div class="flex flex-col gap-6">
           <div class="flex flex-col gap-4">
             <h1
-              class="text-xl font-medium leading-[1.35] tracking-[0.125rem] uppercase text-white"
+              class="text-xl font-medium leading-[1.35] tracking-[0.125rem] uppercase text-ink"
             >
               {{ event.title }}
             </h1>
             <UiRichText
               v-if="event.description"
               :content="event.description"
-              class="text-sm font-normal leading-normal text-[#8b8b8b]"
+              class="text-sm font-normal leading-normal text-subtle"
             />
           </div>
 
-          <div class="flex flex-col divide-y divide-[#2a2a2a]">
+          <div class="flex flex-col divide-y divide-line">
             <div
               v-for="item in details"
               :key="item.label"
               class="flex items-start justify-between gap-4 px-4 py-3"
             >
-              <span class="shrink-0 text-sm font-normal text-[#8b8b8b]">
+              <span class="shrink-0 text-sm font-normal text-subtle">
                 {{ item.label }}
               </span>
               <div class="flex min-w-0 flex-col items-end gap-1">
-                <span class="text-right text-sm text-white">
+                <span class="text-right text-sm text-ink">
                   {{ item.value }}
                 </span>
                 <UButton
@@ -276,7 +276,7 @@ onBeforeUnmount(() => {
                   size="sm"
                   trailing-icon="i-lucide-external-link"
                   label="View on Google Map"
-                  class="p-0 text-[#8b8b8b] hover:text-white"
+                  class="p-0 text-subtle hover:text-ink"
                 />
               </div>
             </div>
@@ -284,7 +284,7 @@ onBeforeUnmount(() => {
               v-if="organizer?.name"
               class="flex items-center justify-between gap-4 px-4 py-3"
             >
-              <span class="shrink-0 text-sm font-normal text-[#8b8b8b]">
+              <span class="shrink-0 text-sm font-normal text-subtle">
                 Organizer
               </span>
               <div class="flex min-w-0 items-center justify-end gap-2">
@@ -293,11 +293,11 @@ onBeforeUnmount(() => {
                   :alt="organizer.name"
                   icon="i-lucide-users"
                   :ui="{
-                    root: 'size-6 bg-[#232323]',
-                    icon: 'size-3 text-[#8b8b8b]',
+                    root: 'size-6 bg-raised',
+                    icon: 'size-3 text-subtle',
                   }"
                 />
-                <span class="text-right text-sm text-white">
+                <span class="text-right text-sm text-ink">
                   {{ organizer.name }}
                 </span>
               </div>
@@ -319,7 +319,7 @@ onBeforeUnmount(() => {
         >
           We'll see you there.
         </p>
-        <p class="text-sm leading-normal text-white">
+        <p class="text-sm leading-normal text-ink">
           <template v-if="registrationStatus === 'pending'">
             Your registration for
             <span class="font-bold">{{ event.title }}</span>
@@ -340,10 +340,10 @@ onBeforeUnmount(() => {
       :class="
         isPage
           ? [
-              'border-t border-[#2a2a2a] p-6 sm:px-8 sm:py-6 lg:px-16',
+              'border-t border-line p-6 sm:px-8 sm:py-6 lg:px-16',
               step === 'success' ? 'pt-8 pb-4' : '',
             ]
-          : 'border-t-2 border-[#232323] px-6 py-4'
+          : 'border-t-2 border-raised px-6 py-4'
       "
     >
       <div
@@ -364,13 +364,13 @@ onBeforeUnmount(() => {
             color="neutral"
             :href="organizerCardUrl"
             target="_blank"
-            class="h-10 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+            class="h-10 cursor-pointer rounded-full bg-raised px-5 text-sm font-medium text-ink hover:bg-line"
           />
           <UButton
             v-else-if="!isPage"
             label="See Organizer"
             color="neutral"
-            class="h-10 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+            class="h-10 cursor-pointer rounded-full bg-raised px-5 text-sm font-medium text-ink hover:bg-line"
             @click="onViewOrganizer"
           />
           <UButton
@@ -386,14 +386,14 @@ onBeforeUnmount(() => {
             "
             color="neutral"
             disabled
-            class="h-10 justify-center rounded-full bg-white/10 px-5 text-sm font-medium text-white/50 disabled:bg-white/10 disabled:opacity-100"
+            class="h-10 justify-center rounded-full bg-ink/10 px-5 text-sm font-medium text-ink/50 disabled:bg-ink/10 disabled:opacity-100"
             :class="isPage && 'w-full'"
           />
           <UButton
             v-else-if="step === 'confirm'"
             color="neutral"
             :block="isPage"
-            class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm hover:bg-white/90"
+            class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm hover:bg-ink/90"
             :ui="{
               base: 'flex-col gap-0.5',
               label:
@@ -401,12 +401,12 @@ onBeforeUnmount(() => {
             }"
             @click="startRegister"
           >
-            <span class="text-sm font-medium leading-[1.1] text-dark">
+            <span class="text-sm font-medium leading-[1.1] text-ink-inverse">
               Register
             </span>
             <span
               v-if="spotsLabel"
-              class="text-[0.6875rem] font-semibold tracking-[0.55px] text-[#ff3113]"
+              class="text-[0.6875rem] font-semibold tracking-[0.55px] text-danger-ink"
             >
               {{ spotsLabel }}
             </span>
@@ -416,7 +416,7 @@ onBeforeUnmount(() => {
             label="Registering..."
             color="neutral"
             loading
-            class="h-10 justify-center rounded-full bg-white/10 px-5 text-sm font-medium text-white/50 disabled:bg-white/10 disabled:opacity-100"
+            class="h-10 justify-center rounded-full bg-ink/10 px-5 text-sm font-medium text-ink/50 disabled:bg-ink/10 disabled:opacity-100"
             :class="isPage && 'w-full'"
           />
         </template>
@@ -427,7 +427,7 @@ onBeforeUnmount(() => {
           :ui="{ leadingAvatar: 'rounded-none bg-transparent' }"
           color="neutral"
           :loading="addingEventId === event.id"
-          class="h-10 cursor-pointer justify-center rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer justify-center rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
           :class="isPage && 'w-full'"
           @click="addToGoogleCalendar(event.id)"
         />

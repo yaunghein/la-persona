@@ -56,7 +56,7 @@ function onSubmit(event: FormSubmitEvent<UpdateCardRequest>) {
 </script>
 
 <template>
-  <div class="rounded-[8px] bg-[#171717] p-8">
+  <div class="rounded-[8px] bg-surface p-8">
     <div v-if="isLoading" class="grid grid-cols-2 gap-5">
       <USkeleton v-for="i in 6" :key="i" class="h-12 w-full" />
       <USkeleton class="h-20 col-span-2 w-full" />
@@ -70,12 +70,10 @@ function onSubmit(event: FormSubmitEvent<UpdateCardRequest>) {
       class="grid w-full grid-cols-1 gap-x-6 gap-y-6 md:grid-cols-2"
     >
       <div class="space-y-4 md:col-span-2">
-        <h2
-          class="text-[20px] font-medium uppercase tracking-widest text-white"
-        >
+        <h2 class="text-[20px] font-medium uppercase tracking-widest text-ink">
           3D Card Information
         </h2>
-        <p class="max-w-160 text-sm leading-5.25 text-[#8b8b8b]">
+        <p class="max-w-160 text-sm leading-5.25 text-subtle">
           This information will be visible on your 3D business card and will
           take 24-36 hours to update. We are working on a more seamless updating
           experience.
@@ -85,13 +83,13 @@ function onSubmit(event: FormSubmitEvent<UpdateCardRequest>) {
       <UFormField
         label="First Name"
         name="firstName"
-        class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
       >
         <UInput
           v-model="state.firstName"
           class="w-full"
           :ui="{
-            base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
           }"
         />
       </UFormField>
@@ -99,13 +97,13 @@ function onSubmit(event: FormSubmitEvent<UpdateCardRequest>) {
       <UFormField
         label="Last Name"
         name="lastName"
-        class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
       >
         <UInput
           v-model="state.lastName"
           class="w-full"
           :ui="{
-            base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
           }"
         />
       </UFormField>
@@ -113,13 +111,13 @@ function onSubmit(event: FormSubmitEvent<UpdateCardRequest>) {
       <UFormField
         label="Professional Title / Role"
         name="position"
-        class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
       >
         <UInput
           v-model="state.position"
           class="w-full"
           :ui="{
-            base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
           }"
         />
       </UFormField>
@@ -127,13 +125,13 @@ function onSubmit(event: FormSubmitEvent<UpdateCardRequest>) {
       <UFormField
         label="Phone Number"
         name="phone"
-        class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
       >
         <UInput
           v-model="state.phone"
           class="w-full"
           :ui="{
-            base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
           }"
         />
       </UFormField>
@@ -141,13 +139,13 @@ function onSubmit(event: FormSubmitEvent<UpdateCardRequest>) {
       <UFormField
         label="Email Address"
         name="email"
-        class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
       >
         <UInput
           v-model="state.email"
           class="w-full"
           :ui="{
-            base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
           }"
         />
       </UFormField>
@@ -155,13 +153,13 @@ function onSubmit(event: FormSubmitEvent<UpdateCardRequest>) {
       <UFormField
         label="Personal Website / Portfolio"
         name="website"
-        class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+        class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
       >
         <UInput
           v-model="state.website"
           class="w-full"
           :ui="{
-            base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+            base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
           }"
         />
       </UFormField>
@@ -173,13 +171,13 @@ function onSubmit(event: FormSubmitEvent<UpdateCardRequest>) {
           color="neutral"
           variant="ghost"
           icon="i-lucide-eye"
-          class="h-10 text-sm rounded-full px-4 text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          class="h-10 text-sm rounded-full px-4 text-subtle hover:bg-raised hover:text-ink"
         >
           Preview Your Card
         </UButton>
         <UButton
           type="submit"
-          class="h-10 text-sm rounded-full bg-[#232323] px-4 text-white hover:bg-[#2a2a2a] disabled:bg-white/20 active:bg-[#2a2a2a] cursor-pointer"
+          class="h-10 text-sm rounded-full bg-raised px-4 text-ink hover:bg-line disabled:bg-ink/20 active:bg-line cursor-pointer"
           icon="i-lucide-square-pen"
           :loading="isSubmitting"
         >

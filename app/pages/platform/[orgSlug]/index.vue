@@ -73,7 +73,7 @@ const {
     </div>
     <p
       v-else-if="isCommunityInsightsError || !communityInsights"
-      class="text-sm text-[#8b8b8b]"
+      class="text-sm text-subtle"
     >
       Could not load community insights.
     </p>

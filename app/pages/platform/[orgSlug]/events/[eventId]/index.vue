@@ -234,12 +234,12 @@ async function onCheckedIn() {
     v-else-if="!eventDetail"
     class="flex flex-col items-center justify-center gap-6 py-20"
   >
-    <p class="text-sm text-[#8b8b8b]">Event not found.</p>
+    <p class="text-sm text-subtle">Event not found.</p>
     <UButton
       label="Back to Events"
       leading-icon="i-lucide-chevron-left"
       color="neutral"
-      class="h-10 cursor-pointer rounded-full bg-[#232323] pr-6 pl-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+      class="h-10 cursor-pointer rounded-full bg-raised pr-6 pl-5 text-sm font-medium text-ink hover:bg-line"
       @click="goBack"
     />
   </div>

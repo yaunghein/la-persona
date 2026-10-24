@@ -32,9 +32,7 @@ watch(
         name="i-lucide-loader-2"
         class="size-8 animate-spin text-primary"
       />
-      <p class="animate-pulse text-sm text-gray-500">
-        Opening your contacts...
-      </p>
+      <p class="animate-pulse text-sm text-subtle">Opening your contacts...</p>
     </div>
   </div>
 </template>

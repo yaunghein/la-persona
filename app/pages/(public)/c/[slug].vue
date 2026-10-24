@@ -470,7 +470,7 @@ async function onSaveContact() {
     <div class="absolute inset-0 w-full h-full">
       <div
         v-if="loading"
-        class="inline-block size-12 animate-spin rounded-full border border-current border-t-transparent text-white/20 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+        class="inline-block size-12 animate-spin rounded-full border border-current border-t-transparent text-ink/20 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
         role="status"
         aria-label="loading"
       >
@@ -489,13 +489,13 @@ async function onSaveContact() {
       <button
         :disabled="isSeamlessExchanging"
         @click="onExchangeContactClick"
-        class="grid flex-1 place-items-center rounded-full border border-[#494949] bg-[#353535] text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
+        class="grid flex-1 place-items-center rounded-full border border-line-heavy bg-line-strong text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
       >
         {{ exchangeButtonLabel }}
       </button>
       <button
         @click="isMenuOpen = !isMenuOpen"
-        class="grid aspect-square w-13 shrink-0 place-items-center rounded-full border border-[#494949] bg-[#353535]"
+        class="grid aspect-square w-13 shrink-0 place-items-center rounded-full border border-line-heavy bg-line-strong"
       >
         <div class="aspect-square w-6">
           <IconMenu />
@@ -504,7 +504,7 @@ async function onSaveContact() {
     </div>
 
     <div
-      class="fixed inset-0 top-auto -mb-px h-[calc(100dvh-3.5rem)] w-full scale-[1.005] rounded-t-xl border border-[#494949] bg-dark transition duration-750 sm:mx-auto sm:max-w-104"
+      class="fixed inset-0 top-auto -mb-px h-[calc(100dvh-3.5rem)] w-full scale-[1.005] rounded-t-xl border border-line-heavy bg-canvas transition duration-750 sm:mx-auto sm:max-w-104"
       :class="{
         'translate-y-0': isFormOpen,
         'translate-y-[101%]': !isFormOpen,
@@ -512,7 +512,7 @@ async function onSaveContact() {
     >
       <div class="flex h-full flex-col">
         <div
-          class="flex items-center justify-center border-b border-[#494949] py-6 text-center text-sm font-bold transition duration-750"
+          class="flex items-center justify-center border-b border-line-heavy py-6 text-center text-sm font-bold transition duration-750"
           :class="{
             'opacity-100': isFormOpen,
             'opacity-0': !isFormOpen,
@@ -528,13 +528,13 @@ async function onSaveContact() {
           <Icon
             v-if="isSeamlessSuccess"
             name="i-material-symbols:verified"
-            class="size-13 text-[#8BF667]"
+            class="size-13 text-success-ink"
           />
           <div
             class="text-center"
             :class="
               isSeamlessSuccess
-                ? 'w-35.5 text-base font-medium uppercase leading-6.75 tracking-[1.6px] text-[#8BF667]'
+                ? 'w-35.5 text-base font-medium uppercase leading-6.75 tracking-[1.6px] text-success-ink'
                 : 'text-sm font-bold leading-none tracking-[0.1rem]'
             "
           >
@@ -544,7 +544,7 @@ async function onSaveContact() {
             class="mx-auto text-center"
             :class="
               isSeamlessSuccess
-                ? 'max-w-[16rem] text-sm font-normal leading-5.25 text-white'
+                ? 'max-w-[16rem] text-sm font-normal leading-5.25 text-ink'
                 : 'max-w-[16rem] text-xs font-light leading-normal tracking-[0.1rem]'
             "
           >
@@ -566,7 +566,7 @@ async function onSaveContact() {
               <button
                 type="button"
                 :disabled="isSeamlessExchanging"
-                class="flex w-full cursor-pointer flex-col gap-1 border border-[#494949] px-4 py-4 text-left transition duration-500 hover:border-white/20 disabled:cursor-not-allowed disabled:opacity-50 sm:px-6"
+                class="flex w-full cursor-pointer flex-col gap-1 border border-line-heavy px-4 py-4 text-left transition duration-500 hover:border-ink/20 disabled:cursor-not-allowed disabled:opacity-50 sm:px-6"
                 @click="exchangeSeamlessly(myCard.id)"
               >
                 <span class="text-sm font-bold tracking-[0.1rem]">
@@ -578,7 +578,7 @@ async function onSaveContact() {
                 </span>
                 <span
                   v-if="myCard.position || myCard.company"
-                  class="text-xs font-light tracking-[0.1rem] text-white/60"
+                  class="text-xs font-light tracking-[0.1rem] text-ink/60"
                 >
                   {{
                     [myCard.position, myCard.company]
@@ -612,7 +612,7 @@ async function onSaveContact() {
                 type="text"
                 autocomplete="off"
                 required
-                class="h-[2.8rem] w-full appearance-none border border-[#494949] bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
+                class="h-[2.8rem] w-full appearance-none border border-line-heavy bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-ink/20 hover:border-ink/20 focus:border-ink/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
             <ContactPhoneInput split-country />
@@ -625,7 +625,7 @@ async function onSaveContact() {
                 type="email"
                 autocomplete="off"
                 required
-                class="h-[2.8rem] w-full appearance-none border border-[#494949] bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
+                class="h-[2.8rem] w-full appearance-none border border-line-heavy bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-ink/20 hover:border-ink/20 focus:border-ink/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
 
@@ -637,7 +637,7 @@ async function onSaveContact() {
                 name="company"
                 type="text"
                 autocomplete="off"
-                class="h-[2.8rem] w-full appearance-none border border-[#494949] bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
+                class="h-[2.8rem] w-full appearance-none border border-line-heavy bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-ink/20 hover:border-ink/20 focus:border-ink/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
 
@@ -649,18 +649,18 @@ async function onSaveContact() {
                 name="position"
                 type="text"
                 autocomplete="off"
-                class="h-[2.8rem] w-full appearance-none border border-[#494949] bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
+                class="h-[2.8rem] w-full appearance-none border border-line-heavy bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-ink/20 hover:border-ink/20 focus:border-ink/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
           </form>
         </div>
         <div
-          class="flex flex-col items-center justify-center gap-6 border-t border-[#494949] px-5 py-8"
+          class="flex flex-col items-center justify-center gap-6 border-t border-line-heavy px-5 py-8"
         >
           <button
             v-if="isSuccess"
             :disabled="isSavingContact"
-            class="cursor-pointer w-full rounded-full border border-[#494949] bg-white py-4 text-center text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-[#353535] disabled:text-white/20"
+            class="cursor-pointer w-full rounded-full border border-line-heavy bg-ink py-4 text-center text-xs font-bold leading-none tracking-[0.1rem] text-ink-inverse transition-all duration-500 disabled:bg-line-strong disabled:text-ink/20"
             @click="onSaveContact"
           >
             {{ isSavingContact ? 'Preparing Contact...' : 'Save Contact' }}
@@ -669,7 +669,7 @@ async function onSaveContact() {
             v-if="isSuccess"
             :href="card.vcf"
             :download="`${card.id}.vcf`"
-            class="cursor-pointer w-full rounded-full border border-[#494949] bg-white py-4 text-center text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-[#353535] disabled:text-white/20"
+            class="cursor-pointer w-full rounded-full border border-line-heavy bg-ink py-4 text-center text-xs font-bold leading-none tracking-[0.1rem] text-ink-inverse transition-all duration-500 disabled:bg-line-strong disabled:text-ink/20"
           >
             Save Contact
           </a> -->
@@ -678,7 +678,7 @@ async function onSaveContact() {
             type="submit"
             form="form"
             :disabled="!isValid || isSubmitting"
-            class="cursor-pointer relative w-full rounded-full border border-[#494949] bg-white py-4 text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-[#353535] disabled:text-white/20"
+            class="cursor-pointer relative w-full rounded-full border border-line-heavy bg-ink py-4 text-xs font-bold leading-none tracking-[0.1rem] text-ink-inverse transition-all duration-500 disabled:bg-line-strong disabled:text-ink/20"
           >
             Continue
             <div
@@ -686,7 +686,7 @@ async function onSaveContact() {
               class="absolute right-[0.26rem] top-[51.75%] -translate-y-1/2"
             >
               <div
-                class="inline-block size-9 animate-spin rounded-full border border-current border-t-transparent text-white/20"
+                class="inline-block size-9 animate-spin rounded-full border border-current border-t-transparent text-ink/20"
                 role="status"
                 aria-label="loading"
               >
@@ -733,7 +733,7 @@ async function onSaveContact() {
     </div>
 
     <div
-      class="fixed inset-0 top-auto -mb-px w-full scale-[1.005] rounded-t-xl border border-[#494949] bg-dark py-6 transition duration-750 sm:mx-auto sm:max-w-104"
+      class="fixed inset-0 top-auto -mb-px w-full scale-[1.005] rounded-t-xl border border-line-heavy bg-canvas py-6 transition duration-750 sm:mx-auto sm:max-w-104"
       :class="{
         'translate-y-0': isMenuOpen,
         'translate-y-100': !isMenuOpen,
@@ -742,7 +742,7 @@ async function onSaveContact() {
       <div>
         <button
           @click="isMenuOpen = false"
-          class="absolute right-4 top-4 grid aspect-square w-8 place-items-center rounded-full border border-[#494949] bg-[#353535] transition duration-750"
+          class="absolute right-4 top-4 grid aspect-square w-8 place-items-center rounded-full border border-line-heavy bg-line-strong transition duration-750"
           :class="{
             'opacity-100': isMenuOpen,
             'opacity-0': !isMenuOpen,
@@ -780,7 +780,7 @@ async function onSaveContact() {
               <div
                 class="grid aspect-square w-[4.56rem] overflow-hidden rounded-full"
               >
-                <NuxtImg
+                <UiSkeletonImage
                   v-if="getLinkIcon(link.label).includes('.')"
                   :src="getLinkIcon(link.label)"
                   :alt="link.label"
@@ -790,7 +790,7 @@ async function onSaveContact() {
                 />
                 <div
                   v-else
-                  class="grid aspect-square h-full w-full place-items-center rounded-full bg-[#353535]"
+                  class="grid aspect-square h-full w-full place-items-center rounded-full bg-line-strong"
                 >
                   <div class="aspect-square w-8">
                     <component :is="iconMap[getLinkIcon(link.label)]" />
@@ -811,7 +811,7 @@ async function onSaveContact() {
               :style="{ transitionDelay: `${(index + 1) * 100}ms` }"
             >
               <div
-                class="grid aspect-square w-[4.56rem] place-items-center rounded-full bg-[#353535]"
+                class="grid aspect-square w-[4.56rem] place-items-center rounded-full bg-line-strong"
               >
                 <div class="aspect-square w-8">
                   <component :is="iconMap[link.icon]" />

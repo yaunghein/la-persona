@@ -43,7 +43,7 @@ const logoSrc = computed(() =>
   <div class="flex flex-col">
     <div class="flex items-center gap-3 pb-6 pt-2">
       <h1
-        class="text-xl font-normal leading-tight tracking-widest uppercase text-white sm:text-2xl"
+        class="text-xl font-normal leading-tight tracking-widest uppercase text-ink sm:text-2xl"
       >
         About community
       </h1>
@@ -51,7 +51,7 @@ const logoSrc = computed(() =>
         icon="i-material-symbols:info-outline"
         color="neutral"
         variant="ghost"
-        class="size-5 cursor-pointer p-0 text-white hover:bg-transparent"
+        class="size-5 cursor-pointer p-0 text-ink hover:bg-transparent"
         aria-label="Open about community information"
         @click="
           () => {
@@ -63,9 +63,9 @@ const logoSrc = computed(() =>
 
     <div class="flex w-full flex-col">
       <div
-        class="relative flex aspect-[1/0.25] w-full items-center justify-center overflow-hidden rounded-t-lg bg-[#232323]"
+        class="relative flex aspect-[1/0.25] w-full items-center justify-center overflow-hidden rounded-t-lg bg-raised"
       >
-        <NuxtImg
+        <UiSkeletonImage
           v-if="coverSrc"
           :src="coverSrc"
           alt=""
@@ -75,19 +75,19 @@ const logoSrc = computed(() =>
         <UIcon
           v-else
           name="i-lucide-image"
-          class="size-6 text-[#8b8b8b] sm:size-8"
+          class="size-6 text-subtle sm:size-8"
           aria-hidden="true"
         />
       </div>
 
       <div
-        class="flex flex-col gap-8 rounded-b-lg bg-[#171717] px-5 py-8 sm:px-8"
+        class="flex flex-col gap-8 rounded-b-lg bg-surface px-5 py-8 sm:px-8"
       >
         <div class="flex items-start gap-4 sm:gap-6">
           <div
-            class="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#232323] sm:size-20"
+            class="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-raised sm:size-20"
           >
-            <NuxtImg
+            <UiSkeletonImage
               :src="logoSrc"
               :alt="data.name"
               width="96"
@@ -97,12 +97,12 @@ const logoSrc = computed(() =>
           </div>
           <div class="flex min-w-0 flex-col gap-2">
             <h2
-              class="text-lg font-normal leading-tight tracking-widest uppercase text-white sm:text-2xl"
+              class="text-lg font-normal leading-tight tracking-widest uppercase text-ink sm:text-2xl"
             >
               {{ data.name }}
             </h2>
             <ul
-              class="flex flex-col gap-0.5 text-sm font-medium leading-5 text-[#8b8b8b]"
+              class="flex flex-col gap-0.5 text-sm font-medium leading-5 text-subtle"
             >
               <li>{{ memberLabel }}</li>
               <li>{{ eventLabel }}</li>
@@ -111,61 +111,61 @@ const logoSrc = computed(() =>
           </div>
         </div>
 
-        <div class="h-px w-full bg-[#232323]" />
+        <div class="h-px w-full bg-raised" />
 
         <section class="flex flex-col gap-4">
           <h3
-            class="text-sm font-medium leading-snug tracking-widest uppercase text-white sm:text-base"
+            class="text-sm font-medium leading-snug tracking-widest uppercase text-ink sm:text-base"
           >
             About
           </h3>
           <div
             v-if="hasHtml(data.description)"
-            class="community-html text-sm font-medium leading-normal text-white max-w-4xl"
+            class="community-html text-sm font-medium leading-normal text-ink max-w-4xl"
             v-html="data.description"
           />
-          <p v-else class="text-sm font-medium leading-normal text-[#8b8b8b]">
+          <p v-else class="text-sm font-medium leading-normal text-subtle">
             No description yet.
           </p>
         </section>
 
-        <div class="h-px w-full bg-[#232323]" />
+        <div class="h-px w-full bg-raised" />
 
         <div class="grid grid-cols-1 items-start gap-8 sm:grid-cols-2">
           <section class="flex flex-col gap-4">
             <h3
-              class="text-sm font-medium leading-snug tracking-widest uppercase text-white sm:text-base"
+              class="text-sm font-medium leading-snug tracking-widest uppercase text-ink sm:text-base"
             >
               Community Guidelines
             </h3>
             <div
               v-if="hasHtml(data.guidelines)"
-              class="community-html text-sm font-medium leading-normal text-white"
+              class="community-html text-sm font-medium leading-normal text-ink"
               v-html="data.guidelines"
             />
-            <p v-else class="text-sm font-medium leading-normal text-[#8b8b8b]">
+            <p v-else class="text-sm font-medium leading-normal text-subtle">
               No guidelines yet.
             </p>
           </section>
 
           <section class="flex flex-col gap-4">
             <h3
-              class="text-sm font-medium leading-snug tracking-widest uppercase text-white sm:text-base"
+              class="text-sm font-medium leading-snug tracking-widest uppercase text-ink sm:text-base"
             >
               People join {{ data.name }} to
             </h3>
             <div
               v-if="hasHtml(data.whyJoin)"
-              class="community-html text-sm font-medium leading-normal text-white"
+              class="community-html text-sm font-medium leading-normal text-ink"
               v-html="data.whyJoin"
             />
-            <p v-else class="text-sm font-medium leading-normal text-[#8b8b8b]">
+            <p v-else class="text-sm font-medium leading-normal text-subtle">
               No details yet.
             </p>
           </section>
         </div>
 
-        <div class="h-px w-full bg-[#232323]" />
+        <div class="h-px w-full bg-raised" />
 
         <div
           class="flex flex-col-reverse items-stretch justify-end gap-2.5 sm:flex-row sm:items-center"
@@ -182,7 +182,7 @@ const logoSrc = computed(() =>
             label="View Organizer"
             leading-icon="i-lucide-eye"
             color="neutral"
-            class="h-10 cursor-pointer justify-center rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+            class="h-10 cursor-pointer justify-center rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
             @click="emit('viewOrganizer')"
           />
         </div>
@@ -194,8 +194,8 @@ const logoSrc = computed(() =>
     v-model:open="isInfoOpen"
     title="About this community"
     :ui="{
-      content: 'sm:max-w-120 rounded-lg bg-[#171717]',
-      title: 'text-sm font-medium uppercase tracking-widest text-white',
+      content: 'sm:max-w-120 rounded-lg bg-surface',
+      title: 'text-sm font-medium uppercase tracking-widest text-ink',
       body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"
   >
@@ -203,11 +203,11 @@ const logoSrc = computed(() =>
       <div class="space-y-5">
         <div class="space-y-2">
           <h3
-            class="text-lg font-medium tracking-widest uppercase text-white sm:text-xl"
+            class="text-lg font-medium tracking-widest uppercase text-ink sm:text-xl"
           >
             Community about
           </h3>
-          <p class="text-sm leading-relaxed text-[#8b8b8b]">
+          <p class="text-sm leading-relaxed text-subtle">
             See who this community is, how it runs, and why people join.
           </p>
         </div>
@@ -215,7 +215,7 @@ const logoSrc = computed(() =>
           <UButton
             label="Understood"
             color="neutral"
-            class="h-10 text-sm rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+            class="h-10 text-sm rounded-full bg-ink px-5 font-medium text-ink-inverse hover:bg-ink/90"
             @click="
               () => {
                 isInfoOpen = false;
@@ -261,7 +261,7 @@ const logoSrc = computed(() =>
 }
 
 .community-html :deep(:is(ul, ol) > li::marker) {
-  color: #ffffff;
+  color: var(--lp-ink);
 }
 
 .community-html :deep(a) {

@@ -100,7 +100,7 @@ const activeTab = computed({
     v-if="isCardPending"
     class="flex min-h-[calc(100vh-7rem)] items-center justify-center"
   >
-    <UIcon name="i-lucide-loader-2" class="size-8 animate-spin text-white/70" />
+    <UIcon name="i-lucide-loader-2" class="size-8 animate-spin text-ink/70" />
   </div>
 
   <div
@@ -111,7 +111,7 @@ const activeTab = computed({
       name="i-material-symbols:cards-stack-outline-sharp"
       class="size-8 text-muted"
     />
-    <h2 class="text-base font-medium uppercase tracking-widest text-white">
+    <h2 class="text-base font-medium uppercase tracking-widest text-ink">
       Card not found
     </h2>
     <p class="max-w-[20rem] text-center text-sm text-muted">
@@ -121,7 +121,7 @@ const activeTab = computed({
       label="Back to Cards"
       icon="i-lucide-arrow-left"
       color="neutral"
-      class="mt-2 h-10 text-sm rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+      class="mt-2 h-10 text-sm rounded-full bg-ink px-5 font-medium text-ink-inverse hover:bg-ink/90"
       :to="`/platform/${orgSlug}/cards`"
     />
   </div>
@@ -143,7 +143,7 @@ const activeTab = computed({
           <UButton
             icon="i-lucide-chevron-left"
             color="primary"
-            class="h-10 bg-transparent mr-1 sm:mr-2 text-white hover:bg-white/10 active:hover:bg-white/20"
+            class="h-10 bg-transparent mr-1 sm:mr-2 text-ink hover:bg-ink/10 active:hover:bg-ink/20"
             :to="`/platform/${orgSlug}/cards`"
           />
           <h1
@@ -155,8 +155,8 @@ const activeTab = computed({
             class="ml-3 font-semibold"
             :class="[
               isPendingApproval
-                ? 'cursor-pointer bg-amber-500/20 text-amber-300'
-                : 'bg-[#232323] text-white',
+                ? 'cursor-pointer bg-amber-500/20 text-amber-700 dark:text-amber-300'
+                : 'bg-raised text-ink',
               isCommunity ? 'normal-case' : 'uppercase',
             ]"
             size="sm"
@@ -175,7 +175,7 @@ const activeTab = computed({
         :label="upgradeButtonLabel"
         icon="i-lucide-chevrons-up"
         color="neutral"
-        class="self-start h-10 text-sm rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+        class="self-start h-10 text-sm rounded-full bg-ink px-5 font-medium text-ink-inverse hover:bg-ink/90"
         @click="openPremiumUpgrade"
       />
     </div>
@@ -185,9 +185,9 @@ const activeTab = computed({
       :items="tabs"
       :ui="{
         root: 'items-start mt-2 sm:mt-6',
-        list: 'bg-[#171717] w-full max-w-[32rem] rounded-[8px] p-1 overflow-x-auto',
-        indicator: 'bg-[#232323]',
-        trigger: 'data-[state=active]:text-white rounded-[4px] px-4 py-2.5',
+        list: 'bg-surface w-full max-w-[32rem] rounded-[8px] p-1 overflow-x-auto',
+        indicator: 'bg-raised',
+        trigger: 'data-[state=active]:text-ink rounded-[4px] px-4 py-2.5',
         content: 'mt-5',
       }"
     >

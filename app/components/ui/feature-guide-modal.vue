@@ -24,8 +24,8 @@ function close() {
     v-model:open="open"
     :title="title"
     :ui="{
-      content: 'sm:max-w-[480px] rounded-lg bg-[#171717]',
-      title: 'text-sm font-medium uppercase tracking-widest text-white',
+      content: 'sm:max-w-[480px] rounded-lg bg-surface',
+      title: 'text-sm font-medium uppercase tracking-widest text-ink',
       body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"
   >
@@ -33,11 +33,11 @@ function close() {
       <div class="space-y-5 sm:space-y-6">
         <div class="space-y-2">
           <h3
-            class="text-lg font-medium leading-tight tracking-widest uppercase text-white sm:text-xl"
+            class="text-lg font-medium leading-tight tracking-widest uppercase text-ink sm:text-xl"
           >
             {{ heading }}
           </h3>
-          <p class="text-sm leading-relaxed text-[#8b8b8b]">
+          <p class="text-sm leading-relaxed text-subtle">
             {{ description }}
           </p>
         </div>
@@ -47,16 +47,16 @@ function close() {
             v-for="(item, index) in items"
             :key="item.title"
             class="py-3 sm:py-3.5"
-            :class="index < items.length - 1 && 'border-b border-[#2a2a2a]'"
+            :class="index < items.length - 1 && 'border-b border-line'"
           >
             <div class="flex items-start gap-3">
               <UIcon
                 :name="item.icon"
-                class="mt-0.5 size-4.5 shrink-0 text-white sm:size-5"
+                class="mt-0.5 size-4.5 shrink-0 text-ink sm:size-5"
               />
               <div class="min-w-0">
-                <p class="text-sm font-medium text-white">{{ item.title }}</p>
-                <p class="mt-1.5 text-sm leading-relaxed text-[#8b8b8b]">
+                <p class="text-sm font-medium text-ink">{{ item.title }}</p>
+                <p class="mt-1.5 text-sm leading-relaxed text-subtle">
                   {{ item.description }}
                 </p>
               </div>
@@ -68,7 +68,7 @@ function close() {
           <UButton
             label="Understood"
             color="neutral"
-            class="h-10 text-sm justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+            class="h-10 text-sm justify-center rounded-full bg-ink px-5 font-medium text-ink-inverse hover:bg-ink/90"
             @click="close"
           />
         </div>

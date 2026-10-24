@@ -176,18 +176,18 @@ const dateLabel = computed(() => {
 });
 
 const formFieldClass =
-  '[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white';
+  '[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink';
 
 const inputUi = {
-  base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+  base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
 };
 
 const selectUi = {
-  base: 'h-[47px] w-full rounded-[4px] border border-[#2a2a2a] bg-[#232323] px-4 text-sm text-white',
-  content: 'border border-[#2a2a2a] bg-[#171717]',
-  item: 'text-white data-[highlighted]:bg-[#232323]',
-  value: 'text-white',
-  trailingIcon: 'text-[#8b8b8b]',
+  base: 'h-[47px] w-full rounded-[4px] border border-line bg-raised px-4 text-sm text-ink',
+  content: 'border border-line bg-surface',
+  item: 'text-ink data-[highlighted]:bg-raised',
+  value: 'text-ink',
+  trailingIcon: 'text-subtle',
 };
 
 const shareUrl = computed(() => {
@@ -608,9 +608,9 @@ async function copyEventLink() {
     :title="isEdit ? 'Edit event' : 'Create an event'"
     close-icon="i-material-symbols:close-small"
     :ui="{
-      content: 'bg-[#171717]',
-      header: 'border-b-2 border-[#232323] px-6 py-6',
-      title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+      content: 'bg-surface',
+      header: 'border-b-2 border-raised px-6 py-6',
+      title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
       body: 'px-6',
     }"
   >
@@ -621,10 +621,10 @@ async function copyEventLink() {
         >
           <Icon
             name="i-material-symbols:verified"
-            class="size-24 text-[#8BF667]"
+            class="size-24 text-success-ink"
           />
           <div
-            class="mt-8 mb-4 text-xl font-semibold leading-none tracking-[2px] whitespace-nowrap text-[#8BF667] uppercase"
+            class="mt-8 mb-4 text-xl font-semibold leading-none tracking-[2px] whitespace-nowrap text-success-ink uppercase"
           >
             Your event is now live
           </div>
@@ -649,15 +649,15 @@ async function copyEventLink() {
       >
         <section class="flex flex-col gap-6">
           <div class="space-y-2">
-            <p class="text-sm text-white">Cover Photo</p>
-            <p class="text-sm text-[#8b8b8b]">
+            <p class="text-sm text-ink">Cover Photo</p>
+            <p class="text-sm text-subtle">
               Suggested ratio 4:3. Max Size 5 MB. JPEG, PNG or WebP.
             </p>
           </div>
 
           <div
-            class="relative aspect-4/3 w-full overflow-hidden rounded-lg border border-[#232323]"
-            :class="cover ? '' : 'bg-dark/50'"
+            class="relative aspect-4/3 w-full overflow-hidden rounded-lg border border-raised"
+            :class="cover ? '' : 'bg-canvas/50'"
           >
             <img
               v-if="cover?.source === 'local'"
@@ -665,7 +665,7 @@ async function copyEventLink() {
               alt="Cover photo preview"
               class="size-full object-cover"
             />
-            <NuxtImg
+            <UiSkeletonImage
               v-else-if="cover"
               :src="cover.previewUrl"
               alt="Cover photo preview"
@@ -677,7 +677,7 @@ async function copyEventLink() {
                 :label="cover ? 'Upload New Photo' : 'Upload Cover Photo'"
                 leading-icon="i-lucide-upload"
                 color="neutral"
-                class="h-10 cursor-pointer rounded-full bg-[#232323] pr-6 pl-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+                class="h-10 cursor-pointer rounded-full bg-raised pr-6 pl-5 text-sm font-medium text-ink hover:bg-line"
                 @click="triggerCoverUpload"
               />
             </div>
@@ -693,22 +693,22 @@ async function copyEventLink() {
 
         <section class="flex flex-col gap-6">
           <div class="space-y-2">
-            <p class="text-sm text-white">Add Event Photos</p>
-            <p class="text-sm text-[#8b8b8b]">
+            <p class="text-sm text-ink">Add Event Photos</p>
+            <p class="text-sm text-subtle">
               Suggested ratio 4:3. Max Size 5 MB for Each. JPEGs, PNGs or WebPs.
             </p>
           </div>
 
           <div
             v-if="!photos.length"
-            class="relative aspect-4/3 w-full overflow-hidden rounded-lg border border-[#232323] bg-dark/50"
+            class="relative aspect-4/3 w-full overflow-hidden rounded-lg border border-raised bg-canvas/50"
           >
             <div class="absolute inset-0 flex items-center justify-center">
               <UButton
                 label="Upload Up to 4 Photos"
                 leading-icon="i-lucide-upload"
                 color="neutral"
-                class="h-10 cursor-pointer rounded-full bg-[#232323] pr-6 pl-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+                class="h-10 cursor-pointer rounded-full bg-raised pr-6 pl-5 text-sm font-medium text-ink hover:bg-line"
                 @click="triggerPhotosUpload"
               />
             </div>
@@ -727,7 +727,7 @@ async function copyEventLink() {
                   alt="Event photo preview"
                   class="size-full object-cover"
                 />
-                <NuxtImg
+                <UiSkeletonImage
                   v-else
                   :src="photo.previewUrl"
                   alt="Event photo preview"
@@ -749,7 +749,7 @@ async function copyEventLink() {
               <UButton
                 label="Add Photos"
                 color="neutral"
-                class="h-10 cursor-pointer rounded-full bg-[#232323] px-6 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+                class="h-10 cursor-pointer rounded-full bg-raised px-6 text-sm font-medium text-ink hover:bg-line"
                 @click="triggerPhotosUpload"
               />
             </div>
@@ -790,16 +790,16 @@ async function copyEventLink() {
             v-model:open="isDatePickerOpen"
             :content="{ align: 'start', side: 'bottom', sideOffset: 8 }"
             :ui="{
-              content: 'border border-[#2a2a2a] bg-[#171717]',
+              content: 'border border-line bg-surface',
             }"
           >
             <button
               type="button"
-              class="flex h-11.75 w-full cursor-pointer items-center justify-between rounded-[4px] border border-[#2a2a2a] bg-[#232323] px-4 text-left text-sm"
-              :class="state.date ? 'text-white' : 'text-white/50'"
+              class="flex h-11.75 w-full cursor-pointer items-center justify-between rounded-[4px] border border-line bg-raised px-4 text-left text-sm"
+              :class="state.date ? 'text-ink' : 'text-ink/50'"
             >
               <span>{{ dateLabel }}</span>
-              <UIcon name="i-lucide-calendar" class="size-5 text-[#8b8b8b]" />
+              <UIcon name="i-lucide-calendar" class="size-5 text-subtle" />
             </button>
 
             <template #content="{ close }">
@@ -864,25 +864,25 @@ async function copyEventLink() {
         </UFormField>
 
         <div class="flex flex-col gap-3">
-          <p class="text-sm font-medium text-white">Capacity</p>
+          <p class="text-sm font-medium text-ink">Capacity</p>
           <button
             type="button"
-            class="flex h-11.75 w-full cursor-pointer items-center justify-between rounded-[4px] border border-[#2a2a2a] bg-[#232323] px-4 text-left text-sm text-white"
+            class="flex h-11.75 w-full cursor-pointer items-center justify-between rounded-[4px] border border-line bg-raised px-4 text-left text-sm text-ink"
             @click="openCapacityEditor"
           >
             <span>{{
               state.capacity === null ? 'Unlimited' : state.capacity
             }}</span>
-            <UIcon name="i-lucide-pencil" class="size-5 text-[#8b8b8b]" />
+            <UIcon name="i-lucide-pencil" class="size-5 text-subtle" />
           </button>
 
           <div
             v-if="isCapacityEditorOpen"
-            class="flex flex-col gap-4 rounded-[4px] border border-[#2a2a2a] bg-[#232323] p-4"
+            class="flex flex-col gap-4 rounded-[4px] border border-line bg-raised p-4"
           >
             <div class="space-y-2">
-              <p class="text-sm text-white">Set Capacity Limit</p>
-              <p class="text-sm text-[#8b8b8b]">
+              <p class="text-sm text-ink">Set Capacity Limit</p>
+              <p class="text-sm text-subtle">
                 No more people can register after the capacity limit is reached.
               </p>
             </div>
@@ -898,13 +898,13 @@ async function copyEventLink() {
               <UButton
                 label="Remove Limit"
                 color="neutral"
-                class="h-10 cursor-pointer rounded-full bg-transparent px-5 text-sm font-medium text-white hover:bg-white/10! active:hover:bg-white/20!"
+                class="h-10 cursor-pointer rounded-full bg-transparent px-5 text-sm font-medium text-ink hover:bg-ink/10! active:hover:bg-ink/20!"
                 @click="removeCapacityLimit"
               />
               <UButton
                 label="Set Limit"
                 color="neutral"
-                class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+                class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
                 @click="setCapacityLimit"
               />
             </div>
@@ -931,7 +931,7 @@ async function copyEventLink() {
           color="neutral"
           variant="ghost"
           :disabled="isSubmitting"
-          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-subtle hover:bg-raised hover:text-ink"
           @click="discardChanges"
         />
         <UButton
@@ -939,7 +939,7 @@ async function copyEventLink() {
           leading-icon="i-lucide-check"
           color="neutral"
           :loading="isCreating || isUpdating"
-          class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
           @click="submitFromFooter"
         />
       </div>
@@ -951,17 +951,17 @@ async function copyEventLink() {
     :close="false"
     :dismissible="!isDeleting"
     :ui="{
-      content: 'bg-[#171717] max-w-md',
-      title: 'text-white',
+      content: 'bg-surface max-w-md',
+      title: 'text-ink',
       body: 'pt-4',
       footer: 'justify-end gap-2',
     }"
     title="Delete Event?"
   >
     <template #body>
-      <p class="text-sm leading-relaxed text-[#bcbcbc]">
+      <p class="text-sm leading-relaxed text-soft">
         This action cannot be undone. The event
-        <span class="font-medium text-white"> "{{ props.event?.title }}" </span>
+        <span class="font-medium text-ink"> "{{ props.event?.title }}" </span>
         will be removed.
       </p>
     </template>

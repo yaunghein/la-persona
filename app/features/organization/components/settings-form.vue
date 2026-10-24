@@ -59,10 +59,10 @@ function patch<K extends keyof CommunitySettingsFormValues>(
 }
 
 const formFieldClass =
-  '[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white';
+  '[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink';
 
 const inputUi = {
-  base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+  base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
 };
 
 function openInfo() {
@@ -195,7 +195,7 @@ onUnmounted(() => {
   <div class="flex flex-col gap-8">
     <div class="flex items-center gap-3">
       <h1
-        class="text-xl font-normal leading-tight tracking-widest uppercase text-white sm:text-2xl"
+        class="text-xl font-normal leading-tight tracking-widest uppercase text-ink sm:text-2xl"
       >
         Community Settings
       </h1>
@@ -203,20 +203,20 @@ onUnmounted(() => {
         icon="i-material-symbols:info-outline"
         color="neutral"
         variant="ghost"
-        class="size-5 cursor-pointer p-0 text-white hover:bg-transparent"
+        class="size-5 cursor-pointer p-0 text-ink hover:bg-transparent"
         aria-label="Open community settings information"
         @click="openInfo"
       />
     </div>
 
     <div
-      class="flex w-full flex-col gap-8 rounded-lg bg-[#171717] p-6 pb-8 sm:p-8"
+      class="flex w-full flex-col gap-8 rounded-lg bg-surface p-6 pb-8 sm:p-8"
     >
       <section class="flex flex-col gap-8">
         <div class="flex flex-col gap-3">
-          <p class="text-sm font-medium text-white">Cover Image</p>
+          <p class="text-sm font-medium text-ink">Cover Image</p>
           <div
-            class="relative aspect-[1/0.25] w-full overflow-hidden rounded-lg border border-[#232323] bg-dark"
+            class="relative aspect-[1/0.25] w-full overflow-hidden rounded-lg border border-raised bg-canvas"
           >
             <img
               v-if="localCoverPreviewUrl"
@@ -224,7 +224,7 @@ onUnmounted(() => {
               alt=""
               class="size-full object-cover"
             />
-            <NuxtImg
+            <UiSkeletonImage
               v-else-if="displayCover"
               :src="displayCover"
               alt=""
@@ -244,7 +244,7 @@ onUnmounted(() => {
                 leading-icon="i-lucide-upload"
                 color="neutral"
                 size="sm"
-                class="h-8 cursor-pointer rounded-full bg-[#232323]/90 pr-4 pl-3 text-xs font-medium text-white hover:bg-[#2a2a2a]"
+                class="h-8 cursor-pointer rounded-full bg-raised/90 pr-4 pl-3 text-xs font-medium text-ink hover:bg-line"
                 @click="triggerFilePicker('community-cover-input')"
               />
             </div>
@@ -252,10 +252,10 @@ onUnmounted(() => {
         </div>
 
         <div class="flex flex-col gap-3">
-          <p class="text-sm font-medium text-white">Organization Logo</p>
+          <p class="text-sm font-medium text-ink">Organization Logo</p>
           <div class="flex flex-wrap items-center gap-4">
             <div
-              class="flex size-16 shrink-0 sm:size-24 items-center justify-center overflow-hidden rounded-full bg-[#232323]"
+              class="flex size-16 shrink-0 sm:size-24 items-center justify-center overflow-hidden rounded-full bg-raised"
             >
               <img
                 v-if="localLogoPreviewUrl"
@@ -263,7 +263,7 @@ onUnmounted(() => {
                 :alt="form.name || 'Organization logo'"
                 class="size-full object-cover"
               />
-              <NuxtImg
+              <UiSkeletonImage
                 v-else
                 :src="displayLogo"
                 :alt="form.name || 'Organization logo'"
@@ -284,7 +284,7 @@ onUnmounted(() => {
               leading-icon="i-lucide-upload"
               color="neutral"
               size="sm"
-              class="h-8 cursor-pointer rounded-full bg-[#232323] pr-4 pl-3 text-xs font-medium text-white hover:bg-[#2a2a2a]"
+              class="h-8 cursor-pointer rounded-full bg-raised pr-4 pl-3 text-xs font-medium text-ink hover:bg-line"
               @click="triggerFilePicker('community-logo-input')"
             />
           </div>
@@ -341,7 +341,7 @@ onUnmounted(() => {
           leading-icon="i-lucide-check"
           color="neutral"
           :loading="saving || isUploadingImage"
-          class="h-10 cursor-pointer justify-center rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer justify-center rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
           @click="onUpdate"
         />
       </div>
@@ -352,8 +352,8 @@ onUnmounted(() => {
     v-model:open="isInfoOpen"
     title="About settings"
     :ui="{
-      content: 'sm:max-w-[480px] rounded-lg bg-[#171717]',
-      title: 'text-sm font-medium uppercase tracking-widest text-white',
+      content: 'sm:max-w-[480px] rounded-lg bg-surface',
+      title: 'text-sm font-medium uppercase tracking-widest text-ink',
       body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"
   >
@@ -361,11 +361,11 @@ onUnmounted(() => {
       <div class="space-y-5">
         <div class="space-y-2">
           <h3
-            class="text-lg font-medium tracking-widest uppercase text-white sm:text-xl"
+            class="text-lg font-medium tracking-widest uppercase text-ink sm:text-xl"
           >
             Community settings
           </h3>
-          <p class="text-sm leading-relaxed text-[#8b8b8b]">
+          <p class="text-sm leading-relaxed text-subtle">
             Update your community name, description, brand card assets, and why
             people should join.
           </p>
@@ -374,7 +374,7 @@ onUnmounted(() => {
           <UButton
             label="Understood"
             color="neutral"
-            class="h-10 text-sm rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+            class="h-10 text-sm rounded-full bg-ink px-5 font-medium text-ink-inverse hover:bg-ink/90"
             @click="closeInfo"
           />
         </div>

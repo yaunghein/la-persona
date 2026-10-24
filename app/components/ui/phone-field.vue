@@ -91,7 +91,7 @@ function selectCountry(code: string) {
         :aria-label="`Country code ${dialCode}`"
       >
         <span>{{ dialCode }}</span>
-        <span class="h-5 w-px shrink-0 bg-white/10" />
+        <span class="h-5 w-px shrink-0 bg-ink/10" />
       </button>
       <template #content>
         <div class="w-72 p-2">
@@ -136,7 +136,7 @@ function selectCountry(code: string) {
       type="tel"
       autocomplete="tel"
       :placeholder="placeholder"
-      class="min-w-0 flex-1 bg-transparent pl-4 outline-none placeholder:text-white/50"
+      class="min-w-0 flex-1 bg-transparent pl-4 outline-none placeholder:text-ink/50"
     />
   </div>
 </template>

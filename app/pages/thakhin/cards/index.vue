@@ -401,17 +401,17 @@ const columns: TableColumn<CardRow>[] = [
 
 /** Matches `app/components/form/manual-contact.vue` / `update-card-info.vue` */
 const formFieldClass =
-  '[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white';
+  '[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink';
 
 const inputUi = {
-  base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+  base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
 };
 
 const selectUi = {
-  base: 'h-[47px] w-full rounded-[4px] border-[#2a2a2a] bg-[#232323] px-3 text-sm text-white',
-  content: 'border border-[#2a2a2a] bg-[#232323]',
-  item: 'text-white data-[highlighted]:bg-[#232323]',
-  value: 'text-white',
+  base: 'h-[47px] w-full rounded-[4px] border-line bg-raised px-3 text-sm text-ink',
+  content: 'border border-line bg-raised',
+  item: 'text-ink data-[highlighted]:bg-raised',
+  value: 'text-ink',
 };
 </script>
 
@@ -480,7 +480,7 @@ const selectUi = {
         @select="(_event, row) => openCard(row.original)"
       >
         <template #displayName-cell="{ row }">
-          <span class="font-medium text-white">
+          <span class="font-medium text-ink">
             {{ displayName(row.original) }}
           </span>
         </template>
@@ -493,7 +493,7 @@ const selectUi = {
           </UBadge>
           <p
             v-if="row.original.linkedUserEmail"
-            class="mt-1 max-w-48 truncate text-xs text-white/45"
+            class="mt-1 max-w-48 truncate text-xs text-ink/45"
           >
             {{ row.original.linkedUserEmail }}
           </p>
@@ -507,7 +507,7 @@ const selectUi = {
           </UBadge>
           <p
             v-if="row.original.subscriptionPlanCode"
-            class="mt-1 text-xs text-white/45"
+            class="mt-1 text-xs text-ink/45"
           >
             {{ row.original.subscriptionPlanCode }}
           </p>
@@ -518,15 +518,15 @@ const selectUi = {
             :class="
               row.original.subscriptionStatus === 'expired'
                 ? 'text-error'
-                : 'text-white/55'
+                : 'text-ink/55'
             "
           >
             {{ new Date(row.original.subscriptionEndAt).toLocaleDateString() }}
           </span>
-          <span v-else class="text-white/30">—</span>
+          <span v-else class="text-ink/30">—</span>
         </template>
         <template #createdAt-cell="{ row }">
-          <span class="text-white/55">{{
+          <span class="text-ink/55">{{
             formatDate(row.original.createdAt)
           }}</span>
         </template>
@@ -542,8 +542,8 @@ const selectUi = {
       inset
       :title="slideTitle"
       :ui="{
-        header: 'border-b-2 border-[#232323] px-6 py-6',
-        title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+        header: 'border-b-2 border-raised px-6 py-6',
+        title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
         body: 'px-6',
       }"
     >
@@ -684,7 +684,7 @@ const selectUi = {
             </UFormField>
           </div>
 
-          <p v-if="!editingId" class="mt-1 text-xs text-[#8b8b8b]">
+          <p v-if="!editingId" class="mt-1 text-xs text-subtle">
             New cards are stored under the placeholder org until you create an
             onboarding invitation (which creates the customer org and moves the
             card). User stays unlinked until the recipient accepts.
@@ -697,7 +697,7 @@ const selectUi = {
           label="Cancel"
           color="neutral"
           variant="ghost"
-          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-subtle hover:bg-raised hover:text-ink"
           @click="
             () => {
               isFormOpen = false;
@@ -709,7 +709,7 @@ const selectUi = {
           :label="editingId ? 'Save changes' : 'Create card'"
           color="neutral"
           :loading="isSaving"
-          class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
           @click="onSubmitForm"
         />
       </template>
@@ -720,17 +720,17 @@ const selectUi = {
       :close="false"
       :dismissible="!isDeleting"
       :ui="{
-        content: 'bg-[#171717] max-w-md',
-        title: 'text-white',
+        content: 'bg-surface max-w-md',
+        title: 'text-ink',
         body: 'pt-4',
         footer: 'justify-end gap-2',
       }"
       title="Delete card?"
     >
       <template #body>
-        <p class="text-sm leading-relaxed text-[#bcbcbc]">
+        <p class="text-sm leading-relaxed text-soft">
           This cannot be undone. The card
-          <span class="font-medium text-white">
+          <span class="font-medium text-ink">
             "{{ cardToDelete ? displayName(cardToDelete) : '' }}"
           </span>
           and related subscription, contact exchanges, and analytics on this
@@ -742,7 +742,7 @@ const selectUi = {
           label="Cancel"
           color="neutral"
           variant="ghost"
-          class="h-10 text-sm rounded-full px-5 text-white hover:bg-[#232323]"
+          class="h-10 text-sm rounded-full px-5 text-ink hover:bg-raised"
           :disabled="isDeleting"
           @click="closeDelete"
         />
@@ -759,11 +759,11 @@ const selectUi = {
     <USlideover
       v-model:open="cardOpen"
       title="Card"
-      :ui="{ content: 'bg-[#171717]' }"
+      :ui="{ content: 'bg-surface' }"
     >
       <template #body>
-        <div v-if="cardDetail" class="space-y-2 text-sm text-white/80">
-          <p class="text-white">
+        <div v-if="cardDetail" class="space-y-2 text-sm text-ink/80">
+          <p class="text-ink">
             {{ cardDetail.firstName }} {{ cardDetail.lastName }}
           </p>
           <p>{{ cardDetail.organizationName }}</p>
@@ -786,7 +786,7 @@ const selectUi = {
           color="neutral"
           :to="`/c/${cardDetail.slug}`"
           target="_blank"
-          class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
         />
       </template>
     </USlideover>

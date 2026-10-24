@@ -101,7 +101,7 @@ async function confirmDelete() {
           icon="material-symbols:info-outline"
           color="neutral"
           variant="ghost"
-          class="flex items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323] cursor-pointer"
+          class="flex items-center justify-center rounded-full p-0 text-muted hover:bg-raised cursor-pointer"
           aria-label="Open cards information"
           @click="openGuide"
         />
@@ -111,7 +111,7 @@ async function confirmDelete() {
         label="Request New Card"
         leading-icon="i-lucide-plus"
         color="neutral"
-        class="fixed bottom-6 left-1/2 z-10 -translate-x-1/2 shadow-lg sm:static sm:translate-x-0 sm:shadow-none h-10 text-sm cursor-pointer flex items-center justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
+        class="fixed bottom-6 left-1/2 z-10 -translate-x-1/2 shadow-lg sm:static sm:translate-x-0 sm:shadow-none h-10 text-sm cursor-pointer flex items-center justify-center rounded-full bg-ink px-5 font-medium text-ink-inverse hover:bg-ink/90 active:hover:bg-ink/80"
         @click="openRequestForm"
       />
     </div>
@@ -155,7 +155,7 @@ async function confirmDelete() {
     <UContainer v-else class="h-[calc(100vh-10rem)] min-h-96">
       <div class="flex flex-col items-center justify-center text-center h-full">
         <div
-          class="bg-[#232323] w-11 aspect-square flex items-center justify-center rounded-sm"
+          class="bg-raised w-11 aspect-square flex items-center justify-center rounded-sm"
         >
           <UIcon
             name="i-material-symbols:cards-stack-outline-sharp"
@@ -185,7 +185,7 @@ async function confirmDelete() {
     @confirm="confirmDelete"
   >
     This action cannot be undone. The card
-    <span class="font-medium text-white">
+    <span class="font-medium text-ink">
       "{{ cardToDelete ? cardHolderName(cardToDelete) : '' }}"
     </span>
     and related subscription records will be removed.

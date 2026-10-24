@@ -141,7 +141,7 @@ function onSubmit() {
       <USkeleton class="h-20 col-span-2 w-full" />
     </div> -->
     <h1
-      class="text-md sm:text-xl font-medium uppercase tracking-widest text-white"
+      class="text-md sm:text-xl font-medium uppercase tracking-widest text-ink"
     >
       Let's get started
     </h1>

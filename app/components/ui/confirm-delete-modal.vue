@@ -23,14 +23,14 @@ function close() {
     :dismissible="!pending"
     :title="title"
     :ui="{
-      content: 'bg-[#171717] max-w-md',
-      title: 'text-white',
+      content: 'bg-surface max-w-md',
+      title: 'text-ink',
       body: 'pt-4',
       footer: 'justify-end gap-2',
     }"
   >
     <template #body>
-      <p class="text-sm leading-relaxed text-[#bcbcbc]">
+      <p class="text-sm leading-relaxed text-soft">
         <slot />
       </p>
     </template>

@@ -93,16 +93,16 @@ function onRegister() {
     close-icon="i-material-symbols:close-small"
     unmount-on-hide
     :ui="{
-      content: 'bg-[#171717] sm:max-w-120 divide-y-0',
-      header: 'border-b-2 border-[#232323] px-6 py-6',
-      title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+      content: 'bg-surface sm:max-w-120 divide-y-0',
+      header: 'border-b-2 border-raised px-6 py-6',
+      title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
       body: 'p-6',
     }"
   >
     <template v-if="event" #body>
       <div class="flex flex-col gap-8">
         <div
-          class="relative aspect-[1/0.75] w-full overflow-hidden rounded-lg bg-[#232323]"
+          class="relative aspect-[1/0.75] w-full overflow-hidden rounded-lg bg-raised"
         >
           <UCarousel
             v-if="galleryImages.length > 1"
@@ -117,17 +117,17 @@ function onRegister() {
               container: 'ms-0 h-full items-stretch',
               item: 'relative h-full min-h-0 basis-full overflow-hidden ps-0',
               dots: 'absolute inset-x-0 bottom-3 z-10 flex items-center justify-center gap-2',
-              dot: 'size-2 rounded-full bg-white/40 data-[state=active]:bg-white',
+              dot: 'size-2 rounded-full bg-ink/40 data-[state=active]:bg-ink',
             }"
           >
-            <NuxtImg
+            <UiSkeletonImage
               :src="item"
               :alt="event.title"
               width="480"
               class="absolute inset-0 size-full object-cover"
             />
           </UCarousel>
-          <NuxtImg
+          <UiSkeletonImage
             v-else-if="galleryImages[0]"
             :src="galleryImages[0]"
             :alt="event.title"
@@ -138,28 +138,28 @@ function onRegister() {
 
         <div class="flex flex-col gap-4">
           <h2
-            class="text-xl font-medium leading-[1.35] tracking-[0.125rem] uppercase text-white"
+            class="text-xl font-medium leading-[1.35] tracking-[0.125rem] uppercase text-ink"
           >
             {{ event.title }}
           </h2>
           <UiRichText
             v-if="event.description"
             :content="event.description"
-            class="text-sm font-normal leading-normal text-[#8b8b8b]"
+            class="text-sm font-normal leading-normal text-subtle"
           />
         </div>
 
-        <div class="flex flex-col divide-y divide-[#2a2a2a]">
+        <div class="flex flex-col divide-y divide-line">
           <div
             v-for="item in details"
             :key="item.label"
             class="flex items-start justify-between gap-4 px-4 py-3"
           >
-            <span class="shrink-0 text-sm font-normal text-[#8b8b8b]">
+            <span class="shrink-0 text-sm font-normal text-subtle">
               {{ item.label }}
             </span>
             <div class="flex min-w-0 flex-col items-end gap-1">
-              <span class="text-right text-sm font-bold text-white">
+              <span class="text-right text-sm font-bold text-ink">
                 {{ item.value }}
               </span>
               <UButton
@@ -173,7 +173,7 @@ function onRegister() {
                 size="sm"
                 trailing-icon="i-lucide-external-link"
                 label="View on Google Map"
-                class="p-0 text-[#8b8b8b] hover:text-white"
+                class="p-0 text-subtle hover:text-ink"
               />
             </div>
           </div>
@@ -190,7 +190,7 @@ function onRegister() {
           "
           label="Register"
           color="neutral"
-          class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
           @click="onRegister"
         />
         <UButton
@@ -203,7 +203,7 @@ function onRegister() {
           :ui="{ leadingAvatar: 'rounded-none bg-transparent' }"
           color="neutral"
           :loading="addingEventId === event.id"
-          class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
           @click="addToGoogleCalendar(event.id)"
         />
         <UButton
@@ -211,7 +211,7 @@ function onRegister() {
           :label="closedLabel(event)"
           color="neutral"
           disabled
-          class="h-10 rounded-full bg-white/10 px-5 text-sm font-medium text-white/50 disabled:bg-white/10 disabled:opacity-100"
+          class="h-10 rounded-full bg-ink/10 px-5 text-sm font-medium text-ink/50 disabled:bg-ink/10 disabled:opacity-100"
         />
       </div>
     </template>

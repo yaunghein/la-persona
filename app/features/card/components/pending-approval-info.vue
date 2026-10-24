@@ -28,15 +28,15 @@ function closeModal() {
     v-model:open="modalOpen"
     title="Pending Approval"
     :ui="{
-      content: 'sm:max-w-[480px] rounded-lg bg-[#171717]',
-      title: 'text-sm font-medium uppercase tracking-widest text-white',
+      content: 'sm:max-w-[480px] rounded-lg bg-surface',
+      title: 'text-sm font-medium uppercase tracking-widest text-ink',
       body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"
   >
     <template #body>
-      <div class="space-y-4 text-sm leading-relaxed text-[#bcbcbc]">
+      <div class="space-y-4 text-sm leading-relaxed text-soft">
         <p>
-          <span class="font-medium text-white">{{ cardName }}</span>
+          <span class="font-medium text-ink">{{ cardName }}</span>
           is currently under payment verification.
         </p>
         <p>
@@ -47,7 +47,7 @@ function closeModal() {
           If a payment is identified as invalid or fraudulent, we reserve the
           right to suspend or remove the card and revoke related access.
         </p>
-        <p class="text-[#8b8b8b]">
+        <p class="text-subtle">
           Need help? Please contact support for verification updates.
         </p>
       </div>
@@ -55,7 +55,7 @@ function closeModal() {
         <UButton
           label="Got it"
           color="neutral"
-          class="h-10 text-sm justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+          class="h-10 text-sm justify-center rounded-full bg-ink px-5 font-medium text-ink-inverse hover:bg-ink/90"
           @click="closeModal"
         />
       </div>

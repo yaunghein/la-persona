@@ -35,6 +35,7 @@ const emit = defineEmits<{
 }>();
 
 const toast = useToast();
+const colorMode = useColorMode();
 const downloading = ref(false);
 const canvasEl = ref<HTMLCanvasElement | null>(null);
 const splineLoading = ref(false);
@@ -55,7 +56,9 @@ const cardFields = computed(() => ({
 
 function applyVariables() {
   if (!splineApp) return;
-  splineApp.setBackgroundColor('#171717');
+  splineApp.setBackgroundColor(
+    colorMode.value === 'light' ? '#f6f6f8' : '#171717'
+  );
   applyCommunityCardToSpline(splineApp, cardFields.value);
 }
 
@@ -92,7 +95,7 @@ async function loadSpline() {
   }
 }
 
-watch(cardFields, () => applyVariables());
+watch([cardFields, () => colorMode.value], () => applyVariables());
 watch(
   () => props.splineUrl,
   () => loadSpline()
@@ -197,15 +200,15 @@ async function onDownload() {
       >
         <div class="flex flex-col gap-6">
           <h1
-            class="text-[1.75rem] font-medium leading-tight tracking-[0.175rem] uppercase text-white"
+            class="text-[1.75rem] font-medium leading-tight tracking-[0.175rem] uppercase text-ink"
           >
             Keep your card ready
           </h1>
-          <p class="text-sm leading-normal text-[#8b8b8b]">
+          <p class="text-sm leading-normal text-subtle">
             Set the lock screen wallpaper on your phone for faster check-in at
             the event and to share your contact with other members faster.
           </p>
-          <p class="text-sm leading-normal text-[#8b8b8b]">
+          <p class="text-sm leading-normal text-subtle">
             You can always download this wallpaper later from your community
             card page.
           </p>
@@ -229,12 +232,12 @@ async function onDownload() {
           >
             <UIcon
               name="i-lucide-loader-circle"
-              class="size-6 animate-spin text-[#8b8b8b]"
+              class="size-6 animate-spin text-subtle"
             />
           </div>
           <p
             v-else-if="!splineUrl || splineFailed"
-            class="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-[#8b8b8b]"
+            class="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-subtle"
           >
             This community card scene is not ready yet.
           </p>

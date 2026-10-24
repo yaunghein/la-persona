@@ -45,12 +45,12 @@ const onContactClick = () => {
 <template>
   <div class="flex sm:min-h-[calc(100dvh-7rem)] items-center justify-center">
     <div
-      class="w-full max-w-106 overflow-hidden rounded-[8px] border border-[#232323] bg-[#171717]"
+      class="w-full max-w-106 overflow-hidden rounded-[8px] border border-raised bg-surface"
     >
       <div
-        class="flex items-center justify-between border-b-2 border-[#232323] p-4 sm:p-6"
+        class="flex items-center justify-between border-b-2 border-raised p-4 sm:p-6"
       >
-        <h2 class="text-sm font-medium uppercase tracking-widest text-white">
+        <h2 class="text-sm font-medium uppercase tracking-widest text-ink">
           What is teams?
         </h2>
         <UBadge
@@ -66,7 +66,7 @@ const onContactClick = () => {
         <div class="space-y-4 sm:space-y-8">
           <div class="space-y-2">
             <h3
-              class="text-md sm:text-xl font-medium uppercase tracking-widest text-white"
+              class="text-md sm:text-xl font-medium uppercase tracking-widest text-ink"
             >
               Collaborate across your organization
             </h3>
@@ -82,18 +82,16 @@ const onContactClick = () => {
               :key="item.title"
               class="px-2 sm:px-4 py-3"
               :class="
-                index < teaserItems.length - 1
-                  ? 'border-b border-[#2a2a2a]'
-                  : ''
+                index < teaserItems.length - 1 ? 'border-b border-line' : ''
               "
             >
               <div class="flex items-start gap-2">
                 <UIcon
                   :name="item.icon"
-                  class="shrink-0 mt-0.5 size-5 text-white"
+                  class="shrink-0 mt-0.5 size-5 text-ink"
                 />
                 <div>
-                  <p class="text-[14px] text-white">{{ item.title }}</p>
+                  <p class="text-[14px] text-ink">{{ item.title }}</p>
                   <p class="mt-2 text-[14px] text-muted">
                     {{ item.description }}
                   </p>
@@ -106,7 +104,7 @@ const onContactClick = () => {
             <UButton
               label="Contact Us For Early Access"
               color="neutral"
-              class="cursor-pointer h-10 text-sm rounded-full bg-white px-6 text-dark hover:bg-white/90"
+              class="cursor-pointer h-10 text-sm rounded-full bg-ink px-6 text-ink-inverse hover:bg-ink/90"
               @click="onContactClick"
             />
           </div> -->

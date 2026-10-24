@@ -289,7 +289,7 @@ watch(isSocialSlideoverOpen, (open) => {
 <template>
   <div class="bg-elevated/25 rounded-md p-4 sm:p-8">
     <h1
-      class="text-md sm:text-xl font-medium uppercase tracking-widest text-white"
+      class="text-md sm:text-xl font-medium uppercase tracking-widest text-ink"
     >
       Finish setting up
     </h1>
@@ -306,7 +306,7 @@ watch(isSocialSlideoverOpen, (open) => {
     >
       <div class="space-y-4">
         <div class="flex justify-between items-center">
-          <p class="text-sm font-medium text-gray-200">
+          <p class="text-sm font-medium text-ink/90">
             Social / Professional Links
           </p>
           <UButton
@@ -314,14 +314,14 @@ watch(isSocialSlideoverOpen, (open) => {
             icon="i-heroicons-plus-circle"
             label="Add Link"
             size="sm"
-            class="rounded-full bg-[#232323] text-xs px-3 text-white hover:bg-[#2a2a2a]"
+            class="rounded-full bg-raised text-xs px-3 text-ink hover:bg-line"
             @click="openCreateLinkSlideover"
           />
         </div>
 
         <div
           v-if="!state.socials.length"
-          class="rounded-[6px] border border-dashed border-white/10 px-4 py-6 text-center text-sm text-muted"
+          class="rounded-[6px] border border-dashed border-ink/10 px-4 py-6 text-center text-sm text-muted"
         >
           Optional — add links now, or continue without them.
         </div>
@@ -330,17 +330,17 @@ watch(isSocialSlideoverOpen, (open) => {
           <div
             v-for="(link, index) in state.socials"
             :key="`${index}-${link.label}-${link.value}`"
-            class="sortable-link-row relative flex items-center gap-3 rounded-[6px] border border-white/10 bg-white/5 p-3"
+            class="sortable-link-row relative flex items-center gap-3 rounded-[6px] border border-ink/10 bg-ink/5 p-3"
           >
             <button
               type="button"
-              class="drag-handle inline-flex h-10 w-9 cursor-grab items-center justify-center rounded-[4px] text-muted hover:bg-white/5 active:cursor-grabbing"
+              class="drag-handle inline-flex h-10 w-9 cursor-grab items-center justify-center rounded-[4px] text-muted hover:bg-ink/5 active:cursor-grabbing"
               aria-label="Drag to reorder link"
             >
               <UIcon name="i-lucide-grip-vertical" class="size-5" />
             </button>
             <div class="min-w-0 flex-1">
-              <p class="truncate text-sm font-medium text-white">
+              <p class="truncate text-sm font-medium text-ink">
                 {{ resolveSocialLabel(link) || 'Untitled Link' }}
               </p>
               <p class="mt-1 truncate text-sm text-muted">
@@ -353,7 +353,7 @@ watch(isSocialSlideoverOpen, (open) => {
                 size="sm"
                 icon="i-lucide-pen-square"
                 variant="ghost"
-                class="text-muted hover:bg-white/5 hover:text-white"
+                class="text-muted hover:bg-ink/5 hover:text-ink"
                 @click="openEditLinkSlideover(index)"
               />
               <UButton
@@ -399,10 +399,10 @@ watch(isSocialSlideoverOpen, (open) => {
     inset
     :title="socialEditorMode === 'create' ? 'Add Link' : 'Edit Link'"
     :ui="{
-      header: 'border-b border-white/10 px-6 py-6',
-      title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+      header: 'border-b border-ink/10 px-6 py-6',
+      title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
       body: 'px-6 py-6',
-      content: 'bg-[#171717]',
+      content: 'bg-surface',
     }"
   >
     <template #body>
@@ -410,7 +410,7 @@ watch(isSocialSlideoverOpen, (open) => {
         <UFormField
           label="Link Type"
           name="socialDraft.label"
-          class="[&_label]:mb-2 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-2 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
           <USelectMenu
             v-model="socialDraft.label"
@@ -421,7 +421,7 @@ watch(isSocialSlideoverOpen, (open) => {
             placeholder="Select Link Type"
             size="xl"
             :ui="{
-              content: 'bg-[#171717] border border-[#2a2a2a]',
+              content: 'bg-surface border border-line',
             }"
           />
         </UFormField>
@@ -430,7 +430,7 @@ watch(isSocialSlideoverOpen, (open) => {
           v-if="socialDraft.label === 'Custom'"
           label="Custom Label"
           name="socialDraft.customLabel"
-          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
           <UInput
             v-model="socialDraft.customLabel"
@@ -444,7 +444,7 @@ watch(isSocialSlideoverOpen, (open) => {
         <UFormField
           label="Link"
           name="socialDraft.value"
-          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
           <UInput
             v-model="socialDraft.value"
@@ -463,7 +463,7 @@ watch(isSocialSlideoverOpen, (open) => {
         label="Cancel"
         color="neutral"
         variant="ghost"
-        class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+        class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-subtle hover:bg-raised hover:text-ink"
         @click="closeSocialSlideover"
       />
       <UButton
@@ -471,7 +471,7 @@ watch(isSocialSlideoverOpen, (open) => {
         :label="socialEditorMode === 'create' ? 'Add Link' : 'Save Link'"
         leading-icon="i-lucide-check"
         color="neutral"
-        class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+        class="h-10 cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
         @click="saveSocialDraft"
       />
     </template>

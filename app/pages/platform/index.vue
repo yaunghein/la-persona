@@ -152,9 +152,7 @@ const showSupportState = computed(() => {
         name="i-lucide-loader-2"
         class="h-8 w-8 animate-spin text-primary"
       />
-      <p class="animate-pulse text-sm text-gray-500">
-        Syncing your workspace...
-      </p>
+      <p class="animate-pulse text-sm text-subtle">Syncing your workspace...</p>
     </div>
 
     <UContainer
@@ -163,7 +161,7 @@ const showSupportState = computed(() => {
     >
       <div class="flex h-full flex-col items-center justify-center text-center">
         <div
-          class="flex aspect-square w-11 items-center justify-center rounded-sm bg-[#232323]"
+          class="flex aspect-square w-11 items-center justify-center rounded-sm bg-raised"
         >
           <UIcon
             name="i-material-symbols:cards-stack-outline-sharp"
@@ -179,18 +177,18 @@ const showSupportState = computed(() => {
           <template v-if="isError">
             We could not load your cards. Try refreshing the page. If this keeps
             happening, contact
-            <span class="text-white">La Persona</span>
+            <span class="text-ink">La Persona</span>
             support.
           </template>
           <template v-else-if="!orgSlug">
             No organization is linked to your account yet. If you were invited
             to join a workspace, try the invitation link again or contact
-            <span class="text-white">La Persona</span>
+            <span class="text-ink">La Persona</span>
             for help.
           </template>
           <template v-else>
             Something went wrong while opening your workspace. Please contact
-            <span class="text-white">La Persona</span>
+            <span class="text-ink">La Persona</span>
             support and we will help you get back on track.
           </template>
         </p>
@@ -202,7 +200,7 @@ const showSupportState = computed(() => {
         name="i-lucide-loader-2"
         class="h-8 w-8 animate-spin text-primary"
       />
-      <p class="text-sm text-gray-500">Preparing your workspace...</p>
+      <p class="text-sm text-subtle">Preparing your workspace...</p>
     </div>
   </div>
 </template>

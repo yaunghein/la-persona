@@ -204,7 +204,7 @@ function closeInfo() {
       >
         <div class="flex items-center gap-3">
           <h1
-            class="text-xl font-normal leading-tight tracking-widest uppercase text-white sm:text-2xl"
+            class="text-xl font-normal leading-tight tracking-widest uppercase text-ink sm:text-2xl"
           >
             {{ data.title }}
           </h1>
@@ -212,7 +212,7 @@ function closeInfo() {
             icon="i-material-symbols:info-outline"
             color="neutral"
             variant="ghost"
-            class="size-5 cursor-pointer p-0 text-white hover:bg-transparent"
+            class="size-5 cursor-pointer p-0 text-ink hover:bg-transparent"
             aria-label="Open members information"
             @click="openInfo"
           />
@@ -225,14 +225,14 @@ function closeInfo() {
             label="Invite Member"
             leading-icon="i-lucide-plus"
             color="neutral"
-            class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark shadow-lg hover:bg-white/90 sm:shadow-none"
+            class="h-10 cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse shadow-lg hover:bg-ink/90 sm:shadow-none"
             @click="emit('invite')"
           />
           <!-- Export hidden for now -->
           <!-- <UButton
             icon="i-material-symbols:download-sharp"
             color="neutral"
-            class="h-10 cursor-pointer rounded-full bg-[#232323] px-5 text-white shadow-lg hover:bg-[#2a2a2a] sm:shadow-none"
+            class="h-10 cursor-pointer rounded-full bg-raised px-5 text-ink shadow-lg hover:bg-line sm:shadow-none"
             aria-label="Export members"
             @click="emit('export')"
           /> -->
@@ -248,9 +248,9 @@ function closeInfo() {
           variant="soft"
           class="w-full flex-1"
           :ui="{
-            base: 'h-10 rounded-full border-0 bg-[#232323] px-5 text-sm font-medium text-white ring-0 placeholder:text-[#8b8b8b] focus-visible:ring-0',
+            base: 'h-10 rounded-full border-0 bg-raised px-5 text-sm font-medium text-ink ring-0 placeholder:text-subtle focus-visible:ring-0',
             trailing: 'pe-4',
-            trailingIcon: 'size-4 text-[#8b8b8b]',
+            trailingIcon: 'size-4 text-subtle',
           }"
         />
 
@@ -262,10 +262,10 @@ function closeInfo() {
           variant="pill"
           :ui="{
             root: 'w-full sm:w-fit',
-            list: 'bg-[#171717] w-full sm:w-fit rounded-lg p-1',
-            indicator: 'bg-[#232323]',
+            list: 'bg-surface w-full sm:w-fit rounded-lg p-1',
+            indicator: 'bg-raised',
             trigger:
-              'data-[state=active]:text-white data-[state=inactive]:text-[#8b8b8b] rounded-md px-4 py-2.5 grow-0 whitespace-nowrap text-center sm:text-left w-full sm:w-fit',
+              'data-[state=active]:text-ink data-[state=inactive]:text-subtle rounded-md px-4 py-2.5 grow-0 whitespace-nowrap text-center sm:text-left w-full sm:w-fit',
           }"
         />
       </div>
@@ -278,8 +278,8 @@ function closeInfo() {
         :data="pagedMembers"
         :columns="columns"
         :ui="{
-          th: 'px-4 py-4 border-b border-[#232323] text-xs font-medium tracking-wide uppercase text-white',
-          td: 'px-4 py-4 border-b border-[#232323] text-sm',
+          th: 'px-4 py-4 border-b border-raised text-xs font-medium tracking-wide uppercase text-ink',
+          td: 'px-4 py-4 border-b border-raised text-sm',
           tr: 'bg-transparent',
           empty: 'py-16 text-center text-sm text-muted',
         }"
@@ -287,36 +287,34 @@ function closeInfo() {
       >
         <template #name-cell="{ row }">
           <div class="flex flex-col gap-0.5">
-            <span class="font-medium text-white">{{ row.original.name }}</span>
-            <span class="text-sm text-[#8b8b8b]">{{ row.original.role }}</span>
+            <span class="font-medium text-ink">{{ row.original.name }}</span>
+            <span class="text-sm text-subtle">{{ row.original.role }}</span>
           </div>
         </template>
         <template #memberRole-cell="{ row }">
           <span
             :class="
-              row.original.memberRole === 'member'
-                ? 'text-[#8b8b8b]'
-                : 'text-white'
+              row.original.memberRole === 'member' ? 'text-subtle' : 'text-ink'
             "
           >
             {{ formatCommunityRole(row.original.memberRole) }}
           </span>
         </template>
         <template #company-cell="{ row }">
-          <span class="text-[#8b8b8b]">{{ row.original.company }}</span>
+          <span class="text-subtle">{{ row.original.company }}</span>
         </template>
         <template #connections-cell="{ row }">
-          <span class="text-[#8b8b8b]">{{ row.original.connections }}</span>
+          <span class="text-subtle">{{ row.original.connections }}</span>
         </template>
         <template #events-cell="{ row }">
-          <span class="text-[#8b8b8b]"
+          <span class="text-subtle"
             >{{ row.original.eventsAttended }} attended</span
           >
         </template>
         <template #status-cell="{ row }">
           <span
             :class="
-              row.original.status === 'active' ? 'text-white' : 'text-[#8b8b8b]'
+              row.original.status === 'active' ? 'text-ink' : 'text-subtle'
             "
           >
             {{ row.original.status === 'active' ? 'Active' : 'Pending' }}
@@ -353,8 +351,8 @@ function closeInfo() {
     v-model:open="isInfoOpen"
     title="What are members?"
     :ui="{
-      content: 'sm:max-w-[480px] rounded-lg bg-[#171717]',
-      title: 'text-sm font-medium uppercase tracking-widest text-white',
+      content: 'sm:max-w-[480px] rounded-lg bg-surface',
+      title: 'text-sm font-medium uppercase tracking-widest text-ink',
       body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"
   >
@@ -362,11 +360,11 @@ function closeInfo() {
       <div class="space-y-5 sm:space-y-6">
         <div class="space-y-2">
           <h3
-            class="text-lg font-medium leading-tight tracking-widest uppercase text-white sm:text-xl"
+            class="text-lg font-medium leading-tight tracking-widest uppercase text-ink sm:text-xl"
           >
             Grow your community
           </h3>
-          <p class="text-sm leading-relaxed text-[#8b8b8b]">
+          <p class="text-sm leading-relaxed text-subtle">
             Invite people, track participation, and manage who belongs in your
             community.
           </p>
@@ -378,19 +376,17 @@ function closeInfo() {
             :key="item.title"
             class="py-3 sm:py-3.5"
             :class="
-              index < data.infoItems.length - 1
-                ? 'border-b border-[#2a2a2a]'
-                : ''
+              index < data.infoItems.length - 1 ? 'border-b border-line' : ''
             "
           >
             <div class="flex items-start gap-3">
               <UIcon
                 :name="item.icon"
-                class="mt-0.5 size-4.5 shrink-0 text-white sm:size-5"
+                class="mt-0.5 size-4.5 shrink-0 text-ink sm:size-5"
               />
               <div class="min-w-0">
-                <p class="text-sm font-medium text-white">{{ item.title }}</p>
-                <p class="mt-1.5 text-sm leading-relaxed text-[#8b8b8b]">
+                <p class="text-sm font-medium text-ink">{{ item.title }}</p>
+                <p class="mt-1.5 text-sm leading-relaxed text-subtle">
                   {{ item.description }}
                 </p>
               </div>
@@ -402,7 +398,7 @@ function closeInfo() {
           <UButton
             label="Understood"
             color="neutral"
-            class="h-10 text-sm justify-center rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+            class="h-10 text-sm justify-center rounded-full bg-ink px-5 font-medium text-ink-inverse hover:bg-ink/90"
             @click="closeInfo"
           />
         </div>

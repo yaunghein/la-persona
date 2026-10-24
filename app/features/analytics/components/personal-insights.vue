@@ -219,27 +219,29 @@ const linkRows = computed(() =>
 const hasSocialRows = computed(() => socialRows.value.length > 0);
 const hasLinkRows = computed(() => linkRows.value.length > 0);
 
+const chartColors = useChartColors();
+
 const chartData = computed(() => ({
   labels:
     stats.value?.dailyViews.map((v) => format(parseISO(v.date), 'MMM d')) || [],
   datasets: [
     {
       data: stats.value?.dailyViews.map((v) => v.count) || [],
-      borderColor: '#ffffff',
+      borderColor: chartColors.value.ink,
       borderWidth: 2,
       backgroundColor: 'transparent',
       tension: 0.35,
       pointRadius: 0,
       pointHoverRadius: 4,
       pointHitRadius: 24,
-      pointHoverBackgroundColor: '#ffffff',
-      pointHoverBorderColor: '#ffffff',
+      pointHoverBackgroundColor: chartColors.value.ink,
+      pointHoverBorderColor: chartColors.value.ink,
       pointHoverBorderWidth: 0,
     },
   ],
 }));
 
-const chartOptions = {
+const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   interaction: {
@@ -249,14 +251,14 @@ const chartOptions = {
   scales: {
     y: {
       beginAtZero: true,
-      grid: { color: 'rgba(255, 255, 255, 0.06)' },
-      border: { color: 'rgba(255, 255, 255, 0.15)' },
-      ticks: { color: '#8b8b8b', font: { size: 10 } },
+      grid: { color: chartColors.value.grid },
+      border: { color: chartColors.value.axis },
+      ticks: { color: chartColors.value.tick, font: { size: 10 } },
     },
     x: {
-      grid: { color: 'rgba(255, 255, 255, 0.06)' },
-      border: { color: 'rgba(255, 255, 255, 0.15)' },
-      ticks: { color: '#8b8b8b', font: { size: 10 } },
+      grid: { color: chartColors.value.grid },
+      border: { color: chartColors.value.axis },
+      ticks: { color: chartColors.value.tick, font: { size: 10 } },
     },
   },
   plugins: {
@@ -264,18 +266,18 @@ const chartOptions = {
     tooltip: {
       enabled: true,
       displayColors: false,
-      backgroundColor: '#171717',
-      borderColor: '#2a2a2a',
+      backgroundColor: chartColors.value.tooltipBackground,
+      borderColor: chartColors.value.tooltipBorder,
       borderWidth: 1,
-      titleColor: '#ffffff',
-      bodyColor: '#ffffff',
+      titleColor: chartColors.value.ink,
+      bodyColor: chartColors.value.ink,
       padding: 10,
       callbacks: {
         label: (ctx: any) => `Views: ${ctx?.parsed?.y ?? 0}`,
       },
     },
   },
-};
+}));
 
 function openInfo() {
   isInfoOpen.value = true;
@@ -305,7 +307,7 @@ function openInfo() {
           icon="material-symbols:info-outline"
           color="neutral"
           variant="ghost"
-          class="flex items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323] cursor-pointer"
+          class="flex items-center justify-center rounded-full p-0 text-muted hover:bg-raised cursor-pointer"
           aria-label="Open analytics information"
           @click="openInfo"
         />
@@ -321,10 +323,10 @@ function openInfo() {
           :search-input="false"
           class="w-32 shrink-0 sm:w-40"
           :ui="{
-            base: 'h-10 rounded-lg border-none bg-[#171717] px-4 text-white shadow-lg sm:shadow-none',
-            content: 'bg-[#171717] border border-[#2a2a2a]',
-            item: 'text-white data-highlighted:bg-[#232323]',
-            value: 'text-white',
+            base: 'h-10 rounded-lg border-none bg-surface px-4 text-ink shadow-lg sm:shadow-none',
+            content: 'bg-surface border border-line',
+            item: 'text-ink data-highlighted:bg-raised',
+            value: 'text-ink',
           }"
         />
         <USelectMenu
@@ -340,86 +342,86 @@ function openInfo() {
           :content="{ align: 'end', collisionPadding: 16 }"
           class="min-w-0 flex-1 sm:w-56 sm:flex-none"
           :ui="{
-            base: 'h-10 rounded-lg border-none bg-[#171717] px-4 text-white shadow-lg sm:shadow-none',
+            base: 'h-10 rounded-lg border-none bg-surface px-4 text-ink shadow-lg sm:shadow-none',
             content:
-              'w-[calc(100vw-2rem)] bg-[#171717] border border-[#2a2a2a] sm:w-96',
-            item: 'text-white data-highlighted:bg-[#232323]',
-            value: 'text-white',
+              'w-[calc(100vw-2rem)] bg-surface border border-line sm:w-96',
+            item: 'text-ink data-highlighted:bg-raised',
+            value: 'text-ink',
           }"
         />
       </div>
     </div>
 
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-      <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
+      <div class="rounded-lg bg-surface p-4 sm:p-6">
         <div
-          class="mb-4 grid size-8 sm:size-11 place-items-center rounded-[4px] bg-[#232323]"
+          class="mb-4 grid size-8 sm:size-11 place-items-center rounded-[4px] bg-raised"
         >
-          <UIcon name="i-lucide-eye" class="size-5 text-white/70" />
+          <UIcon name="i-lucide-eye" class="size-5 text-ink/70" />
         </div>
         <p
-          class="text-xs font-medium uppercase tracking-[1.2px] text-[#8b8b8b] whitespace-nowrap -mt-1 mb-4"
+          class="text-xs font-medium uppercase tracking-[1.2px] text-subtle whitespace-nowrap -mt-1 mb-4"
         >
           Total Views
         </p>
-        <p class="mt-1 text-3xl font-bold leading-[1.1] -mb-1 text-white">
+        <p class="mt-1 text-3xl font-bold leading-[1.1] -mb-1 text-ink">
           {{ totalViews }}
         </p>
       </div>
-      <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
+      <div class="rounded-lg bg-surface p-4 sm:p-6">
         <div
-          class="mb-4 grid size-8 sm:size-11 place-items-center rounded-[4px] bg-[#232323]"
+          class="mb-4 grid size-8 sm:size-11 place-items-center rounded-[4px] bg-raised"
         >
-          <UIcon name="i-lucide-download" class="size-5 text-white/70" />
+          <UIcon name="i-lucide-download" class="size-5 text-ink/70" />
         </div>
         <p
-          class="text-xs font-medium uppercase tracking-[1.2px] text-[#8b8b8b] whitespace-nowrap -mt-1 mb-4"
+          class="text-xs font-medium uppercase tracking-[1.2px] text-subtle whitespace-nowrap -mt-1 mb-4"
         >
           Exchange or Save
         </p>
-        <p class="mt-1 text-3xl font-bold leading-[1.1] -mb-1 text-white">
+        <p class="mt-1 text-3xl font-bold leading-[1.1] -mb-1 text-ink">
           {{ cardSaves }}
         </p>
       </div>
-      <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
+      <div class="rounded-lg bg-surface p-4 sm:p-6">
         <div
-          class="mb-4 grid size-8 sm:size-11 place-items-center rounded-[4px] bg-[#232323]"
+          class="mb-4 grid size-8 sm:size-11 place-items-center rounded-[4px] bg-raised"
         >
-          <UIcon name="i-lucide-percent" class="size-5 text-white/70" />
+          <UIcon name="i-lucide-percent" class="size-5 text-ink/70" />
         </div>
         <p
-          class="text-xs font-medium uppercase tracking-[1.2px] text-[#8b8b8b] whitespace-nowrap -mt-1 mb-4"
+          class="text-xs font-medium uppercase tracking-[1.2px] text-subtle whitespace-nowrap -mt-1 mb-4"
         >
           Conversion Rate
         </p>
-        <p class="mt-1 text-3xl font-bold leading-[1.1] -mb-1 text-white">
+        <p class="mt-1 text-3xl font-bold leading-[1.1] -mb-1 text-ink">
           {{ conversionRate }}%
         </p>
       </div>
-      <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
+      <div class="rounded-lg bg-surface p-4 sm:p-6">
         <div
-          class="mb-4 grid size-8 sm:size-11 place-items-center rounded-[4px] bg-[#232323]"
+          class="mb-4 grid size-8 sm:size-11 place-items-center rounded-[4px] bg-raised"
         >
-          <UIcon name="i-lucide-share-2" class="size-5 text-white/70" />
+          <UIcon name="i-lucide-share-2" class="size-5 text-ink/70" />
         </div>
         <p
-          class="text-xs font-medium uppercase tracking-[1.2px] text-[#8b8b8b] whitespace-nowrap -mt-1 mb-4"
+          class="text-xs font-medium uppercase tracking-[1.2px] text-subtle whitespace-nowrap -mt-1 mb-4"
         >
           Social Clicks
         </p>
-        <p class="mt-1 text-3xl font-bold leading-[1.1] -mb-1 text-white">
+        <p class="mt-1 text-3xl font-bold leading-[1.1] -mb-1 text-ink">
           {{ socialTotal }}
         </p>
       </div>
     </div>
 
-    <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
+    <div class="rounded-lg bg-surface p-4 sm:p-6">
       <h2
         class="text-xl sm:text-2xl font-medium leading-tight tracking-widest uppercase"
       >
         Views Over Time
       </h2>
-      <p class="mt-1 text-sm text-[#8b8b8b]">
+      <p class="mt-1 text-sm text-subtle">
         Daily card opens for the past 7 days
       </p>
       <div class="mt-4 h-60">
@@ -428,30 +430,30 @@ function openInfo() {
     </div>
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
+      <div class="rounded-lg bg-surface p-4 sm:p-6">
         <h3
           class="text-xl sm:text-2xl font-medium leading-tight tracking-widest uppercase"
         >
           Social Media Click-Throughs
         </h3>
-        <p class="mt-1 text-sm text-[#8b8b8b]">
+        <p class="mt-1 text-sm text-subtle">
           Which platforms are driving engagement
         </p>
         <div v-if="hasSocialRows" class="mt-6 space-y-2">
           <div
             v-for="row in socialRows"
             :key="row.platform"
-            class="flex items-center justify-between rounded-[4px] bg-[#232323] px-3 py-2"
+            class="flex items-center justify-between rounded-[4px] bg-raised px-3 py-2"
           >
             <div class="flex items-center gap-2 text-sm">
-              <NuxtImg
+              <UiSkeletonImage
                 v-if="row.image"
                 :src="row.image"
                 :alt="`${row.platform} icon`"
                 width="16"
                 class="size-4 object-contain"
               />
-              <UIcon v-else name="i-lucide-globe" class="size-4 text-white" />
+              <UIcon v-else name="i-lucide-globe" class="size-4 text-ink" />
               <span>{{ row.platform }}</span>
             </div>
             <span class="text-sm font-medium">{{ row.count }}</span>
@@ -459,33 +461,31 @@ function openInfo() {
         </div>
         <div
           v-else
-          class="mt-6 flex min-h-38 flex-col items-center justify-center gap-2 rounded-[4px] bg-[#232323] text-center"
+          class="mt-6 flex min-h-38 flex-col items-center justify-center gap-2 rounded-[4px] bg-raised text-center"
         >
           <UIcon
             name="i-lucide-mouse-pointer-click"
-            class="size-5 text-white/70"
+            class="size-5 text-ink/70"
           />
-          <p class="text-sm text-[#8b8b8b]">No social links configured.</p>
+          <p class="text-sm text-subtle">No social links configured.</p>
         </div>
       </div>
 
-      <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
+      <div class="rounded-lg bg-surface p-4 sm:p-6">
         <h3
           class="text-xl sm:text-2xl font-medium leading-tight tracking-widest uppercase"
         >
           Portfolio & Link Clicks
         </h3>
-        <p class="mt-1 text-sm text-[#8b8b8b]">
-          External URL engagement tracking
-        </p>
+        <p class="mt-1 text-sm text-subtle">External URL engagement tracking</p>
         <div v-if="hasLinkRows" class="mt-6 space-y-2">
           <div
             v-for="row in linkRows"
             :key="row.label"
-            class="flex items-center justify-between rounded-[4px] bg-[#232323] px-3 py-2"
+            class="flex items-center justify-between rounded-[4px] bg-raised px-3 py-2"
           >
             <div class="flex items-center gap-2 text-sm">
-              <UIcon name="i-lucide-link-2" class="size-4 text-white/80" />
+              <UIcon name="i-lucide-link-2" class="size-4 text-ink/80" />
               <span>{{ row.label }}</span>
             </div>
             <span class="text-sm font-medium">{{ row.count }}</span>
@@ -495,38 +495,35 @@ function openInfo() {
           v-else
           class="mt-6 flex min-h-38 flex-col items-center justify-center gap-2 text-center"
         >
-          <UIcon name="i-lucide-link-2" class="size-5 text-white/70" />
-          <p class="text-sm text-[#8b8b8b]">No links configured yet.</p>
+          <UIcon name="i-lucide-link-2" class="size-5 text-ink/70" />
+          <p class="text-sm text-subtle">No links configured yet.</p>
         </div>
       </div>
     </div>
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <div class="rounded-lg bg-[#171717] p-4 sm:p-6">
+      <div class="rounded-lg bg-surface p-4 sm:p-6">
         <h3
           class="text-xl sm:text-2xl font-medium leading-tight tracking-widest uppercase"
         >
           Card Save Actions
         </h3>
-        <p class="mt-1 text-sm text-[#8b8b8b]">
+        <p class="mt-1 text-sm text-subtle">
           Breakdown of how users saved your card
         </p>
         <div class="mt-6 space-y-3">
           <div
-            class="flex items-center justify-between rounded-[4px] bg-[#232323] p-4"
+            class="flex items-center justify-between rounded-[4px] bg-raised p-4"
           >
             <div class="flex items-center gap-3">
               <div
-                class="grid size-9 place-items-center rounded-[4px] bg-[#171717]"
+                class="grid size-9 place-items-center rounded-[4px] bg-surface"
               >
-                <UIcon
-                  name="i-lucide-refresh-cw"
-                  class="size-4 text-white/75"
-                />
+                <UIcon name="i-lucide-refresh-cw" class="size-4 text-ink/75" />
               </div>
               <div class="max-w-48">
                 <p class="text-sm">Exchange Contacts</p>
-                <p class="text-xs text-[#8b8b8b]">
+                <p class="text-xs text-subtle">
                   {{ exchangeCount }} people have connected with you.
                 </p>
               </div>
@@ -536,17 +533,17 @@ function openInfo() {
             }}</span>
           </div>
           <div
-            class="flex items-center justify-between rounded-[4px] bg-[#232323] p-4"
+            class="flex items-center justify-between rounded-[4px] bg-raised p-4"
           >
             <div class="flex items-center gap-3">
               <div
-                class="grid size-9 place-items-center rounded-[4px] bg-[#171717]"
+                class="grid size-9 place-items-center rounded-[4px] bg-surface"
               >
-                <UIcon name="i-lucide-download" class="size-4 text-white/75" />
+                <UIcon name="i-lucide-download" class="size-4 text-ink/75" />
               </div>
               <div class="max-w-48">
                 <p class="text-sm">Add to Contacts</p>
-                <p class="text-xs text-[#8b8b8b]">
+                <p class="text-xs text-subtle">
                   {{ vcfCount }} people have saved your contact to their phones.
                 </p>
               </div>
@@ -558,7 +555,7 @@ function openInfo() {
 
       <div
         v-if="hasDonutData"
-        class="flex items-center justify-center rounded-lg bg-[#171717] p-4 sm:p-6"
+        class="flex items-center justify-center rounded-lg bg-surface p-4 sm:p-6"
       >
         <AnalyticsDonutChart :data="[exchangeCount, vcfCount]" />
       </div>

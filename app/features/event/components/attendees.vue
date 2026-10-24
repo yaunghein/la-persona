@@ -120,9 +120,9 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
         variant="soft"
         class="w-full"
         :ui="{
-          base: 'h-10 rounded-full border-0 bg-[#232323] px-5 text-sm font-medium text-white ring-0 placeholder:text-[#8b8b8b] focus-visible:ring-0',
+          base: 'h-10 rounded-full border-0 bg-raised px-5 text-sm font-medium text-ink ring-0 placeholder:text-subtle focus-visible:ring-0',
           trailing: 'pe-4',
-          trailingIcon: 'size-4 text-[#8b8b8b]',
+          trailingIcon: 'size-4 text-subtle',
         }"
       />
 
@@ -134,8 +134,8 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
           class="shrink-0 cursor-pointer border-b pb-1 text-sm font-medium leading-5 whitespace-nowrap transition-colors"
           :class="
             activeTab === tab.value
-              ? 'border-white text-white'
-              : 'border-transparent text-[#8b8b8b] hover:text-white'
+              ? 'border-ink text-ink'
+              : 'border-transparent text-subtle hover:text-ink'
           "
           @click="activeTab = tab.value"
         >
@@ -151,8 +151,8 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
         :data="pagedAttendees"
         :columns="columns"
         :ui="{
-          th: 'px-4 py-4 border-b border-[#232323] text-xs font-medium tracking-wide uppercase text-white',
-          td: 'px-4 py-4 border-b border-[#232323] text-sm',
+          th: 'px-4 py-4 border-b border-raised text-xs font-medium tracking-wide uppercase text-ink',
+          td: 'px-4 py-4 border-b border-raised text-sm',
           tr: 'bg-transparent',
           empty: 'py-16 text-center text-sm text-muted',
         }"
@@ -160,18 +160,18 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
       >
         <template #name-cell="{ row }">
           <div class="flex flex-col gap-0.5">
-            <span class="font-medium text-white">{{ row.original.name }}</span>
-            <span class="text-xs text-[#8b8b8b]">{{ row.original.role }}</span>
+            <span class="font-medium text-ink">{{ row.original.name }}</span>
+            <span class="text-xs text-subtle">{{ row.original.role }}</span>
           </div>
         </template>
         <template #company-cell="{ row }">
-          <span class="text-[#8b8b8b]">{{ row.original.company }}</span>
+          <span class="text-subtle">{{ row.original.company }}</span>
         </template>
         <template #email-cell="{ row }">
-          <span class="text-[#8b8b8b]">{{ row.original.email || '—' }}</span>
+          <span class="text-subtle">{{ row.original.email || '—' }}</span>
         </template>
         <template #status-cell="{ row }">
-          <span class="text-[#8b8b8b]">{{
+          <span class="text-subtle">{{
             attendeeStatusLabel(row.original)
           }}</span>
         </template>

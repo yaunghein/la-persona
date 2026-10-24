@@ -35,20 +35,20 @@ const lastSentLabel = computed(() =>
     v-model:open="open"
     :title="copy.title"
     :ui="{
-      content: 'sm:max-w-md rounded-lg bg-[#171717]',
-      title: 'text-sm font-medium uppercase tracking-widest text-white',
+      content: 'sm:max-w-md rounded-lg bg-surface',
+      title: 'text-sm font-medium uppercase tracking-widest text-ink',
       body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"
   >
     <template #body>
       <div class="flex flex-col gap-4">
-        <p class="text-sm leading-normal text-white">
+        <p class="text-sm leading-normal text-ink">
           Send to
           <strong>{{ recipientCount }}</strong>
           {{ copy.audience }}
           {{ recipientCount === 1 ? 'attendee' : 'attendees' }}?
         </p>
-        <p class="text-sm leading-normal text-[#8b8b8b]">{{ copy.body }}</p>
+        <p class="text-sm leading-normal text-subtle">{{ copy.body }}</p>
         <UAlert
           v-if="lastSentAt"
           color="warning"
@@ -59,7 +59,7 @@ const lastSentLabel = computed(() =>
         />
         <p
           v-if="recipientCount === 0"
-          class="text-sm leading-normal text-[#8b8b8b]"
+          class="text-sm leading-normal text-subtle"
         >
           There is no one to email yet.
         </p>
@@ -68,7 +68,7 @@ const lastSentLabel = computed(() =>
             label="Cancel"
             color="neutral"
             variant="ghost"
-            class="h-10 text-sm cursor-pointer rounded-full px-5 text-white hover:bg-[#232323]"
+            class="h-10 text-sm cursor-pointer rounded-full px-5 text-ink hover:bg-raised"
             @click="
               () => {
                 open = false;
@@ -81,7 +81,7 @@ const lastSentLabel = computed(() =>
             color="neutral"
             :loading="sending"
             :disabled="recipientCount === 0"
-            class="h-10 text-sm cursor-pointer rounded-full bg-white px-6 font-medium text-dark hover:bg-white/90"
+            class="h-10 text-sm cursor-pointer rounded-full bg-ink px-6 font-medium text-ink-inverse hover:bg-ink/90"
             @click="emit('confirm')"
           />
         </div>

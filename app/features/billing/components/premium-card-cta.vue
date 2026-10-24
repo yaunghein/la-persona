@@ -42,10 +42,10 @@ onUnmounted(() => {
 <template>
   <div class="aspect-[1/0.9] w-full overflow-hidden">
     <div
-      class="flex h-full min-h-0 w-full flex-col items-center justify-between rounded-lg border-2 border-[#232323] bg-[#171717] py-5"
+      class="flex h-full min-h-0 w-full flex-col items-center justify-between rounded-lg border-2 border-raised bg-surface py-5"
     >
       <p
-        class="max-w-72 shrink-0 text-center text-xl font-normal leading-tight tracking-[0.125rem] text-white uppercase"
+        class="max-w-72 shrink-0 text-center text-xl font-normal leading-tight tracking-[0.125rem] text-ink uppercase"
       >
         Want your own persona card with
         <span class="font-bold">custom design</span>?
@@ -66,7 +66,7 @@ onUnmounted(() => {
       <UButton
         label="Get Our Premium Card"
         color="neutral"
-        class="h-10 shrink-0 cursor-pointer justify-center rounded-full bg-white px-8 text-sm font-medium text-dark hover:bg-white/90"
+        class="h-10 shrink-0 cursor-pointer justify-center rounded-full bg-ink px-8 text-sm font-medium text-ink-inverse hover:bg-ink/90"
         @click="emit('request')"
       />
     </div>

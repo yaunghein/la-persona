@@ -22,14 +22,14 @@ defineEmits<{
       v-for="contact in contacts"
       :key="contact.id"
       :ui="{
-        root: 'rounded-[8px] bg-[#171717] border border-transparent',
+        root: 'rounded-[8px] bg-surface border border-transparent',
         body: 'p-5 sm:p-4',
-        footer: 'border-t border-[#232323] p-5 sm:p-4',
+        footer: 'border-t border-raised p-5 sm:p-4',
       }"
     >
       <div class="space-y-2">
         <p
-          class="flex items-center gap-1 text-xl font-medium leading-none text-white sm:text-[20px]"
+          class="flex items-center gap-1 text-xl font-medium leading-none text-ink sm:text-[20px]"
         >
           {{ contact.name }}
           <ContactPersonaBadge
@@ -63,13 +63,13 @@ defineEmits<{
               :to="contactOriginPath(contact)"
               color="neutral"
               variant="link"
-              class="mt-2 h-auto p-0 text-md leading-none text-white underline-offset-2 sm:mt-1 sm:text-sm"
+              class="mt-2 h-auto p-0 text-md leading-none text-ink underline-offset-2 sm:mt-1 sm:text-sm"
             >
               {{ contactOriginLabel(contact) }}
             </UButton>
             <p
               v-else
-              class="mt-2 text-md leading-none text-white sm:mt-1 sm:text-sm"
+              class="mt-2 text-md leading-none text-ink sm:mt-1 sm:text-sm"
             >
               {{ contactOriginLabel(contact) }}
             </p>

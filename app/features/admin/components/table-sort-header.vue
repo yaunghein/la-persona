@@ -38,7 +38,7 @@ function onToggle() {
     :label="prettyLabel"
     :icon="icon"
     size="sm"
-    class="-ml-2 h-8 px-2 text-xs font-medium text-white/45 hover:bg-white/5 hover:text-white"
+    class="-ml-2 h-8 px-2 text-xs font-medium text-ink/45 hover:bg-ink/5 hover:text-ink"
     @click="onToggle"
   />
 </template>

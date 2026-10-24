@@ -268,7 +268,7 @@ const currentPageLabel = computed(() => {
         <UDashboardNavbar
           :title="currentPageLabel"
           :ui="{ right: 'gap-3' }"
-          class="uppercase text-sm tracking-[1.4px] border-b border-[#232323] bg-[#171717]"
+          class="uppercase text-sm tracking-[1.4px] border-b border-raised bg-surface"
         >
           <template #leading>
             <UDashboardSidebarCollapse />
@@ -287,8 +287,8 @@ const currentPageLabel = computed(() => {
       inset
       :title="feedbackHeaderLabel"
       :ui="{
-        content: 'bg-[#171717]',
-        title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+        content: 'bg-surface',
+        title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
       }"
     >
       <template #body>
@@ -307,7 +307,7 @@ const currentPageLabel = computed(() => {
           leading-icon="i-lucide-check"
           color="neutral"
           :loading="feedbackForm.isSubmitting"
-          class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
         />
       </template>
     </USlideover>

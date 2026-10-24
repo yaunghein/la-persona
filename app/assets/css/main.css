@@ -15,18 +15,64 @@ html {
   --color-green: #8bf667;
 }
 
+/* Theme-aware colors: light values on :root, the original dark values on .dark. */
+@theme inline {
+  --color-canvas: var(--lp-canvas);
+  --color-surface: var(--lp-surface);
+  --color-surface-soft: var(--lp-surface-soft);
+  --color-raised: var(--lp-raised);
+  --color-line: var(--lp-line);
+  --color-line-strong: var(--lp-line-strong);
+  --color-line-heavy: var(--lp-line-heavy);
+  --color-subtle: var(--lp-subtle);
+  --color-soft: var(--lp-soft);
+  --color-ink: var(--lp-ink);
+  --color-ink-inverse: var(--lp-ink-inverse);
+  --color-success-ink: var(--lp-success-ink);
+  --color-danger-ink: var(--lp-danger-ink);
+}
+
 :root {
+  --lp-canvas: #ededf0;
+  --lp-surface: #f6f6f8;
+  --lp-surface-soft: #f1f1f4;
+  --lp-raised: #e7e7eb;
+  --lp-line: #dcdce1;
+  --lp-line-strong: #d0d0d6;
+  --lp-line-heavy: #bdbdc5;
+  --lp-subtle: #6b6b74;
+  --lp-soft: #45454d;
+  --lp-ink: #121212;
+  --lp-ink-inverse: #f6f6f8;
+  --lp-success-ink: #3f8f22;
+  --lp-danger-ink: #d4260c;
+
   --ui-primary: var(--color-dark);
   --ui-text: var(--color-dark);
   --ui-text-muted: #12121275;
-  --ui-bg: #ffffff;
-  --ui-bg-elevated: #e5e6e9;
-  --ui-bg-accented: #e5e6e9;
-  --ui-border: #e5e6e9;
-  --ui-border-accented: #e5e6e9;
+  --ui-text-dimmed: #8e8e96;
+  --ui-bg: #ededf0;
+  --ui-bg-elevated: #dcdce1;
+  --ui-bg-accented: #dcdce1;
+  --ui-border: #dcdce1;
+  --ui-border-accented: #dcdce1;
 }
 
 .dark {
+  --lp-canvas: #121212;
+  --lp-surface: #171717;
+  --lp-surface-soft: #1c1c1c;
+  --lp-raised: #232323;
+  --lp-line: #2a2a2a;
+  --lp-line-strong: #353535;
+  --lp-line-heavy: #494949;
+  --lp-subtle: #8b8b8b;
+  --lp-soft: #bcbcbc;
+  --lp-ink: #ffffff;
+  --lp-ink-inverse: #121212;
+  --lp-success-ink: #8bf667;
+  --lp-danger-ink: #ff3113;
+
   --ui-primary: white;
   --ui-text: white;
   --ui-text-muted: #ffffff75;

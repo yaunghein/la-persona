@@ -226,7 +226,7 @@ async function downloadQr() {
 </script>
 
 <template>
-  <div class="rounded-[8px] bg-[#171717] p-4 sm:p-8">
+  <div class="rounded-[8px] bg-surface p-4 sm:p-8">
     <div v-if="isLoading" class="space-y-8">
       <div class="space-y-3">
         <USkeleton class="h-6 w-52" />
@@ -245,11 +245,11 @@ async function downloadQr() {
       <div class="space-y-8">
         <div class="space-y-2">
           <h2
-            class="text-md sm:text-xl font-medium uppercase tracking-widest text-white"
+            class="text-md sm:text-xl font-medium uppercase tracking-widest text-ink"
           >
             QR & Wallpaper
           </h2>
-          <p class="max-w-160 text-sm leading-5.25 text-[#8b8b8b]">
+          <p class="max-w-160 text-sm leading-5.25 text-subtle">
             Choose your phone model for a perfect-fit wallpaper, or download
             only the QR to share your persona card anywhere.
           </p>
@@ -258,7 +258,7 @@ async function downloadQr() {
         <UFormField
           label="Choose Your Phone Model"
           name="phoneModel"
-          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
           <USelectMenu
             v-model="selectedModel"
@@ -268,10 +268,10 @@ async function downloadQr() {
             :search-input="{ placeholder: 'Search phone model...' }"
             class="w-full"
             :ui="{
-              base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white',
-              placeholder: 'text-white/50',
-              trailingIcon: 'text-[#8b8b8b]',
-              content: 'bg-[#171717] border border-[#2a2a2a]',
+              base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink',
+              placeholder: 'text-ink/50',
+              trailingIcon: 'text-subtle',
+              content: 'bg-surface border border-line',
             }"
           />
         </UFormField>
@@ -282,7 +282,7 @@ async function downloadQr() {
               <div
                 class="space-y-3 flex sm:static flex-col items-center text-center sm:items-start"
               >
-                <p class="text-sm font-medium text-white">QR Color</p>
+                <p class="text-sm font-medium text-ink">QR Color</p>
                 <UColorPicker
                   v-model="qrColor"
                   size="sm"
@@ -293,7 +293,7 @@ async function downloadQr() {
               <div
                 class="space-y-3 flex sm:static flex-col items-center text-center sm:items-start"
               >
-                <p class="text-sm font-medium text-white">Background Color</p>
+                <p class="text-sm font-medium text-ink">Background Color</p>
                 <UColorPicker
                   v-model="qrLayerBgColor"
                   size="sm"
@@ -306,8 +306,8 @@ async function downloadQr() {
             <div class="griddd sm:grid-cols-2 gap-5 hidden">
               <div class="space-y-3">
                 <div class="flex items-center justify-between">
-                  <p class="text-sm font-medium text-white">Border Opacity</p>
-                  <span class="text-xs text-white/60">
+                  <p class="text-sm font-medium text-ink">Border Opacity</p>
+                  <span class="text-xs text-ink/60">
                     {{ Math.round(qrBorderOpacity * 100) }}%
                   </span>
                 </div>
@@ -323,10 +323,8 @@ async function downloadQr() {
               </div>
               <div class="space-y-3">
                 <div class="flex items-center justify-between">
-                  <p class="text-sm font-medium text-white">
-                    Background Opacity
-                  </p>
-                  <span class="text-xs text-white/60">
+                  <p class="text-sm font-medium text-ink">Background Opacity</p>
+                  <span class="text-xs text-ink/60">
                     {{ Math.round(qrLayerBgOpacity * 100) }}%
                   </span>
                 </div>
@@ -348,7 +346,7 @@ async function downloadQr() {
       <div class="flex items-start justify-center flex-wrap gap-10">
         <div class="flex flex-col items-center gap-6">
           <div
-            class="relative flex h-60 w-60 flex-col items-center justify-center gap-1.5 overflow-hidden rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4 sm:scale-100"
+            class="relative flex h-60 w-60 flex-col items-center justify-center gap-1.5 overflow-hidden rounded-[6px] border border-line bg-raised p-4 sm:scale-100"
           >
             <UButton
               size="xl"
@@ -359,9 +357,9 @@ async function downloadQr() {
               aria-label="Expand wallpaper preview"
               @click="openWallpaperPreview"
             />
-            <p class="text-sm text-white/50">Preview</p>
+            <p class="text-sm text-ink/50">Preview</p>
             <div
-              class="flex h-40 w-40 items-center justify-center rounded-[4px] bg-[#1c1c1c]"
+              class="flex h-40 w-40 items-center justify-center rounded-[4px] bg-surface-soft"
             >
               <div
                 class="relative h-full max-w-full overflow-hidden rounded-[4px]"
@@ -375,7 +373,7 @@ async function downloadQr() {
                 />
                 <div
                   v-else
-                  class="flex h-full w-full items-center justify-center text-xs text-white/50"
+                  class="flex h-full w-full items-center justify-center text-xs text-ink/50"
                 >
                   {{
                     isRenderingWallpaperPreview
@@ -385,7 +383,7 @@ async function downloadQr() {
                 </div>
               </div>
             </div>
-            <p class="text-sm text-white">{{ selectedModelConfig.label }}</p>
+            <p class="text-sm text-ink">{{ selectedModelConfig.label }}</p>
           </div>
 
           <UButton
@@ -400,11 +398,11 @@ async function downloadQr() {
 
         <div class="flex flex-col items-center gap-6">
           <div
-            class="flex h-60 w-60 flex-col items-center justify-center gap-1.5 overflow-hidden rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4 text-left sm:scale-100"
+            class="flex h-60 w-60 flex-col items-center justify-center gap-1.5 overflow-hidden rounded-[6px] border border-line bg-raised p-4 text-left sm:scale-100"
           >
-            <p class="text-sm text-white/50">Preview</p>
+            <p class="text-sm text-ink/50">Preview</p>
             <div
-              class="flex h-40 w-40 items-center justify-center rounded-[8px] bg-[#1c1c1c] p-1"
+              class="flex h-40 w-40 items-center justify-center rounded-[8px] bg-surface-soft p-1"
             >
               <img
                 v-if="qrOnlyPreviewDataUrl"
@@ -414,15 +412,15 @@ async function downloadQr() {
               />
               <div
                 v-else
-                class="flex h-full w-full items-center justify-center text-xs text-white/50"
+                class="flex h-full w-full items-center justify-center text-xs text-ink/50"
               >
                 No QR
               </div>
             </div>
-            <p class="max-w-full truncate text-xs text-white/50">
+            <p class="max-w-full truncate text-xs text-ink/50">
               {{ publicCardUrl || 'Public URL unavailable' }}
             </p>
-            <p class="text-sm text-white">QR Only</p>
+            <p class="text-sm text-ink">QR Only</p>
           </div>
 
           <UButton
@@ -442,8 +440,8 @@ async function downloadQr() {
     v-model:open="isWallpaperPreviewModalOpen"
     title="Wallpaper Preview"
     :ui="{
-      content: 'sm:max-w-[560px] rounded-lg bg-[#171717] max-h-[90vh]',
-      title: 'text-sm font-medium uppercase tracking-widest text-white',
+      content: 'sm:max-w-[560px] rounded-lg bg-surface max-h-[90vh]',
+      title: 'text-sm font-medium uppercase tracking-widest text-ink',
       body: 'px-5 py-4 sm:px-6 sm:py-5',
     }"
   >
@@ -464,7 +462,7 @@ async function downloadQr() {
             />
             <div
               v-else
-              class="flex h-full min-h-70 w-full items-center justify-center bg-[#1c1c1c] text-sm text-white/50 sm:min-h-100"
+              class="flex h-full min-h-70 w-full items-center justify-center bg-surface-soft text-sm text-ink/50 sm:min-h-100"
             >
               {{
                 isRenderingWallpaperPreview
@@ -475,11 +473,11 @@ async function downloadQr() {
           </div>
         </div>
       </div>
-      <!-- <div class="mt-5 flex justify-center border-t border-[#2a2a2a] pt-5">
+      <!-- <div class="mt-5 flex justify-center border-t border-line pt-5">
         <UButton
           label="Close"
           color="neutral"
-          class="h-10 text-sm min-w-44 justify-center rounded-full bg-white px-8 font-medium text-dark hover:bg-white/90"
+          class="h-10 text-sm min-w-44 justify-center rounded-full bg-ink px-8 font-medium text-ink-inverse hover:bg-ink/90"
           @click="isWallpaperPreviewModalOpen = false"
         />
       </div> -->

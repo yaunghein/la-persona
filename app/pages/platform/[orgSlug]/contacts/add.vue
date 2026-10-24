@@ -26,7 +26,7 @@ async function goToContacts() {
           icon="i-lucide-chevron-left"
           color="neutral"
           variant="ghost"
-          class="size-7 rounded p-0 text-white hover:bg-[#232323]"
+          class="size-7 rounded p-0 text-ink hover:bg-raised"
           aria-label="Go back to contacts"
           @click="goBack"
         />
@@ -36,22 +36,20 @@ async function goToContacts() {
           Create New Contact
         </h1>
       </div>
-      <p class="text-sm text-[#8b8b8b]">Manually add a new contact.</p>
+      <p class="text-sm text-subtle">Manually add a new contact.</p>
     </div>
 
     <UCard
       :ui="{
-        root: 'rounded-[8px] bg-[#171717] border border-transparent',
+        root: 'rounded-[8px] bg-surface border border-transparent',
         body: 'p-5 sm:p-8',
       }"
     >
       <div class="mb-8 space-y-4">
-        <h2
-          class="text-[20px] font-medium uppercase tracking-widest text-white"
-        >
+        <h2 class="text-[20px] font-medium uppercase tracking-widest text-ink">
           New Contact
         </h2>
-        <p class="text-sm text-[#8b8b8b]">
+        <p class="text-sm text-subtle">
           This information will be shown in "the contacts".
         </p>
       </div>

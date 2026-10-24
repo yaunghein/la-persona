@@ -12,18 +12,18 @@ export default defineAppConfig({
     slideover: {
       slots: {
         overlay: 'bg-black/70',
-        content: 'bg-[#171717] ring-0 sm:ring-0 shadow-none divide-y-0',
-        header: 'border-b-2 border-[#232323] p-6',
-        title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+        content: 'bg-surface ring-0 sm:ring-0 shadow-none divide-y-0',
+        header: 'border-b-2 border-raised p-6',
+        title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
         body: 'p-6',
         footer:
-          'flex-wrap justify-end gap-2 border-t-2 border-[#232323] px-6 py-4',
+          'flex-wrap justify-end gap-2 border-t-2 border-raised px-6 py-4',
       },
     },
     modal: {
       slots: {
         overlay: 'bg-black/70',
-        content: 'bg-[#171717] ring-0 shadow-none',
+        content: 'bg-surface ring-0 shadow-none',
       },
       variants: {
         overlay: {

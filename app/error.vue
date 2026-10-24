@@ -34,11 +34,11 @@ async function goHome() {
 <template>
   <UApp>
     <div
-      class="relative flex min-h-dvh flex-col overflow-hidden bg-dark text-white"
+      class="relative flex min-h-dvh flex-col overflow-hidden bg-canvas text-ink"
     >
       <header class="relative z-10 flex justify-center px-6 py-8 sm:py-10">
         <button type="button" class="inline-flex" @click="goHome">
-          <IconLogo class="aspect-[1/0.09] w-32 text-white sm:w-40" />
+          <IconLogo class="aspect-[1/0.09] w-32 text-ink sm:w-40" />
           <span class="sr-only">LA PERSONA home</span>
         </button>
       </header>
@@ -47,7 +47,7 @@ async function goHome() {
         class="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pb-24 text-center"
       >
         <p
-          class="font-bold uppercase text-white font-heading"
+          class="font-bold uppercase text-ink font-heading"
           :class="
             isNotFound
               ? 'pl-[0.18em] text-[5rem] leading-none sm:text-[8.5rem]'
@@ -63,14 +63,14 @@ async function goHome() {
           {{ heading }}
         </h1>
         <p
-          class="mt-4 max-w-sm text-sm leading-relaxed text-[#8b8b8b] sm:text-base"
+          class="mt-4 max-w-sm text-sm leading-relaxed text-subtle sm:text-base"
         >
           {{ description }}
         </p>
 
         <UButton
           color="neutral"
-          class="mt-10 h-10 text-sm rounded-full bg-white px-8 font-medium text-dark hover:bg-white/90"
+          class="mt-10 h-10 text-sm rounded-full bg-ink px-8 font-medium text-ink-inverse hover:bg-ink/90"
           @click="goHome"
         >
           Back to home
@@ -78,7 +78,7 @@ async function goHome() {
       </main>
 
       <footer
-        class="relative z-10 px-6 pb-8 text-center text-xs font-light uppercase tracking-wide text-white/30"
+        class="relative z-10 px-6 pb-8 text-center text-xs font-light uppercase tracking-wide text-ink/30"
       >
         © la persona. All rights reserved.
       </footer>

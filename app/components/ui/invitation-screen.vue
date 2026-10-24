@@ -22,42 +22,40 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div
-    class="flex min-h-dvh items-center justify-center bg-[#171717] px-6 py-10"
-  >
+  <div class="flex min-h-dvh items-center justify-center bg-surface px-6 py-10">
     <div class="flex w-full max-w-120 flex-col gap-8">
       <div v-if="pending" class="flex flex-col items-center gap-3 py-16">
         <UIcon
           name="i-lucide-loader-2"
           class="size-8 animate-spin text-primary"
         />
-        <p class="text-sm text-[#8b8b8b]">Loading invitation...</p>
+        <p class="text-sm text-subtle">Loading invitation...</p>
       </div>
 
       <div v-else-if="errorTitle" class="space-y-4 py-16 text-center">
-        <h1 class="text-xl font-medium uppercase tracking-widest text-white">
+        <h1 class="text-xl font-medium uppercase tracking-widest text-ink">
           {{ errorTitle }}
         </h1>
-        <p v-if="errorMessage" class="text-sm text-[#8b8b8b]">
+        <p v-if="errorMessage" class="text-sm text-subtle">
           {{ errorMessage }}
         </p>
         <UButton
           label="Try again"
           color="neutral"
-          class="h-10 text-sm rounded-full bg-white px-5 font-medium text-dark"
+          class="h-10 text-sm rounded-full bg-ink px-5 font-medium text-ink-inverse"
           @click="emit('retry')"
         />
       </div>
 
-      <div v-else class="flex flex-col gap-10 pb-10 rounded-lg bg-[#232323]">
+      <div v-else class="flex flex-col gap-10 pb-10 rounded-lg bg-raised">
         <div
           class="flex w-full items-center justify-center overflow-hidden rounded-t-lg"
           :class="[
             props.coverAspectClass || 'aspect-[1/0.25]',
-            coverSrc ? 'bg-[#232323]' : 'bg-white/5',
+            coverSrc ? 'bg-raised' : 'bg-ink/5',
           ]"
         >
-          <NuxtImg
+          <UiSkeletonImage
             v-if="coverSrc"
             :src="coverSrc"
             alt=""
@@ -67,20 +65,20 @@ const emit = defineEmits<{
           <UIcon
             v-else
             name="i-lucide-image"
-            class="size-6 text-[#8b8b8b] sm:size-8"
+            class="size-6 text-subtle sm:size-8"
           />
         </div>
 
         <div class="flex flex-col items-center gap-6 px-6">
-          <p class="text-base font-medium leading-5 text-white">
+          <p class="text-base font-medium leading-5 text-ink">
             You’ve been invited to join
           </p>
           <div class="flex w-full flex-col items-center gap-4">
             <div
               class="flex size-18 items-center justify-center overflow-hidden rounded-full"
-              :class="logoSrc ? 'bg-white' : 'bg-[#171717]'"
+              :class="logoSrc ? 'bg-white' : 'bg-surface'"
             >
-              <NuxtImg
+              <UiSkeletonImage
                 v-if="logoSrc"
                 :src="logoSrc"
                 :alt="organizationName || ''"
@@ -88,26 +86,22 @@ const emit = defineEmits<{
                 height="72"
                 class="size-full object-cover"
               />
-              <UIcon
-                v-else
-                name="i-lucide-users"
-                class="size-7 text-[#8b8b8b]"
-              />
+              <UIcon v-else name="i-lucide-users" class="size-7 text-subtle" />
             </div>
             <div class="flex flex-col items-center gap-2 text-center">
               <h1
-                class="text-xl font-normal uppercase leading-5 tracking-widest text-white"
+                class="text-xl font-normal uppercase leading-5 tracking-widest text-ink"
               >
                 {{ organizationName }}
               </h1>
               <p
                 v-if="meta?.length"
-                class="flex flex-wrap items-center justify-center gap-2 text-sm font-medium leading-5 text-[#8b8b8b]"
+                class="flex flex-wrap items-center justify-center gap-2 text-sm font-medium leading-5 text-subtle"
               >
                 <template v-for="(item, index) in meta" :key="item">
                   <span
                     v-if="index > 0"
-                    class="size-0.75 shrink-0 rounded-full bg-[#8b8b8b]"
+                    class="size-0.75 shrink-0 rounded-full bg-subtle"
                     aria-hidden="true"
                   />
                   <span>{{ item }}</span>
@@ -131,26 +125,26 @@ const emit = defineEmits<{
             color="neutral"
             :loading="actionLoading"
             :disabled="actionDisabled || actionLoading"
-            class="h-10 w-auto min-w-56 justify-center rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+            class="h-10 w-auto min-w-56 justify-center rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
             @click="emit('action')"
           />
         </div>
       </div>
 
       <p
-        class="w-full mx-auto max-w-80 text-center text-sm leading-normal text-[#8b8b8b]"
+        class="w-full mx-auto max-w-80 text-center text-sm leading-normal text-subtle"
       >
         By creating a La Persona account, you agree to our
         <NuxtLink
           href="/privacy-policy"
-          class="text-white underline underline-offset-2"
+          class="text-ink underline underline-offset-2"
         >
           E-sign Consent
         </NuxtLink>
         and
         <NuxtLink
           href="/privacy-policy"
-          class="text-white underline underline-offset-2"
+          class="text-ink underline underline-offset-2"
         >
           User Agreement
         </NuxtLink>

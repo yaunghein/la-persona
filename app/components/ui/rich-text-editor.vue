@@ -51,16 +51,16 @@ const toolbarItems: EditorToolbarItem[][] = [
       v-model="model"
       content-type="html"
       :placeholder="placeholder || 'Start writing...'"
-      class="flex min-h-40 w-full flex-col overflow-hidden rounded-[4px] border border-[#2a2a2a] bg-[#232323]"
+      class="flex min-h-40 w-full flex-col overflow-hidden rounded-[4px] border border-line bg-raised"
       :ui="{
         content: 'relative min-h-32 w-full flex-1 !h-auto',
-        base: 'tiptap min-h-32 cursor-text px-4 py-3 text-sm leading-normal text-white *:my-0 [&_p]:my-0 [&_p]:leading-normal [&_li]:my-0',
+        base: 'tiptap min-h-32 cursor-text px-4 py-3 text-sm leading-normal text-ink *:my-0 [&_p]:my-0 [&_p]:leading-normal [&_li]:my-0',
       }"
     >
       <UEditorToolbar
         :editor="editor"
         :items="toolbarItems"
-        class="shrink-0 border-b border-[#2a2a2a] px-2 py-1"
+        class="shrink-0 border-b border-line px-2 py-1"
       />
     </UEditor>
   </div>
@@ -94,6 +94,6 @@ const toolbarItems: EditorToolbarItem[][] = [
 }
 
 .community-rich-text :deep(:is(ul, ol) > li::marker) {
-  color: #ffffff;
+  color: var(--lp-ink);
 }
 </style>

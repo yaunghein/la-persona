@@ -60,14 +60,14 @@ async function onFileChange(event: Event) {
 <template>
   <div class="flex flex-col gap-3">
     <div>
-      <p class="text-sm font-medium text-white">{{ label }}</p>
-      <p v-if="hint" class="mt-1 text-xs leading-relaxed text-white/50">
+      <p class="text-sm font-medium text-ink">{{ label }}</p>
+      <p v-if="hint" class="mt-1 text-xs leading-relaxed text-ink/50">
         {{ hint }}
       </p>
     </div>
 
     <div
-      class="flex aspect-[1/0.6] w-full items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-white/[0.03]"
+      class="flex aspect-[1/0.6] w-full items-center justify-center overflow-hidden rounded-lg border border-ink/10 bg-ink/[0.03]"
     >
       <img
         v-if="previewUrl"
@@ -75,7 +75,7 @@ async function onFileChange(event: Event) {
         :alt="label"
         class="size-full object-contain"
       />
-      <p v-else class="px-4 text-center text-xs text-white/40">
+      <p v-else class="px-4 text-center text-xs text-ink/40">
         {{ emptyText }}
       </p>
     </div>
@@ -93,7 +93,7 @@ async function onFileChange(event: Event) {
         leading-icon="i-lucide-upload"
         color="neutral"
         :loading="uploading"
-        class="h-10 cursor-pointer rounded-full bg-[#232323] pr-6 pl-4 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+        class="h-10 cursor-pointer rounded-full bg-raised pr-6 pl-4 text-sm font-medium text-ink hover:bg-line"
         @click="fileInput?.click()"
       />
       <UButton

@@ -333,10 +333,10 @@ const columns: TableColumn<UserRow>[] = [
         @select="(_event, row) => openDetail(row.original)"
       >
         <template #name-cell="{ row }">
-          <span class="font-medium text-white">{{ row.original.name }}</span>
+          <span class="font-medium text-ink">{{ row.original.name }}</span>
         </template>
         <template #email-cell="{ row }">
-          <span class="text-white/70">{{ row.original.email }}</span>
+          <span class="text-ink/70">{{ row.original.email }}</span>
         </template>
         <template #role-cell="{ row }">
           <UBadge
@@ -355,7 +355,7 @@ const columns: TableColumn<UserRow>[] = [
           </UBadge>
         </template>
         <template #createdAt-cell="{ row }">
-          <span class="text-white/55">{{
+          <span class="text-ink/55">{{
             formatDate(row.original.createdAt)
           }}</span>
         </template>
@@ -370,26 +370,24 @@ const columns: TableColumn<UserRow>[] = [
       :close="false"
       :dismissible="!isDeleting"
       :ui="{
-        content: 'bg-[#171717] max-w-md',
-        title: 'text-white',
+        content: 'bg-surface max-w-md',
+        title: 'text-ink',
         body: 'pt-4',
         footer: 'justify-end gap-2',
       }"
       title="Delete user?"
     >
       <template #body>
-        <div class="space-y-3 text-sm leading-relaxed text-[#bcbcbc]">
+        <div class="space-y-3 text-sm leading-relaxed text-soft">
           <p>
             This cannot be undone. The account
-            <span class="font-medium text-white">
+            <span class="font-medium text-ink">
               "{{ userToDelete?.email }}"
             </span>
             will be removed.
           </p>
           <div v-if="deletePreview">
-            <p class="text-white">
-              Personal organizations that will be deleted
-            </p>
+            <p class="text-ink">Personal organizations that will be deleted</p>
             <p v-if="deletePreview.personalOrganizations.length === 0">None.</p>
             <ul v-else class="list-disc pl-5">
               <li
@@ -399,7 +397,7 @@ const columns: TableColumn<UserRow>[] = [
                 {{ org.name }} ({{ org.cardCount }} cards)
               </li>
             </ul>
-            <p class="mt-3 text-white">Community memberships that will drop</p>
+            <p class="mt-3 text-ink">Community memberships that will drop</p>
             <p v-if="deletePreview.communityMemberships.length === 0">
               None. Those organizations stay.
             </p>
@@ -419,7 +417,7 @@ const columns: TableColumn<UserRow>[] = [
           label="Cancel"
           color="neutral"
           variant="ghost"
-          class="h-10 text-sm rounded-full px-5 text-white hover:bg-[#232323]"
+          class="h-10 text-sm rounded-full px-5 text-ink hover:bg-raised"
           :disabled="isDeleting"
           @click="closeDelete"
         />
@@ -436,10 +434,10 @@ const columns: TableColumn<UserRow>[] = [
     <USlideover
       v-model:open="detailOpen"
       title="Person"
-      :ui="{ content: 'bg-[#171717]' }"
+      :ui="{ content: 'bg-surface' }"
     >
       <template #body>
-        <div v-if="detail" class="space-y-4 text-sm text-white/80">
+        <div v-if="detail" class="space-y-4 text-sm text-ink/80">
           <UFormField label="Name">
             <UInput v-model="editName" class="w-full" />
           </UFormField>
@@ -457,7 +455,7 @@ const columns: TableColumn<UserRow>[] = [
           </UFormField>
           <p>{{ detail.banned ? 'Banned' : 'Active' }}</p>
           <div>
-            <p class="text-white">Organizations</p>
+            <p class="text-ink">Organizations</p>
             <p v-if="detail.memberships.length === 0">None.</p>
             <p v-for="org in detail.memberships" :key="org.id">
               {{ org.organizationName }} · {{ org.organizationType }} ·
@@ -465,7 +463,7 @@ const columns: TableColumn<UserRow>[] = [
             </p>
           </div>
           <div>
-            <p class="text-white">Cards</p>
+            <p class="text-ink">Cards</p>
             <p v-if="detail.cards.length === 0">None.</p>
             <p v-for="card in detail.cards" :key="card.id">
               {{ card.firstName }} {{ card.lastName }} · {{ card.slug }}
@@ -489,14 +487,14 @@ const columns: TableColumn<UserRow>[] = [
             :label="detail.banned ? 'Unban' : 'Ban'"
             color="neutral"
             :disabled="isSelfDetail"
-            class="h-10 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+            class="h-10 cursor-pointer rounded-full bg-raised px-5 text-sm font-medium text-ink hover:bg-line"
             @click="patchUser(detail, { banned: !detail.banned })"
           />
           <UButton
             label="Save"
             color="neutral"
             :loading="isSaving"
-            class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+            class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
             @click="saveDetail"
           />
         </template>
@@ -506,7 +504,7 @@ const columns: TableColumn<UserRow>[] = [
     <USlideover
       v-model:open="isCreateOpen"
       title="Create person"
-      :ui="{ content: 'bg-[#171717]' }"
+      :ui="{ content: 'bg-surface' }"
     >
       <template #body>
         <div class="space-y-4">
@@ -551,14 +549,14 @@ const columns: TableColumn<UserRow>[] = [
           label="Cancel"
           color="neutral"
           variant="ghost"
-          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-subtle hover:bg-raised hover:text-ink"
           @click="closeCreate"
         />
         <UButton
           label="Create"
           color="neutral"
           :loading="isCreating"
-          class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
           @click="onCreate"
         />
       </template>

@@ -59,18 +59,18 @@ const selectedTab = computed({
           <UButton
             icon="i-lucide-chevron-left"
             color="primary"
-            class="size-7! bg-white/5 mt-1 mr-1 sm:mr-2 text-white hover:bg-white/10 active:hover:bg-white/20 flex items-center justify-center"
+            class="size-7! bg-ink/5 mt-1 mr-1 sm:mr-2 text-ink hover:bg-ink/10 active:hover:bg-ink/20 flex items-center justify-center"
             aria-label="Back to events"
             @click="emit('back')"
           />
           <div class="flex min-w-0 flex-wrap items-start gap-x-4 gap-y-2">
             <h1
-              class="max-w-124 text-xl font-normal leading-[1.2] tracking-widest uppercase text-white sm:text-2xl"
+              class="max-w-124 text-xl font-normal leading-[1.2] tracking-widest uppercase text-ink sm:text-2xl"
             >
               {{ title }}
             </h1>
             <span
-              class="mt-1 rounded-md bg-white/10 px-2 py-1.25 text-[0.625rem] font-medium tracking-wider text-white uppercase"
+              class="mt-1 rounded-md bg-ink/10 px-2 py-1.25 text-[0.625rem] font-medium tracking-wider text-ink uppercase"
             >
               {{ status === 'upcoming' ? 'Upcoming' : 'Past' }}
             </span>
@@ -84,7 +84,7 @@ const selectedTab = computed({
             leading-icon="i-lucide-pencil"
             color="neutral"
             :ui="{ leadingIcon: 'size-4' }"
-            class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+            class="h-10 cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
             @click="emit('edit')"
           />
           <UButton
@@ -92,7 +92,7 @@ const selectedTab = computed({
             color="neutral"
             aria-label="Copy event link"
             :ui="{ leadingIcon: 'size-4' }"
-            class="h-10! w-20! cursor-pointer rounded-full p-0 text-white flex items-center justify-center bg-white/5 hover:bg-white/15 active:hover:bg-white/20"
+            class="h-10! w-20! cursor-pointer rounded-full p-0 text-ink flex items-center justify-center bg-ink/5 hover:bg-ink/15 active:hover:bg-ink/20"
             @click="emit('share')"
           />
           <UDropdownMenu
@@ -105,7 +105,7 @@ const selectedTab = computed({
               color="neutral"
               aria-label="Event email actions"
               :ui="{ leadingIcon: 'size-4' }"
-              class="h-10! w-20! cursor-pointer rounded-full p-0 text-white flex items-center justify-center bg-white/5 hover:bg-white/15 active:hover:bg-white/20"
+              class="h-10! w-20! cursor-pointer rounded-full p-0 text-ink flex items-center justify-center bg-ink/5 hover:bg-ink/15 active:hover:bg-ink/20"
             />
           </UDropdownMenu>
         </div>
@@ -120,10 +120,10 @@ const selectedTab = computed({
         size="lg"
         :ui="{
           root: 'items-start w-fit max-w-full',
-          list: 'bg-[#171717] w-fit max-w-full rounded-lg p-1 overflow-x-auto',
-          indicator: 'bg-[#232323]',
+          list: 'bg-surface w-fit max-w-full rounded-lg p-1 overflow-x-auto',
+          indicator: 'bg-raised',
           trigger:
-            'data-[state=active]:text-white data-[state=inactive]:text-[#8b8b8b] rounded-md px-4 py-2.5 grow-0',
+            'data-[state=active]:text-ink data-[state=inactive]:text-subtle rounded-md px-4 py-2.5 grow-0',
         }"
       />
     </div>

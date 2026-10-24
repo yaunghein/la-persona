@@ -146,9 +146,9 @@ const privacySections = [
 </script>
 
 <template>
-  <header class="z-30 bg-dark px-4 sm:px-18">
+  <header class="z-30 bg-canvas px-4 sm:px-18">
     <div
-      class="flex items-center justify-center border-b border-white/10 py-7 sm:py-13"
+      class="flex items-center justify-center border-b border-ink/10 py-7 sm:py-13"
     >
       <NuxtLink to="/" class="aspect-[1/0.09] w-32 sm:w-[11.6rem]">
         <IconLogo />
@@ -156,46 +156,46 @@ const privacySections = [
     </div>
   </header>
   <div
-    class="min-h-dvh bg-[#111111] px-4 py-10 text-white sm:px-6 sm:py-11 lg:px-8"
+    class="min-h-dvh bg-[#e9e9ec] dark:bg-[#111111] px-4 py-10 text-ink sm:px-6 sm:py-11 lg:px-8"
   >
     <UContainer class="max-w-5xl">
       <div class="mx-auto mb-10 max-w-3xl text-center">
         <h1 class="text-3xl font-medium uppercase tracking-widest sm:text-4xl">
           Terms & Privacy Policy
         </h1>
-        <p class="mt-4 text-sm text-[#8b8b8b]">Last updated: March 10, 2026</p>
+        <p class="mt-4 text-sm text-subtle">Last updated: March 10, 2026</p>
       </div>
 
       <div class="space-y-6">
         <section
-          class="rounded-[12px] border border-[#262626] bg-[#141414] p-5 sm:p-7"
+          class="rounded-[12px] border border-line dark:border-[#262626] bg-surface-soft dark:bg-[#141414] p-5 sm:p-7"
         >
           <h2
-            class="mb-6 text-2xl font-medium uppercase tracking-widest text-white"
+            class="mb-6 text-2xl font-medium uppercase tracking-widest text-ink"
           >
             Terms of Service
           </h2>
-          <div class="divide-y divide-[#262626]">
+          <div class="divide-y divide-line dark:divide-[#262626]">
             <div
               v-for="section in termsSections"
               :key="section.title"
               class="px-4 py-4 sm:px-5 sm:py-8"
             >
               <h3
-                class="text-base font-medium uppercase tracking-widest text-white"
+                class="text-base font-medium uppercase tracking-widest text-ink"
               >
                 {{ section.title }}
               </h3>
               <p
                 v-for="paragraph in section.body || []"
                 :key="paragraph"
-                class="mt-3 text-sm leading-7 text-[#bcbcbc]"
+                class="mt-3 text-sm leading-7 text-soft"
               >
                 {{ paragraph }}
               </p>
               <ul
                 v-if="section.bullets?.length"
-                class="mt-3 space-y-2 pl-4 text-sm text-[#bcbcbc]"
+                class="mt-3 space-y-2 pl-4 text-sm text-soft"
               >
                 <li
                   v-for="item in section.bullets"
@@ -206,11 +206,11 @@ const privacySections = [
                 </li>
               </ul>
             </div>
-            <div class="px-5 pt-3 sm:pt-7 text-sm text-[#bcbcbc]">
+            <div class="px-5 pt-3 sm:pt-7 text-sm text-soft">
               Questions about these Terms?
               <a
                 href="mailto:duodesignlab.mm@gmail.com"
-                class="ml-1 underline decoration-[#525252] underline-offset-4"
+                class="ml-1 underline decoration-line-heavy dark:decoration-[#525252] underline-offset-4"
               >
                 duodesignlab.mm@gmail.com
               </a>
@@ -219,34 +219,34 @@ const privacySections = [
         </section>
 
         <section
-          class="rounded-[12px] border border-[#262626] bg-[#141414] p-5 sm:p-7"
+          class="rounded-[12px] border border-line dark:border-[#262626] bg-surface-soft dark:bg-[#141414] p-5 sm:p-7"
         >
           <h2
-            class="mb-6 text-2xl font-medium uppercase tracking-widest text-white"
+            class="mb-6 text-2xl font-medium uppercase tracking-widest text-ink"
           >
             Privacy Policy
           </h2>
-          <div class="divide-y divide-[#262626]">
+          <div class="divide-y divide-line dark:divide-[#262626]">
             <div
               v-for="section in privacySections"
               :key="section.title"
               class="px-4 py-4 sm:px-5 sm:py-8"
             >
               <h3
-                class="text-base font-medium uppercase tracking-widest text-white"
+                class="text-base font-medium uppercase tracking-widest text-ink"
               >
                 {{ section.title }}
               </h3>
               <p
                 v-for="paragraph in section.body || []"
                 :key="paragraph"
-                class="mt-3 text-sm leading-7 text-[#bcbcbc]"
+                class="mt-3 text-sm leading-7 text-soft"
               >
                 {{ paragraph }}
               </p>
               <ul
                 v-if="section.bullets?.length"
-                class="mt-3 space-y-2 pl-4 text-sm text-[#bcbcbc]"
+                class="mt-3 space-y-2 pl-4 text-sm text-soft"
               >
                 <li
                   v-for="item in section.bullets"
@@ -257,11 +257,11 @@ const privacySections = [
                 </li>
               </ul>
             </div>
-            <div class="px-5 pt-3 sm:pt-7 text-sm text-[#bcbcbc]">
+            <div class="px-5 pt-3 sm:pt-7 text-sm text-soft">
               Privacy-related questions?
               <a
                 href="mailto:duodesignlab.mm@gmail.com"
-                class="ml-1 underline decoration-[#525252] underline-offset-4"
+                class="ml-1 underline decoration-line-heavy dark:decoration-[#525252] underline-offset-4"
               >
                 duodesignlab.mm@gmail.com
               </a>
@@ -276,7 +276,7 @@ const privacySections = [
     class="mt-2 flex flex-row-reverse flex-wrap-reverse items-center justify-center gap-8 px-18 pb-10 sm:mt-0 sm:flex-row sm:justify-between"
   >
     <div
-      class="mr-auto w-full text-xs font-light text-center sm:text-left uppercase leading-normal text-white/30 sm:w-auto"
+      class="mr-auto w-full text-xs font-light text-center sm:text-left uppercase leading-normal text-ink/30 sm:w-auto"
     >
       © la persona. All rights reserved.
     </div>

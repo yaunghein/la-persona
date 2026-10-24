@@ -156,12 +156,12 @@ function onCancelOnboarding() {
 </script>
 
 <template>
-  <div class="flex h-dvh overflow-hidden bg-[#171717]">
-    <div class="flex h-full min-h-0 w-full flex-col bg-[#171717]">
+  <div class="flex h-dvh overflow-hidden bg-surface">
+    <div class="flex h-full min-h-0 w-full flex-col bg-surface">
       <div v-if="pending" class="flex flex-1 items-center justify-center">
         <UIcon
           name="i-lucide-loader-circle"
-          class="size-6 animate-spin text-[#8b8b8b]"
+          class="size-6 animate-spin text-subtle"
         />
       </div>
 
@@ -169,7 +169,7 @@ function onCancelOnboarding() {
         v-else-if="error || !event"
         class="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center"
       >
-        <p class="text-sm text-[#8b8b8b]">
+        <p class="text-sm text-subtle">
           {{
             (error as { data?: { statusMessage?: string } })?.data
               ?.statusMessage || 'This event could not be found.'

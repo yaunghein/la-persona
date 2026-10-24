@@ -352,7 +352,7 @@ const columns: TableColumn<CardRequestRow>[] = [
           "
         >
           <template #requesterName-cell="{ row }">
-            <span class="font-medium text-white">
+            <span class="font-medium text-ink">
               {{ row.original.requesterName || '—' }}
             </span>
           </template>
@@ -374,7 +374,7 @@ const columns: TableColumn<CardRequestRow>[] = [
               :to="resolveObjectStorageUrl(row.original.paymentReceiptUrl)"
               target="_blank"
             />
-            <span v-else class="text-white/35">—</span>
+            <span v-else class="text-ink/35">—</span>
           </template>
           <template #status-cell="{ row }">
             <UBadge :color="statusColor(row.original.status)" variant="subtle">
@@ -382,7 +382,7 @@ const columns: TableColumn<CardRequestRow>[] = [
             </UBadge>
           </template>
           <template #createdAt-cell="{ row }">
-            <span class="text-white/55">{{
+            <span class="text-ink/55">{{
               formatDate(row.original.createdAt)
             }}</span>
           </template>
@@ -432,7 +432,7 @@ const columns: TableColumn<CardRequestRow>[] = [
         "
       >
         <template #createdAt-cell="{ row }">
-          <span class="text-white/55">{{
+          <span class="text-ink/55">{{
             formatDate(row.original.createdAt)
           }}</span>
         </template>
@@ -445,11 +445,11 @@ const columns: TableColumn<CardRequestRow>[] = [
     <USlideover
       v-model:open="requestOpen"
       title="Design request"
-      :ui="{ content: 'bg-[#171717]' }"
+      :ui="{ content: 'bg-surface' }"
     >
       <template #body>
-        <div v-if="selectedRequest" class="space-y-2 text-sm text-white/80">
-          <p class="text-white">
+        <div v-if="selectedRequest" class="space-y-2 text-sm text-ink/80">
+          <p class="text-ink">
             {{ selectedRequest.cardData?.name || 'Untitled' }}
           </p>
           <p>
@@ -480,7 +480,7 @@ const columns: TableColumn<CardRequestRow>[] = [
           color="neutral"
           :to="resolveObjectStorageUrl(selectedRequest.paymentReceiptUrl)"
           target="_blank"
-          class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
         />
       </template>
     </USlideover>
@@ -488,11 +488,11 @@ const columns: TableColumn<CardRequestRow>[] = [
     <USlideover
       v-model:open="updateOpen"
       title="Card update"
-      :ui="{ content: 'bg-[#171717]' }"
+      :ui="{ content: 'bg-surface' }"
     >
       <template #body>
-        <div v-if="selectedUpdate" class="space-y-2 text-sm text-white/80">
-          <p class="text-white">
+        <div v-if="selectedUpdate" class="space-y-2 text-sm text-ink/80">
+          <p class="text-ink">
             {{ selectedUpdate.card.firstName }}
             {{ selectedUpdate.card.lastName }}
           </p>

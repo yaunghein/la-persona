@@ -19,18 +19,19 @@ const roleOptions: { label: string; value: CommunityInviteRole }[] = [
   { label: 'Member', value: 'member' },
   { label: 'Volunteer', value: 'volunteer' },
 ];
+const colorMode = useColorMode();
 const qrDataUrl = ref('');
 
 const formFieldClass =
-  '[&_label]:mb-1.5 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white';
+  '[&_label]:mb-1.5 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink';
 
 const inputUi = {
-  base: 'h-11 rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+  base: 'h-11 rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
 };
 
 watch(
-  inviteLink,
-  async (link) => {
+  [inviteLink, () => colorMode.value],
+  async ([link, mode]) => {
     if (!link || !import.meta.client) return;
     try {
       const qrModule = await import('qrcode');
@@ -38,10 +39,10 @@ watch(
       qrDataUrl.value = await qrFactory.toDataURL(link, {
         width: 200,
         margin: 1,
-        color: {
-          dark: '#ffffff',
-          light: '#121212',
-        },
+        color:
+          mode === 'light'
+            ? { dark: '#121212', light: '#ededf0' }
+            : { dark: '#ffffff', light: '#121212' },
       });
     } catch {
       qrDataUrl.value = '';
@@ -119,8 +120,8 @@ function downloadQr() {
     inset
     title="INVITE MEMBERS"
     :ui="{
-      header: 'border-b-2 border-[#232323] px-6 py-6',
-      title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+      header: 'border-b-2 border-raised px-6 py-6',
+      title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
       body: 'px-6',
     }"
   >
@@ -128,32 +129,30 @@ function downloadQr() {
       <div class="flex flex-col gap-6">
         <section class="flex flex-col gap-3">
           <div class="space-y-1">
-            <h3 class="text-sm font-medium text-white">Invite with Link</h3>
-            <p class="text-sm text-[#8b8b8b]">
-              Anyone with this link can join.
-            </p>
+            <h3 class="text-sm font-medium text-ink">Invite with Link</h3>
+            <p class="text-sm text-subtle">Anyone with this link can join.</p>
           </div>
           <div
-            class="flex h-11 items-center justify-between gap-3 rounded-[4px] border border-[#2a2a2a] bg-[#232323] pr-1 pl-4"
+            class="flex h-11 items-center justify-between gap-3 rounded-[4px] border border-line bg-raised pr-1 pl-4"
           >
-            <p class="truncate text-sm text-white">{{ inviteLink }}</p>
+            <p class="truncate text-sm text-ink">{{ inviteLink }}</p>
             <UButton
               icon="i-lucide-copy"
               color="neutral"
               variant="ghost"
-              class="shrink-0 text-white hover:bg-[#2a2a2a]"
+              class="shrink-0 text-ink hover:bg-line"
               aria-label="Copy invite link"
               @click="copyInviteLink"
             />
           </div>
         </section>
 
-        <div class="h-px w-full bg-[#232323]" />
+        <div class="h-px w-full bg-raised" />
 
         <section class="flex flex-col gap-4">
           <div class="space-y-1">
-            <h3 class="text-sm font-medium text-white">Invite by Email</h3>
-            <p class="text-sm text-[#8b8b8b]">Send an invite to their email.</p>
+            <h3 class="text-sm font-medium text-ink">Invite by Email</h3>
+            <p class="text-sm text-subtle">Send an invite to their email.</p>
           </div>
 
           <UFormField label="Email" :class="formFieldClass">
@@ -174,7 +173,7 @@ function downloadQr() {
                 : 'Members can browse events and register.'
             "
             :class="formFieldClass"
-            :ui="{ help: 'mt-1.5 text-xs text-[#8b8b8b]' }"
+            :ui="{ help: 'mt-1.5 text-xs text-subtle' }"
           >
             <USelect
               v-model="roleInput"
@@ -190,25 +189,25 @@ function downloadQr() {
               leading-icon="i-lucide-send"
               color="neutral"
               :loading="isSending"
-              class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+              class="h-10 cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
               @click="sendInvitations"
             />
           </div>
         </section>
 
-        <div class="h-px w-full bg-[#232323]" />
+        <div class="h-px w-full bg-raised" />
 
         <section class="flex flex-col gap-4">
           <div class="space-y-1">
-            <h3 class="text-sm font-medium text-white">Community QR Code</h3>
-            <p class="text-sm text-[#8b8b8b]">
+            <h3 class="text-sm font-medium text-ink">Community QR Code</h3>
+            <p class="text-sm text-subtle">
               Show it on slides, registration desks, or printed materials.
             </p>
           </div>
 
           <div class="flex flex-col items-center gap-4">
             <div
-              class="flex size-44 items-center justify-center rounded-xl border border-[#232323] bg-dark p-2"
+              class="flex size-44 items-center justify-center rounded-xl border border-raised bg-canvas p-2"
             >
               <img
                 v-if="qrDataUrl"
@@ -219,14 +218,14 @@ function downloadQr() {
               <UIcon
                 v-else
                 name="i-lucide-qr-code"
-                class="size-14 text-[#8b8b8b]"
+                class="size-14 text-subtle"
               />
             </div>
             <UButton
               label="Download QR"
               leading-icon="i-lucide-download"
               color="neutral"
-              class="h-10 cursor-pointer rounded-full bg-[#232323] pr-6 pl-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+              class="h-10 cursor-pointer rounded-full bg-raised pr-6 pl-5 text-sm font-medium text-ink hover:bg-line"
               @click="downloadQr"
             />
           </div>

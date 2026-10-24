@@ -57,14 +57,14 @@ const selectCountry = (country: (typeof countries)[0]) => {
           {{ dialCode }}
         </span>
         <div
-          class="absolute right-0 top-1/2 h-4/5 w-px -translate-y-1/2 bg-white/10"
+          class="absolute right-0 top-1/2 h-4/5 w-px -translate-y-1/2 bg-ink/10"
         ></div>
       </button>
 
       <!-- <Transition name="fly"> -->
       <div
         v-if="open"
-        class="absolute left-0 top-[calc(3.13rem+0.5rem)] w-full border border-white/10 bg-dark z-20"
+        class="absolute left-0 top-[calc(3.13rem+0.5rem)] w-full border border-ink/10 bg-canvas z-20"
       >
         <div class="relative">
           <input
@@ -73,11 +73,11 @@ const selectCountry = (country: (typeof countries)[0]) => {
             @focus="searchFocus = true"
             @blur="searchFocus = false"
             placeholder="Search Countries"
-            class="h-[2.8rem] w-full appearance-none border-b border-white/10 bg-transparent px-4 pl-10 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 focus:outline-none sm:h-[3.13rem] sm:px-6 sm:pl-10"
+            class="h-[2.8rem] w-full appearance-none border-b border-ink/10 bg-transparent px-4 pl-10 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-ink/20 focus:outline-none sm:h-[3.13rem] sm:px-6 sm:pl-10"
           />
           <div
             class="absolute left-3 top-1/2 aspect-square size-5 -translate-y-1/2 transition duration-300"
-            :class="searchFocus ? 'text-white' : 'text-white/10'"
+            :class="searchFocus ? 'text-ink' : 'text-ink/10'"
           >
             <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none">
               <path
@@ -118,7 +118,7 @@ const selectCountry = (country: (typeof countries)[0]) => {
         required
         v-model="phone"
         @focus="open = false"
-        class="h-[2.8rem] w-full appearance-none border border-white/10 bg-transparent pl-15 pr-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:pl-18 sm:pr-6"
+        class="h-[2.8rem] w-full appearance-none border border-ink/10 bg-transparent pl-15 pr-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-ink/20 hover:border-ink/20 focus:border-ink/50 focus:outline-none sm:h-[3.13rem] sm:pl-18 sm:pr-6"
       />
       <input
         v-if="splitCountry"

@@ -257,7 +257,7 @@ const columns: TableColumn<PaymentRow>[] = [
         "
       >
         <template #payerName-cell="{ row }">
-          <span class="font-medium text-white">
+          <span class="font-medium text-ink">
             {{ row.original.payerName || '-' }}
           </span>
         </template>
@@ -284,17 +284,17 @@ const columns: TableColumn<PaymentRow>[] = [
             :to="resolveObjectStorageUrl(row.original.receiptUrl)"
             target="_blank"
           />
-          <span v-else class="text-white/35">—</span>
+          <span v-else class="text-ink/35">—</span>
         </template>
 
         <template #linkedRequestId-cell="{ row }">
-          <span v-if="row.original.linkedRequestId" class="text-white/80">
+          <span v-if="row.original.linkedRequestId" class="text-ink/80">
             {{ row.original.linkedRequestId }}
-            <span v-if="row.original.linkedRequestStatus" class="text-white/40">
+            <span v-if="row.original.linkedRequestStatus" class="text-ink/40">
               · {{ row.original.linkedRequestStatus }}
             </span>
           </span>
-          <span v-else class="text-white/35">—</span>
+          <span v-else class="text-ink/35">—</span>
         </template>
 
         <template #status-cell="{ row }">
@@ -304,7 +304,7 @@ const columns: TableColumn<PaymentRow>[] = [
         </template>
 
         <template #createdAt-cell="{ row }">
-          <span class="text-white/55">{{
+          <span class="text-ink/55">{{
             formatDate(row.original.createdAt)
           }}</span>
         </template>
@@ -318,11 +318,11 @@ const columns: TableColumn<PaymentRow>[] = [
     <USlideover
       v-model:open="paymentOpen"
       title="Payment"
-      :ui="{ content: 'bg-[#171717]' }"
+      :ui="{ content: 'bg-surface' }"
     >
       <template #body>
-        <div v-if="selectedPayment" class="space-y-3 text-sm text-white/80">
-          <p class="text-white">
+        <div v-if="selectedPayment" class="space-y-3 text-sm text-ink/80">
+          <p class="text-ink">
             {{ selectedPayment.payerName }} · {{ selectedPayment.payerEmail }}
           </p>
           <p>
@@ -345,7 +345,7 @@ const columns: TableColumn<PaymentRow>[] = [
           <div
             v-for="item in selectedPayment.items"
             :key="item.cardId"
-            class="border-t border-[#2a2a2a] pt-2"
+            class="border-t border-line pt-2"
           >
             <p>
               {{ item.planCode }} ·

@@ -21,9 +21,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div
-    class="shrink-0 border-t border-[#2a2a2a] px-6 pt-8 pb-4 sm:px-8 lg:px-16"
-  >
+  <div class="shrink-0 border-t border-line px-6 pt-8 pb-4 sm:px-8 lg:px-16">
     <div
       class="mx-auto flex w-full max-w-120 flex-col items-center gap-8 sm:max-w-112"
     >
@@ -34,8 +32,8 @@ const emit = defineEmits<{
           :disabled="primaryDisabled"
           :class="
             primaryMuted
-              ? 'bg-[#232323] text-white hover:bg-[#2a2a2a]'
-              : 'bg-white text-dark hover:bg-white/90'
+              ? 'bg-raised text-ink hover:bg-line'
+              : 'bg-ink text-ink-inverse hover:bg-ink/90'
           "
           @click="primaryType === 'button' ? emit('primary') : undefined"
         >
@@ -44,7 +42,7 @@ const emit = defineEmits<{
         <button
           v-if="secondaryLabel"
           type="button"
-          class="cursor-pointer text-sm font-bold text-white underline"
+          class="cursor-pointer text-sm font-bold text-ink underline"
           @click="emit('secondary')"
         >
           {{ secondaryLabel }}

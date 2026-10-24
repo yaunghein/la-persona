@@ -129,9 +129,12 @@ defineExpose({
     <div
       class="text-center flex flex-col items-center justify-center max-w-60 mx-auto"
     >
-      <Icon name="i-material-symbols:verified" class="text-[#8BF667] size-24" />
+      <Icon
+        name="i-material-symbols:verified"
+        class="text-success-ink size-24"
+      />
       <div
-        class="text-[#8BF667] uppercase text-xl font-semibold leading-none tracking-[2px] mt-8 mb-4"
+        class="text-success-ink uppercase text-xl font-semibold leading-none tracking-[2px] mt-8 mb-4"
       >
         Submission Received
       </div>
@@ -158,24 +161,24 @@ defineExpose({
     >
       <Icon
         name="i-material-symbols-warning-rounded"
-        class="text-[#FF3113] size-24"
+        class="text-danger-ink size-24"
       />
       <div class="space-y-4">
         <div
-          class="text-[#FF3113] uppercase text-xl font-semibold leading-none tracking-[2px]"
+          class="text-danger-ink uppercase text-xl font-semibold leading-none tracking-[2px]"
         >
           Something Went Wrong
         </div>
-        <p class="text-sm leading-5.25 text-white">
+        <p class="text-sm leading-5.25 text-ink">
           We could not submit your feedback just yet.
         </p>
-        <p class="text-sm leading-5.25 text-[#8b8b8b] whitespace-pre-line">
+        <p class="text-sm leading-5.25 text-subtle whitespace-pre-line">
           {{ serverErrorMessage }}
         </p>
       </div>
       <UButton
         label="Back"
-        class="h-10 text-sm rounded-full bg-white px-6 text-dark hover:bg-white/90 cursor-pointer"
+        class="h-10 text-sm rounded-full bg-ink px-6 text-ink-inverse hover:bg-ink/90 cursor-pointer"
         @click="clearServerError"
       />
     </div>
@@ -191,10 +194,10 @@ defineExpose({
     class="space-y-4"
   >
     <!-- <div class="space-y-4">
-      <h1 class="text-[20px] font-medium uppercase tracking-widest text-white">
+      <h1 class="text-[20px] font-medium uppercase tracking-widest text-ink">
         {{ titleLabel }}
       </h1>
-      <p class="text-sm leading-[21px] text-[#8b8b8b]">
+      <p class="text-sm leading-[21px] text-subtle">
         Please fill in the form below.
       </p>
     </div> -->
@@ -202,7 +205,7 @@ defineExpose({
     <UFormField
       label="Message"
       name="message"
-      class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white"
+      class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
     >
       <UTextarea
         v-model="state.message"
@@ -210,7 +213,7 @@ defineExpose({
         :placeholder="placeholderByKind[state.kind]"
         class="w-full"
         :ui="{
-          base: 'rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+          base: 'rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
         }"
       />
     </UFormField>

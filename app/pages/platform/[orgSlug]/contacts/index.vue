@@ -219,7 +219,7 @@ watch(total, (count) => {
           icon="material-symbols:info-outline"
           color="neutral"
           variant="ghost"
-          class="flex cursor-pointer items-center justify-center rounded-full p-0 text-muted hover:bg-[#232323]"
+          class="flex cursor-pointer items-center justify-center rounded-full p-0 text-muted hover:bg-raised"
           aria-label="Open contacts information"
           @click="openGuide"
         />
@@ -253,37 +253,33 @@ watch(total, (count) => {
           label="Create New Contact"
           leading-icon="i-lucide-plus"
           color="neutral"
-          class="fixed bottom-6 left-1/2 z-10 -translate-x-1/2 shadow-lg sm:static sm:translate-x-0 sm:shadow-none flex h-10 text-sm cursor-pointer items-center justify-center rounded-full border-2 border-[#232323] bg-white px-5 font-medium text-dark hover:bg-white/90 active:hover:bg-white/80"
+          class="fixed bottom-6 left-1/2 z-10 -translate-x-1/2 shadow-lg sm:static sm:translate-x-0 sm:shadow-none flex h-10 text-sm cursor-pointer items-center justify-center rounded-full border-2 border-raised bg-ink px-5 font-medium text-ink-inverse hover:bg-ink/90 active:hover:bg-ink/80"
           @click="openCreateContact"
         />
         <UButton
           icon="i-material-symbols-download-sharp"
           color="neutral"
           variant="ghost"
-          class="hidden h-10 w-16 cursor-pointer items-center justify-center rounded-full border-2 border-[#232323] bg-[#232323] p-0 px-5 text-white hover:bg-[#2a2a2a] sm:flex"
+          class="hidden h-10 w-16 cursor-pointer items-center justify-center rounded-full border-2 border-raised bg-raised p-0 px-5 text-ink hover:bg-line sm:flex"
           aria-label="Export contacts"
           @click="exportContacts"
         />
         <UFieldGroup class="hidden sm:flex">
           <UButton
             icon="i-lucide-table-2"
-            class="flex size-9 cursor-pointer items-center justify-center rounded-l-md border-2 border-[#232323] p-0 hover:bg-[#232323]"
+            class="flex size-9 cursor-pointer items-center justify-center rounded-l-md border-2 border-raised p-0 hover:bg-raised"
             aria-label="List view"
             :variant="viewMode === 'list' ? 'solid' : 'ghost'"
-            :class="
-              viewMode === 'list' ? 'bg-[#232323] text-white' : 'text-muted'
-            "
+            :class="viewMode === 'list' ? 'bg-raised text-ink' : 'text-muted'"
             @click="setViewMode('list')"
           />
           <UButton
             size="xl"
             icon="i-lucide-layout-grid"
-            class="flex size-9 cursor-pointer items-center justify-center rounded-r-md border-2 border-[#232323] p-0 hover:bg-[#232323]"
+            class="flex size-9 cursor-pointer items-center justify-center rounded-r-md border-2 border-raised p-0 hover:bg-raised"
             aria-label="Grid view"
             :variant="viewMode === 'grid' ? 'solid' : 'ghost'"
-            :class="
-              viewMode === 'grid' ? 'bg-[#232323] text-white' : 'text-muted'
-            "
+            :class="viewMode === 'grid' ? 'bg-raised text-ink' : 'text-muted'"
             @click="setViewMode('grid')"
           />
         </UFieldGroup>
@@ -296,8 +292,8 @@ watch(total, (count) => {
       inset
       title="CREATE NEW CONTACT"
       :ui="{
-        header: 'border-b-2 border-[#232323] px-6 py-6',
-        title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+        header: 'border-b-2 border-raised px-6 py-6',
+        title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
         body: 'px-6',
       }"
     >
@@ -317,7 +313,7 @@ watch(total, (count) => {
           leading-icon="i-lucide-plus"
           color="neutral"
           :loading="manualContactForm?.isPending"
-          class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
         />
       </template>
     </USlideover>
@@ -338,7 +334,7 @@ watch(total, (count) => {
         name="i-material-symbols:perm-contact-calendar-sharp"
         class="size-8 text-muted"
       />
-      <h2 class="text-base font-medium uppercase tracking-widest text-white">
+      <h2 class="text-base font-medium uppercase tracking-widest text-ink">
         No contacts yet
       </h2>
       <p class="max-w-[18rem] text-center text-sm text-muted">
@@ -349,7 +345,7 @@ watch(total, (count) => {
         label="Create New Contact"
         leading-icon="i-lucide-plus"
         color="neutral"
-        class="mt-2 h-10 text-sm rounded-full bg-white px-5 font-medium text-dark hover:bg-white/90"
+        class="mt-2 h-10 text-sm rounded-full bg-ink px-5 font-medium text-ink-inverse hover:bg-ink/90"
         @click="openCreateContact"
       />
     </div>
@@ -413,7 +409,7 @@ watch(total, (count) => {
     @confirm="confirmDelete"
   >
     This action cannot be undone. The contact
-    <span class="font-medium text-white">"{{ contactToDelete?.name }}"</span>
+    <span class="font-medium text-ink">"{{ contactToDelete?.name }}"</span>
     will be removed.
   </UiConfirmDeleteModal>
 </template>

@@ -465,26 +465,26 @@ const columns: TableColumn<OrgRow>[] = [
 ];
 
 const formFieldClass =
-  '[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-white';
+  '[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink';
 
 const inputUi = {
-  base: 'h-[47px] rounded-[4px] border-[#2a2a2a] bg-[#232323] text-sm text-white placeholder:text-white/50',
+  base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
 };
 
 const selectUi = {
-  base: 'h-[47px] w-full rounded-[4px] border-[#2a2a2a] bg-[#232323] px-3 text-sm text-white',
-  content: 'border border-[#2a2a2a] bg-[#232323]',
-  item: 'text-white data-[highlighted]:bg-[#232323]',
-  value: 'text-white',
+  base: 'h-[47px] w-full rounded-[4px] border-line bg-raised px-3 text-sm text-ink',
+  content: 'border border-line bg-raised',
+  item: 'text-ink data-[highlighted]:bg-raised',
+  value: 'text-ink',
 };
 
 const selectMenuUi = {
-  base: 'h-[47px] w-full rounded-[4px] border-[#2a2a2a] bg-[#232323] px-3 text-sm text-white',
-  content: 'border border-[#2a2a2a] bg-[#232323]',
-  item: 'text-white data-[highlighted]:bg-[#2a2a2a]',
-  value: 'text-white',
-  placeholder: 'text-white/50',
-  input: 'bg-[#232323] text-white placeholder:text-white/50',
+  base: 'h-[47px] w-full rounded-[4px] border-line bg-raised px-3 text-sm text-ink',
+  content: 'border border-line bg-raised',
+  item: 'text-ink data-[highlighted]:bg-line',
+  value: 'text-ink',
+  placeholder: 'text-ink/50',
+  input: 'bg-raised text-ink placeholder:text-ink/50',
 };
 </script>
 
@@ -541,10 +541,10 @@ const selectMenuUi = {
         @select="(_event, row) => openOrg(row.original)"
       >
         <template #name-cell="{ row }">
-          <span class="font-medium text-white">{{ row.original.name }}</span>
+          <span class="font-medium text-ink">{{ row.original.name }}</span>
         </template>
         <template #slug-cell="{ row }">
-          <span class="font-mono text-xs text-white/55">{{
+          <span class="font-mono text-xs text-ink/55">{{
             row.original.slug
           }}</span>
         </template>
@@ -560,7 +560,7 @@ const selectMenuUi = {
           </UBadge>
         </template>
         <template #createdAt-cell="{ row }">
-          <span class="text-white/55">{{
+          <span class="text-ink/55">{{
             formatDate(row.original.createdAt)
           }}</span>
         </template>
@@ -576,8 +576,8 @@ const selectMenuUi = {
       inset
       title="CREATE ORGANIZATION"
       :ui="{
-        header: 'border-b-2 border-[#232323] px-6 py-6',
-        title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+        header: 'border-b-2 border-raised px-6 py-6',
+        title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
         body: 'px-6',
       }"
     >
@@ -652,14 +652,14 @@ const selectMenuUi = {
           label="Cancel"
           color="neutral"
           variant="ghost"
-          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-subtle hover:bg-raised hover:text-ink"
           @click="closeCreate"
         />
         <UButton
           label="Create"
           color="neutral"
           :loading="isCreating"
-          class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
           @click="onCreate"
         />
       </template>
@@ -671,16 +671,16 @@ const selectMenuUi = {
       inset
       title="EDIT ORGANIZATION"
       :ui="{
-        header: 'border-b-2 border-[#232323] px-6 py-6',
-        title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+        header: 'border-b-2 border-raised px-6 py-6',
+        title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
         body: 'px-6',
       }"
     >
       <template #body>
         <div class="py-2">
-          <p class="mb-4 text-sm leading-relaxed text-[#8b8b8b]">
+          <p class="mb-4 text-sm leading-relaxed text-subtle">
             Changing the slug updates platform URLs that use
-            <span class="font-mono text-white/80"
+            <span class="font-mono text-ink/80"
               >/platform/{{ editForm.slug || '…' }}/…</span
             >. Bookmarks and shared links with the old slug will stop working
             until updated.
@@ -750,15 +750,13 @@ const selectMenuUi = {
                   :ui="inputUi"
                 />
               </UFormField>
-              <div
-                class="rounded-lg border border-white/10 bg-white/[0.03] p-4"
-              >
+              <div class="rounded-lg border border-ink/10 bg-ink/[0.03] p-4">
                 <UCheckbox
                   v-model="editForm.applyToMemberCards"
                   label="Update existing member cards"
-                  :ui="{ label: 'text-sm font-medium text-white' }"
+                  :ui="{ label: 'text-sm font-medium text-ink' }"
                 />
-                <p class="mt-2 text-xs leading-relaxed text-white/50">
+                <p class="mt-2 text-xs leading-relaxed text-ink/50">
                   Member cards keep the spline, wallpaper, and card back they
                   received when they joined. Turn this on to copy the three
                   values above onto every card in this community.
@@ -766,10 +764,10 @@ const selectMenuUi = {
               </div>
               <div
                 v-if="editingRow"
-                class="flex flex-col gap-6 border-y border-[#232323] py-6"
+                class="flex flex-col gap-6 border-y border-raised py-6"
               >
                 <p
-                  class="text-sm font-medium tracking-[1.4px] text-white uppercase"
+                  class="text-sm font-medium tracking-[1.4px] text-ink uppercase"
                 >
                   Email images
                 </p>
@@ -823,14 +821,14 @@ const selectMenuUi = {
           label="Cancel"
           color="neutral"
           variant="ghost"
-          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-[#8b8b8b] hover:bg-[#232323] hover:text-white"
+          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-subtle hover:bg-raised hover:text-ink"
           @click="closeEdit"
         />
         <UButton
           label="Save"
           color="neutral"
           :loading="isSaving"
-          class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
           @click="onSaveEdit"
         />
       </template>
@@ -842,23 +840,23 @@ const selectMenuUi = {
       inset
       :title="orgDetail?.name || 'Organization'"
       :ui="{
-        content: 'bg-[#121212]',
-        header: 'border-b-2 border-[#232323] px-6 py-6',
-        title: 'truncate text-lg font-medium text-white',
+        content: 'bg-canvas',
+        header: 'border-b-2 border-raised px-6 py-6',
+        title: 'truncate text-lg font-medium text-ink',
         body: 'px-6',
       }"
     >
       <template #body>
-        <div v-if="orgLoading" class="py-10 text-sm text-white/45">
+        <div v-if="orgLoading" class="py-10 text-sm text-ink/45">
           Loading organization…
         </div>
         <div v-else-if="orgDetail" class="space-y-8 py-2">
           <div class="flex items-start justify-between gap-4">
             <div class="min-w-0">
-              <p class="truncate font-mono text-xs text-white/45">
+              <p class="truncate font-mono text-xs text-ink/45">
                 /{{ orgDetail.slug }}
               </p>
-              <p class="mt-1 text-xs text-white/40">
+              <p class="mt-1 text-xs text-ink/40">
                 Created {{ formatDate(orgDetail.createdAt) }}
               </p>
             </div>
@@ -872,33 +870,31 @@ const selectMenuUi = {
           </div>
 
           <div class="grid grid-cols-2 gap-3">
-            <div class="rounded-lg border border-white/10 px-4 py-3">
-              <p class="text-xs text-white/45">Members</p>
-              <p class="mt-1 text-2xl font-semibold tabular-nums text-white">
+            <div class="rounded-lg border border-ink/10 px-4 py-3">
+              <p class="text-xs text-ink/45">Members</p>
+              <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">
                 {{ orgDetail.members.length }}
               </p>
             </div>
-            <div class="rounded-lg border border-white/10 px-4 py-3">
-              <p class="text-xs text-white/45">Cards</p>
-              <p class="mt-1 text-2xl font-semibold tabular-nums text-white">
+            <div class="rounded-lg border border-ink/10 px-4 py-3">
+              <p class="text-xs text-ink/45">Cards</p>
+              <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">
                 {{ orgDetail.cards.length }}
               </p>
             </div>
           </div>
 
           <section v-if="orgDetail.community" class="space-y-3">
-            <h3
-              class="text-xs font-medium tracking-wide text-white/45 uppercase"
-            >
+            <h3 class="text-xs font-medium tracking-wide text-ink/45 uppercase">
               Brand
             </h3>
             <dl
-              class="divide-y divide-white/10 overflow-hidden rounded-lg border border-white/10"
+              class="divide-y divide-ink/10 overflow-hidden rounded-lg border border-ink/10"
             >
               <div v-for="row in brandRows" :key="row.label" class="px-4 py-3">
-                <dt class="text-xs text-white/45">{{ row.label }}</dt>
+                <dt class="text-xs text-ink/45">{{ row.label }}</dt>
                 <dd
-                  class="mt-1 break-all font-mono text-xs leading-relaxed text-white/85"
+                  class="mt-1 break-all font-mono text-xs leading-relaxed text-ink/85"
                 >
                   {{ row.value || '—' }}
                 </dd>
@@ -909,33 +905,29 @@ const selectMenuUi = {
           <section v-if="copyRows.length" class="space-y-4">
             <div v-for="row in copyRows" :key="row.label">
               <h3
-                class="text-xs font-medium tracking-wide text-white/45 uppercase"
+                class="text-xs font-medium tracking-wide text-ink/45 uppercase"
               >
                 {{ row.label }}
               </h3>
-              <p
-                class="mt-2 line-clamp-4 text-sm leading-relaxed text-white/75"
-              >
+              <p class="mt-2 line-clamp-4 text-sm leading-relaxed text-ink/75">
                 {{ row.value }}
               </p>
             </div>
           </section>
 
           <section class="space-y-3">
-            <h3
-              class="text-xs font-medium tracking-wide text-white/45 uppercase"
-            >
+            <h3 class="text-xs font-medium tracking-wide text-ink/45 uppercase">
               Members
             </h3>
             <p
               v-if="orgDetail.members.length === 0"
-              class="text-sm text-white/45"
+              class="text-sm text-ink/45"
             >
               No members.
             </p>
             <ul
               v-else
-              class="divide-y divide-white/10 overflow-hidden rounded-lg border border-white/10"
+              class="divide-y divide-ink/10 overflow-hidden rounded-lg border border-ink/10"
             >
               <li
                 v-for="member in orgDetail.members"
@@ -943,10 +935,10 @@ const selectMenuUi = {
                 class="flex items-center justify-between gap-3 px-4 py-3"
               >
                 <div class="min-w-0">
-                  <p class="truncate text-sm text-white">
+                  <p class="truncate text-sm text-ink">
                     {{ member.userName }}
                   </p>
-                  <p class="truncate text-xs text-white/45">
+                  <p class="truncate text-xs text-ink/45">
                     {{ member.userEmail }}
                   </p>
                 </div>
@@ -971,20 +963,15 @@ const selectMenuUi = {
           </section>
 
           <section class="space-y-3">
-            <h3
-              class="text-xs font-medium tracking-wide text-white/45 uppercase"
-            >
+            <h3 class="text-xs font-medium tracking-wide text-ink/45 uppercase">
               Cards
             </h3>
-            <p
-              v-if="orgDetail.cards.length === 0"
-              class="text-sm text-white/45"
-            >
+            <p v-if="orgDetail.cards.length === 0" class="text-sm text-ink/45">
               No cards.
             </p>
             <ul
               v-else
-              class="divide-y divide-white/10 overflow-hidden rounded-lg border border-white/10"
+              class="divide-y divide-ink/10 overflow-hidden rounded-lg border border-ink/10"
             >
               <li
                 v-for="item in orgDetail.cards"
@@ -992,14 +979,14 @@ const selectMenuUi = {
                 class="flex items-center justify-between gap-3 px-4 py-3"
               >
                 <div class="min-w-0">
-                  <p class="truncate text-sm text-white">
+                  <p class="truncate text-sm text-ink">
                     {{
                       [item.firstName, item.lastName]
                         .filter(Boolean)
                         .join(' ') || item.slug
                     }}
                   </p>
-                  <p class="truncate font-mono text-xs text-white/45">
+                  <p class="truncate font-mono text-xs text-ink/45">
                     /c/{{ item.slug }}
                   </p>
                 </div>
@@ -1035,7 +1022,7 @@ const selectMenuUi = {
           label="Edit"
           leading-icon="i-lucide-pencil"
           color="neutral"
-          class="h-10 cursor-pointer rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
           @click="openEditFromDetail"
         />
       </template>
@@ -1045,22 +1032,20 @@ const selectMenuUi = {
       v-model:open="isDeleteOpen"
       :close="false"
       :dismissible="!isDeleting"
-      :ui="{ content: 'bg-[#171717] max-w-md' }"
+      :ui="{ content: 'bg-surface max-w-md' }"
       title="Delete organization?"
     >
       <template #body>
-        <div class="space-y-3 text-sm leading-relaxed text-white/70">
+        <div class="space-y-3 text-sm leading-relaxed text-ink/70">
           <p v-if="(orgToDelete?.cardCount || 0) > 0">
-            <span class="font-medium text-white">{{ orgToDelete?.name }}</span>
+            <span class="font-medium text-ink">{{ orgToDelete?.name }}</span>
             still has {{ orgToDelete?.cardCount }}
             {{ orgToDelete?.cardCount === 1 ? 'card' : 'cards' }}. Delete or
             move those cards first. Deleting the organization would remove them.
           </p>
           <template v-else-if="orgToDelete">
             <p>
-              <span class="font-medium text-white">{{
-                orgToDelete?.name
-              }}</span>
+              <span class="font-medium text-ink">{{ orgToDelete?.name }}</span>
               will be removed.
               {{ orgToDelete?.memberCount || 0 }}
               {{

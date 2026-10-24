@@ -27,24 +27,24 @@ definePageMeta({
 
 const { data, isLoading } = useAdminOverviewQuery();
 
-const chartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: { labels: { color: '#d4d4d4' } },
-  },
-  scales: {
-    x: {
-      ticks: { color: '#a3a3a3', maxTicksLimit: 6 },
-      grid: { color: '#2a2a2a' },
+const colorMode = useColorMode();
+
+const chartOptions = computed(() => {
+  const isLight = colorMode.value === 'light';
+  const tick = isLight ? '#6b6b74' : '#a3a3a3';
+  const grid = isLight ? '#dcdce1' : '#2a2a2a';
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color: isLight ? '#45454d' : '#d4d4d4' } },
     },
-    y: {
-      beginAtZero: true,
-      ticks: { color: '#a3a3a3' },
-      grid: { color: '#2a2a2a' },
+    scales: {
+      x: { ticks: { color: tick, maxTicksLimit: 6 }, grid: { color: grid } },
+      y: { beginAtZero: true, ticks: { color: tick }, grid: { color: grid } },
     },
-  },
-};
+  };
+});
 
 function money(amount: number) {
   return `${amount.toLocaleString()} MMK`;
@@ -185,32 +185,32 @@ const census = computed(() => {
           v-for="item in census"
           :key="item.label"
           :to="item.to"
-          class="rounded-lg border border-[#2a2a2a] bg-[#171717] p-4 transition hover:border-[#3a3a3a]"
+          class="rounded-lg border border-line bg-surface p-4 transition hover:border-line-strong dark:hover:border-[#3a3a3a]"
         >
-          <p class="text-xs uppercase tracking-[1.4px] text-white/50">
+          <p class="text-xs uppercase tracking-[1.4px] text-ink/50">
             {{ item.label }}
           </p>
-          <p class="mt-2 text-2xl font-medium text-white">{{ item.value }}</p>
-          <p class="mt-1 text-sm text-white/60">{{ item.detail }}</p>
+          <p class="mt-2 text-2xl font-medium text-ink">{{ item.value }}</p>
+          <p class="mt-1 text-sm text-ink/60">{{ item.detail }}</p>
         </NuxtLink>
       </div>
 
       <div>
-        <h2 class="mb-3 text-sm uppercase tracking-[1.4px] text-white/70">
+        <h2 class="mb-3 text-sm uppercase tracking-[1.4px] text-ink/70">
           Needs you
         </h2>
         <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <NuxtLink
             :to="ROUTES.THAKHIN.REQUESTS"
-            class="rounded-lg border border-[#2a2a2a] bg-[#171717] p-4"
+            class="rounded-lg border border-line bg-surface p-4"
           >
-            <p class="text-xs uppercase tracking-[1.4px] text-white/50">
+            <p class="text-xs uppercase tracking-[1.4px] text-ink/50">
               Design requests
             </p>
-            <p class="mt-2 text-2xl font-medium text-white">
+            <p class="mt-2 text-2xl font-medium text-ink">
               {{ data.queues.designRequests.count }}
             </p>
-            <p class="mt-1 text-sm text-white/60">
+            <p class="mt-1 text-sm text-ink/60">
               {{
                 data.queues.designRequests.oldestAgeHours == null
                   ? 'None waiting'
@@ -220,41 +220,41 @@ const census = computed(() => {
           </NuxtLink>
           <NuxtLink
             :to="ROUTES.THAKHIN.PAYMENTS"
-            class="rounded-lg border border-[#2a2a2a] bg-[#171717] p-4"
+            class="rounded-lg border border-line bg-surface p-4"
           >
-            <p class="text-xs uppercase tracking-[1.4px] text-white/50">
+            <p class="text-xs uppercase tracking-[1.4px] text-ink/50">
               Standalone payments
             </p>
-            <p class="mt-2 text-2xl font-medium text-white">
+            <p class="mt-2 text-2xl font-medium text-ink">
               {{ data.queues.standalonePayments.count }}
             </p>
-            <p class="mt-1 text-sm text-white/60">
+            <p class="mt-1 text-sm text-ink/60">
               Submitted, not tied to a request
             </p>
           </NuxtLink>
           <NuxtLink
             :to="`${ROUTES.THAKHIN.REQUESTS}?tab=updates`"
-            class="rounded-lg border border-[#2a2a2a] bg-[#171717] p-4"
+            class="rounded-lg border border-line bg-surface p-4"
           >
-            <p class="text-xs uppercase tracking-[1.4px] text-white/50">
+            <p class="text-xs uppercase tracking-[1.4px] text-ink/50">
               Card updates
             </p>
-            <p class="mt-2 text-2xl font-medium text-white">
+            <p class="mt-2 text-2xl font-medium text-ink">
               {{ data.queues.updateRequests.count }}
             </p>
-            <p class="mt-1 text-sm text-white/60">Pending field changes</p>
+            <p class="mt-1 text-sm text-ink/60">Pending field changes</p>
           </NuxtLink>
           <NuxtLink
             :to="ROUTES.THAKHIN.INVITATIONS"
-            class="rounded-lg border border-[#2a2a2a] bg-[#171717] p-4"
+            class="rounded-lg border border-line bg-surface p-4"
           >
-            <p class="text-xs uppercase tracking-[1.4px] text-white/50">
+            <p class="text-xs uppercase tracking-[1.4px] text-ink/50">
               Expiring invitations
             </p>
-            <p class="mt-2 text-2xl font-medium text-white">
+            <p class="mt-2 text-2xl font-medium text-ink">
               {{ data.queues.expiringInvitations.count }}
             </p>
-            <p class="mt-1 text-sm text-white/60">
+            <p class="mt-1 text-sm text-ink/60">
               Pending and due within 48 hours
             </p>
           </NuxtLink>
@@ -262,59 +262,57 @@ const census = computed(() => {
       </div>
 
       <div class="grid gap-3 lg:grid-cols-3">
-        <div class="rounded-lg border border-[#2a2a2a] bg-[#171717] p-4">
-          <p class="text-xs uppercase tracking-[1.4px] text-white/50">
-            Revenue
-          </p>
-          <p class="mt-2 text-2xl font-medium text-white">
+        <div class="rounded-lg border border-line bg-surface p-4">
+          <p class="text-xs uppercase tracking-[1.4px] text-ink/50">Revenue</p>
+          <p class="mt-2 text-2xl font-medium text-ink">
             {{ money(data.month.revenue.current) }}
           </p>
-          <p class="mt-1 text-sm text-white/60">
+          <p class="mt-1 text-sm text-ink/60">
             {{
               signed(data.month.revenue.current, data.month.revenue.previous)
             }}
           </p>
         </div>
-        <div class="rounded-lg border border-[#2a2a2a] bg-[#171717] p-4">
-          <p class="text-xs uppercase tracking-[1.4px] text-white/50">
+        <div class="rounded-lg border border-line bg-surface p-4">
+          <p class="text-xs uppercase tracking-[1.4px] text-ink/50">
             Live subscriptions
           </p>
-          <p class="mt-2 text-2xl font-medium text-white">
+          <p class="mt-2 text-2xl font-medium text-ink">
             {{ data.month.liveSubscriptions.toLocaleString() }}
           </p>
-          <p class="mt-1 text-sm text-white/60">
+          <p class="mt-1 text-sm text-ink/60">
             {{ data.month.graceOrExpired.toLocaleString() }} in grace or expired
           </p>
         </div>
-        <div class="rounded-lg border border-[#2a2a2a] bg-[#171717] p-4">
-          <p class="text-xs uppercase tracking-[1.4px] text-white/50">
+        <div class="rounded-lg border border-line bg-surface p-4">
+          <p class="text-xs uppercase tracking-[1.4px] text-ink/50">
             Invitations
           </p>
-          <p class="mt-2 text-2xl font-medium text-white">
+          <p class="mt-2 text-2xl font-medium text-ink">
             {{ data.month.invitations.accepted }} /
             {{ data.month.invitations.sent }}
           </p>
-          <p class="mt-1 text-sm text-white/60">
+          <p class="mt-1 text-sm text-ink/60">
             Accepted of those sent this month
           </p>
         </div>
       </div>
 
       <div class="grid gap-4 xl:grid-cols-3">
-        <div class="rounded-lg border border-[#2a2a2a] bg-[#171717] p-4">
-          <p class="mb-3 text-sm text-white/70">Daily active users</p>
+        <div class="rounded-lg border border-line bg-surface p-4">
+          <p class="mb-3 text-sm text-ink/70">Daily active users</p>
           <div class="h-56">
             <Line :data="activeChart" :options="chartOptions" />
           </div>
         </div>
-        <div class="rounded-lg border border-[#2a2a2a] bg-[#171717] p-4">
-          <p class="mb-3 text-sm text-white/70">Card analytics</p>
+        <div class="rounded-lg border border-line bg-surface p-4">
+          <p class="mb-3 text-sm text-ink/70">Card analytics</p>
           <div class="h-56">
             <Line :data="analyticsChart" :options="chartOptions" />
           </div>
         </div>
-        <div class="rounded-lg border border-[#2a2a2a] bg-[#171717] p-4">
-          <p class="mb-3 text-sm text-white/70">Approved revenue</p>
+        <div class="rounded-lg border border-line bg-surface p-4">
+          <p class="mb-3 text-sm text-ink/70">Approved revenue</p>
           <div class="h-56">
             <Line :data="revenueChart" :options="chartOptions" />
           </div>

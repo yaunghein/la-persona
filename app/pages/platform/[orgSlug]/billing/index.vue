@@ -79,7 +79,7 @@ const columns: TableColumn<BillingTableRow>[] = [
     header: 'DUE DATE',
     meta: {
       class: {
-        th: 'text-sm font-medium uppercase tracking-widest text-white',
+        th: 'text-sm font-medium uppercase tracking-widest text-ink',
         td: 'text-sm font-medium text-muted',
       },
     },
@@ -89,7 +89,7 @@ const columns: TableColumn<BillingTableRow>[] = [
     header: 'DESCRIPTION',
     meta: {
       class: {
-        th: 'text-sm font-medium uppercase tracking-widest text-white',
+        th: 'text-sm font-medium uppercase tracking-widest text-ink',
         td: 'text-sm font-medium text-muted',
       },
     },
@@ -99,7 +99,7 @@ const columns: TableColumn<BillingTableRow>[] = [
     header: 'STATUS',
     meta: {
       class: {
-        th: 'text-sm font-medium uppercase tracking-widest text-white',
+        th: 'text-sm font-medium uppercase tracking-widest text-ink',
         td: 'text-sm font-medium text-muted',
       },
     },
@@ -109,7 +109,7 @@ const columns: TableColumn<BillingTableRow>[] = [
     header: 'TOTAL',
     meta: {
       class: {
-        th: 'text-sm font-medium uppercase tracking-widest text-white',
+        th: 'text-sm font-medium uppercase tracking-widest text-ink',
         td: 'text-sm font-medium text-muted',
       },
     },
@@ -258,23 +258,19 @@ function getStatusLabel(status: string) {
           <UButton
             size="xl"
             icon="i-lucide-table-2"
-            class="cursor-pointer size-9 rounded-l-md border-2 border-[#232323] p-0 flex items-center justify-center hover:bg-[#232323]"
+            class="cursor-pointer size-9 rounded-l-md border-2 border-raised p-0 flex items-center justify-center hover:bg-raised"
             aria-label="List view"
             :variant="viewMode === 'list' ? 'solid' : 'ghost'"
-            :class="
-              viewMode === 'list' ? 'bg-[#232323] text-white' : 'text-muted'
-            "
+            :class="viewMode === 'list' ? 'bg-raised text-ink' : 'text-muted'"
             @click="setViewMode('list')"
           />
           <UButton
             size="xl"
             icon="i-lucide-layout-grid"
-            class="cursor-pointer size-9 rounded-r-md border-2 border-[#232323] p-0 flex items-center justify-center hover:bg-[#232323]"
+            class="cursor-pointer size-9 rounded-r-md border-2 border-raised p-0 flex items-center justify-center hover:bg-raised"
             aria-label="Grid view"
             :variant="viewMode === 'grid' ? 'solid' : 'ghost'"
-            :class="
-              viewMode === 'grid' ? 'bg-[#232323] text-white' : 'text-muted'
-            "
+            :class="viewMode === 'grid' ? 'bg-raised text-ink' : 'text-muted'"
             @click="setViewMode('grid')"
           />
         </UFieldGroup>
@@ -294,7 +290,7 @@ function getStatusLabel(status: string) {
       class="flex flex-1 flex-col items-center justify-center gap-4"
     >
       <UIcon name="i-lucide-receipt-text" class="size-8 text-muted" />
-      <h2 class="text-base font-medium uppercase tracking-widest text-white">
+      <h2 class="text-base font-medium uppercase tracking-widest text-ink">
         No billing records yet
       </h2>
       <p class="max-w-[20rem] text-center text-sm text-muted">
@@ -312,8 +308,8 @@ function getStatusLabel(status: string) {
           :data="tableRows"
           :columns="columns"
           :ui="{
-            th: 'px-4 py-4 border-b border-[#232323]',
-            td: 'px-4 py-4 border-b border-[#232323]',
+            th: 'px-4 py-4 border-b border-raised',
+            td: 'px-4 py-4 border-b border-raised',
             tr: 'bg-transparent',
             empty: 'py-16 text-center text-sm text-muted',
           }"
@@ -325,7 +321,7 @@ function getStatusLabel(status: string) {
               icon="i-material-symbols-download-sharp"
               color="neutral"
               variant="ghost"
-              class="cursor-pointer p-0 text-muted hover:text-white"
+              class="cursor-pointer p-0 text-muted hover:text-ink"
               @click="onDownload"
             />
           </template>
@@ -341,7 +337,7 @@ function getStatusLabel(status: string) {
               trailing-icon="i-lucide-chevron-down"
               color="neutral"
               variant="ghost"
-              class="h-10 text-sm rounded-full border border-[#232323] bg-[#171717] px-4 text-muted hover:bg-[#232323]"
+              class="h-10 text-sm rounded-full border border-raised bg-surface px-4 text-muted hover:bg-raised"
             />
           </UDropdownMenu>
         </div>
@@ -351,7 +347,7 @@ function getStatusLabel(status: string) {
             v-for="row in pagedRows"
             :key="row.id"
             :ui="{
-              root: 'rounded-[8px] bg-[#171717] border border-transparent',
+              root: 'rounded-[8px] bg-surface border border-transparent',
               body: 'p-0!',
             }"
           >
@@ -359,18 +355,18 @@ function getStatusLabel(status: string) {
               <p class="text-sm font-medium text-muted">
                 {{ formatDate(row.dueDate) }}
               </p>
-              <p class="mt-1 text-xl font-medium leading-tight text-white">
+              <p class="mt-1 text-xl font-medium leading-tight text-ink">
                 {{ row.description }}
               </p>
             </div>
 
-            <div class="border-t-2 border-[#232323] px-5 py-4">
+            <div class="border-t-2 border-raised px-5 py-4">
               <div class="flex items-center justify-between">
                 <div>
                   <p class="text-xs text-muted">
                     {{ getStatusLabel(row.status) }}
                   </p>
-                  <p class="mt-1 text-sm text-white">
+                  <p class="mt-1 text-sm text-ink">
                     {{ formatMoney(row.amountMinor, row.currency) }}
                   </p>
                 </div>
@@ -380,7 +376,7 @@ function getStatusLabel(status: string) {
                   icon="i-material-symbols-download-sharp"
                   color="neutral"
                   variant="ghost"
-                  class="cursor-pointer p-0 text-muted hover:text-white"
+                  class="cursor-pointer p-0 text-muted hover:text-ink"
                   @click="onDownload"
                 />
               </div>

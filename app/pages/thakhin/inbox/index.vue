@@ -193,17 +193,15 @@ onMounted(() => {
           </UBadge>
         </template>
         <template #userName-cell="{ row }">
-          <span class="font-medium text-white">{{
-            row.original.userName
-          }}</span>
+          <span class="font-medium text-ink">{{ row.original.userName }}</span>
         </template>
         <template #message-cell="{ row }">
-          <span class="line-clamp-2 max-w-md text-white/70">{{
+          <span class="line-clamp-2 max-w-md text-ink/70">{{
             row.original.message
           }}</span>
         </template>
         <template #createdAt-cell="{ row }">
-          <span class="text-white/55">{{
+          <span class="text-ink/55">{{
             new Date(row.original.createdAt).toLocaleString()
           }}</span>
         </template>
@@ -216,11 +214,11 @@ onMounted(() => {
     <USlideover
       v-model:open="detailOpen"
       :title="selected ? kindLabel(selected.kind) : 'Message'"
-      :ui="{ content: 'bg-[#171717]' }"
+      :ui="{ content: 'bg-surface' }"
     >
       <template #body>
-        <div v-if="selected" class="space-y-4 text-sm text-white/80">
-          <p class="whitespace-pre-wrap text-white">{{ selected.message }}</p>
+        <div v-if="selected" class="space-y-4 text-sm text-ink/80">
+          <p class="whitespace-pre-wrap text-ink">{{ selected.message }}</p>
           <p>{{ selected.userName }} · {{ selected.userEmail }}</p>
           <p>{{ selected.organizationName }}</p>
         </div>
@@ -240,13 +238,13 @@ onMounted(() => {
             :to="`${ROUTES.THAKHIN.USERS}?focus=${selected.userId}`"
             label="Open person"
             color="neutral"
-            class="h-10 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+            class="h-10 cursor-pointer rounded-full bg-raised px-5 text-sm font-medium text-ink hover:bg-line"
           />
           <UButton
             :to="`${ROUTES.THAKHIN.ORGANIZATIONS}?focus=${selected.organizationId}`"
             label="Open organization"
             color="neutral"
-            class="h-10 cursor-pointer rounded-full bg-[#232323] px-5 text-sm font-medium text-white hover:bg-[#2a2a2a]"
+            class="h-10 cursor-pointer rounded-full bg-raised px-5 text-sm font-medium text-ink hover:bg-line"
           />
         </template>
       </template>
@@ -256,13 +254,13 @@ onMounted(() => {
       v-model:open="isDeleteOpen"
       :close="false"
       :dismissible="!isDeleting"
-      :ui="{ content: 'bg-[#171717] max-w-md' }"
+      :ui="{ content: 'bg-surface max-w-md' }"
       title="Delete message?"
     >
       <template #body>
-        <p class="text-sm text-white/70">
+        <p class="text-sm text-ink/70">
           This removes the message from
-          <span class="text-white">{{ messageToDelete?.userEmail }}</span
+          <span class="text-ink">{{ messageToDelete?.userEmail }}</span
           >. The person and organization stay.
         </p>
       </template>

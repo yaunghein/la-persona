@@ -80,12 +80,12 @@ function checkIn(attendee: EventAttendee) {
         variant="soft"
         class="w-full min-w-0 sm:flex-1"
         :ui="{
-          base: 'h-10 rounded-full border-0 bg-[#232323] ps-5 pe-11 text-sm font-medium text-white ring-0 placeholder:text-[#8b8b8b] focus-visible:ring-0',
+          base: 'h-10 rounded-full border-0 bg-raised ps-5 pe-11 text-sm font-medium text-ink ring-0 placeholder:text-subtle focus-visible:ring-0',
           trailing: 'pe-5',
-          trailingIcon: 'size-4.5 text-[#8b8b8b]',
+          trailingIcon: 'size-4.5 text-subtle',
         }"
       />
-      <span class="shrink-0 text-center text-sm font-medium text-[#8b8b8b]"
+      <span class="shrink-0 text-center text-sm font-medium text-subtle"
         >or</span
       >
       <div class="flex min-w-0 flex-1 flex-col gap-2">
@@ -95,12 +95,12 @@ function checkIn(attendee: EventAttendee) {
           color="neutral"
           block
           :disabled="checkInPhase !== 'live'"
-          class="h-10 w-full min-w-0 cursor-pointer justify-between rounded-full bg-white pr-5 pl-5 text-sm font-medium text-dark hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-[#232323] disabled:text-[#8b8b8b] disabled:opacity-100 sm:flex-1"
+          class="h-10 w-full min-w-0 cursor-pointer justify-between rounded-full bg-ink pr-5 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90 disabled:cursor-not-allowed disabled:bg-raised disabled:text-subtle disabled:opacity-100 sm:flex-1"
           @click="emit('open-scanner')"
         />
         <p
           v-if="checkInPhase !== 'live'"
-          class="text-center text-sm text-[#8b8b8b] sm:text-left"
+          class="text-center text-sm text-subtle sm:text-left"
         >
           {{
             checkInPhase === 'before'
@@ -115,12 +115,12 @@ function checkIn(attendee: EventAttendee) {
       v-if="hasQuery && !matchingAttendees.length"
       class="flex flex-col items-center justify-center gap-8 pt-30"
     >
-      <UIcon name="i-lucide-user-x" class="size-12 text-[#8b8b8b]" />
+      <UIcon name="i-lucide-user-x" class="size-12 text-subtle" />
       <div class="flex max-w-108 flex-col items-center gap-3 text-center">
-        <p class="text-xl font-medium tracking-[2px] uppercase text-white">
+        <p class="text-xl font-medium tracking-[2px] uppercase text-ink">
           Attendee not found
         </p>
-        <p class="text-sm text-[#8b8b8b]">
+        <p class="text-sm text-subtle">
           {{
             canWalkIn
               ? 'No registered attendee matches this search. Register them as a walk-in instead.'
@@ -132,7 +132,7 @@ function checkIn(attendee: EventAttendee) {
         v-if="canWalkIn"
         label="Register as walk-in"
         color="neutral"
-        class="h-10 cursor-pointer justify-center rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+        class="h-10 cursor-pointer justify-center rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
         @click="emit('open-walk-in')"
       />
     </div>
@@ -141,7 +141,7 @@ function checkIn(attendee: EventAttendee) {
       <div
         v-for="attendee in matchingAttendees"
         :key="attendee.id"
-        class="flex flex-col gap-4 rounded-lg bg-[#171717] p-4 sm:flex-row sm:items-center sm:justify-between"
+        class="flex flex-col gap-4 rounded-lg bg-surface p-4 sm:flex-row sm:items-center sm:justify-between"
       >
         <div class="flex items-center gap-4">
           <UAvatar
@@ -149,13 +149,13 @@ function checkIn(attendee: EventAttendee) {
             :alt="attendee.name"
             icon="i-lucide-user"
             :ui="{
-              root: 'size-12 bg-[#232323]',
-              icon: 'size-5 text-[#8b8b8b]',
+              root: 'size-12 bg-raised',
+              icon: 'size-5 text-subtle',
             }"
           />
           <div>
-            <p class="font-medium text-white">{{ attendee.name }}</p>
-            <p class="text-sm text-[#8b8b8b]">
+            <p class="font-medium text-ink">{{ attendee.name }}</p>
+            <p class="text-sm text-subtle">
               {{ attendee.role }} • {{ attendee.company }}
             </p>
           </div>
@@ -166,10 +166,10 @@ function checkIn(attendee: EventAttendee) {
             label="Check-in"
             color="neutral"
             :disabled="checkInPhase !== 'live'"
-            class="h-10 cursor-pointer justify-center rounded-full bg-white px-6 text-sm font-medium text-dark hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-[#232323] disabled:text-[#8b8b8b] disabled:opacity-100"
+            class="h-10 cursor-pointer justify-center rounded-full bg-ink px-6 text-sm font-medium text-ink-inverse hover:bg-ink/90 disabled:cursor-not-allowed disabled:bg-raised disabled:text-subtle disabled:opacity-100"
             @click="checkIn(attendee)"
           />
-          <span v-else class="text-sm font-medium text-[#8b8b8b]">
+          <span v-else class="text-sm font-medium text-subtle">
             Already checked in
           </span>
           <UButton
@@ -177,7 +177,7 @@ function checkIn(attendee: EventAttendee) {
             icon="i-lucide-scan-eye"
             color="primary"
             size="lg"
-            class="bg-white/5 text-white hover:bg-white/15 active:hover:bg-white/20"
+            class="bg-ink/5 text-ink hover:bg-ink/15 active:hover:bg-ink/20"
             @click="emit('select', attendee)"
           />
         </div>
@@ -185,12 +185,12 @@ function checkIn(attendee: EventAttendee) {
     </div>
 
     <div v-else class="flex flex-col items-center justify-center gap-8 pt-30">
-      <UIcon name="i-lucide-user-plus" class="size-12 text-[#8b8b8b]" />
+      <UIcon name="i-lucide-user-plus" class="size-12 text-subtle" />
       <div class="flex max-w-108 flex-col items-center gap-3 text-center">
-        <p class="text-xl font-medium tracking-[2px] uppercase text-white">
+        <p class="text-xl font-medium tracking-[2px] uppercase text-ink">
           Search to check in
         </p>
-        <p class="text-sm text-[#8b8b8b]">
+        <p class="text-sm text-subtle">
           {{
             canWalkIn
               ? 'Find a registered attendee by name, company, or email. If they are not on the list, register them as a walk-in.'
@@ -202,7 +202,7 @@ function checkIn(attendee: EventAttendee) {
         v-if="canWalkIn"
         label="Register as walk-in"
         color="neutral"
-        class="h-10 cursor-pointer justify-center rounded-full bg-white px-5 text-sm font-medium text-dark hover:bg-white/90"
+        class="h-10 cursor-pointer justify-center rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
         @click="emit('open-walk-in')"
       />
     </div>

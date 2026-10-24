@@ -52,9 +52,9 @@ function onViewPersona() {
     close-icon="i-material-symbols:close-small"
     unmount-on-hide
     :ui="{
-      content: 'bg-[#171717]',
-      header: 'border-b-2 border-[#232323] px-6 py-6',
-      title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+      content: 'bg-surface',
+      header: 'border-b-2 border-raised px-6 py-6',
+      title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
       body: 'px-6',
     }"
   >
@@ -66,23 +66,23 @@ function onViewPersona() {
             :alt="attendee.name"
             icon="i-lucide-user"
             :ui="{
-              root: 'size-24 bg-[#232323]',
-              icon: 'size-10 text-[#8b8b8b]',
+              root: 'size-24 bg-raised',
+              icon: 'size-10 text-subtle',
             }"
           />
           <div class="space-y-1">
-            <h2 class="text-xl font-medium tracking-[2px] uppercase text-white">
+            <h2 class="text-xl font-medium tracking-[2px] uppercase text-ink">
               {{ attendee.name }}
             </h2>
             <p
               v-if="attendee.role || attendee.company"
-              class="flex items-center justify-center gap-x-2 text-xs text-[#8b8b8b]"
+              class="flex items-center justify-center gap-x-2 text-xs text-subtle"
             >
               <span v-if="attendee.role">{{ attendee.role }}</span>
               <span v-if="attendee.role && attendee.company">·</span>
               <span v-if="attendee.company">{{ attendee.company }}</span>
             </p>
-            <p v-if="attendee.email" class="text-xs text-[#8b8b8b]">
+            <p v-if="attendee.email" class="text-xs text-subtle">
               {{ attendee.email }}
             </p>
           </div>
@@ -90,38 +90,36 @@ function onViewPersona() {
 
         <div>
           <div
-            class="flex items-center justify-between border-b border-[#2a2a2a] px-4 py-3"
+            class="flex items-center justify-between border-b border-line px-4 py-3"
           >
-            <span class="text-sm text-[#8b8b8b]">Membership Status</span>
-            <span class="text-sm font-bold text-white">{{
+            <span class="text-sm text-subtle">Membership Status</span>
+            <span class="text-sm font-bold text-ink">{{
               attendee.membershipStatus
             }}</span>
           </div>
           <div class="flex items-center justify-between px-4 py-3">
-            <span class="text-sm text-[#8b8b8b]">Joined</span>
-            <span class="text-sm font-bold text-white">{{
+            <span class="text-sm text-subtle">Joined</span>
+            <span class="text-sm font-bold text-ink">{{
               attendee.joinedAt ? formatDateLabel(attendee.joinedAt) : '—'
             }}</span>
           </div>
         </div>
 
         <section>
-          <h3 class="pb-3 text-sm font-medium text-white">
-            Event Registration
-          </h3>
+          <h3 class="pb-3 text-sm font-medium text-ink">Event Registration</h3>
           <div
-            class="flex items-center justify-between border-b border-[#2a2a2a] px-4 py-3"
+            class="flex items-center justify-between border-b border-line px-4 py-3"
           >
-            <span class="text-sm text-[#8b8b8b]">Registered</span>
-            <span class="text-sm font-bold text-white">{{
+            <span class="text-sm text-subtle">Registered</span>
+            <span class="text-sm font-bold text-ink">{{
               attendee.registeredAt
                 ? formatDateLabel(attendee.registeredAt)
                 : '—'
             }}</span>
           </div>
           <div class="flex items-center justify-between px-4 py-3">
-            <span class="text-sm text-[#8b8b8b]">Checked In</span>
-            <span class="text-sm font-bold text-white">
+            <span class="text-sm text-subtle">Checked In</span>
+            <span class="text-sm font-bold text-ink">
               {{
                 attendee.checkedInAt
                   ? formatTimeLabel(attendee.checkedInAt)
@@ -132,20 +130,18 @@ function onViewPersona() {
         </section>
 
         <section>
-          <h3 class="pb-3 text-sm font-medium text-white">
-            Community Activity
-          </h3>
+          <h3 class="pb-3 text-sm font-medium text-ink">Community Activity</h3>
           <div
-            class="flex items-center justify-between border-b border-[#2a2a2a] px-4 py-3"
+            class="flex items-center justify-between border-b border-line px-4 py-3"
           >
-            <span class="text-sm text-[#8b8b8b]">Events Attended</span>
-            <span class="text-sm font-bold text-white">{{
+            <span class="text-sm text-subtle">Events Attended</span>
+            <span class="text-sm font-bold text-ink">{{
               attendee.eventsAttended
             }}</span>
           </div>
           <div class="flex items-center justify-between px-4 py-3">
-            <span class="text-sm text-[#8b8b8b]">Connections Made</span>
-            <span class="text-sm font-bold text-white">{{
+            <span class="text-sm text-subtle">Connections Made</span>
+            <span class="text-sm font-bold text-ink">{{
               attendee.connectionsMade
             }}</span>
           </div>
@@ -161,7 +157,7 @@ function onViewPersona() {
           color="neutral"
           :to="personaCardUrl"
           :target="personaCardUrl ? '_blank' : undefined"
-          class="h-10 cursor-pointer justify-center rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+          class="h-10 cursor-pointer justify-center rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
           @click="onViewPersona"
         />
       </div>

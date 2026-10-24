@@ -6,11 +6,12 @@ const props = defineProps<{
 const open = defineModel<boolean>('open', { default: false });
 
 const toast = useToast();
+const colorMode = useColorMode();
 const qrDataUrl = ref('');
 
 watch(
-  () => props.walkInUrl,
-  async (url) => {
+  [() => props.walkInUrl, () => colorMode.value],
+  async ([url, mode]) => {
     if (!url || !import.meta.client) return;
     try {
       const qrModule = await import('qrcode');
@@ -19,10 +20,10 @@ watch(
       qrDataUrl.value = await qrFactory.toDataURL(url, {
         width: 200,
         margin: 1,
-        color: {
-          dark: '#ffffff',
-          light: '#121212',
-        },
+        color:
+          mode === 'light'
+            ? { dark: '#121212', light: '#ededf0' }
+            : { dark: '#ffffff', light: '#121212' },
       });
     } catch {
       qrDataUrl.value = '';
@@ -56,9 +57,9 @@ function downloadQr() {
     title="WALK-IN REGISTRATION"
     close-icon="i-material-symbols:close-small"
     :ui="{
-      content: 'bg-[#171717]',
-      header: 'border-b-2 border-[#232323] px-6 py-6',
-      title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+      content: 'bg-surface',
+      header: 'border-b-2 border-raised px-6 py-6',
+      title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
       body: 'px-6',
     }"
   >
@@ -66,8 +67,8 @@ function downloadQr() {
       <div class="flex flex-col gap-8 py-8">
         <section class="flex flex-col gap-8">
           <div class="space-y-3">
-            <h3 class="text-sm font-medium text-white">Register By QR</h3>
-            <p class="text-sm leading-normal text-[#8b8b8b]">
+            <h3 class="text-sm font-medium text-ink">Register By QR</h3>
+            <p class="text-sm leading-normal text-subtle">
               Ask attendees to scan this QR code. It opens the event page, where
               they can register. Once they finish, they'll appear in the
               attendee list.
@@ -76,7 +77,7 @@ function downloadQr() {
 
           <div class="flex flex-col items-center gap-6">
             <div
-              class="flex size-50 items-center justify-center rounded-xl border border-[#232323] bg-dark p-2"
+              class="flex size-50 items-center justify-center rounded-xl border border-raised bg-canvas p-2"
             >
               <img
                 v-if="qrDataUrl"
@@ -87,7 +88,7 @@ function downloadQr() {
               <UIcon
                 v-else
                 name="i-lucide-qr-code"
-                class="size-16 text-[#8b8b8b]"
+                class="size-16 text-subtle"
               />
             </div>
           </div>
@@ -100,7 +101,7 @@ function downloadQr() {
         label="Download QR"
         leading-icon="i-lucide-download"
         color="neutral"
-        class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90"
+        class="h-10 cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
         @click="downloadQr"
       />
     </template>

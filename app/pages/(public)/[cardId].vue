@@ -112,7 +112,7 @@ async function onActionClick(link: { action?: string; label: string }) {
     <div class="absolute inset-0 w-full h-full">
       <div
         v-if="loading"
-        class="inline-block size-12 animate-spin rounded-full border border-current border-t-transparent text-white/20 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+        class="inline-block size-12 animate-spin rounded-full border border-current border-t-transparent text-ink/20 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
         role="status"
         aria-label="loading"
       >
@@ -130,13 +130,13 @@ async function onActionClick(link: { action?: string; label: string }) {
     >
       <button
         @click="isFormOpen = !isFormOpen"
-        class="grid flex-1 place-items-center rounded-full border border-white/10 bg-white/10 text-sm font-bold"
+        class="grid flex-1 place-items-center rounded-full border border-ink/10 bg-ink/10 text-sm font-bold"
       >
         Exchange Contact
       </button>
       <button
         @click="isMenuOpen = !isMenuOpen"
-        class="grid aspect-square w-13 shrink-0 place-items-center rounded-full border border-white/10 bg-white/10"
+        class="grid aspect-square w-13 shrink-0 place-items-center rounded-full border border-ink/10 bg-ink/10"
       >
         <div class="aspect-square w-6">
           <IconMenu />
@@ -145,7 +145,7 @@ async function onActionClick(link: { action?: string; label: string }) {
     </div>
 
     <div
-      class="fixed inset-0 top-auto -mb-px h-[calc(100dvh-3.5rem)] w-full scale-[1.005] rounded-t-xl border border-white/10 bg-dark transition duration-750 sm:mx-auto sm:max-w-104"
+      class="fixed inset-0 top-auto -mb-px h-[calc(100dvh-3.5rem)] w-full scale-[1.005] rounded-t-xl border border-ink/10 bg-canvas transition duration-750 sm:mx-auto sm:max-w-104"
       :class="{
         'translate-y-0': isFormOpen,
         'translate-y-[101%]': !isFormOpen,
@@ -153,7 +153,7 @@ async function onActionClick(link: { action?: string; label: string }) {
     >
       <div class="flex h-full flex-col">
         <div
-          class="flex items-center justify-center border-b border-white/10 py-6 text-center text-sm font-bold transition duration-750"
+          class="flex items-center justify-center border-b border-ink/10 py-6 text-center text-sm font-bold transition duration-750"
           :class="{
             'opacity-100': isFormOpen,
             'opacity-0': !isFormOpen,
@@ -197,7 +197,7 @@ async function onActionClick(link: { action?: string; label: string }) {
                 type="text"
                 autocomplete="off"
                 required
-                class="h-[2.8rem] w-full appearance-none border border-white/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
+                class="h-[2.8rem] w-full appearance-none border border-ink/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-ink/20 hover:border-ink/20 focus:border-ink/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
             <ContactPhoneInput />
@@ -210,7 +210,7 @@ async function onActionClick(link: { action?: string; label: string }) {
                 type="email"
                 autocomplete="off"
                 required
-                class="h-[2.8rem] w-full appearance-none border border-white/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
+                class="h-[2.8rem] w-full appearance-none border border-ink/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-ink/20 hover:border-ink/20 focus:border-ink/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
 
@@ -222,7 +222,7 @@ async function onActionClick(link: { action?: string; label: string }) {
                 name="company"
                 type="text"
                 autocomplete="off"
-                class="h-[2.8rem] w-full appearance-none border border-white/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
+                class="h-[2.8rem] w-full appearance-none border border-ink/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-ink/20 hover:border-ink/20 focus:border-ink/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
 
@@ -234,19 +234,19 @@ async function onActionClick(link: { action?: string; label: string }) {
                 name="position"
                 type="text"
                 autocomplete="off"
-                class="h-[2.8rem] w-full appearance-none border border-white/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-white/20 hover:border-white/20 focus:border-white/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
+                class="h-[2.8rem] w-full appearance-none border border-ink/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-ink/20 hover:border-ink/20 focus:border-ink/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
               />
             </label>
           </form>
         </div>
         <div
-          class="flex flex-col items-center justify-center gap-6 border-t border-white/10 px-5 py-8"
+          class="flex flex-col items-center justify-center gap-6 border-t border-ink/10 px-5 py-8"
         >
           <a
             v-if="isSuccess"
             :href="card.vcf"
             :download="`${card.id}.vcf`"
-            class="cursor-pointer w-full rounded-full border border-white/10 bg-white py-4 text-center text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-white/10 disabled:text-white/20"
+            class="cursor-pointer w-full rounded-full border border-ink/10 bg-ink py-4 text-center text-xs font-bold leading-none tracking-[0.1rem] text-ink-inverse transition-all duration-500 disabled:bg-ink/10 disabled:text-ink/20"
           >
             Save Contact
           </a>
@@ -255,7 +255,7 @@ async function onActionClick(link: { action?: string; label: string }) {
             type="submit"
             form="form"
             :disabled="!isValid || isSubmitting"
-            class="cursor-pointer relative w-full rounded-full border border-white/10 bg-white py-4 text-xs font-bold leading-none tracking-[0.1rem] text-dark transition-all duration-500 disabled:bg-white/10 disabled:text-white/20"
+            class="cursor-pointer relative w-full rounded-full border border-ink/10 bg-ink py-4 text-xs font-bold leading-none tracking-[0.1rem] text-ink-inverse transition-all duration-500 disabled:bg-ink/10 disabled:text-ink/20"
           >
             Continue
             <div
@@ -263,7 +263,7 @@ async function onActionClick(link: { action?: string; label: string }) {
               class="absolute right-[0.26rem] top-[51.75%] -translate-y-1/2"
             >
               <div
-                class="inline-block size-9 animate-spin rounded-full border border-current border-t-transparent text-white/20"
+                class="inline-block size-9 animate-spin rounded-full border border-current border-t-transparent text-ink/20"
                 role="status"
                 aria-label="loading"
               >
@@ -294,7 +294,7 @@ async function onActionClick(link: { action?: string; label: string }) {
     </div>
 
     <div
-      class="fixed inset-0 top-auto -mb-px w-full scale-[1.005] rounded-t-xl border border-white/10 bg-dark py-6 transition duration-750 sm:mx-auto sm:max-w-104"
+      class="fixed inset-0 top-auto -mb-px w-full scale-[1.005] rounded-t-xl border border-ink/10 bg-canvas py-6 transition duration-750 sm:mx-auto sm:max-w-104"
       :class="{
         'translate-y-0': isMenuOpen,
         'translate-y-100': !isMenuOpen,
@@ -303,7 +303,7 @@ async function onActionClick(link: { action?: string; label: string }) {
       <div>
         <button
           @click="isMenuOpen = false"
-          class="absolute right-4 top-4 grid aspect-square w-8 place-items-center rounded-full border border-white/10 bg-white/10 transition duration-750"
+          class="absolute right-4 top-4 grid aspect-square w-8 place-items-center rounded-full border border-ink/10 bg-ink/10 transition duration-750"
           :class="{
             'opacity-100': isMenuOpen,
             'opacity-0': !isMenuOpen,
@@ -335,9 +335,9 @@ async function onActionClick(link: { action?: string; label: string }) {
               @click="onActionClick(link)"
             >
               <div
-                class="grid aspect-square w-[4.56rem] overflow-hidden rounded-full bg-white/10"
+                class="grid aspect-square w-[4.56rem] overflow-hidden rounded-full bg-ink/10"
               >
-                <NuxtImg
+                <UiSkeletonImage
                   :src="link.icon"
                   :alt="link.label"
                   width="73"
@@ -359,9 +359,9 @@ async function onActionClick(link: { action?: string; label: string }) {
               :style="{ transitionDelay: `${(index + 1) * 100}ms` }"
             >
               <div
-                class="grid aspect-square w-[4.56rem] overflow-hidden rounded-full bg-white/10"
+                class="grid aspect-square w-[4.56rem] overflow-hidden rounded-full bg-ink/10"
               >
-                <NuxtImg
+                <UiSkeletonImage
                   :src="link.icon"
                   :alt="link.label"
                   width="73"
@@ -383,7 +383,7 @@ async function onActionClick(link: { action?: string; label: string }) {
               @click="onActionClick(link)"
             >
               <div
-                class="grid aspect-square w-[4.56rem] place-items-center rounded-full bg-white/10"
+                class="grid aspect-square w-[4.56rem] place-items-center rounded-full bg-ink/10"
               >
                 <div class="aspect-square w-8">
                   <component :is="iconMap[link.icon]" />
@@ -403,7 +403,7 @@ async function onActionClick(link: { action?: string; label: string }) {
               :style="{ transitionDelay: `${(index + 1) * 100}ms` }"
             >
               <div
-                class="grid aspect-square w-[4.56rem] place-items-center rounded-full bg-white/10"
+                class="grid aspect-square w-[4.56rem] place-items-center rounded-full bg-ink/10"
               >
                 <div class="aspect-square w-8">
                   <component :is="iconMap[link.icon]" />

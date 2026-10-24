@@ -31,14 +31,14 @@ onBeforeUnmount(() => {
     >
       <div class="mx-auto flex w-full max-w-120 flex-col gap-8 sm:max-w-112">
         <h1
-          class="text-[1.75rem] font-medium leading-tight tracking-[0.175rem] uppercase text-white"
+          class="text-[1.75rem] font-medium leading-tight tracking-[0.175rem] uppercase text-ink"
         >
           Setting up your
           <span class="font-bold">{{ organizerName }} card</span>
         </h1>
-        <div class="relative h-0.5 w-full bg-[#2a2a2a]">
+        <div class="relative h-0.5 w-full bg-line">
           <div
-            class="absolute inset-y-0 left-0 bg-white transition-[width] duration-[2000ms] ease-linear"
+            class="absolute inset-y-0 left-0 bg-ink transition-[width] duration-[2000ms] ease-linear"
             :class="progressReady ? 'w-3/4' : 'w-0'"
           />
         </div>

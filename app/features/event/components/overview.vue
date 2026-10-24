@@ -33,41 +33,43 @@ const metrics = computed(() => [
   { label: 'New Members Joined', value: props.data.newMembersJoined },
 ]);
 
+const chartColors = useChartColors();
+
 const chartData = computed(() => ({
   labels: props.data.registrationTrend.labels,
   datasets: [
     {
       label: 'Registrations',
       data: props.data.registrationTrend.values,
-      borderColor: '#ffffff',
+      borderColor: chartColors.value.ink,
       backgroundColor: 'transparent',
       tension: 0.35,
       pointRadius: 3,
       pointHoverRadius: 5,
-      pointBackgroundColor: '#ffffff',
+      pointBackgroundColor: chartColors.value.ink,
       borderWidth: 2,
     },
   ],
 }));
 
-const chartOptions = {
+const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   scales: {
     x: {
-      grid: { color: 'rgba(255,255,255,0.06)', borderDash: [4, 4] },
-      ticks: { color: '#8b8b8b', font: { size: 12 } },
+      grid: { color: chartColors.value.grid, borderDash: [4, 4] },
+      ticks: { color: chartColors.value.tick, font: { size: 12 } },
       border: { display: false },
     },
     y: {
       beginAtZero: true,
       max: 160,
       ticks: {
-        color: '#8b8b8b',
+        color: chartColors.value.tick,
         font: { size: 12 },
         stepSize: 40,
       },
-      grid: { color: 'rgba(255,255,255,0.06)', borderDash: [4, 4] },
+      grid: { color: chartColors.value.grid, borderDash: [4, 4] },
       border: { display: false },
     },
   },
@@ -76,11 +78,11 @@ const chartOptions = {
     tooltip: {
       enabled: true,
       displayColors: false,
-      backgroundColor: '#171717',
-      borderColor: '#2a2a2a',
+      backgroundColor: chartColors.value.tooltipBackground,
+      borderColor: chartColors.value.tooltipBorder,
       borderWidth: 1,
-      titleColor: '#ffffff',
-      bodyColor: '#ffffff',
+      titleColor: chartColors.value.ink,
+      bodyColor: chartColors.value.ink,
       padding: 10,
       callbacks: {
         label: (ctx: { parsed?: { y?: number } }) =>
@@ -88,7 +90,7 @@ const chartOptions = {
       },
     },
   },
-} as const;
+}));
 </script>
 
 <template>
@@ -97,24 +99,20 @@ const chartOptions = {
       <div
         v-for="metric in metrics"
         :key="metric.label"
-        class="flex min-h-27 flex-col justify-between rounded-lg bg-[#171717] p-6"
+        class="flex min-h-27 flex-col justify-between rounded-lg bg-surface p-6"
       >
-        <p
-          class="text-xs font-medium uppercase tracking-[1.2px] text-[#8b8b8b]"
-        >
+        <p class="text-xs font-medium uppercase tracking-[1.2px] text-subtle">
           {{ metric.label }}
         </p>
-        <p class="text-[2rem] font-bold leading-[1.2] text-white">
+        <p class="text-[2rem] font-bold leading-[1.2] text-ink">
           {{ metric.value }}
         </p>
       </div>
     </div>
 
-    <div
-      class="flex min-h-0 w-full flex-1 flex-col rounded-lg bg-[#171717] p-6"
-    >
+    <div class="flex min-h-0 w-full flex-1 flex-col rounded-lg bg-surface p-6">
       <h2
-        class="shrink-0 text-xl font-medium tracking-[0.125rem] uppercase text-white"
+        class="shrink-0 text-xl font-medium tracking-[0.125rem] uppercase text-ink"
       >
         Registration Trend
       </h2>

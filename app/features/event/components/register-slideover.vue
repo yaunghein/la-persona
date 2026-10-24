@@ -28,9 +28,9 @@ const slideoverTitle = computed(() =>
     close-icon="i-material-symbols:close-small"
     unmount-on-hide
     :ui="{
-      content: 'bg-[#171717] sm:max-w-[480px] divide-y-0',
-      header: 'border-b-2 border-[#232323] px-6 py-6',
-      title: 'text-sm font-medium tracking-[1.4px] text-white uppercase',
+      content: 'bg-surface sm:max-w-[480px] divide-y-0',
+      header: 'border-b-2 border-raised px-6 py-6',
+      title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
       body: 'flex flex-1 flex-col p-0!',
       footer: 'hidden p-0',
     }"

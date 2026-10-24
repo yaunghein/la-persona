@@ -2,12 +2,14 @@
 import { Doughnut } from 'vue-chartjs';
 const props = defineProps<{ data: number[] }>();
 
+const chartColors = useChartColors();
+
 const chartData = computed(() => ({
   labels: ['Exchange', 'Add'],
   datasets: [
     {
       data: props.data,
-      backgroundColor: ['#ffffff', '#a8a8a8'],
+      backgroundColor: [chartColors.value.ink, chartColors.value.secondary],
       borderWidth: 0,
       hoverOffset: 4,
     },

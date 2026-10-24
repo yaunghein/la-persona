@@ -16,13 +16,13 @@ function goToDashboard() {
       class="relative mx-auto my-10 flex w-full max-w-120 items-start justify-between px-5 sm:my-13"
     >
       <div
-        class="absolute left-1/2 top-4.5 h-0.5 w-[calc(100%-15rem)] -translate-x-1/2 bg-[#2A2A2A] sm:w-52"
+        class="absolute left-1/2 top-4.5 h-0.5 w-[calc(100%-15rem)] -translate-x-1/2 bg-line sm:w-52"
       ></div>
       <div class="flex flex-col items-center gap-4">
         <div
-          class="w-9 aspect-square rounded-full flex relative bg-[#232323]"
+          class="w-9 aspect-square rounded-full flex relative bg-raised"
           :class="{
-            'bg-white text-dark': step === 'contact',
+            'bg-ink text-ink-inverse': step === 'contact',
           }"
         >
           <Icon
@@ -39,9 +39,9 @@ function goToDashboard() {
       </div>
       <div class="flex flex-col items-center gap-4">
         <div
-          class="w-9 aspect-square rounded-full flex relative bg-[#232323]"
+          class="w-9 aspect-square rounded-full flex relative bg-raised"
           :class="{
-            'bg-white text-dark': step === 'link',
+            'bg-ink text-ink-inverse': step === 'link',
           }"
         >
           <Icon

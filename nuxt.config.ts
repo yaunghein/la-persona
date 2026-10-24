@@ -128,7 +128,8 @@ export default defineNuxtConfig({
     },
   },
   colorMode: {
-    preference: 'dark',
+    preference: 'system',
+    fallback: 'dark',
   },
   vite: {
     optimizeDeps: {
@@ -223,7 +224,6 @@ export default defineNuxtConfig({
           content:
             'Experience the elegance of a card tailored to your identity. From the sleek phone wallpaper to the interactive 3D design, each element reflects your brand with precision and style.',
         },
-        { name: 'theme-color', content: '#121212' },
         { property: 'og:type', content: 'website' },
         { property: 'og:title', content: 'Elevate Your Presence - LA PERSONA' },
         {

@@ -74,7 +74,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
       collisionPadding: 12,
     }"
     :ui="{
-      content: 'bg-[#171717] border border-[#2a2a2a]',
+      content: 'bg-surface border border-line',
       item: 'py-2',
     }"
   >

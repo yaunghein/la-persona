@@ -73,17 +73,17 @@ async function confirmPayment() {
     :dismissible="!isBusy"
     :title="title"
     :ui="{
-      content: 'max-w-[480px] bg-[#171717]',
-      header: 'border-b-2 border-[#232323] px-6 py-6',
-      title: 'text-sm font-medium tracking-[1.4px] uppercase text-white',
+      content: 'max-w-[480px] bg-surface',
+      header: 'border-b-2 border-raised px-6 py-6',
+      title: 'text-sm font-medium tracking-[1.4px] uppercase text-ink',
       body: 'px-6 pt-6 pb-8',
     }"
   >
     <template #body>
       <div class="space-y-8">
         <div>
-          <div class="rounded-[4px] border-b border-[#2a2a2a] px-4 py-3">
-            <div class="flex items-center justify-between text-sm text-white">
+          <div class="rounded-[4px] border-b border-line px-4 py-3">
+            <div class="flex items-center justify-between text-sm text-ink">
               <span>Membership Period</span>
               <span class="font-bold">1 Year</span>
             </div>
@@ -91,9 +91,9 @@ async function confirmPayment() {
           <div
             v-for="line in quote?.lines ?? []"
             :key="line.label"
-            class="rounded-[4px] border-b border-[#2a2a2a] px-4 py-3 last:border-b-0"
+            class="rounded-[4px] border-b border-line px-4 py-3 last:border-b-0"
           >
-            <div class="flex items-center justify-between text-sm text-white">
+            <div class="flex items-center justify-between text-sm text-ink">
               <span>{{ line.label }}</span>
               <span class="font-bold">
                 {{
@@ -110,31 +110,31 @@ async function confirmPayment() {
           <p class="text-sm leading-5.25 text-muted">
             Please scan the QR code below to complete your payment. Make sure
             that account name is
-            <span class="font-bold text-white">Yan Aung Hein</span>.
+            <span class="font-bold text-ink">Yan Aung Hein</span>.
           </p>
 
           <div class="space-y-3">
-            <p class="text-sm font-medium text-white">KBZ Pay QR Code</p>
+            <p class="text-sm font-medium text-ink">KBZ Pay QR Code</p>
             <div
-              class="rounded-[6px] border border-[#2a2a2a] bg-[#232323] p-4 text-center"
+              class="rounded-[6px] border border-line bg-raised p-4 text-center"
             >
-              <p class="text-sm text-white/50">Scan to Pay</p>
+              <p class="text-sm text-ink/50">Scan to Pay</p>
               <div class="mx-auto my-3 size-40 overflow-hidden bg-[#d9d9d9]">
-                <NuxtImg
+                <UiSkeletonImage
                   src="/images/kpay.jpg"
                   alt="KBZ Pay QR Code"
                   width="160"
                   class="h-full w-full object-contain"
                 />
               </div>
-              <p class="text-sm font-bold text-white">
+              <p class="text-sm font-bold text-ink">
                 {{ quote ? formatAmount(quote.totalAmountMinor) : '—' }}
               </p>
             </div>
           </div>
 
           <div class="space-y-3">
-            <p class="text-sm font-medium text-white">Upload Payment Receipt</p>
+            <p class="text-sm font-medium text-ink">Upload Payment Receipt</p>
             <UFileUpload
               v-model="receiptFile"
               accept="image/png,image/jpeg,image/webp"
@@ -144,9 +144,9 @@ async function confirmPayment() {
               class="min-h-42 w-full"
               :ui="{
                 root: '[&_img]:object-contain',
-                base: 'rounded-[4px] border-[#2a2a2a] bg-[#232323]',
-                label: 'text-sm text-white',
-                description: 'text-xs text-[#8b8b8b]',
+                base: 'rounded-[4px] border-line bg-raised',
+                label: 'text-sm text-ink',
+                description: 'text-xs text-subtle',
               }"
             />
           </div>
@@ -163,7 +163,7 @@ async function confirmPayment() {
         color="neutral"
         :loading="isBusy"
         :disabled="!receiptFile || !quote"
-        class="h-10 cursor-pointer rounded-full bg-white pr-6 pl-5 text-sm font-medium text-dark hover:bg-white/90 disabled:opacity-60"
+        class="h-10 cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90 disabled:opacity-60"
         @click="confirmPayment"
       />
     </template>
