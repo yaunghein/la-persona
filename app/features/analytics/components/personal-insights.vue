@@ -179,7 +179,7 @@ const socialImageMap: Record<string, string> = {
   facebook: '/images/card/facebook.png',
   github: '/images/card/github.png',
   gmail: '/images/card/gmail.png',
-  instagram: '/images/card/instagram.png',
+  instagram: '/images/card/instagram.webp',
   line: '/images/card/line.png',
   linkedin: '/images/card/linkedin.png',
   telegram: '/images/card/telegram.png',
@@ -451,7 +451,7 @@ function openInfo() {
                 :src="row.image"
                 :alt="`${row.platform} icon`"
                 width="16"
-                class="size-4 object-contain"
+                class="size-4 rounded-full object-cover"
               />
               <UIcon v-else name="i-lucide-globe" class="size-4 text-ink" />
               <span>{{ row.platform }}</span>

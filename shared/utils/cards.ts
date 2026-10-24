@@ -18,7 +18,7 @@ export const cards = [
         label: 'Facebook',
       },
       {
-        icon: '/images/card/instagram.png',
+        icon: '/images/card/instagram.webp',
         href: 'https://www.instagram.com/kyaw.aungpyae/',
         label: 'Instagram',
       },
@@ -59,7 +59,7 @@ export const cards = [
       },
 
       {
-        icon: '/images/card/instagram.png',
+        icon: '/images/card/instagram.webp',
         href: 'https://www.instagram.com/yuzu.americano/',
         label: 'Instagram',
       },
@@ -114,7 +114,7 @@ export const cards = [
         label: 'Facebook',
       },
       {
-        icon: '/images/card/instagram.png',
+        icon: '/images/card/instagram.webp',
         href: 'https://www.instagram.com/minmiles_/',
         label: 'Instagram',
       },
@@ -134,7 +134,7 @@ export const cards = [
     email: 'shuneleiyee@gmail.com',
     links: [
       {
-        icon: '/images/card/instagram.png',
+        icon: '/images/card/instagram.webp',
         href: 'https://www.instagram.com/feng.riji/',
         label: 'Instagram',
       },
@@ -174,7 +174,7 @@ export const cards = [
         label: 'Line',
       },
       {
-        icon: '/images/card/instagram.png',
+        icon: '/images/card/instagram.webp',
         href: 'https://www.instagram.com/minhtet.dipar',
         label: 'Instagram',
       },
@@ -239,7 +239,7 @@ export const cards = [
         label: 'Go to Website',
       },
       {
-        icon: '/images/card/instagram.png',
+        icon: '/images/card/instagram.webp',
         href: 'https://www.instagram.com/mattnay.creative',
         label: 'Instagram',
       },

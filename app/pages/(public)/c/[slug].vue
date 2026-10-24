@@ -272,7 +272,7 @@ const linkAssetMap: Record<string, string> = {
   facebook: '/images/card/facebook.png',
   github: '/images/card/github.png',
   gmail: '/images/card/gmail.png',
-  instagram: '/images/card/instagram.png',
+  instagram: '/images/card/instagram.webp',
   line: '/images/card/line.png',
   linkedin: '/images/card/linkedin.png',
   telegram: '/images/card/telegram.png',
