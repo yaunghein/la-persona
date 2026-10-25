@@ -339,10 +339,7 @@ onBeforeUnmount(() => {
       class="shrink-0"
       :class="
         isPage
-          ? [
-              'border-t border-line p-6 sm:px-8 sm:py-6 lg:px-16',
-              step === 'success' ? 'pt-8 pb-4' : '',
-            ]
+          ? 'border-t border-line px-6 py-4 sm:px-8 lg:px-16'
           : 'border-t-2 border-raised px-6 py-4'
       "
     >
@@ -350,10 +347,7 @@ onBeforeUnmount(() => {
         class="flex w-full"
         :class="
           isPage
-            ? [
-                'mx-auto max-w-120 flex-col items-center sm:max-w-md',
-                step === 'success' ? 'gap-8' : 'gap-6',
-              ]
+            ? 'mx-auto max-w-120 flex-col items-center gap-4 sm:max-w-md'
             : 'flex-wrap items-center justify-end gap-2'
         "
       >
@@ -419,6 +413,24 @@ onBeforeUnmount(() => {
             class="h-10 justify-center rounded-full bg-ink/10 px-5 text-sm font-medium text-ink/50 disabled:bg-ink/10 disabled:opacity-100"
             :class="isPage && 'w-full'"
           />
+          <template v-if="isPage">
+            <a
+              v-if="organizerCardUrl"
+              :href="organizerCardUrl"
+              target="_blank"
+              class="text-sm font-medium text-subtle underline hover:text-ink"
+            >
+              See Organizer
+            </a>
+            <button
+              v-else
+              type="button"
+              class="cursor-pointer text-sm font-medium text-subtle underline hover:text-ink"
+              @click="onViewOrganizer"
+            >
+              See Organizer
+            </button>
+          </template>
         </template>
         <UButton
           v-else-if="canAddToGoogleCalendar"
@@ -429,7 +441,7 @@ onBeforeUnmount(() => {
           :loading="addingEventId === event.id"
           class="h-10 cursor-pointer justify-center rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
           :class="isPage && 'w-full'"
-          @click="addToGoogleCalendar(event.id)"
+          @click="void addToGoogleCalendar(event.id)"
         />
         <UiPoweredByLaPersona v-if="isPage" />
       </div>

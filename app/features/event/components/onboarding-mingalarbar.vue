@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { IconExchange } from '#components';
+
 defineProps<{
   organizerName: string;
 }>();
@@ -10,14 +12,14 @@ const emit = defineEmits<{
 
 const benefits = [
   {
-    icon: 'i-lucide-pencil',
+    icon: 'i-material-symbols:edit-outline-sharp',
     iconClass: 'size-5',
     lead: 'Quickly register and check-in',
     rest: (name: string) => ` for ${name} Events`,
   },
   {
-    icon: 'i-lucide-arrow-left-right',
-    iconClass: 'size-[1.125rem]',
+    icon: IconExchange,
+    iconClass: 'size-4.5',
     lead: 'Exchange contact details',
     rest: () => ' with everyone through your persona card,',
   },
@@ -48,14 +50,15 @@ const benefits = [
             >.
           </p>
           <p>
-            Sign in or create your free La Persona account to register for the
-            event and receive your Community Persona Card.
+            You don’t have a La Persona Account yet. Create your free La Persona
+            account to register for the event and receive your
+            Community&nbsp;Card.
           </p>
         </div>
 
         <div class="flex flex-col gap-3">
           <p class="text-sm leading-normal text-subtle">
-            With the community persona card, you can;
+            With the community card, you&nbsp;can;
           </p>
           <div class="flex flex-col divide-y divide-line">
             <div
@@ -63,11 +66,16 @@ const benefits = [
               :key="item.lead"
               class="flex items-start gap-2 px-4 py-6"
             >
-              <UIcon
-                :name="item.icon"
-                class="mt-0.5 shrink-0 text-ink"
-                :class="item.iconClass"
-              />
+              <span
+                class="mt-px flex size-5 shrink-0 items-center justify-center text-ink"
+              >
+                <UIcon
+                  v-if="typeof item.icon === 'string'"
+                  :name="item.icon"
+                  :class="item.iconClass"
+                />
+                <component :is="item.icon" v-else :class="item.iconClass" />
+              </span>
               <p class="text-sm leading-normal text-subtle">
                 <span class="text-ink">{{ item.lead }}</span
                 >{{ item.rest(organizerName) }}

@@ -68,6 +68,30 @@ const viewer = computed<EventFlowViewer>(() => {
   };
 });
 
+// Registered members land on the same "You're all set" screen as the register flow.
+const registeredStatus = computed(() => {
+  const status = viewer.value.viewerRegistrationStatus;
+  if (status === 'none' || !viewer.value.cardSlug) return null;
+  return status === 'pending' ? 'pending' : 'registered';
+});
+// Server-side fetches carry no session cookie, so load the private card in the browser only.
+const isMounted = useMounted();
+const { data: viewerCard } = useCardQuery(() =>
+  isMounted.value && registeredStatus.value ? viewer.value.cardSlug || '' : ''
+);
+const {
+  canAdd: canAddToGoogleCalendar,
+  isAdding: isAddingToGoogleCalendar,
+  isAdded: isAddedToGoogleCalendar,
+  add: addToGoogleCalendar,
+} = useRegisteredEventCalendar({
+  eventId,
+  orgSlug,
+  endsAt: () => event.value?.endsAt,
+  isRegistered: () => registeredStatus.value === 'registered',
+  returnPath: () => ROUTES.EVENTS.PUBLIC(eventId.value),
+});
+
 const registrationBlock = computed(() => {
   if (!event.value) return null;
   return registrationBlockReason({
@@ -183,6 +207,27 @@ function onCancelOnboarding() {
         :organizer-name="event.organizer?.name || 'this community'"
         @next="onCreateAccount"
         @cancel="onCancelOnboarding"
+      />
+
+      <EventOnboardingRegistered
+        v-else-if="registeredStatus"
+        class="min-h-0 flex-1"
+        :event-title="event.title"
+        :registration-status="registeredStatus"
+        :can-add-to-google-calendar="canAddToGoogleCalendar"
+        :adding-to-google-calendar="isAddingToGoogleCalendar"
+        :is-added-to-google-calendar="isAddedToGoogleCalendar"
+        :first-name="viewerCard?.firstName"
+        :last-name="viewerCard?.lastName"
+        :position="viewerCard?.position"
+        :phone="viewerCard?.phone"
+        :phone-country-code="viewerCard?.phoneCountryCode"
+        :email="viewerCard?.email"
+        :website="viewerCard?.website"
+        :plan-code="viewerCard?.subscription?.planCode"
+        :spline-url="viewerCard?.splineUrl"
+        :joined-at="viewerCard?.createdAt"
+        @add-to-google-calendar="addToGoogleCalendar()"
       />
 
       <EventRegisterFlow

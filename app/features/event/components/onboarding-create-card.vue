@@ -127,6 +127,13 @@ function validate(formData: Partial<typeof state>): FormError[] {
     });
   }
 
+  if (!state.socials.length) {
+    errors.push({
+      name: 'socials',
+      message: 'Add at least one social or professional link.',
+    });
+  }
+
   state.socials.forEach((link, index) => {
     const label = resolveSocialLabel(link) || 'Social link';
     if (link.label === 'Custom' && !String(link.customLabel || '').trim()) {
@@ -307,11 +314,12 @@ watch(
           <h1
             class="text-[1.75rem] font-medium leading-tight tracking-[0.175rem] uppercase text-ink"
           >
-            Create your Persona card
+            Registration form
           </h1>
           <p class="text-sm leading-normal text-subtle">
-            Don't worry about getting everything perfect. You can edit your
-            information anytime.
+            Register for the event by filling out the form below. Don't worry
+            about getting everything perfect. You can edit your information
+            anytime.
           </p>
         </div>
 
@@ -382,14 +390,9 @@ watch(
 
           <div class="flex flex-col gap-4">
             <div class="flex items-center justify-between gap-3">
-              <div class="flex flex-col gap-3">
-                <p class="text-sm font-medium text-ink">
-                  Social / Professional Links
-                </p>
-                <p class="text-sm leading-normal text-subtle">
-                  Add a profile so other members can connect with you.
-                </p>
-              </div>
+              <p class="text-sm font-medium text-ink">
+                Social / Professional Links (Required)
+              </p>
               <UButton
                 type="button"
                 label="Add Link"
@@ -465,10 +468,10 @@ watch(
     </div>
 
     <EventOnboardingFooter
-      :primary-label="submitting ? 'Saving...' : 'Get Community Card'"
+      :primary-label="submitting ? 'Registering...' : 'Register'"
+      :primary-disabled="submitting"
       primary-type="submit"
       secondary-label="Cancel"
-      :show-powered-by="false"
       @secondary="emit('cancel')"
     />
   </UForm>

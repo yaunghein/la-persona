@@ -12,8 +12,15 @@ const CONSENT_ERROR_MESSAGES: Record<string, string> = {
     'That Google account is linked to another LA PERSONA user.',
 };
 
-/** Pass `orgSlug` on pages without an `[orgSlug]` route param (public event page). */
-export function useGoogleCalendar(orgSlug?: MaybeRefOrGetter<string>) {
+/**
+ * Pass `orgSlug` on pages without an `[orgSlug]` route param (public event page).
+ * Pass `returnPath` to come back to the current page after Google consent
+ * instead of the platform events list.
+ */
+export function useGoogleCalendar(
+  orgSlug?: MaybeRefOrGetter<string>,
+  config: { returnPath?: MaybeRefOrGetter<string> } = {}
+) {
   const toast = useToast();
   const { organizationSlug: routeOrgSlug } = useOrganizationSlug();
   const organizationSlug = computed(
@@ -27,7 +34,10 @@ export function useGoogleCalendar(orgSlug?: MaybeRefOrGetter<string>) {
   const isEnabled = computed(() => env.GOOGLE_CALENDAR_ENABLED);
 
   function returnUrl(eventId: string, state: 'add' | 'error') {
-    return `${ROUTES.EVENTS.PLATFORM_LIST_EVENT(organizationSlug.value, eventId)}&${GOOGLE_CALENDAR_QUERY_KEY}=${state}`;
+    const path =
+      toValue(config.returnPath) ||
+      ROUTES.EVENTS.PLATFORM_LIST_EVENT(organizationSlug.value, eventId);
+    return `${path}${path.includes('?') ? '&' : '?'}${GOOGLE_CALENDAR_QUERY_KEY}=${state}`;
   }
 
   async function requestConsent(eventId: string) {
@@ -40,12 +50,15 @@ export function useGoogleCalendar(orgSlug?: MaybeRefOrGetter<string>) {
     if (error) throw new Error(error.message || 'Could not open Google.');
   }
 
-  /** `afterConsent` skips the Google redirect so a declined permission cannot loop. */
+  /**
+   * `afterConsent` skips the Google redirect so a declined permission cannot loop.
+   * Resolves `true` once the event is on the calendar.
+   */
   async function addToGoogleCalendar(
     eventId: string,
     options: { afterConsent?: boolean } = {}
   ) {
-    if (addingEventId.value) return;
+    if (addingEventId.value) return false;
     addingEventId.value = eventId;
     let redirecting = false;
 
@@ -60,11 +73,11 @@ export function useGoogleCalendar(orgSlug?: MaybeRefOrGetter<string>) {
               'Allow LA PERSONA to add events to your Google Calendar and try again.',
             color: 'error',
           });
-          return;
+          return false;
         }
         redirecting = true;
         await requestConsent(eventId);
-        return;
+        return false;
       }
 
       toast.add({
@@ -86,6 +99,7 @@ export function useGoogleCalendar(orgSlug?: MaybeRefOrGetter<string>) {
             ]
           : undefined,
       });
+      return true;
     } catch (error: any) {
       redirecting = false;
       toast.add({
@@ -100,6 +114,7 @@ export function useGoogleCalendar(orgSlug?: MaybeRefOrGetter<string>) {
     } finally {
       if (!redirecting) addingEventId.value = null;
     }
+    return false;
   }
 
   function showConsentError(code: unknown) {
@@ -113,4 +128,69 @@ export function useGoogleCalendar(orgSlug?: MaybeRefOrGetter<string>) {
   }
 
   return { isEnabled, addingEventId, addToGoogleCalendar, showConsentError };
+}
+
+/**
+ * "Add to Google Calendar" on the registration success screen. Google consent
+ * returns to `returnPath`; once `isRegistered` is true the pending add (or the
+ * consent error) is resumed and the return params are dropped from the URL.
+ */
+export function useRegisteredEventCalendar(input: {
+  eventId: MaybeRefOrGetter<string>;
+  orgSlug: MaybeRefOrGetter<string>;
+  endsAt: MaybeRefOrGetter<string | null | undefined>;
+  isRegistered: MaybeRefOrGetter<boolean>;
+  returnPath: MaybeRefOrGetter<string>;
+}) {
+  const route = useRoute();
+  const router = useRouter();
+  const isMounted = useMounted();
+  const { isEnabled, addingEventId, addToGoogleCalendar, showConsentError } =
+    useGoogleCalendar(input.orgSlug, { returnPath: input.returnPath });
+  let consentState = route.query[GOOGLE_CALENDAR_QUERY_KEY];
+  const consentError = route.query.error;
+  const isAdded = ref(false);
+
+  const canAdd = computed(() => {
+    const endsAt = toValue(input.endsAt);
+    return (
+      isMounted.value &&
+      isEnabled.value &&
+      toValue(input.isRegistered) &&
+      Boolean(endsAt) &&
+      new Date(endsAt!).getTime() > Date.now()
+    );
+  });
+  const isAdding = computed(
+    () => addingEventId.value === toValue(input.eventId)
+  );
+
+  async function add(options: { afterConsent?: boolean } = {}) {
+    if (await addToGoogleCalendar(toValue(input.eventId), options)) {
+      isAdded.value = true;
+    }
+  }
+
+  watch(
+    () => toValue(input.isRegistered),
+    (isRegistered) => {
+      if (!import.meta.client || !isRegistered || !consentState) return;
+      if (consentState === 'add') {
+        add({ afterConsent: true });
+      } else {
+        showConsentError(consentError);
+      }
+      consentState = undefined;
+
+      if (!route.query[GOOGLE_CALENDAR_QUERY_KEY]) return;
+      const query = { ...route.query };
+      delete query[GOOGLE_CALENDAR_QUERY_KEY];
+      delete query.error;
+      delete query.error_description;
+      router.replace({ path: route.path, query });
+    },
+    { immediate: true }
+  );
+
+  return { canAdd, isAdding, isAdded, add };
 }

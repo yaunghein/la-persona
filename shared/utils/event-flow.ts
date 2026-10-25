@@ -1,11 +1,7 @@
 import type { ViewerRegistrationStatus } from '~~/shared/contracts/event';
 import { ROUTES } from '~~/shared/utils/routes';
 
-export const COMMUNITY_SETUP_STEPS = [
-  'create-card',
-  'setting-up',
-  'download-wallpaper',
-] as const;
+export const COMMUNITY_SETUP_STEPS = ['create-card'] as const;
 
 export type CommunitySetupStep = (typeof COMMUNITY_SETUP_STEPS)[number];
 
@@ -49,19 +45,8 @@ function eventHome(eventId?: string | null, orgSlug?: string | null) {
 
 export function resolveCommunitySetupStep(input: {
   cardComplete: boolean;
-  requestedStep?: string | null;
 }): CommunitySetupStep | null {
-  const requested = parseCommunitySetupStep(input.requestedStep);
-
-  if (!input.cardComplete) {
-    return 'create-card';
-  }
-
-  if (requested === 'download-wallpaper') {
-    return 'download-wallpaper';
-  }
-
-  return null;
+  return input.cardComplete ? null : 'create-card';
 }
 
 export function resolveEventFlowPath(input: {
@@ -69,7 +54,6 @@ export function resolveEventFlowPath(input: {
   orgSlug: string;
   viewer: EventFlowViewer;
   source: 'register' | 'mingalarbar' | 'bootstrap' | 'setup';
-  setupStep?: string | null;
 }): string {
   const { eventId, orgSlug, viewer, source } = input;
 
@@ -94,19 +78,6 @@ export function resolveEventFlowPath(input: {
     }
     return ROUTES.COMMUNITY_SETUP.CARD(orgSlug, viewer.cardSlug, {
       step: 'create-card',
-      eventId: eventId || undefined,
-    });
-  }
-
-  const continueToWallpaper =
-    source === 'setup' &&
-    (input.setupStep === 'download-wallpaper' ||
-      input.setupStep === 'create-card');
-
-  if (continueToWallpaper) {
-    if (!viewer.cardSlug) return eventHome(eventId, orgSlug);
-    return ROUTES.COMMUNITY_SETUP.CARD(orgSlug, viewer.cardSlug, {
-      step: 'download-wallpaper',
       eventId: eventId || undefined,
     });
   }

@@ -204,7 +204,7 @@ function onRegister() {
           color="neutral"
           :loading="addingEventId === event.id"
           class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
-          @click="addToGoogleCalendar(event.id)"
+          @click="void addToGoogleCalendar(event.id)"
         />
         <UButton
           v-else

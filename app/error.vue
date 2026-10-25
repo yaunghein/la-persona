@@ -14,8 +14,8 @@ const heading = computed(() =>
 
 const description = computed(() =>
   isNotFound.value
-    ? "The page you're looking for has left the room — or never had a seat."
-    : 'We could not complete this request. Try again in a moment.'
+    ? "The page you're looking for has left the room — or never had a\u00a0seat."
+    : 'We could not complete this request. Try again in a\u00a0moment.'
 );
 
 useSeoMeta({
@@ -58,12 +58,12 @@ async function goHome() {
         </p>
 
         <h1
-          class="mt-8 max-w-2xl text-[1.75rem] font-medium leading-tight tracking-widest uppercase sm:text-4xl"
+          class="mt-8 max-w-2xl text-[1.75rem] font-medium leading-tight tracking-widest text-balance uppercase sm:text-4xl"
         >
           {{ heading }}
         </h1>
         <p
-          class="mt-4 max-w-sm text-sm leading-relaxed text-subtle sm:text-base"
+          class="mt-4 max-w-sm text-sm leading-relaxed text-balance text-subtle sm:text-base"
         >
           {{ description }}
         </p>

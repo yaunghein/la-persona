@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {
   isCommunityCardComplete,
-  parseCommunitySetupStep,
   resolveCommunitySetupStep,
   resolveEventFlowPath,
 } from '~~/shared/utils/event-flow';
@@ -19,20 +18,14 @@ const eventId = computed(() => {
   const value = route.query.eventId;
   return typeof value === 'string' ? value : '';
 });
-const requestedStep = computed(() => parseCommunitySetupStep(route.query.step));
 
 const { data: session } = await authClient.useSession(useFetch);
 
-const {
-  data: card,
-  isPending: pending,
-  error,
-  refetch: refresh,
-} = useCardQuery(cardSlug);
+const { data: card, isPending: pending, error } = useCardQuery(cardSlug);
 const { mutateAsync: updateCard } = useUpdateCardMutation(cardSlug);
+const { mutateAsync: registerForEvent } = useRegisterForEventMutation();
 
 const submitting = ref(false);
-const isSettingUp = ref(false);
 const createCardDraftKey = computed(() => `card:${cardSlug.value}:onboarding`);
 
 const viewer = computed<EventFlowViewer>(() => ({
@@ -44,22 +37,13 @@ const viewer = computed<EventFlowViewer>(() => ({
 }));
 
 const step = computed(() =>
-  resolveCommunitySetupStep({
-    cardComplete: viewer.value.cardComplete,
-    requestedStep: requestedStep.value,
-  })
+  resolveCommunitySetupStep({ cardComplete: viewer.value.cardComplete })
 );
 
 watch(
-  [card, session, requestedStep, isSettingUp, submitting],
+  [card, session, submitting],
   () => {
-    if (
-      pending.value ||
-      !card.value ||
-      !session.value ||
-      isSettingUp.value ||
-      submitting.value
-    ) {
+    if (pending.value || !card.value || !session.value || submitting.value) {
       return;
     }
     if (card.value.userId && card.value.userId !== session.value.user.id) {
@@ -77,7 +61,6 @@ watch(
       orgSlug: orgSlug.value,
       viewer: viewer.value,
       source: 'setup',
-      setupStep: requestedStep.value,
     });
 
     if (next !== route.fullPath) {
@@ -115,65 +98,37 @@ async function onCreateCard(payload: {
       socials: payload.socials,
     });
     clearFormDraft(createCardDraftKey.value);
-    isSettingUp.value = true;
-    await refresh();
   } catch (error: any) {
     toast.add({
       title: 'Could not save card',
       description: apiErrorMessage(error, 'Try again.'),
       color: 'error',
     });
-  } finally {
     submitting.value = false;
+    return;
   }
-}
 
-async function onSettingUpNext() {
-  await navigateTo(
-    ROUTES.COMMUNITY_SETUP.CARD(orgSlug.value, cardSlug.value, {
-      step: 'download-wallpaper',
-      eventId: eventId.value || undefined,
-    })
-  );
-  isSettingUp.value = false;
+  // The event page shows the "You're all set" screen once the viewer is registered.
+  if (eventId.value) {
+    try {
+      await registerForEvent(eventId.value);
+    } catch (error: any) {
+      toast.add({
+        title: 'Could not register',
+        description: apiErrorMessage(
+          error,
+          'Your card is ready. You can register from the event page.'
+        ),
+        color: 'error',
+      });
+    }
+  }
+  await navigateTo(eventHome(), { replace: true });
+  submitting.value = false;
 }
 
 function goToEvent() {
   return navigateTo(eventHome());
-}
-
-const finishing = ref(false);
-
-async function finishSetup() {
-  if (finishing.value) return;
-  if (!eventId.value) {
-    return navigateTo(
-      orgSlug.value
-        ? `${ROUTES.PLATFORM.ROOT}/${orgSlug.value}`
-        : ROUTES.PLATFORM.ROOT
-    );
-  }
-
-  finishing.value = true;
-  try {
-    await registerForEvent(eventId.value);
-    return navigateTo({
-      path: ROUTES.EVENTS.PUBLIC(eventId.value),
-      query: { registered: '1' },
-    });
-  } catch (error: any) {
-    toast.add({
-      title: 'Could not register',
-      description: apiErrorMessage(
-        error,
-        'Your card is ready. You can register from the event page.'
-      ),
-      color: 'error',
-    });
-    return navigateTo(ROUTES.EVENTS.PUBLIC(eventId.value));
-  } finally {
-    finishing.value = false;
-  }
 }
 </script>
 
@@ -193,7 +148,7 @@ async function finishSetup() {
         This community card could not be loaded.
       </div>
       <EventOnboardingCreateCard
-        v-else-if="(step === 'create-card' || submitting) && !isSettingUp"
+        v-else-if="step === 'create-card' || submitting"
         class="min-h-0 flex-1"
         :first-name="card.firstName"
         :last-name="card.lastName"
@@ -207,39 +162,12 @@ async function finishSetup() {
         @submit="onCreateCard"
         @cancel="goToEvent"
       />
-      <div
-        v-else-if="!isSettingUp && step !== 'download-wallpaper'"
-        class="flex flex-1 items-center justify-center"
-      >
+      <div v-else class="flex flex-1 items-center justify-center">
         <UIcon
           name="i-lucide-loader-circle"
           class="size-6 animate-spin text-subtle"
         />
       </div>
-      <EventOnboardingSettingUp
-        v-else-if="isSettingUp"
-        class="min-h-0 flex-1"
-        :organizer-name="card.organization.name || 'this community'"
-        @next="onSettingUpNext"
-      />
-      <EventOnboardingDownloadWallpaper
-        v-else-if="step === 'download-wallpaper'"
-        class="min-h-0 flex-1"
-        :first-name="card.firstName"
-        :last-name="card.lastName"
-        :position="card.position"
-        :phone="card.phone"
-        :phone-country-code="card.phoneCountryCode"
-        :email="card.email"
-        :website="card.website"
-        :plan-code="card.subscription?.planCode"
-        :spline-url="card.splineUrl"
-        :wallpaper-url="card.wallpaperUrl"
-        :joined-at="card.createdAt"
-        :card-slug="card.slug"
-        @next="finishSetup"
-        @skip="finishSetup"
-      />
     </div>
   </div>
 </template>
