@@ -13,6 +13,29 @@ html {
   --color-gold: #c8a97e;
   /* La Persona success / approve accent (Figma: #8bf667) */
   --color-green: #8bf667;
+
+  /* UiSkeletonImage: soft pulse while loading, fade in once loaded */
+  --animate-skeleton: skeleton 1.6s ease-in-out infinite;
+  --animate-fade-in: fade-in 0.4s ease-out;
+
+  @keyframes skeleton {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
 }
 
 /* Theme-aware colors: light values on :root, the original dark values on .dark. */

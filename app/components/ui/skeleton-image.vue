@@ -5,18 +5,24 @@ const props = defineProps<{ src?: string | null }>();
 
 const image = useTemplateRef<{ $el?: HTMLImageElement }>('image');
 const isLoaded = ref(false);
+// Only fade in images the user actually waited for; cached ones show at once.
+const shouldFadeIn = ref(true);
 
 watch(
   () => props.src,
   () => {
     isLoaded.value = false;
+    shouldFadeIn.value = true;
   }
 );
 
 // Server-rendered or cached images can finish before hydration attaches @load.
 onMounted(() => {
   const element = image.value?.$el;
-  if (element?.complete && element.naturalWidth > 0) isLoaded.value = true;
+  if (element?.complete && element.naturalWidth > 0) {
+    shouldFadeIn.value = false;
+    isLoaded.value = true;
+  }
 });
 </script>
 
@@ -24,7 +30,11 @@ onMounted(() => {
   <NuxtImg
     ref="image"
     :src="src || undefined"
-    :class="isLoaded ? undefined : 'animate-pulse bg-elevated'"
+    :class="
+      isLoaded
+        ? shouldFadeIn && 'motion-safe:animate-fade-in'
+        : 'motion-safe:animate-skeleton bg-elevated text-transparent'
+    "
     @load="isLoaded = true"
     @error="isLoaded = true"
   />

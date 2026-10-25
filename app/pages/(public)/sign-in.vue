@@ -1,4 +1,8 @@
 <script setup lang="ts">
+definePageMeta({
+  colorMode: 'dark',
+});
+
 usePageSeo({
   title: 'Sign In - LA PERSONA',
   description:

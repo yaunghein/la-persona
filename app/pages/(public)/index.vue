@@ -4,6 +4,10 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Application } from '@splinetool/runtime';
 
+definePageMeta({
+  colorMode: 'dark',
+});
+
 usePageSeo({
   title: 'Meet the right people — LA PERSONA',
   description:
