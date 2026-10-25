@@ -13,6 +13,14 @@ export type SplineCardFields = {
   joinedAt?: string | Date | null;
 };
 
+/** Render `https://www.example.com/` as `www.example.com`. */
+function displayWebsite(website: string | null | undefined) {
+  return (website || '')
+    .trim()
+    .replace(/^https?:\/\//i, '')
+    .replace(/\/$/, '');
+}
+
 export function splineVariablesForCard(card: SplineCardFields) {
   const fullname = [card.firstName, card.lastName]
     .filter(Boolean)
@@ -32,7 +40,7 @@ export function splineVariablesForCard(card: SplineCardFields) {
       position: card.position || '',
       phone,
       email: card.email || '',
-      website: card.website || '',
+      website: displayWebsite(card.website),
     };
   }
 
@@ -41,7 +49,7 @@ export function splineVariablesForCard(card: SplineCardFields) {
     position: card.position || '',
     phone,
     email: card.email || '',
-    website: card.website || '',
+    website: displayWebsite(card.website),
   };
 }
 
