@@ -354,7 +354,7 @@ onBeforeUnmount(() => {
         <template v-if="step !== 'success'">
           <UButton
             v-if="!isPage && organizerCardUrl"
-            label="See Organizer"
+            label="Contact Organizer"
             color="neutral"
             :href="organizerCardUrl"
             target="_blank"
@@ -362,7 +362,7 @@ onBeforeUnmount(() => {
           />
           <UButton
             v-else-if="!isPage"
-            label="See Organizer"
+            label="Contact Organizer"
             color="neutral"
             class="h-10 cursor-pointer rounded-full bg-raised px-5 text-sm font-medium text-ink hover:bg-line"
             @click="onViewOrganizer"
@@ -418,17 +418,17 @@ onBeforeUnmount(() => {
               v-if="organizerCardUrl"
               :href="organizerCardUrl"
               target="_blank"
-              class="text-sm font-medium text-subtle underline hover:text-ink"
+              class="text-sm font-medium text-ink underline underline-offset-4 hover:text-ink/80"
             >
-              See Organizer
+              Contact Organizer
             </a>
             <button
               v-else
               type="button"
-              class="cursor-pointer text-sm font-medium text-subtle underline hover:text-ink"
+              class="cursor-pointer text-sm font-medium text-ink underline underline-offset-4 hover:text-ink/80"
               @click="onViewOrganizer"
             >
-              See Organizer
+              Contact Organizer
             </button>
           </template>
         </template>

@@ -42,7 +42,7 @@ const emit = defineEmits<{
         <button
           v-if="secondaryLabel"
           type="button"
-          class="cursor-pointer text-sm font-medium text-subtle underline hover:text-ink"
+          class="cursor-pointer text-sm font-medium text-ink underline underline-offset-4 hover:text-ink/80"
           @click="emit('secondary')"
         >
           {{ secondaryLabel }}

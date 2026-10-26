@@ -19,7 +19,7 @@ const benefits = [
   },
   {
     icon: IconExchange,
-    iconClass: 'size-4.5',
+    iconClass: 'size-5',
     lead: 'Exchange contact details',
     rest: () => ' with everyone through your persona card,',
   },
@@ -37,7 +37,7 @@ const benefits = [
     <div
       class="hide-scrollbar min-h-0 flex-1 overflow-y-auto p-6 sm:p-8 lg:px-16 lg:py-10"
     >
-      <div class="mx-auto flex w-full max-w-120 flex-col gap-6 sm:max-w-112">
+      <div class="mx-auto flex w-full max-w-120 flex-col gap-6 sm:max-w-md">
         <h1
           class="text-[1.75rem] font-medium leading-tight tracking-[0.175rem] uppercase text-ink"
         >
@@ -50,9 +50,8 @@ const benefits = [
             >.
           </p>
           <p>
-            You don’t have a La Persona Account yet. Create your free La Persona
-            account to register for the event and receive your
-            Community&nbsp;Card.
+            Sign in to your La Persona account or create a free account to
+            register for the event and receive your Community&nbsp;Card.
           </p>
         </div>
 
@@ -87,7 +86,7 @@ const benefits = [
     </div>
 
     <EventOnboardingFooter
-      primary-label="Create Account"
+      primary-label="Continue"
       secondary-label="Cancel"
       @primary="emit('next')"
       @secondary="emit('cancel')"
