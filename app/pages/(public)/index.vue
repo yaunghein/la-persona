@@ -14,13 +14,15 @@ usePageSeo({
     'La Persona transforms how professionals introduce themselves, connect, and unlock opportunities—starting from a single interaction.',
 });
 
-const { data: session } = await authClient.useSession(useFetch);
-const heroCtaTo = computed(() =>
-  session.value ? ROUTES.PLATFORM.ROOT : ROUTES.SIGN_IN
-);
-const heroCtaLabel = computed(() =>
-  session.value ? 'Go to platform' : 'Try free'
-);
+// const { data: session } = await authClient.useSession(useFetch);
+// const heroCtaTo = computed(() =>
+//   session.value ? ROUTES.PLATFORM.ROOT : ROUTES.SIGN_IN
+// );
+// const heroCtaLabel = computed(() =>
+//   session.value ? 'Go to platform' : 'Try free'
+// );
+const messengerUrl =
+  'https://m.me/61571393589144?text=Hello%20I%20want%20to%20know%20more';
 
 /**
  * Story — scrollytelling: tall track + sticky stage; ScrollTrigger scrub drives word motion
@@ -532,12 +534,20 @@ const premiumPlanFeatures = [
         <div
           class="flex sm:w-full max-w-[23.33rem] flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center sm:gap-4"
         >
-          <UButton
+          <!-- <UButton
             :to="heroCtaTo"
             size="xl"
             class="whitespace-nowrap h-10 sm:h-12 justify-center rounded-full bg-ink px-10 text-xs font-light uppercase tracking-[0.1rem] text-ink-inverse sm:text-sm sm:tracking-[0.0875rem]"
           >
             {{ heroCtaLabel }}
+          </UButton> -->
+          <UButton
+            :to="messengerUrl"
+            target="_blank"
+            size="xl"
+            class="whitespace-nowrap h-10 sm:h-12 justify-center rounded-full bg-ink px-10 text-xs font-light uppercase tracking-[0.1rem] text-ink-inverse sm:text-sm sm:tracking-[0.0875rem]"
+          >
+            Talk to Us
           </UButton>
           <UButton
             to="/#features"
@@ -836,7 +846,7 @@ const premiumPlanFeatures = [
       </div>
     </section>
 
-    <!-- Pricing -->
+    <!-- Pricing (hidden for now)
     <section id="pricing" class="px-4 py-14 sm:py-24 relative z-10">
       <div
         class="mx-auto flex max-w-196 flex-col items-center gap-12 sm:gap-18"
@@ -919,6 +929,7 @@ const premiumPlanFeatures = [
         </div>
       </div>
     </section>
+    -->
 
     <!-- Final CTA -->
     <section id="landing-v2-final-cta" class="px-4 py-20 sm:px-58.5 sm:py-33">
@@ -931,7 +942,8 @@ const premiumPlanFeatures = [
           Every meaningful connection starts with a great introduction.
         </p>
         <UButton
-          to="/sign-in"
+          :to="messengerUrl"
+          target="_blank"
           size="xl"
           class="h-11 justify-center rounded-full bg-ink px-10 text-xs font-light uppercase tracking-[0.1rem] text-ink-inverse sm:text-sm sm:tracking-[0.0875rem]"
         >
@@ -942,7 +954,7 @@ const premiumPlanFeatures = [
 
     <!-- Footer -->
 
-    <!-- Floating CTA -->
+    <!-- Floating CTA (hidden for now)
     <div
       ref="floatingCtaEl"
       class="fixed bottom-[5vh] left-1/2 z-50 -translate-x-1/2 invisible"
@@ -955,6 +967,7 @@ const premiumPlanFeatures = [
         Try Free
       </UButton>
     </div>
+    -->
   </main>
   <footer
     class="border-t border-ink/10 px-4 pt-5 sm:pt-12 pb-5 sm:pb-10 sm:px-12"
