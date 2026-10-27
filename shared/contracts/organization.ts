@@ -157,14 +157,17 @@ export type CommunitySettings = CommunitySettingsFormValues &
 
 const richText = z.string().max(20_000);
 
-/** Rich-text fields are sanitized on the server before they are stored. */
+/**
+ * Rich-text fields are sanitized on the server before they are stored.
+ * Images are sent only when they change; an omitted image is kept.
+ */
 export const UpdateCommunitySettingsRequest = z.object({
   name: z.string().trim().min(1, 'Organization name cannot be empty.').max(120),
   description: richText,
   guidelines: richText,
   whyJoin: richText,
-  logoUrl: StoredImageReference,
-  coverImageUrl: StoredImageReference,
+  logoUrl: StoredImageReference.optional(),
+  coverImageUrl: StoredImageReference.optional(),
 });
 
 export type UpdateCommunitySettingsRequest = z.infer<

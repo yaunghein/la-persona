@@ -239,7 +239,7 @@ export async function updateOrganization(
         description: sanitizeRichText(changes.description ?? '') ?? '',
         guidelines: sanitizeRichText(changes.guidelines ?? '') ?? '',
         whyJoin: sanitizeRichText(changes.whyJoin ?? '') ?? '',
-        coverUrl: changes.coverImageUrl ?? null,
+        coverUrl: changes.coverImageUrl,
         splineUrl: brand(changes.splineUrl),
         wallpaperUrl: brand(changes.wallpaperUrl),
         cardBackUrl: brand(changes.cardBackUrl),

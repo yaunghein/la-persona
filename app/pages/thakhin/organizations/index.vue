@@ -53,6 +53,29 @@ const editForm = reactive({
   applyToMemberCards: false,
 });
 
+const MEDIA_FIELDS = [
+  'logoUrl',
+  'coverImageUrl',
+  'splineUrl',
+  'wallpaperUrl',
+  'cardBackUrl',
+  'emailQrBackgroundUrl',
+  'emailContactExchangeUrl',
+  'emailAfterEventUrl',
+] as const;
+
+/** Media as loaded, so unchanged values are left out of the save. */
+let loadedMedia: Partial<Record<(typeof MEDIA_FIELDS)[number], string>> = {};
+
+/** A value the form can't produce (e.g. a legacy path) never blocks a save. */
+function changedMedia() {
+  return Object.fromEntries(
+    MEDIA_FIELDS.filter((field) => editForm[field] !== loadedMedia[field]).map(
+      (field) => [field, editForm[field]]
+    )
+  );
+}
+
 const createForm = reactive({
   name: '',
   slug: '',
@@ -122,6 +145,9 @@ async function openEdit(row: OrgRow) {
   editForm.emailContactExchangeUrl = '';
   editForm.emailAfterEventUrl = '';
   editForm.applyToMemberCards = false;
+  loadedMedia = Object.fromEntries(
+    MEDIA_FIELDS.map((field) => [field, editForm[field]])
+  );
   isEditOpen.value = true;
 
   if (row.type !== ORGANIZATION_TYPES.COMMUNITY) return;
@@ -139,6 +165,9 @@ async function openEdit(row: OrgRow) {
   editForm.emailQrBackgroundUrl = detail.community.emailQrBackgroundUrl;
   editForm.emailContactExchangeUrl = detail.community.emailContactExchangeUrl;
   editForm.emailAfterEventUrl = detail.community.emailAfterEventUrl;
+  loadedMedia = Object.fromEntries(
+    MEDIA_FIELDS.map((field) => [field, detail.community![field]])
+  );
 }
 
 function closeEdit() {
@@ -182,14 +211,7 @@ async function onSaveEdit() {
             description: editForm.description,
             guidelines: editForm.guidelines,
             whyJoin: editForm.whyJoin,
-            logoUrl: editForm.logoUrl,
-            coverImageUrl: editForm.coverImageUrl,
-            splineUrl: editForm.splineUrl,
-            wallpaperUrl: editForm.wallpaperUrl,
-            cardBackUrl: editForm.cardBackUrl,
-            emailQrBackgroundUrl: editForm.emailQrBackgroundUrl,
-            emailContactExchangeUrl: editForm.emailContactExchangeUrl,
-            emailAfterEventUrl: editForm.emailAfterEventUrl,
+            ...changedMedia(),
             applyToMemberCards: editForm.applyToMemberCards,
           }
         : {}),

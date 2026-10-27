@@ -33,6 +33,7 @@ const invalidateAdmin = useInvalidateAdmin();
 
 const isFormOpen = ref(false);
 const editingId = ref<string | null>(null);
+let editingRow: CardRow | null = null;
 const isSaving = ref(false);
 const isDeleteOpen = ref(false);
 const isDeleting = ref(false);
@@ -233,6 +234,7 @@ function openCreate() {
 
 function openEdit(row: CardRow) {
   editingId.value = row.id;
+  editingRow = row;
   fillForm(row);
   isFormOpen.value = true;
 }
@@ -258,6 +260,13 @@ function formatDate(value: string) {
 const slideTitle = computed(() =>
   editingId.value ? 'EDIT CARD' : 'CREATE CARD'
 );
+
+const MEDIA_FIELDS = [
+  'splineUrl',
+  'avatarUrl',
+  'wallpaperUrl',
+  'cardBackUrl',
+] as const;
 
 async function onSubmitForm() {
   isSaving.value = true;
@@ -285,6 +294,11 @@ async function onSubmitForm() {
       });
     } else {
       body.organizationId = form.organizationId;
+      // Unchanged media is left out, so a value the form can't produce
+      // (e.g. an avatar the holder uploaded) never blocks a save.
+      for (const field of MEDIA_FIELDS) {
+        if (body[field] === (editingRow?.[field] || null)) delete body[field];
+      }
       await adminApi.updateCard(editingId.value, body);
       toast.add({
         title: 'Card updated',

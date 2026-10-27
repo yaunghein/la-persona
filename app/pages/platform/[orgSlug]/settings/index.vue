@@ -49,28 +49,42 @@ watch(
 const { mutate: updateSettings, isPending: isSaving } =
   useUpdateCommunitySettingsMutation(organizationSlug);
 
+/** Unchanged images are left out, so a legacy stored value never blocks a save. */
 function saveSettings(values: CommunitySettingsFormValues) {
-  updateSettings(UpdateCommunitySettingsRequest.parse(values), {
-    onSuccess: (saved) => {
-      clearDraft();
-      hydrate({ ...saved });
-      toast.add({
-        title: 'Settings updated',
-        description: 'Community settings were saved.',
-        color: 'success',
-      });
-    },
-    onError: (error) => {
-      toast.add({
-        title: 'Could not save',
-        description: apiErrorMessage(
-          error,
-          'Community settings could not be saved.'
-        ),
-        color: 'error',
-      });
-    },
-  });
+  const loaded = data.value;
+  updateSettings(
+    UpdateCommunitySettingsRequest.parse({
+      name: values.name,
+      description: values.description,
+      guidelines: values.guidelines,
+      whyJoin: values.whyJoin,
+      ...(values.logoUrl !== loaded?.logoUrl && { logoUrl: values.logoUrl }),
+      ...(values.coverImageUrl !== loaded?.coverImageUrl && {
+        coverImageUrl: values.coverImageUrl,
+      }),
+    }),
+    {
+      onSuccess: (saved) => {
+        clearDraft();
+        hydrate({ ...saved });
+        toast.add({
+          title: 'Settings updated',
+          description: 'Community settings were saved.',
+          color: 'success',
+        });
+      },
+      onError: (error) => {
+        toast.add({
+          title: 'Could not save',
+          description: apiErrorMessage(
+            error,
+            'Community settings could not be saved.'
+          ),
+          color: 'error',
+        });
+      },
+    }
+  );
 }
 
 function onSubmit() {

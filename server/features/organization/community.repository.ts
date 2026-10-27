@@ -24,7 +24,7 @@ export async function findOrganizationById(organizationId: string) {
 
 export async function updateOrganizationProfile(
   organizationId: string,
-  values: { name: string; logo: string | null }
+  values: { name: string; logo?: string | null }
 ) {
   const [row] = await db
     .update(organization)
