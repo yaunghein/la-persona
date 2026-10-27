@@ -28,7 +28,7 @@ const emit = defineEmits<{
       <div class="flex w-full flex-col items-center gap-4">
         <button
           :type="primaryType"
-          class="flex h-10 w-full cursor-pointer items-center justify-center rounded-full px-5 text-sm font-medium disabled:cursor-default disabled:opacity-70"
+          class="flex h-13 sm:h-10 w-full cursor-pointer items-center justify-center rounded-full px-5 text-sm font-medium disabled:cursor-default disabled:opacity-70"
           :disabled="primaryDisabled"
           :class="
             primaryMuted

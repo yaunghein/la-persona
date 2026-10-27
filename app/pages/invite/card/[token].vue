@@ -74,6 +74,19 @@ const meta = computed(() => {
   return [invitation.value.planName, period];
 });
 
+useInAppBrowserPreview(() => {
+  if (!invitation.value) return null;
+  const { cardFirstName, cardLastName } = invitation.value;
+  return {
+    heading: 'Claim Your LA PERSONA Card in Your\u00a0Browser',
+    item: {
+      imageUrl: INVITATION_COVER_FALLBACK,
+      title: [cardFirstName, cardLastName].filter(Boolean).join(' '),
+      description: meta.value.join(' · '),
+    },
+  };
+});
+
 // Keep the accept state until navigation, so "already processed" never flashes.
 const isAcceptInProgress = computed(
   () => isAccepting.value || hasAccepted.value

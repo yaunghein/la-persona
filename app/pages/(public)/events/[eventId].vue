@@ -45,6 +45,19 @@ usePageSeo({
   imageAlt: () => event.value?.title,
 });
 
+useInAppBrowserPreview(() => {
+  if (!event.value) return null;
+  const { coverUrl, title, description } = event.value;
+  return {
+    heading: 'Register for This Event in Your\u00a0Browser',
+    item: {
+      imageUrl: coverUrl || null,
+      title,
+      description: description ? truncateSeoText(description, 100) : null,
+    },
+  };
+});
+
 const orgSlug = computed(() => event.value?.organizer?.slug || '');
 
 const viewer = computed<EventFlowViewer>(() => {

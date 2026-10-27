@@ -173,7 +173,7 @@ onBeforeUnmount(disposeSpline);
           block
           :loading="addingToGoogleCalendar"
           :disabled="isAddedToGoogleCalendar"
-          class="h-10 cursor-pointer justify-center rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
+          class="h-13 sm:h-10 cursor-pointer justify-center rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
           @click="emit('addToGoogleCalendar')"
         />
         <UiPoweredByLaPersona />

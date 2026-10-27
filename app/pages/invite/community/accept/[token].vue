@@ -36,6 +36,19 @@ const errorMessage = computed(() =>
   apiErrorMessage(error.value, 'This invitation is invalid.')
 );
 
+useInAppBrowserPreview(() => {
+  if (!data.value) return null;
+  const { organizationName, logoUrl, coverUrl } = data.value;
+  return {
+    heading: `Join ${organizationName} in Your\u00a0Browser`,
+    item: {
+      imageUrl: invitationLogoSrc(logoUrl) || communityCoverSrc(coverUrl),
+      title: organizationName,
+      description: communityInviteMeta(data.value).slice(0, 2).join(' · '),
+    },
+  };
+});
+
 const canAccept = computed(
   () =>
     data.value &&

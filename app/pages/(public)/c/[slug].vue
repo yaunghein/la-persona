@@ -75,6 +75,16 @@ usePageSeo({
   type: 'profile',
 });
 
+useInAppBrowserPreview(() => {
+  const name = cardFullName.value;
+  return {
+    heading: name
+      ? `Explore ${name}'s LA PERSONA Card in Your\u00a0Browser`
+      : 'Explore This LA PERSONA Card in Your\u00a0Browser',
+    cardBackUrl: resolveObjectStorageUrl(card.value?.cardBackUrl) || null,
+  };
+});
+
 onMounted(async () => {
   if (!card || !card.value) return;
 

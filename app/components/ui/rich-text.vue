@@ -23,20 +23,28 @@ const isHtml = computed(() => /<[a-z][^>]*>/i.test(props.content));
 .community-rich-text-view :deep(ul) {
   list-style-type: disc;
   list-style-position: outside;
-  margin: 0;
+  margin: 0.5rem 0 0.75rem;
   padding-inline-start: 1.25rem;
 }
 
 .community-rich-text-view :deep(ol) {
   list-style-type: decimal;
   list-style-position: outside;
-  margin: 0;
+  margin: 0.5rem 0 0.75rem;
   padding-inline-start: 1.25rem;
 }
 
 .community-rich-text-view :deep(li) {
   margin: 0;
   line-height: 1.5;
+}
+
+.community-rich-text-view :deep(li + li) {
+  margin-top: 0.25rem;
+}
+
+.community-rich-text-view :deep(li p + p) {
+  margin-top: 0;
 }
 
 .community-rich-text-view :deep(strong) {

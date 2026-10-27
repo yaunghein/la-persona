@@ -70,19 +70,23 @@ const toolbarItems: EditorToolbarItem[][] = [
 .community-rich-text :deep(ul) {
   list-style-type: disc;
   list-style-position: outside;
-  margin: 0.25rem 0 0;
+  margin: 0.5rem 0 0.75rem;
   padding-inline-start: 1.25rem;
 }
 
 .community-rich-text :deep(ol) {
   list-style-type: decimal;
   list-style-position: outside;
-  margin: 0.25rem 0 0;
+  margin: 0.5rem 0 0.75rem;
   padding-inline-start: 1.25rem;
 }
 
+.community-rich-text :deep(li + li) {
+  margin-top: 0.25rem !important;
+}
+
 .community-rich-text :deep(li) {
-  margin: 0 !important;
+  margin-bottom: 0 !important;
   padding-block: 0 !important;
   line-height: 1.375 !important;
 }

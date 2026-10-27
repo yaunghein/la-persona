@@ -41,6 +41,19 @@ usePageSeo({
 });
 
 const data = computed(() => preview.value ?? null);
+
+useInAppBrowserPreview(() => {
+  if (!preview.value) return null;
+  const { organizationName, logoUrl, coverUrl } = preview.value;
+  return {
+    heading: `Join ${organizationName} in Your\u00a0Browser`,
+    item: {
+      imageUrl: invitationLogoSrc(logoUrl) || communityCoverSrc(coverUrl),
+      title: organizationName,
+      description: communityInviteMeta(preview.value).slice(0, 2).join(' · '),
+    },
+  };
+});
 const alreadyMember = computed(() => !!preview.value?.alreadyMember);
 const error = computed(() => previewError.value);
 
