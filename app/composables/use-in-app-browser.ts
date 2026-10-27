@@ -94,6 +94,10 @@ export function useInAppBrowser() {
   const appName = ref<InAppBrowserName | 'app' | null>(null);
   const externalUrl = ref<string | null>(null);
   const isDismissed = useSessionStorage('lp-in-app-browser:dismissed', false);
+  const hasTriedHandoff = useSessionStorage(
+    'lp-in-app-browser:tried-handoff',
+    false
+  );
   const preview = usePreviewState();
 
   const isPromptVisible = computed(
@@ -110,6 +114,23 @@ export function useInAppBrowser() {
     } else if (/Android/.test(userAgent) && /; wv\)/.test(userAgent)) {
       // Unknown Android WebView: we can only show the manual steps.
       appName.value = 'app';
+    }
+
+    // Hand off once per session without a tap, so the app opens the browser
+    // straight away; the prompt stays as the fallback. LINE reopens the page
+    // with openExternalBrowser, so skip it there to avoid a loop.
+    const isReopenedByLine = new URL(window.location.href).searchParams.has(
+      'openExternalBrowser'
+    );
+    if (
+      externalUrl.value &&
+      !hasTriedHandoff.value &&
+      !isDismissed.value &&
+      !isReopenedByLine
+    ) {
+      hasTriedHandoff.value = true;
+      if (document.readyState === 'complete') openInBrowser();
+      else window.addEventListener('load', openInBrowser, { once: true });
     }
   });
 

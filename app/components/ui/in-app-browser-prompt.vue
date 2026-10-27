@@ -50,7 +50,7 @@ const emit = defineEmits<{
             :src="preview.cardBackUrl"
             alt=""
             width="720"
-            class="h-auto w-full rounded"
+            class="aspect-[1/0.57] w-full rounded object-cover"
           />
         </div>
         <div
