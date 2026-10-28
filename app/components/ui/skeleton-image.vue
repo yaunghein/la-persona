@@ -16,13 +16,13 @@ watch(
   }
 );
 
-// Server-rendered or cached images can finish before hydration attaches @load.
+// Server-rendered or cached images can finish (load or fail) before hydration
+// attaches @load / @error.
 onMounted(() => {
   const element = image.value?.$el;
-  if (element?.complete && element.naturalWidth > 0) {
-    shouldFadeIn.value = false;
-    isLoaded.value = true;
-  }
+  if (!props.src || !element?.complete) return;
+  shouldFadeIn.value = false;
+  isLoaded.value = true;
 });
 </script>
 

@@ -555,7 +555,7 @@ watch(
         label="Cancel"
         color="neutral"
         variant="ghost"
-        class="h-13 sm:h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-subtle hover:bg-raised hover:text-ink"
+        class="h-13 cursor-pointer rounded-full px-5 text-sm font-medium text-subtle hover:bg-raised hover:text-ink"
         @click="closeSocialSlideover"
       />
       <UButton
@@ -564,7 +564,7 @@ watch(
         :label="socialEditorMode === 'create' ? 'Add Link' : 'Save Link'"
         leading-icon="i-lucide-check"
         color="neutral"
-        class="h-13 sm:h-10 cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
+        class="h-13 cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
       />
     </template>
   </USlideover>
@@ -590,14 +590,14 @@ watch(
         label="Cancel"
         color="neutral"
         variant="ghost"
-        class="h-13 sm:h-10 text-sm rounded-full px-5"
+        class="h-13 text-sm rounded-full px-5"
         @click="closeDeleteSocialConfirm"
       />
       <UButton
         type="button"
         label="Delete"
         color="error"
-        class="h-13 sm:h-10 text-sm rounded-full px-6 font-medium"
+        class="h-13 text-sm rounded-full px-6 font-medium"
         @click="confirmRemoveLink"
       />
     </template>

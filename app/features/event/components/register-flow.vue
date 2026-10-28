@@ -358,13 +358,13 @@ onBeforeUnmount(() => {
             color="neutral"
             :href="organizerCardUrl"
             target="_blank"
-            class="h-13 sm:h-10 cursor-pointer rounded-full bg-raised px-5 text-sm font-medium text-ink hover:bg-line"
+            class="h-13 cursor-pointer rounded-full bg-raised px-5 text-sm font-medium text-ink hover:bg-line"
           />
           <UButton
             v-else-if="!isPage"
             label="Contact Organizer"
             color="neutral"
-            class="h-13 sm:h-10 cursor-pointer rounded-full bg-raised px-5 text-sm font-medium text-ink hover:bg-line"
+            class="h-13 cursor-pointer rounded-full bg-raised px-5 text-sm font-medium text-ink hover:bg-line"
             @click="onViewOrganizer"
           />
           <UButton
@@ -380,14 +380,14 @@ onBeforeUnmount(() => {
             "
             color="neutral"
             disabled
-            class="h-13 sm:h-10 justify-center rounded-full bg-ink/10 px-5 text-sm font-medium text-ink/50 disabled:bg-ink/10 disabled:opacity-100"
+            class="h-13 justify-center rounded-full bg-ink/10 px-5 text-sm font-medium text-ink/50 disabled:bg-ink/10 disabled:opacity-100"
             :class="isPage && 'w-full'"
           />
           <UButton
             v-else-if="step === 'confirm'"
             color="neutral"
             :block="isPage"
-            class="h-13 sm:h-10 cursor-pointer rounded-full bg-ink px-5 text-sm hover:bg-ink/90"
+            class="h-13 cursor-pointer rounded-full bg-ink px-5 text-sm hover:bg-ink/90"
             :ui="{
               base: 'flex-col gap-0.5',
               label:
@@ -410,7 +410,7 @@ onBeforeUnmount(() => {
             label="Registering..."
             color="neutral"
             loading
-            class="h-13 sm:h-10 justify-center rounded-full bg-ink/10 px-5 text-sm font-medium text-ink/50 disabled:bg-ink/10 disabled:opacity-100"
+            class="h-13 justify-center rounded-full bg-ink/10 px-5 text-sm font-medium text-ink/50 disabled:bg-ink/10 disabled:opacity-100"
             :class="isPage && 'w-full'"
           />
           <template v-if="isPage">
@@ -439,7 +439,7 @@ onBeforeUnmount(() => {
           :ui="{ leadingAvatar: 'rounded-none bg-transparent' }"
           color="neutral"
           :loading="addingEventId === event.id"
-          class="h-13 sm:h-10 cursor-pointer justify-center rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
+          class="h-13 cursor-pointer justify-center rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
           :class="isPage && 'w-full'"
           @click="void addToGoogleCalendar(event.id)"
         />

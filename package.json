@@ -2,9 +2,12 @@
   "name": "la-persona",
   "type": "module",
   "private": true,
+  "engines": {
+    "node": ">=24.22.1 <25"
+  },
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev -o",
+    "dev": "nuxt dev -o --host",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
@@ -22,7 +25,7 @@
     "@aws-sdk/s3-request-presigner": "^3.975.0",
     "@nuxt/image": "^2.1.0",
     "@nuxt/ui": "^4.3.0",
-    "@splinetool/runtime": "^1.12.39",
+    "@splinetool/runtime": "^2.0.114",
     "@tanstack/vue-query": "^5.92.9",
     "@vueuse/nuxt": "14.1.0",
     "barcode-detector": "^3.2.2",
