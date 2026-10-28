@@ -51,7 +51,7 @@ html {
   --color-ink-inverse: var(--lp-ink-inverse);
   --color-success-ink: var(--lp-success-ink);
   --color-danger-ink: var(--lp-danger-ink);
-  /* La Persona success / approve accent (Figma: #8bf667), darkened in light mode for contrast */
+  /* La Persona success / approve accent (Figma: #8bf667), #37cd8f in light mode */
   --color-green: var(--lp-green);
 }
 
@@ -67,9 +67,9 @@ html {
   --lp-soft: #45454d;
   --lp-ink: #121212;
   --lp-ink-inverse: #f6f6f8;
-  --lp-success-ink: #3f8f22;
+  --lp-success-ink: #37cd8f;
   --lp-danger-ink: #d4260c;
-  --lp-green: #3f8f22;
+  --lp-green: #37cd8f;
 
   --ui-primary: var(--color-dark);
   --ui-text: var(--color-dark);

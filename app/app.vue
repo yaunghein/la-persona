@@ -18,7 +18,7 @@ useHead({
       <NuxtPage />
     </NuxtLayout>
     <UiInAppBrowserPrompt
-      v-if="!inAppBrowser.isPromptVisible.value"
+      v-if="inAppBrowser.isPromptVisible.value"
       :preview="inAppBrowser.preview.value"
       :can-open-externally="inAppBrowser.canOpenExternally.value"
       @open="inAppBrowser.openInBrowser"
