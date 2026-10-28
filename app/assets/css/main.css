@@ -11,8 +11,6 @@ html {
   --color-dark: #121212;
   /* La Persona landing accent (Figma: #c8a97e) */
   --color-gold: #c8a97e;
-  /* La Persona success / approve accent (Figma: #8bf667) */
-  --color-green: #8bf667;
 
   /* UiSkeletonImage: soft pulse while loading, fade in once loaded */
   --animate-skeleton: skeleton 1.6s ease-in-out infinite;
@@ -53,6 +51,8 @@ html {
   --color-ink-inverse: var(--lp-ink-inverse);
   --color-success-ink: var(--lp-success-ink);
   --color-danger-ink: var(--lp-danger-ink);
+  /* La Persona success / approve accent (Figma: #8bf667), darkened in light mode for contrast */
+  --color-green: var(--lp-green);
 }
 
 :root {
@@ -69,6 +69,7 @@ html {
   --lp-ink-inverse: #f6f6f8;
   --lp-success-ink: #3f8f22;
   --lp-danger-ink: #d4260c;
+  --lp-green: #3f8f22;
 
   --ui-primary: var(--color-dark);
   --ui-text: var(--color-dark);
@@ -95,6 +96,7 @@ html {
   --lp-ink-inverse: #121212;
   --lp-success-ink: #8bf667;
   --lp-danger-ink: #ff3113;
+  --lp-green: #8bf667;
 
   --ui-primary: white;
   --ui-text: white;

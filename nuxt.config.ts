@@ -92,6 +92,7 @@ export default defineNuxtConfig({
           'https://prod.spline.design',
           'https://fonts.gstatic.com',
           'https://prod.spline.design',
+          'https://unpkg.com/@splinetool/', // Spline runtime fetches bevel.wasm from unpkg
           'https://www.googletagmanager.com',
           'https://www.google-analytics.com/',
           'https://la-persona-staging.s3.ap-southeast-2.amazonaws.com',
