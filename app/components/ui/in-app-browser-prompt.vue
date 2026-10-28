@@ -50,7 +50,7 @@ const emit = defineEmits<{
             :src="preview.cardBackUrl"
             alt=""
             width="720"
-            class="aspect-[1/0.57] w-full rounded object-cover"
+            class="aspect-[1/0.57] w-full rounded-lg object-cover"
           />
         </div>
         <div
@@ -62,11 +62,11 @@ const emit = defineEmits<{
             :src="preview.item.imageUrl"
             alt=""
             width="224"
-            class="size-28 shrink-0 rounded object-cover"
+            class="size-28 shrink-0 rounded-lg object-cover"
           />
           <div
             v-else
-            class="grid size-28 shrink-0 place-items-center rounded bg-line-strong"
+            class="grid size-28 shrink-0 place-items-center rounded-lg bg-line-strong"
           >
             <UIcon name="i-lucide-image" class="size-6 text-subtle" />
           </div>
