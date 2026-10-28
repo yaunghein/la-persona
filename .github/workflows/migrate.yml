@@ -6,6 +6,7 @@ on:
 jobs:
   migrate:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
 
     steps:
@@ -15,10 +16,10 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.4.4
 
       - name: Install Dependencies
-        run: bun install --frozen-lockfile
+        run: bun install --frozen-lockfile --ignore-scripts
 
       - name: Install Railway CLI
         run: bun install -g @railway/cli
