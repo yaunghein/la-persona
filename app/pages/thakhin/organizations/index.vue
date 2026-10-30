@@ -604,7 +604,12 @@ const selectMenuUi = {
       }"
     >
       <template #body>
-        <div class="py-2">
+        <form
+          id="create-organization-form"
+          novalidate
+          @submit.prevent="onCreate"
+          class="py-2"
+        >
           <div class="flex flex-col gap-4">
             <UFormField label="Name" required :class="formFieldClass">
               <UInput
@@ -666,7 +671,7 @@ const selectMenuUi = {
               />
             </UFormField>
           </div>
-        </div>
+        </form>
       </template>
 
       <template #footer>
@@ -682,7 +687,8 @@ const selectMenuUi = {
           color="neutral"
           :loading="isCreating"
           class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
-          @click="onCreate"
+          type="submit"
+          form="create-organization-form"
         />
       </template>
     </USlideover>

@@ -29,6 +29,7 @@ import type {
   OnboardingInvitationPreview,
   OnboardingInvitationSummary,
 } from '~~/shared/contracts/onboarding';
+import type { InvitationInvitee } from '~~/shared/contracts/organization';
 
 export function addMonths(base: Date, months: number) {
   const result = new Date(base);
@@ -161,11 +162,8 @@ export async function createOnboardingInvitation(params: {
   });
 }
 
-export function buildOnboardingInvitationLink(
-  invitationId: string,
-  email: string
-) {
-  return `${env.BASE_URL}${ROUTES.INVITE.CARD(invitationId, email)}`;
+export function buildOnboardingInvitationLink(invitationId: string) {
+  return `${env.BASE_URL}${ROUTES.INVITE.CARD(invitationId)}`;
 }
 
 export async function sendOnboardingInvitationEmail(params: {
@@ -176,10 +174,7 @@ export async function sendOnboardingInvitationEmail(params: {
     to: [params.email],
     subject: 'Your LA PERSONA card is ready',
     html: await renderEmailComponent('OnboardingInvitation', {
-      inviteUrl: buildOnboardingInvitationLink(
-        params.invitationId,
-        params.email
-      ),
+      inviteUrl: buildOnboardingInvitationLink(params.invitationId),
     }),
   });
 }
@@ -457,7 +452,7 @@ function toInvitationSummary(
     cardLastName: row.cardLastName,
     planCode: invitation.subscriptionPlanCode,
     planName: row.planName,
-    link: buildOnboardingInvitationLink(invitation.id, invitation.email),
+    link: buildOnboardingInvitationLink(invitation.id),
   };
 }
 
@@ -503,6 +498,20 @@ export async function previewInvitationForUser(
     isEmailMatched,
     canAccept: invitation.status === 'pending' && !isExpired && isEmailMatched,
   };
+}
+
+export async function describeOnboardingInvitee(
+  invitationId: string
+): Promise<InvitationInvitee> {
+  const invitation = await findOnboardingInvitation(invitationId);
+  if (
+    !invitation ||
+    invitation.status !== 'pending' ||
+    invitation.expiresAt <= new Date()
+  ) {
+    throw notFound('Invitation');
+  }
+  return { email: invitation.email };
 }
 
 /** Sends (or re-sends) the invitation email and restarts its expiry window. */

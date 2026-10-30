@@ -15,8 +15,11 @@ import {
 import type {
   CommunityInvitationPreview,
   CreateInvitationRequest,
+  InvitationInvitee,
   InvitationReviewResult,
 } from '~~/shared/contracts/organization';
+import { isCommunityCardComplete } from '~~/shared/utils/event-flow';
+import { ROUTES } from '~~/shared/utils/routes';
 import {
   COMMUNITY_INVITE_ROLES,
   type CommunityInviteRole,
@@ -34,6 +37,15 @@ function inviteRole(invitation: InvitationRecord): CommunityInviteRole {
 
 function isInvitee(invitation: InvitationRecord, email: string) {
   return invitation.email.toLowerCase() === email.toLowerCase();
+}
+
+function maskEmail(email: string) {
+  const [local = '', domain = ''] = email.split('@');
+  const masked =
+    local.length <= 2
+      ? `${local[0] ?? ''}*`
+      : `${local[0]}${'*'.repeat(local.length - 2)}${local.at(-1)}`;
+  return `${masked}@${domain}`;
 }
 
 function isOpen(invitation: InvitationRecord) {
@@ -82,7 +94,7 @@ export async function previewInvitation(
   const invitation = await loadInvitation(event, invitationId);
   if (!isInvitee(invitation, viewer.email)) {
     throw forbidden(
-      'This invitation was sent to a different email address.',
+      `This invitation was sent to ${maskEmail(invitation.email)}.`,
       'not_invitee'
     );
   }
@@ -104,6 +116,15 @@ export async function previewInvitation(
     status: invitation.status,
     ...stats,
   };
+}
+
+export async function describeInvitationInvitee(
+  event: H3Event,
+  invitationId: string
+): Promise<InvitationInvitee> {
+  const invitation = await loadInvitation(event, invitationId);
+  if (!isOpen(invitation)) throw notFound('Invitation');
+  return { email: invitation.email };
 }
 
 /**
@@ -196,10 +217,14 @@ async function acceptAsInvitee(
     });
   }
 
-  await ensureCommunityCard(userId, organization.id);
+  const card = await ensureCommunityCard(userId, organization.id);
   return {
     status: 'accepted',
     organizationSlug: organization.slug,
-    redirectTo: communityHomePath(organization.slug),
+    redirectTo: isCommunityCardComplete(card)
+      ? communityHomePath(organization.slug)
+      : ROUTES.COMMUNITY_SETUP.CARD(organization.slug, card.slug, {
+          step: 'create-card',
+        }),
   };
 }

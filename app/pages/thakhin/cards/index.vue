@@ -268,6 +268,13 @@ const MEDIA_FIELDS = [
   'cardBackUrl',
 ] as const;
 
+// Enter submits only when creating; edits are saved with the button.
+function blockEnterWhileEditing(event: KeyboardEvent) {
+  if (editingId.value && event.target instanceof HTMLInputElement) {
+    event.preventDefault();
+  }
+}
+
 async function onSubmitForm() {
   isSaving.value = true;
   try {
@@ -562,7 +569,13 @@ const selectUi = {
       }"
     >
       <template #body>
-        <div class="py-2">
+        <form
+          id="card-form"
+          novalidate
+          @submit.prevent="onSubmitForm"
+          @keydown.enter="blockEnterWhileEditing"
+          class="py-2"
+        >
           <div class="flex flex-col gap-4">
             <UFormField
               v-if="editingId"
@@ -703,7 +716,7 @@ const selectUi = {
             onboarding invitation (which creates the customer org and moves the
             card). User stays unlinked until the recipient accepts.
           </p>
-        </div>
+        </form>
       </template>
 
       <template #footer>
@@ -724,7 +737,8 @@ const selectUi = {
           color="neutral"
           :loading="isSaving"
           class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
-          @click="onSubmitForm"
+          type="submit"
+          form="card-form"
         />
       </template>
     </USlideover>

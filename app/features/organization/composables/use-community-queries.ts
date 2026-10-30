@@ -5,6 +5,7 @@ import type {
   CommunityInvitationPreview,
   CommunityMember,
   CreateInvitationRequest,
+  InvitationInvitee,
   InvitationReviewResult,
   JoinLink,
   JoinLinkPreview,
@@ -14,6 +15,7 @@ import type {
   UpdateMemberRequest,
 } from '~~/shared/contracts/organization';
 import { organizationQueryKeys } from '~/features/organization/composables/use-user-organizations';
+import { parseInvitePath } from '~~/shared/utils/routes';
 
 const organizationUrl = (organizationSlug: string, path: string): string =>
   `/api/organizations/${organizationSlug}/${path}`;
@@ -173,6 +175,26 @@ export function useInvitationPreviewQuery(
         `/api/invitations/${toValue(invitationId)}` as string
       ),
     enabled: () => !!toValue(invitationId),
+    retry: false,
+  });
+}
+
+export function useInviteeEmailQuery(invitePath: MaybeRefOrGetter<string>) {
+  const invite = computed(() => parseInvitePath(toValue(invitePath)));
+  return useQuery({
+    queryKey: computed(() =>
+      organizationQueryKeys.invitee(toValue(invitePath))
+    ),
+    queryFn: () => {
+      const { kind, id } = invite.value!;
+      const collection =
+        kind === 'card' ? 'onboarding-invitations' : 'invitations';
+      return $fetch<InvitationInvitee>(
+        `/api/public/${collection}/${id}` as string
+      );
+    },
+    enabled: () => !!invite.value,
+    select: (invitee) => invitee.email,
     retry: false,
   });
 }

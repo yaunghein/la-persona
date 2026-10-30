@@ -24,6 +24,12 @@ const props = defineProps<{
   socials?: { label: string; value: string }[] | null;
   submitting?: boolean;
   draftKey: string;
+  copy: {
+    title: string;
+    description: string;
+    submitLabel: string;
+    submittingLabel: string;
+  };
 }>();
 
 const emit = defineEmits<{
@@ -314,12 +320,10 @@ watch(
           <h1
             class="text-[1.75rem] font-medium leading-tight tracking-[0.175rem] uppercase text-ink"
           >
-            Registration form
+            {{ copy.title }}
           </h1>
           <p class="text-sm leading-normal text-subtle">
-            Register for the event by filling out the form below. Don't worry
-            about getting everything perfect. You can edit your information
-            anytime.
+            {{ copy.description }}
           </p>
         </div>
 
@@ -468,7 +472,7 @@ watch(
     </div>
 
     <EventOnboardingFooter
-      :primary-label="submitting ? 'Registering...' : 'Register'"
+      :primary-label="submitting ? copy.submittingLabel : copy.submitLabel"
       :primary-disabled="submitting"
       primary-type="submit"
       secondary-label="Cancel"

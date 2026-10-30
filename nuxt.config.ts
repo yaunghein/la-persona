@@ -129,7 +129,7 @@ export default defineNuxtConfig({
     },
   },
   colorMode: {
-    preference: 'system',
+    preference: 'dark',
     fallback: 'dark',
   },
   vite: {

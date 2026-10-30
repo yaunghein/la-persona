@@ -507,7 +507,12 @@ const columns: TableColumn<UserRow>[] = [
       :ui="{ content: 'bg-surface' }"
     >
       <template #body>
-        <div class="space-y-4">
+        <form
+          id="create-person-form"
+          novalidate
+          @submit.prevent="onCreate"
+          class="space-y-4"
+        >
           <UFormField label="Name" required>
             <UInput
               v-model="createForm.name"
@@ -541,7 +546,7 @@ const columns: TableColumn<UserRow>[] = [
               class="w-full"
             />
           </UFormField>
-        </div>
+        </form>
       </template>
 
       <template #footer>
@@ -557,7 +562,8 @@ const columns: TableColumn<UserRow>[] = [
           color="neutral"
           :loading="isCreating"
           class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
-          @click="onCreate"
+          type="submit"
+          form="create-person-form"
         />
       </template>
     </USlideover>

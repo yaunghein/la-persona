@@ -10,12 +10,23 @@ usePageSeo({
 });
 
 import { Application } from '@splinetool/runtime';
+import { z } from 'zod';
+import { getSafeInternalPath } from '~~/shared/utils/safe-redirect';
 
 const toast = useToast();
 const route = useRoute();
 const loading = ref(false);
-const email = ref(
-  typeof route.query.email === 'string' ? route.query.email : ''
+const email = ref('');
+
+const { data: inviteeEmail } = useInviteeEmailQuery(
+  () => getSafeInternalPath(route.query.redirectTo) || ''
+);
+watch(
+  inviteeEmail,
+  (value) => {
+    if (value && !email.value) email.value = value;
+  },
+  { immediate: true }
 );
 const isGoogleSigningIn = ref(false);
 const isLinkedInSigningIn = ref(false);
@@ -88,42 +99,63 @@ const onLinkedIn = async () => {
   }
 };
 
+const magicLinkStatus = ref<{
+  color: 'success' | 'error';
+  title: string;
+  description: string;
+} | null>(null);
+
+watch(email, () => {
+  magicLinkStatus.value = null;
+});
+
+function showMagicLinkError(description: string) {
+  magicLinkStatus.value = {
+    color: 'error',
+    title: "Couldn't send the link",
+    description,
+  };
+}
+
 const onMagicLink = async () => {
   const normalizedEmail = email.value.trim().toLowerCase();
   if (!normalizedEmail) {
-    toast.add({
+    magicLinkStatus.value = {
+      color: 'error',
       title: 'Email required',
-      description: 'Please enter your email to receive a magic link.',
-      color: 'warning',
-    });
+      description: 'Enter your email and we will send you a sign-in\u00a0link.',
+    };
+    return;
+  }
+  if (!z.email().safeParse(normalizedEmail).success) {
+    magicLinkStatus.value = {
+      color: 'error',
+      title: 'Invalid email',
+      description: 'Enter a valid email address, like\u00a0name@example.com.',
+    };
     return;
   }
 
   isMagicLinkSending.value = true;
+  magicLinkStatus.value = null;
   try {
     const { error } = await signInWithMagicLink(normalizedEmail);
     if (error) {
-      toast.add({
-        title: 'Magic link failed',
-        description:
-          error.message || 'Could not send magic link. Please try again.',
-        color: 'error',
-      });
+      showMagicLinkError(
+        error.message || 'Check your email address and try\u00a0again.'
+      );
       return;
     }
 
-    toast.add({
-      title: 'Magic link sent',
-      description: `We sent a sign-in link to ${normalizedEmail}.`,
+    magicLinkStatus.value = {
       color: 'success',
-    });
+      title: 'Check your inbox',
+      description: `We sent a sign-in link to ${normalizedEmail}. It expires in 30\u00a0minutes.`,
+    };
   } catch (error: any) {
-    toast.add({
-      title: 'Magic link failed',
-      description:
-        error?.message || 'Could not send magic link. Please try again.',
-      color: 'error',
-    });
+    showMagicLinkError(
+      error?.message || 'Check your email address and try\u00a0again.'
+    );
   } finally {
     isMagicLinkSending.value = false;
   }
@@ -191,7 +223,7 @@ const onMagicLink = async () => {
             <div class="h-px flex-1 bg-line" />
           </div>
 
-          <div class="space-y-4">
+          <form class="space-y-4" novalidate @submit.prevent="onMagicLink">
             <UFormField
               label="Email"
               name="email"
@@ -204,24 +236,57 @@ const onMagicLink = async () => {
                 size="xl"
                 class="w-full"
                 :ui="{
-                  base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
+                  base: 'h-11.75 rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
                 }"
               />
             </UFormField>
 
-            <UButton
-              block
-              color="neutral"
-              :loading="isMagicLinkSending"
-              class="h-10 text-sm justify-center rounded-full bg-ink font-medium text-ink-inverse hover:bg-ink/90 active:hover:bg-ink/80"
-              @click="onMagicLink"
-            >
-              <template #leading>
-                <UIcon name="i-lucide-sparkles" class="size-4" />
-              </template>
-              Send Magic Link
-            </UButton>
-          </div>
+            <div class="relative">
+              <UButton
+                block
+                color="neutral"
+                type="submit"
+                :loading="isMagicLinkSending"
+                class="h-10 text-sm justify-center rounded-full bg-ink font-medium text-ink-inverse hover:bg-ink/90 active:hover:bg-ink/80"
+              >
+                <template #leading>
+                  <UIcon name="i-lucide-sparkles" class="size-4" />
+                </template>
+                Send Magic Link
+              </UButton>
+
+              <div
+                v-if="magicLinkStatus"
+                role="status"
+                aria-live="polite"
+                class="absolute inset-x-0 top-full mt-4 flex items-start gap-3 rounded-sm border px-4 py-3"
+                :class="
+                  magicLinkStatus.color === 'success'
+                    ? 'border-success-ink/20 bg-success-ink/3'
+                    : 'border-error/20 bg-error/5'
+                "
+              >
+                <UIcon
+                  v-if="magicLinkStatus.color === 'success'"
+                  name="i-lucide-mail-check"
+                  class="mt-0.5 size-4 shrink-0 text-ink"
+                />
+                <UIcon
+                  v-else
+                  name="i-lucide-triangle-alert"
+                  class="mt-0.5 size-4 shrink-0 text-ink"
+                />
+                <div class="flex flex-col gap-1">
+                  <p class="text-sm font-medium leading-5 text-ink">
+                    {{ magicLinkStatus.title }}
+                  </p>
+                  <p class="text-sm leading-5 text-subtle">
+                    {{ magicLinkStatus.description }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </form>
         </div>
 
         <p

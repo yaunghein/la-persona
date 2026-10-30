@@ -3,11 +3,6 @@ const PLATFORM_ROOT = '/platform';
 const THAKHIN_ROOT = '/thakhin';
 const INVITE_ROOT = '/invite';
 
-/** Lets sign-in prefill the magic-link email for the invitee. */
-function inviteEmailQuery(email?: string) {
-  return email ? `?email=${encodeURIComponent(email)}` : '';
-}
-
 export const ROUTES = {
   HOME: '/',
   SIGN_IN: '/sign-in',
@@ -39,10 +34,9 @@ export const ROUTES = {
   },
   INVITE: {
     ROOT: INVITE_ROOT,
-    CARD: (token: string, email?: string) =>
-      `${INVITE_ROOT}/card/${token}${inviteEmailQuery(email)}`,
-    COMMUNITY_ACCEPT: (token: string, email?: string) =>
-      `${INVITE_ROOT}/community/accept/${token}${inviteEmailQuery(email)}`,
+    CARD: (token: string) => `${INVITE_ROOT}/card/${token}`,
+    COMMUNITY_ACCEPT: (token: string) =>
+      `${INVITE_ROOT}/community/accept/${token}`,
     COMMUNITY_JOIN: (token: string) => `${INVITE_ROOT}/community/join/${token}`,
   },
   PLATFORM: {
@@ -66,6 +60,17 @@ export const ROUTES = {
 /** Community join links stay public so signed-out visitors and link previews see the community. */
 export function isProtectedInvitePath(path: string) {
   return /^\/invite\/(?:card|community\/accept)\/[^/]+\/?$/.test(path);
+}
+
+export function parseInvitePath(path: string) {
+  const match = path.match(
+    /^\/invite\/(card|community\/accept)\/([^/?#]+)\/?(?:[?#]|$)/
+  );
+  if (!match) return null;
+  return {
+    kind: match[1] === 'card' ? ('card' as const) : ('community' as const),
+    id: match[2]!,
+  };
 }
 
 export function parsePlatformEventDetailPath(path: string) {

@@ -406,7 +406,11 @@ watch(isSocialSlideoverOpen, (open) => {
     }"
   >
     <template #body>
-      <div class="space-y-6">
+      <form
+        id="social-link-form"
+        class="space-y-6"
+        @submit.prevent="saveSocialDraft"
+      >
         <UFormField
           label="Link Type"
           name="socialDraft.label"
@@ -454,7 +458,7 @@ watch(isSocialSlideoverOpen, (open) => {
             size="xl"
           />
         </UFormField>
-      </div>
+      </form>
     </template>
 
     <template #footer>
@@ -467,12 +471,12 @@ watch(isSocialSlideoverOpen, (open) => {
         @click="closeSocialSlideover"
       />
       <UButton
-        type="button"
+        type="submit"
+        form="social-link-form"
         :label="socialEditorMode === 'create' ? 'Add Link' : 'Save Link'"
         leading-icon="i-lucide-check"
         color="neutral"
         class="h-10 cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
-        @click="saveSocialDraft"
       />
     </template>
   </USlideover>

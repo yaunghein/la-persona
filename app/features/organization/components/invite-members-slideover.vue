@@ -149,7 +149,11 @@ function downloadQr() {
 
         <div class="h-px w-full bg-raised" />
 
-        <section class="flex flex-col gap-4">
+        <form
+          class="flex flex-col gap-4"
+          novalidate
+          @submit.prevent="sendInvitations"
+        >
           <div class="space-y-1">
             <h3 class="text-sm font-medium text-ink">Invite by Email</h3>
             <p class="text-sm text-subtle">Send an invite to their email.</p>
@@ -188,12 +192,12 @@ function downloadQr() {
               label="Send Invitation"
               leading-icon="i-lucide-send"
               color="neutral"
+              type="submit"
               :loading="isSending"
               class="h-10 cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
-              @click="sendInvitations"
             />
           </div>
-        </section>
+        </form>
 
         <div class="h-px w-full bg-raised" />
 

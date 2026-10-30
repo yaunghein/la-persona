@@ -331,7 +331,12 @@ const selectUi = {
       }"
     >
       <template #body>
-        <div class="py-2">
+        <form
+          id="create-invitation-form"
+          novalidate
+          @submit.prevent="onCreateInvitation"
+          class="py-2"
+        >
           <div class="flex flex-col gap-4">
             <UFormField label="Invitee Email" :class="formFieldClass">
               <UInput
@@ -414,7 +419,7 @@ const selectUi = {
               />
             </div>
           </div>
-        </div>
+        </form>
       </template>
 
       <template #footer>
@@ -434,7 +439,8 @@ const selectUi = {
           color="neutral"
           :loading="isCreating"
           class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
-          @click="onCreateInvitation"
+          type="submit"
+          form="create-invitation-form"
         />
       </template>
     </USlideover>

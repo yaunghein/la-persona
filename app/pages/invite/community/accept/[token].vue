@@ -32,9 +32,31 @@ function accept() {
   });
 }
 
-const errorMessage = computed(() =>
-  apiErrorMessage(error.value, 'This invitation is invalid.')
+const { data: session } = await authClient.useSession(useFetch);
+
+const isOtherAccount = computed(
+  () => apiErrorCode(error.value) === 'not_invitee'
 );
+
+const errorTitle = computed(() => {
+  if (!isError.value) return undefined;
+  return isOtherAccount.value
+    ? 'Signed in with another account'
+    : 'Invitation unavailable';
+});
+
+const errorMessage = computed(() => {
+  const message = apiErrorMessage(error.value, 'This invitation is invalid.');
+  const viewerEmail = session.value?.user.email;
+  return isOtherAccount.value && viewerEmail
+    ? `${message} You're signed in as ${viewerEmail}.`
+    : message;
+});
+
+function onRetry() {
+  if (isOtherAccount.value) return signOut();
+  void refetch();
+}
 
 useInAppBrowserPreview(() => {
   if (!data.value) return null;
@@ -97,8 +119,9 @@ function onAction() {
 <template>
   <UiInvitationScreen
     :pending="isPending"
-    :error-title="isError ? 'Invitation unavailable' : undefined"
+    :error-title="errorTitle"
     :error-message="isError ? errorMessage : undefined"
+    :retry-label="isOtherAccount ? 'Sign out & switch account' : undefined"
     :cover-src="data ? invitationCoverSrc(data.coverUrl) : undefined"
     :logo-src="data ? invitationLogoSrc(data.logoUrl) : undefined"
     :organization-name="data?.organizationName"
@@ -108,6 +131,6 @@ function onAction() {
     :action-label="actionLabel"
     :action-loading="isAcceptInProgress"
     @action="onAction"
-    @retry="() => void refetch()"
+    @retry="onRetry"
   />
 </template>

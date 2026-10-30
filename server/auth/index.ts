@@ -130,7 +130,7 @@ export const auth = betterAuth({
             {
               inviterName: inviter.user.name || 'A community organizer',
               organizationName: invitedOrg.name,
-              inviteUrl: `${env.BASE_URL}${ROUTES.INVITE.COMMUNITY_ACCEPT(id, email)}`,
+              inviteUrl: `${env.BASE_URL}${ROUTES.INVITE.COMMUNITY_ACCEPT(id)}`,
             }
           ),
         });

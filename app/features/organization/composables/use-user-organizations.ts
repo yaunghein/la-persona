@@ -15,6 +15,8 @@ export const organizationQueryKeys = {
     [...organizationQueryKeys.all, 'invitation', invitationId] as const,
   joinLinkPreview: (token: string) =>
     [...organizationQueryKeys.all, 'join-link-preview', token] as const,
+  invitee: (invitePath: string) =>
+    [...organizationQueryKeys.all, 'invitee', invitePath] as const,
 };
 
 /** Organizations the signed-in user belongs to (with their role in each). */

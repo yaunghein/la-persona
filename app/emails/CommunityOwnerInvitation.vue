@@ -10,21 +10,22 @@ defineProps<{
 </script>
 
 <template>
-  <EmailLayout :preview="`${organizationName} is ready for you on LA PERSONA`">
-    <EHeading as="h4" style="margin: 0; font-weight: 600; letter-spacing: 1px">
-      YOUR COMMUNITY IS READY
-    </EHeading>
-    <EText style="margin: 12px 0 0; line-height: 1.5">
-      You've been invited to own
+  <EmailLayout
+    :preview="`You're invited to own ${organizationName} on LA PERSONA`"
+  >
+    <EText style="margin: 0; line-height: 1.5">
+      You've been invited to
       <strong style="font-weight: 700">{{ organizationName }}</strong> on
-      <strong style="font-weight: 900">LA&nbsp;PERSONA</strong>.
+      <strong style="font-weight: 900">LA&nbsp;PERSONA</strong> as
+      community&nbsp;organizer.
     </EText>
 
-    <EText style="margin: 32px 0 0">AS THE&nbsp;OWNER</EText>
+    <EText style="margin: 32px 0 0">AS THE COMMUNITY&nbsp;ORGANIZER</EText>
     <EText style="margin: 8px 0 0 8px; line-height: 1.5">
-      • Get your community card<br />
-      • Set up your community's&nbsp;look<br />
-      • Invite members and run&nbsp;events
+      • Share your own community&nbsp;card<br />
+      • Invite and manage your&nbsp;members<br />
+      • Run events with registration and&nbsp;check-in<br />
+      • See views, contacts and attendance in&nbsp;analytics
     </EText>
 
     <EmailButton :href="inviteUrl">ACCEPT INVITATION</EmailButton>

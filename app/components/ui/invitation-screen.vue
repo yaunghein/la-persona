@@ -3,6 +3,7 @@ const props = defineProps<{
   pending?: boolean;
   errorTitle?: string;
   errorMessage?: string;
+  retryLabel?: string;
   coverSrc?: string;
   coverAspectClass?: string;
   logoSrc?: string;
@@ -40,7 +41,7 @@ const emit = defineEmits<{
           {{ errorMessage }}
         </p>
         <UButton
-          label="Try again"
+          :label="retryLabel || 'Try again'"
           color="neutral"
           class="h-10 text-sm rounded-full bg-ink px-5 font-medium text-ink-inverse"
           @click="emit('retry')"

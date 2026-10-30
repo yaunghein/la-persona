@@ -87,6 +87,8 @@ export const ReviewInvitationRequest = z.object({
 
 export type ReviewInvitationRequest = z.infer<typeof ReviewInvitationRequest>;
 
+export type InvitationInvitee = { email: string };
+
 export type InvitationReviewResult =
   | { status: 'accepted'; organizationSlug: string; redirectTo: string }
   | { status: 'member_added' }

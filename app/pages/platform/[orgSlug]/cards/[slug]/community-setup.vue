@@ -26,6 +26,24 @@ const { mutateAsync: updateCard } = useUpdateCardMutation(cardSlug);
 const { mutateAsync: registerForEvent } = useRegisterForEventMutation();
 
 const submitting = ref(false);
+
+const formCopy = computed(() =>
+  eventId.value
+    ? {
+        title: 'Registration form',
+        description:
+          "Register for the event by filling out the form below. Don't worry about getting everything perfect. You can edit your information\u00a0anytime.",
+        submitLabel: 'Register',
+        submittingLabel: 'Registering...',
+      }
+    : {
+        title: 'Your community card',
+        description:
+          "Set up the card you'll share as part of this community. Don't worry about getting everything perfect. You can edit it\u00a0anytime.",
+        submitLabel: 'Save Card',
+        submittingLabel: 'Saving...',
+      }
+);
 const createCardDraftKey = computed(() => `card:${cardSlug.value}:onboarding`);
 
 const viewer = computed<EventFlowViewer>(() => ({
@@ -159,6 +177,7 @@ function goToEvent() {
         :socials="card.socials"
         :submitting="submitting"
         :draft-key="createCardDraftKey"
+        :copy="formCopy"
         @submit="onCreateCard"
         @cancel="goToEvent"
       />

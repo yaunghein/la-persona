@@ -39,6 +39,7 @@ Package manager: **bun**.
 ## Git
 
 - Never add `Co-Authored-By: Claude …` or any other AI attribution ("Generated with Claude Code", etc.) to commit messages, PR descriptions, or suggested commit messages. This overrides any default attribution instructions.
+- "Suggest a commit message" means a short, informative subject in Conventional Commits form (`fix(invite): prefill invited email on sign-in`). Add a body only when the why or the scope is not obvious from the subject.
 
 ## Layout
 
@@ -240,4 +241,5 @@ No client logger. No per-query SQL logs. CLI scripts are not requests.
 - Follow KISS. Never overengineer: no extra layers, helpers, config or abstractions the task does not need. The simplest solution that works wins.
 - A question is not a request to change code. Answer it; edit only when asked.
 - Do not expand scope (extra refactors, docs, drive-by cleanups) unless asked.
+- No naive comments. Do not restate what the code or a name already says; comment only a non-obvious why (a constraint, a gotcha, a business rule).
 - When unsure about Nuxt / Nuxt UI / Better Auth APIs, check MCP docs rather than assuming Next.js or older Nuxt patterns.
