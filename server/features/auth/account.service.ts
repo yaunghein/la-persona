@@ -2,15 +2,12 @@ import { nanoid } from 'nanoid';
 import { env } from '~~/env';
 import {
   deleteOrganizations,
-  findAnyOrganization,
   findPersonalOrganization,
   insertPersonalOrganization,
   listOwnedPersonalOrganizationIds,
 } from '~~/server/features/auth/account.repository';
 import { getPendingOnboardingInvitationByEmail } from '~~/server/features/onboarding/onboarding-invitation.service';
 import { slugify } from '~~/shared/utils/slugify';
-
-export { findAnyOrganization, findPersonalOrganization };
 
 /**
  * New accounts get a personal workspace, unless an onboarding invitation is

@@ -29,10 +29,3 @@ export function addYangonMonths(monthStart: string, amount: number) {
   const nextMonth = String(shifted.getUTCMonth() + 1).padStart(2, '0');
   return `${nextYear}-${nextMonth}-01`;
 }
-
-export function yangonRange(startDay: string, endDay: string) {
-  return {
-    start: yangonDayStart(startDay),
-    end: yangonDayStart(endDay),
-  };
-}

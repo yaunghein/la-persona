@@ -16,7 +16,7 @@ import {
   listCardRequestsForReview,
   rejectLinkedPayments,
 } from '~~/server/features/card/card-request.repository';
-import { findPersonalOrganization } from '~~/server/features/auth/account.service';
+import { findPersonalOrganization } from '~~/server/features/auth/account.repository';
 import { splitPersonName } from '~~/shared/utils/person-name';
 import { restoreSubscriptionsAfterRejection } from '~~/server/features/billing/subscription.repository';
 import type {

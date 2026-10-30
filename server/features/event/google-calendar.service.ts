@@ -46,13 +46,6 @@ export async function getGoogleCalendarAccessToken(
   }
 }
 
-// Google event ids must be base32hex (0-9, a-v); sha256 hex fits and keeps one entry per registration.
-function googleEventId(userId: string, eventId: string) {
-  return createHash('sha256')
-    .update(`la-persona:${userId}:${eventId}`)
-    .digest('hex');
-}
-
 function escapeHtml(value: string) {
   return value
     .replaceAll('&', '&amp;')
@@ -147,7 +140,10 @@ export async function upsertGoogleCalendarEvent(
   row: SelectEvent,
   context: GoogleCalendarEventContext
 ) {
-  const id = googleEventId(userId, row.id);
+  // Google event ids must be base32hex (0-9, a-v); sha256 hex fits and keeps one entry per registration.
+  const id = createHash('sha256')
+    .update(`la-persona:${userId}:${row.id}`)
+    .digest('hex');
   const body = toGoogleEventBody(row, context);
 
   const inserted = await calendarRequest(

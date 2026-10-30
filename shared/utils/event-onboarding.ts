@@ -9,18 +9,6 @@ export const EVENT_ONBOARDING_STEPS = [
 
 export type EventOnboardingStep = (typeof EVENT_ONBOARDING_STEPS)[number];
 
-export const EVENT_ONBOARDING_NEXT: Record<
-  EventOnboardingStep,
-  EventOnboardingStep | null
-> = {
-  mingalarbar: 'create-card',
-  'create-card': 'setting-up',
-  'setting-up': 'download-wallpaper',
-  'download-wallpaper': 'register-success',
-  'register-success': 'how-to-use',
-  'how-to-use': null,
-};
-
 export function parseEventOnboardingStep(
   value: unknown
 ): EventOnboardingStep | null {

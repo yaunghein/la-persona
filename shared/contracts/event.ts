@@ -46,11 +46,7 @@ export const EVENT_REGISTRATION_MODES = [
   'closed',
   'invite_only',
 ] as const;
-export type EventRegistrationMode = (typeof EVENT_REGISTRATION_MODES)[number];
-
 export const EVENT_APPROVAL_MODES = ['everyone', 'manual'] as const;
-export type EventApprovalMode = (typeof EVENT_APPROVAL_MODES)[number];
-
 /** Emails an organizer sends to attendees from the event page. */
 export const EVENT_BROADCAST_KINDS = ['reminder', 'after_event'] as const;
 export type EventBroadcastKind = (typeof EVENT_BROADCAST_KINDS)[number];
@@ -355,20 +351,6 @@ export type CommunityEventsData = {
     description: string;
   }[];
   events: CommunityEvent[];
-};
-
-export type CommunityEventFormValues = {
-  title: string;
-  description: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  location: string;
-  coverUrl: string;
-  photoUrls: string[];
-  capacity: number | null;
-  registrationMode: EventDTO['registrationMode'];
-  approvalMode: EventDTO['approvalMode'];
 };
 
 export function toCommunityEvent(event: EventListItemDTO): CommunityEvent {

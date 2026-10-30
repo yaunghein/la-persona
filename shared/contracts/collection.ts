@@ -32,26 +32,6 @@ export const AdminPaginationQuery = z.object({
   offset: z.coerce.number().int().min(0).default(0),
 });
 
-/** `?sort=field` (ascending) or `?sort=-field` (descending), limited to `fields`. */
-export function sortQuery<const TField extends string>(
-  fields: readonly [TField, ...TField[]],
-  defaultSort: `${TField}` | `-${TField}`
-) {
-  const allowed = new Set<string>(
-    fields.flatMap((field) => [field, `-${field}`])
-  );
-  return z
-    .string()
-    .default(defaultSort)
-    .refine((value) => allowed.has(value), {
-      message: `Sort by one of: ${fields.join(', ')}`,
-    })
-    .transform((value) => ({
-      field: value.replace(/^-/, '') as TField,
-      direction: value.startsWith('-') ? ('desc' as const) : ('asc' as const),
-    }));
-}
-
 /** A page of a paginated collection. */
 export type Page<T> = {
   items: T[];

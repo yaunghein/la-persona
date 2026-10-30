@@ -27,16 +27,6 @@ export function isCommunityCardComplete(card: {
   );
 }
 
-export function parseCommunitySetupStep(
-  value: unknown
-): CommunitySetupStep | null {
-  const step = Array.isArray(value) ? value[0] : value;
-  if (typeof step !== 'string') return null;
-  return (COMMUNITY_SETUP_STEPS as readonly string[]).includes(step)
-    ? (step as CommunitySetupStep)
-    : null;
-}
-
 function eventHome(eventId?: string | null, orgSlug?: string | null) {
   if (eventId) return ROUTES.EVENTS.PUBLIC(eventId);
   if (orgSlug) return `${ROUTES.PLATFORM.ROOT}/${orgSlug}`;

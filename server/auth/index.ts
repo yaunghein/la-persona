@@ -15,8 +15,8 @@ import {
 import {
   findAnyOrganization,
   findPersonalOrganization,
-  provisionPersonalOrganization,
-} from '~~/server/features/auth/account.service';
+} from '~~/server/features/auth/account.repository';
+import { provisionPersonalOrganization } from '~~/server/features/auth/account.service';
 import { sendEmail } from '~~/server/lib/mailer';
 import { ROUTES } from '~~/shared/utils/routes';
 
@@ -51,15 +51,6 @@ if (env.LINKEDIN_CLIENT_ID && env.LINKEDIN_CLIENT_SECRET) {
     clientId: env.LINKEDIN_CLIENT_ID,
     clientSecret: env.LINKEDIN_CLIENT_SECRET,
   };
-}
-
-function getFallbackAvatarUrl(email: string) {
-  return `https://avatar.vercel.sh/${encodeURIComponent(email)}`;
-}
-
-function getFallbackNameFromEmail(email: string) {
-  const localPart = email.split('@')[0]?.trim();
-  return localPart || 'User';
 }
 
 export const auth = betterAuth({
@@ -147,8 +138,12 @@ export const auth = betterAuth({
           return {
             data: {
               ...user,
-              image: hasImage ? user.image : getFallbackAvatarUrl(user.email),
-              name: hasName ? user.name : getFallbackNameFromEmail(user.email),
+              image: hasImage
+                ? user.image
+                : `https://avatar.vercel.sh/${encodeURIComponent(user.email)}`,
+              name: hasName
+                ? user.name
+                : user.email.split('@')[0]?.trim() || 'User',
             },
           };
         },

@@ -60,22 +60,18 @@ export function resolveCardSubscriptionState(
   };
 }
 
-export function daysLeftUntil(endAt: Date | null, now = new Date()) {
-  if (!endAt) return null;
-  const diff = endAt.getTime() - now.getTime();
-  return diff <= 0 ? 0 : Math.ceil(diff / DAY_MS);
-}
-
 export function toSubscriptionOverview(
   state: CardSubscriptionState
 ): CardSubscriptionOverview {
+  const endAt =
+    state.status === 'trial' ? state.trialEndAt : state.currentPeriodEndAt;
+  const msLeft = endAt ? endAt.getTime() - Date.now() : null;
   return {
     status: state.status,
     planCode: state.planCode,
     isTrial: state.isTrial,
-    daysLeft: daysLeftUntil(
-      state.status === 'trial' ? state.trialEndAt : state.currentPeriodEndAt
-    ),
+    daysLeft:
+      msLeft === null ? null : msLeft <= 0 ? 0 : Math.ceil(msLeft / DAY_MS),
   };
 }
 

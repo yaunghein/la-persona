@@ -29,6 +29,7 @@ export type WideEvent = {
   outcome?: 'success' | 'client_error' | 'error';
   user_id?: string;
   user_email?: string;
+  impersonator_id?: string;
   organization_id?: string;
   organization_name?: string;
   error?: WideEventError;
@@ -52,7 +53,8 @@ export function emailErrorLabel(error: unknown): string {
   return 'Error';
 }
 
-export function normalizeRoute(pathname: string, params?: RouteParams) {
+/** Replaces param values with `:name` so tokens and ids stay out of `route`. */
+function normalizeRoute(pathname: string, params?: RouteParams) {
   const path = pathname.split('?')[0] || pathname;
   if (!params) return path;
 
@@ -66,33 +68,6 @@ export function normalizeRoute(pathname: string, params?: RouteParams) {
     route = route.split(value).join(`:${key}`);
   }
   return route;
-}
-
-export function isNoisyPath(pathname: string) {
-  const path =
-    pathname.length > 1 && pathname.endsWith('/')
-      ? pathname.slice(0, -1)
-      : pathname;
-  return (
-    path === '/api/auth/get-session' ||
-    path === '/api/public/image-proxy' ||
-    /^\/api\/public\/cards\/[^/]+\/interactions$/.test(path)
-  );
-}
-
-export function shouldEmit(input: {
-  method: string;
-  path: string;
-  status: number;
-  durationMs: number;
-  emailFailed: boolean;
-}) {
-  const failed = input.status >= 400 || input.emailFailed;
-  const slow = input.durationMs > SLOW_MS;
-  if (isNoisyPath(input.path)) return failed || slow;
-  if (failed || slow) return true;
-  const method = input.method.toUpperCase();
-  return method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS';
 }
 
 export function enrichLog(event: H3Event, fields: Record<string, unknown>) {
@@ -116,90 +91,60 @@ export function enrichLog(event: H3Event, fields: Record<string, unknown>) {
   }
 }
 
-function statusFromUnknown(error: unknown) {
-  if (error && typeof error === 'object' && 'statusCode' in error) {
-    const statusCode = (error as { statusCode?: unknown }).statusCode;
-    if (typeof statusCode === 'number' && statusCode >= 400) return statusCode;
-  }
-  return 500;
-}
-
-function validationFields(data: unknown) {
-  if (!Array.isArray(data) || data.length === 0) return;
-  const fields = data.flatMap((issue) => {
-    if (!issue || typeof issue !== 'object' || !('path' in issue)) return [];
-    const path = (issue as { path?: unknown }).path;
-    if (!Array.isArray(path) || path.length === 0) return [];
-    const field = path
-      .filter((part) => typeof part === 'string' || typeof part === 'number')
-      .join('.');
-    return field ? [field] : [];
-  });
-  if (fields.length === 0) return;
-  return `Validation failed: ${[...new Set(fields)].join(', ')}`;
-}
-
-function messageFromUnknown(error: unknown, status: number) {
-  const data =
-    error && typeof error === 'object' && 'data' in error
-      ? (error as { data?: unknown }).data
-      : undefined;
-  if (
-    data &&
-    typeof data === 'object' &&
-    !Array.isArray(data) &&
-    'message' in data &&
-    typeof (data as { message?: unknown }).message === 'string' &&
-    (data as { message: string }).message
-  ) {
-    return (data as { message: string }).message;
-  }
-
-  const fields = validationFields(data);
-  if (fields) return fields;
-
-  if (error instanceof Error && error.message) return error.message;
-  if (error && typeof error === 'object' && 'statusMessage' in error) {
-    const statusMessage = (error as { statusMessage?: unknown }).statusMessage;
-    if (
-      typeof statusMessage === 'string' &&
-      statusMessage &&
-      statusMessage !== 'Server Error'
-    ) {
-      return statusMessage;
-    }
-  }
-  return status >= 500 ? 'Internal Server Error' : 'Request failed';
-}
-
-function isH3Error(error: unknown) {
-  return (
-    !!error &&
-    typeof error === 'object' &&
-    (error as { constructor?: { __h3_error__?: boolean } }).constructor
-      ?.__h3_error__ === true
-  );
-}
-
 export function toLogError(error: unknown, status: number): WideEventError {
   const named = error instanceof Error ? error : undefined;
+  const fields =
+    error && typeof error === 'object'
+      ? (error as Record<string, unknown>)
+      : {};
+  const data = 'data' in fields ? fields.data : undefined;
+  const dataMessage =
+    data && typeof data === 'object' && !Array.isArray(data)
+      ? (data as { message?: unknown }).message
+      : undefined;
+  // Validation errors carry zod issues: log the field paths, never the values.
+  const invalidFields = Array.isArray(data)
+    ? data.flatMap((issue) => {
+        const path = (issue as { path?: unknown } | null)?.path;
+        if (!Array.isArray(path)) return [];
+        const field = path
+          .filter(
+            (part) => typeof part === 'string' || typeof part === 'number'
+          )
+          .join('.');
+        return field ? [field] : [];
+      })
+    : [];
+  const statusMessage = fields.statusMessage;
+
+  let message = status >= 500 ? 'Internal Server Error' : 'Request failed';
+  if (typeof dataMessage === 'string' && dataMessage) message = dataMessage;
+  else if (invalidFields.length > 0)
+    message = `Validation failed: ${[...new Set(invalidFields)].join(', ')}`;
+  else if (named?.message) message = named.message;
+  else if (
+    typeof statusMessage === 'string' &&
+    statusMessage &&
+    statusMessage !== 'Server Error'
+  )
+    message = statusMessage;
+
+  const isH3Error =
+    (fields.constructor as { __h3_error__?: boolean } | undefined)
+      ?.__h3_error__ === true;
   const result: WideEventError = {
-    type: isH3Error(error) ? 'H3Error' : named?.name || 'Error',
-    message: messageFromUnknown(error, status),
+    type: isH3Error ? 'H3Error' : named?.name || 'Error',
+    message,
   };
   if (status >= 500 && named?.stack) result.stack = named.stack;
   return result;
 }
 
-type LogFields = Record<string, unknown>;
-
-function isLogFields(value: unknown): value is LogFields {
-  return !!value && typeof value === 'object' && !Array.isArray(value);
-}
-
-function unnamedOrganizations(wide: WideEvent) {
-  const targets: Array<{ fields: LogFields; id: string; nameKey: string }> = [];
-  const add = (fields: LogFields, id: unknown, nameKey: string) => {
+/** Fills `organization_name` (or `organization.name`) next to every organization id on the line. */
+async function addOrganizationNames(wide: WideEvent) {
+  type Fields = Record<string, unknown>;
+  const targets: Array<{ fields: Fields; id: string; nameKey: string }> = [];
+  const add = (fields: Fields, id: unknown, nameKey: string) => {
     if (typeof id === 'string' && id && !fields[nameKey]) {
       targets.push({ fields, id, nameKey });
     }
@@ -207,15 +152,11 @@ function unnamedOrganizations(wide: WideEvent) {
 
   add(wide, wide.organization_id, 'organization_name');
   for (const [key, value] of Object.entries(wide)) {
-    if (!isLogFields(value)) continue;
-    if (key === 'organization') add(value, value.id, 'name');
-    else add(value, value.organization_id, 'organization_name');
+    if (!value || typeof value !== 'object' || Array.isArray(value)) continue;
+    const nested = value as Fields;
+    if (key === 'organization') add(nested, nested.id, 'name');
+    else add(nested, nested.organization_id, 'organization_name');
   }
-  return targets;
-}
-
-async function addOrganizationNames(wide: WideEvent) {
-  const targets = unnamedOrganizations(wide);
   if (targets.length === 0) return;
 
   try {
@@ -232,10 +173,6 @@ async function addOrganizationNames(wide: WideEvent) {
   } catch {
     // The request line still goes out with ids only.
   }
-}
-
-function writeWideEvent(wide: WideEvent, level: 'error' | 'warn' | 'info') {
-  void addOrganizationNames(wide).then(() => logger[level](wide));
 }
 
 export function emitWideEvent(event: H3Event) {
@@ -258,13 +195,20 @@ export function emitWideEvent(event: H3Event) {
     event.context.params as RouteParams | undefined
   );
 
-  const user = event.context.principal?.user;
-  if (!wide.user_id && user?.id) wide.user_id = user.id;
-  if (!wide.user_email && user?.email) wide.user_email = user.email;
+  const principal = event.context.principal;
+  if (!wide.user_id && principal?.user.id) wide.user_id = principal.user.id;
+  if (!wide.user_email && principal?.user.email) {
+    wide.user_email = principal.user.email;
+  }
+  // `user_*` is the impersonated user; this records the admin acting as them.
+  if (principal?.impersonatorId)
+    wide.impersonator_id = principal.impersonatorId;
 
-  const organizationId = event.context.principal?.session.activeOrganizationId;
-  if (!wide.organization_id && organizationId) {
-    wide.organization_id = organizationId;
+  // Top-level `organization_id` is set by authorization for the organization the
+  // request acted on; the caller's active workspace is kept apart so it can't be mistaken for it.
+  const sessionOrganizationId = principal?.session.activeOrganizationId;
+  if (sessionOrganizationId) {
+    wide.session = { organization_id: sessionOrganizationId };
   }
 
   if (!wide.outcome) {
@@ -277,27 +221,24 @@ export function emitWideEvent(event: H3Event) {
   }
 
   const emailFailed = wide.email?.ok === false;
-  if (
-    !shouldEmit({
-      method: wide.method,
-      path: pathname,
-      status,
-      durationMs: wide.duration_ms,
-      emailFailed,
-    })
-  ) {
-    return;
-  }
+  const failed = status >= 400 || emailFailed;
+  const slow = wide.duration_ms > SLOW_MS;
+  const path =
+    pathname.length > 1 && pathname.endsWith('/')
+      ? pathname.slice(0, -1)
+      : pathname;
+  const isNoisy =
+    path === '/api/auth/get-session' ||
+    path === '/api/public/image-proxy' ||
+    /^\/api\/public\/cards\/[^/]+\/interactions$/.test(path);
+  const method = wide.method.toUpperCase();
+  const isRead = method === 'GET' || method === 'HEAD' || method === 'OPTIONS';
+  // Logged: failures, slow calls, and writes outside the noisy routes.
+  if (!failed && !slow && (isRead || isNoisy)) return;
 
-  if (status >= 500 || emailFailed) {
-    writeWideEvent(wide, 'error');
-    return;
-  }
-  if (status >= 400 || wide.duration_ms > SLOW_MS) {
-    writeWideEvent(wide, 'warn');
-    return;
-  }
-  writeWideEvent(wide, 'info');
+  const level =
+    status >= 500 || emailFailed ? 'error' : failed || slow ? 'warn' : 'info';
+  void addOrganizationNames(wide).then(() => logger[level](wide));
 }
 
 export function settleEmailResults(

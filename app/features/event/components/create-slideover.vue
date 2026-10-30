@@ -217,19 +217,15 @@ function revokePreview(item: DraftEventMedia | null) {
   }
 }
 
-async function uploadEventImage(file: File) {
+async function storedImageUrl(item: DraftEventMedia) {
+  if (item.source === 'remote') return item.previewUrl;
+  if (!item.file) throw new Error('Upload failed');
   const fileKey = await uploadImage(
-    file,
+    item.file,
     { organizationSlug: organizationSlug.value },
     { maxSizeMB: 1.5, maxWidthOrHeight: 2400 }
   );
   return resolveObjectStorageUrl(fileKey);
-}
-
-async function storedImageUrl(item: DraftEventMedia) {
-  if (item.source === 'remote') return item.previewUrl;
-  if (!item.file) throw new Error('Upload failed');
-  return uploadEventImage(item.file);
 }
 
 async function uploadedImageUrls() {

@@ -9,7 +9,9 @@ const options: pino.LoggerOptions = {
   timestamp: pino.stdTimeFunctions.isoTime,
   base: {
     service: 'la-persona',
-    env: env.NODE_ENV,
+    // NODE_ENV is "production" on staging too, so prefer the deploy environment.
+    env: env.RAILWAY_ENVIRONMENT_NAME || env.NODE_ENV,
+    version: env.RAILWAY_GIT_COMMIT_SHA || undefined,
   },
   redact: {
     paths: [
@@ -30,7 +32,11 @@ const options: pino.LoggerOptions = {
 
 function createLogger() {
   if (env.NODE_ENV === 'production') {
-    return pino(options);
+    // Railway filters and colors by a string `level`; pino defaults to numbers.
+    return pino({
+      ...options,
+      formatters: { level: (label) => ({ level: label }) },
+    });
   }
 
   try {

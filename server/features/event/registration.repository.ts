@@ -41,24 +41,6 @@ export async function findRegistrationByEventAndUser(
   return row ?? null;
 }
 
-export async function findRegistrationByIdAndEvent(
-  registrationId: string,
-  eventId: string
-) {
-  const [row] = await db
-    .select()
-    .from(eventRegistration)
-    .where(
-      and(
-        eq(eventRegistration.id, registrationId),
-        eq(eventRegistration.eventId, eventId)
-      )
-    )
-    .limit(1);
-
-  return row ?? null;
-}
-
 export async function countCountedRegistrations(eventId: string) {
   const [row] = await db
     .select({ value: count() })
@@ -133,18 +115,6 @@ export function toViewerStatus(
   status: EventRegistrationStatus | undefined
 ): ViewerRegistrationStatus {
   return status ?? 'none';
-}
-
-export async function insertEventRegistration(values: {
-  eventId: string;
-  userId: string;
-  status: EventRegistrationStatus;
-}) {
-  const [inserted] = await db
-    .insert(eventRegistration)
-    .values(values)
-    .returning();
-  return inserted;
 }
 
 export async function deleteEventRegistration(eventId: string, userId: string) {
@@ -225,25 +195,6 @@ export async function countCheckedInByUsersInOrganization(
     .groupBy(eventRegistration.userId);
 
   return new Map(rows.map((row) => [row.userId, Number(row.value)]));
-}
-
-export async function countCheckedInByUserInOrganization(
-  userId: string,
-  organizationId: string
-) {
-  const [row] = await db
-    .select({ value: count() })
-    .from(eventRegistration)
-    .innerJoin(event, eq(event.id, eventRegistration.eventId))
-    .where(
-      and(
-        eq(eventRegistration.userId, userId),
-        eq(event.organizationId, organizationId),
-        eq(eventRegistration.status, 'checked_in')
-      )
-    );
-
-  return row?.value ?? 0;
 }
 
 export async function countMembersJoinedSince(

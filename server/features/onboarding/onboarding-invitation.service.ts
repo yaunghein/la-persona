@@ -31,12 +31,6 @@ import type {
 } from '~~/shared/contracts/onboarding';
 import type { InvitationInvitee } from '~~/shared/contracts/organization';
 
-export function addMonths(base: Date, months: number) {
-  const result = new Date(base);
-  result.setMonth(result.getMonth() + months);
-  return result;
-}
-
 export function normalizeEmail(value: string) {
   return String(value || '')
     .trim()
@@ -265,7 +259,8 @@ export async function acceptOnboardingInvitation(params: {
       .where(eq(card.id, invite.cardId));
 
     const startAt = now;
-    const endAt = addMonths(startAt, Math.max(0, invite.freeMonths));
+    const endAt = new Date(startAt);
+    endAt.setMonth(endAt.getMonth() + Math.max(0, invite.freeMonths));
 
     const [payment] = await tx
       .insert(subscriptionPayment)

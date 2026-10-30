@@ -111,15 +111,6 @@ export async function findCardBySlug(slug: string): Promise<CardRecord | null> {
   return row ?? null;
 }
 
-export async function findCardById(cardId: string): Promise<CardRecord | null> {
-  const [row] = await db
-    .select()
-    .from(card)
-    .where(eq(card.id, cardId))
-    .limit(1);
-  return row ?? null;
-}
-
 /** The account email of the card's holder, if the card is claimed. */
 export async function findCardOwnerEmail(cardId: string) {
   const [row] = await db

@@ -1,5 +1,5 @@
 import { authorizeContactAccess } from '~~/server/features/contact/contact.policy';
-import { deleteContact } from '~~/server/features/contact/contact.service';
+import { deleteContact } from '~~/server/features/contact/contact.repository';
 import { ContactRouteParams } from '~~/shared/contracts/contact';
 
 export default defineEventHandler(async (event) => {

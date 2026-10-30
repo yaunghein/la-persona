@@ -11,7 +11,6 @@ import { sendEventCheckInEmail } from '~~/server/features/event/check-in.notific
 import { qrTicketImageUrl } from '~~/server/features/event/event-email-content';
 import { findCommunitySettingByOrganizationId } from '~~/server/features/organization/community-setting.repository';
 import {
-  deleteEventByIdAndOrganizationId,
   findEventsByOrganizationId,
   findPublicEventById,
   insertEvent,
@@ -150,10 +149,6 @@ export async function updateEvent(
   );
   if (!updated) throw notFound('Event');
   return toEventDTO(updated);
-}
-
-export async function deleteEvent(record: SelectEvent) {
-  await deleteEventByIdAndOrganizationId(record.id, record.organizationId);
 }
 
 export async function listAttendees(record: SelectEvent) {

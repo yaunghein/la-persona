@@ -246,14 +246,6 @@ export async function expireLapsedSubscriptions(now = new Date()) {
   return expired.length;
 }
 
-export async function countSubmittedPayments() {
-  const [row] = await db
-    .select({ value: count() })
-    .from(subscriptionPayment)
-    .where(eq(subscriptionPayment.status, 'submitted'));
-  return Number(row?.value ?? 0);
-}
-
 const LINKED_REQUEST_ID = /^(?:New|Existing) design request \(([^)]+)\)$/;
 
 /** Card request linked to a payment (by column, or the legacy note format). */

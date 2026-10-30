@@ -12,7 +12,7 @@ function isShareAbortError(error: unknown) {
   return error instanceof DOMException && error.name === 'AbortError';
 }
 
-export function isMobileDevice() {
+function isMobileDevice() {
   if (typeof navigator === 'undefined') return false;
   const ua = navigator.userAgent;
   if (/Android|iPhone|iPad|iPod/i.test(ua)) return true;
@@ -39,11 +39,11 @@ function canShareFiles(files: File[]) {
   }
 }
 
-function downloadBlob(blob: Blob, fileName: string) {
-  const objectUrl = URL.createObjectURL(blob);
+export function downloadFile(input: { blob: Blob; fileName: string }) {
+  const objectUrl = URL.createObjectURL(input.blob);
   const anchor = document.createElement('a');
   anchor.href = objectUrl;
-  anchor.download = fileName;
+  anchor.download = input.fileName;
   anchor.rel = 'noopener';
   anchor.style.display = 'none';
   document.body.appendChild(anchor);
@@ -64,32 +64,9 @@ async function fetchTypedBlob(url: string, fileName: string) {
     : new Blob([blob], { type: guessMimeType(fileName, blob.type) });
 }
 
-export function downloadFile(input: { blob: Blob; fileName: string }) {
-  downloadBlob(input.blob, input.fileName);
-}
-
 export async function downloadUrl(input: { url: string; fileName: string }) {
   const blob = await fetchTypedBlob(input.url, input.fileName);
   downloadFile({ blob, fileName: input.fileName });
-}
-
-export async function shareFiles(
-  files: { blob: Blob; fileName: string }[]
-): Promise<'shared' | 'cancelled' | 'unavailable'> {
-  const shareable = files.map((file) => {
-    const type = file.blob.type || guessMimeType(file.fileName);
-    return new File([file.blob], file.fileName, { type });
-  });
-
-  if (!canShareFiles(shareable)) return 'unavailable';
-
-  try {
-    await navigator.share({ files: shareable });
-    return 'shared';
-  } catch (error) {
-    if (isShareAbortError(error)) return 'cancelled';
-    return 'unavailable';
-  }
 }
 
 export async function shareOrDownloadFile(input: {

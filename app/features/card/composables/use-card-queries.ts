@@ -7,23 +7,10 @@ import type {
   CreateCardRequestRequest,
   ListCardRequestsQuery,
   ListCardUpdateRequestsQuery,
-  PublicCard,
   ReviewCardRequestRequest,
   UpdateCardRequest,
 } from '~~/shared/contracts/card';
 import type { Collection, Page } from '~~/shared/contracts/collection';
-
-/** Typed as plain strings so Nitro's route-type inference doesn't explode on dynamic paths. */
-function cardResourceUrl(cardSlug: string): string {
-  return `/api/cards/${cardSlug}`;
-}
-
-function adminRequestUrl(
-  kind: 'card-requests' | 'card-update-requests',
-  requestId: string
-): string {
-  return `/api/admin/${kind}/${requestId}`;
-}
 
 export const cardQueryKeys = {
   all: ['cards'] as const,
@@ -96,14 +83,10 @@ export function useDeleteCardMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (cardSlug: string) =>
-      $fetch<void>(cardResourceUrl(cardSlug), { method: 'DELETE' }),
+      $fetch<void>(`/api/cards/${cardSlug}` as string, { method: 'DELETE' }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: cardQueryKeys.all }),
   });
-}
-
-export function fetchPublicCard(cardSlug: string) {
-  return $fetch<PublicCard>(`/api/public/cards/${cardSlug}`);
 }
 
 /** Buy a new card (new or existing design) with a payment receipt. */
@@ -159,7 +142,7 @@ export function useReviewCardRequestMutation(
       requestId,
       status,
     }: { requestId: string } & ReviewCardRequestRequest) =>
-      $fetch<unknown>(adminRequestUrl(kind, requestId), {
+      $fetch<unknown>(`/api/admin/${kind}/${requestId}` as string, {
         method: 'PATCH',
         body: { status },
       }),

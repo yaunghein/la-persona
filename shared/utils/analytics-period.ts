@@ -11,11 +11,6 @@ export const ANALYTICS_PERIOD_OPTIONS: {
   { label: '90 Days', value: '90d' },
 ];
 
-export function parseAnalyticsPeriod(value: unknown): AnalyticsPeriod {
-  if (value === '30d' || value === '90d') return value;
-  return '7d';
-}
-
 export function analyticsPeriodDays(period: AnalyticsPeriod) {
   if (period === '90d') return 90;
   if (period === '30d') return 30;

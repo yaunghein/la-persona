@@ -64,10 +64,6 @@ export function joinLinkUrl(token: string) {
   return `${env.BASE_URL}${ROUTES.INVITE.COMMUNITY_JOIN(token)}`;
 }
 
-export function invitationUrl(invitationId: string) {
-  return `${env.BASE_URL}${ROUTES.INVITE.COMMUNITY_ACCEPT(invitationId)}`;
-}
-
 export async function listOrganizationsOfUser(
   userId: string
 ): Promise<Collection<UserOrganization>> {
@@ -212,15 +208,6 @@ export async function assertMemberRoleChangeable(
   return target;
 }
 
-function linkedinFromSocials(
-  socials: { label: string; value: string }[] | null | undefined
-) {
-  return (
-    socials?.find((item) => item.label.toLowerCase().includes('linkedin'))
-      ?.value || null
-  );
-}
-
 function fullName(firstName: string, lastName?: string | null) {
   return [firstName, lastName].filter(Boolean).join(' ').trim();
 }
@@ -271,7 +258,10 @@ export async function listCommunityRoster(
       firstName,
       lastName,
       phone: communityCard?.phone || null,
-      linkedin: linkedinFromSocials(communityCard?.socials),
+      linkedin:
+        communityCard?.socials?.find((item) =>
+          item.label.toLowerCase().includes('linkedin')
+        )?.value || null,
     };
   });
 

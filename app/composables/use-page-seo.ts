@@ -39,14 +39,9 @@ export function truncateSeoText(value: string, max = 160) {
   return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`;
 }
 
-export function useSiteOrigin() {
-  const baseUrl = env.BASE_URL;
-  return (baseUrl || useRequestURL().origin).replace(/\/$/, '');
-}
-
 export function usePageSeo(options: PageSeoOptions) {
   const route = useRoute();
-  const origin = useSiteOrigin();
+  const origin = (env.BASE_URL || useRequestURL().origin).replace(/\/$/, '');
 
   const absoluteUrl = (value: string) =>
     /^https?:\/\//i.test(value)

@@ -65,35 +65,6 @@ export const organizationRoles = {
   volunteer: organizationVolunteerRole,
 };
 
-export const ORGANIZATION_PERMISSIONS = {
-  ORGANIZATION_READ: { organization: ['read'] },
-  ORGANIZATION_UPDATE: { organization: ['update'] },
-  ORGANIZATION_DELETE: { organization: ['delete'] },
-  EVENT_CREATE: { event: ['create'] },
-  EVENT_READ: { event: ['read'] },
-  EVENT_UPDATE: { event: ['update'] },
-  EVENT_DELETE: { event: ['delete'] },
-  MEMBER_CREATE: { member: ['create'] },
-  MEMBER_UPDATE: { member: ['update'] },
-  MEMBER_DELETE: { member: ['delete'] },
-  INVITATION_CREATE: { invitation: ['create'] },
-  INVITATION_CANCEL: { invitation: ['cancel'] },
-  CARD_CREATE: { card: ['create'] },
-  CARD_READ: { card: ['read'] },
-  CARD_READ_ALL: { card: ['readAll'] },
-  CARD_UPDATE: { card: ['update'] },
-  CARD_DELETE: { card: ['delete'] },
-  CARD_REQUEST_CREATE: { cardRequest: ['create'] },
-  CARD_REQUEST_UPDATE: { cardRequest: ['update'] },
-  CONTACT_EXCHANGE_CREATE: { contactExchange: ['create'] },
-  CONTACT_EXCHANGE_READ: { contactExchange: ['read'] },
-  CONTACT_EXCHANGE_READ_ALL: { contactExchange: ['readAll'] },
-  CONTACT_EXCHANGE_DELETE: { contactExchange: ['delete'] },
-  MEDIA_UPLOAD: { media: ['upload'] },
-  CHECK_IN_READ: { checkIn: ['read'] },
-  CHECK_IN_CREATE: { checkIn: ['create'] },
-} as const;
-
 type OrganizationPermissionStatements = typeof organizationPermissionStatements;
 
 /** A single org-scoped permission, written `resource:action` (e.g. `event:update`). */
@@ -131,12 +102,6 @@ export function roleHasPermission(
         }).success
     );
 }
-
-export type OrganizationPermission = {
-  [Resource in keyof typeof organizationPermissionStatements]?: ReadonlyArray<
-    (typeof organizationPermissionStatements)[Resource][number]
-  >;
-};
 
 export type OrganizationMemberRole = 'owner' | 'admin' | 'member' | 'volunteer';
 

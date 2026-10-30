@@ -17,11 +17,6 @@ export type ExchangedContact = {
   position: string;
 };
 
-function contactExchangeSubject(name: string) {
-  const firstName = name.trim().split(/\s+/)[0] || 'LA PERSONA';
-  return `New Contact Exchange from ${firstName} 👋`;
-}
-
 /**
  * One recipient per message. Subject and body come from a fixed template, so
  * public callers can never choose the content or fan out to many addresses.
@@ -36,9 +31,11 @@ export async function sendContactExchangeEmail(params: {
       ...params.contact,
       contactsUrl: `${env.BASE_URL}${ROUTES.PLATFORM.CONTACTS}`,
     });
+    const firstName =
+      params.contact.name.trim().split(/\s+/)[0] || 'LA PERSONA';
     await sendEmail({
       to,
-      subject: contactExchangeSubject(params.contact.name),
+      subject: `New Contact Exchange from ${firstName} 👋`,
       html,
     });
     return { ok: true, template: TEMPLATE, to };

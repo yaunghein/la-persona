@@ -27,19 +27,6 @@ export const findEventsByOrganizationId = (organizationId: string) => {
     .orderBy(desc(event.startsAt));
 };
 
-export const findEventByIdAndOrganizationId = async (
-  id: string,
-  organizationId: string
-) => {
-  const [row] = await db
-    .select()
-    .from(event)
-    .where(and(eq(event.id, id), eq(event.organizationId, organizationId)))
-    .limit(1);
-
-  return row;
-};
-
 export const findPublicEventById = async (id: string) => {
   const [row] = await db
     .select({

@@ -1,8 +1,4 @@
-import {
-  isQrFinderCell,
-  QR_DOT_RADIUS_RATIO,
-  ticketQrRect,
-} from '~~/shared/utils/qr-ticket';
+import { isQrFinderCell, QR_DOT_RADIUS_RATIO } from '~~/shared/utils/qr-ticket';
 
 const QR_SIZE_RATIO = 0.3;
 const QR_PADDING_RATIO = 0.05;
@@ -66,10 +62,6 @@ function fillStrokeAndDrawQrInRoundedFrame(
   context.beginPath();
   context.roundRect(sx, sy, sw, sh, strokeR);
   context.stroke();
-}
-
-export function wallpaperFileSegment(input?: string) {
-  return (input || 'card').replace(/[^a-z0-9-_]+/gi, '-').toLowerCase();
 }
 
 function loadImage(url: string) {
@@ -186,18 +178,6 @@ async function createStyledQrCanvas(
   }
 
   return qrCanvas;
-}
-
-export function canvasToPngBlob(canvas: HTMLCanvasElement) {
-  return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((result) => {
-      if (!result) {
-        reject(new Error('Failed to create image file'));
-        return;
-      }
-      resolve(result);
-    }, 'image/png');
-  });
 }
 
 export async function renderWallpaperCanvas(options: WallpaperImageOptions) {
@@ -317,39 +297,6 @@ export async function renderQrCanvas(options: {
     borderWidth,
     hexToRgba(qrColor, qrBorderOpacity)
   );
-
-  return canvas;
-}
-
-export async function renderTicketQrCanvas(options: {
-  backgroundUrl: string;
-  cardUrl: string;
-  qrColor?: string;
-}) {
-  if (!options.backgroundUrl || !options.cardUrl) {
-    throw new Error('QR is not ready');
-  }
-
-  const image = await loadImage(options.backgroundUrl);
-  const width = image.naturalWidth;
-  const height = image.naturalHeight;
-
-  const { x: qrX, y: qrY, size: qrSize } = ticketQrRect(width, height);
-
-  const styledQr = await createStyledQrCanvas(
-    options.cardUrl,
-    qrSize,
-    options.qrColor || DEFAULTS.qrColor
-  );
-
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const context = canvas.getContext('2d');
-  if (!context) throw new Error('Canvas context unavailable');
-
-  context.drawImage(image, 0, 0, width, height);
-  context.drawImage(styledQr, qrX, qrY, qrSize, qrSize);
 
   return canvas;
 }

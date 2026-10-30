@@ -5,7 +5,6 @@ import {
   type CardRecord,
 } from '~~/server/features/card/card.repository';
 import {
-  deleteContact,
   insertContact,
   insertLegacyContactExchange,
   listContacts,
@@ -78,7 +77,7 @@ function deliverContactExchangeEmails(
   };
 }
 
-async function toContactPage(
+export async function listContactPage(
   scope: ContactScope,
   query: ListContactsQuery
 ): Promise<Page<ContactSummary>> {
@@ -109,10 +108,6 @@ export async function workspaceContactScope(
   return { cardIds: workspaceCards.map((row) => row.card.id) };
 }
 
-export function listContactPage(scope: ContactScope, query: ListContactsQuery) {
-  return toContactPage(scope, query);
-}
-
 /** Upper bound for one export; far above any real workspace today. */
 const CONTACT_EXPORT_LIMIT = 10_000;
 
@@ -121,7 +116,7 @@ export async function exportContactsCsv(
   query: Omit<ListContactsQuery, 'limit' | 'offset'>,
   options: { includeOrigin: boolean }
 ) {
-  const { items } = await toContactPage(scope, {
+  const { items } = await listContactPage(scope, {
     ...query,
     limit: CONTACT_EXPORT_LIMIT,
     offset: 0,
@@ -173,8 +168,6 @@ export async function createManualContact(params: {
     source: 'manual',
   });
 }
-
-export { deleteContact };
 
 /**
  * A visitor fills the public form on a card: save the contact for the card,

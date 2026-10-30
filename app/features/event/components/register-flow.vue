@@ -74,7 +74,6 @@ type RegisterStep = 'confirm' | 'registering' | 'success';
 const step = ref<RegisterStep>(
   props.viewerRegistrationStatus !== 'none' ? 'success' : 'confirm'
 );
-let registeringTimer: ReturnType<typeof setTimeout> | null = null;
 
 const galleryImages = computed(() =>
   eventGalleryImages(props.event.coverUrl, props.event.photoUrls)
@@ -143,12 +142,6 @@ const spotsLabel = computed(() => {
   return `${remaining} spot${remaining === 1 ? '' : 's'} available`;
 });
 
-function clearRegisteringTimer() {
-  if (!registeringTimer) return;
-  clearTimeout(registeringTimer);
-  registeringTimer = null;
-}
-
 async function startRegister() {
   if (step.value !== 'confirm' || registrationBlock.value) return;
 
@@ -186,10 +179,6 @@ watch(
   },
   { immediate: true }
 );
-
-onBeforeUnmount(() => {
-  clearRegisteringTimer();
-});
 </script>
 
 <template>

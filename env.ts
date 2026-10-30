@@ -39,6 +39,9 @@ const ServerEnv = PublicEnv.extend({
   DEFAULT_CARD_BACK_URL: z.string().min(1),
   DEFAULT_WALLPAPER_URL: z.string().min(1),
   PLACEHOLDER_ORGANIZATION_ID: z.string().min(1), // Unclaimed Thakhin-created cards live here until an onboarding invite assigns a real org.
+  // Injected by Railway on deploy; unset locally.
+  RAILWAY_ENVIRONMENT_NAME: z.string().optional(),
+  RAILWAY_GIT_COMMIT_SHA: z.string().optional(),
 });
 
 export const env = (

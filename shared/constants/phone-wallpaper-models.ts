@@ -110,22 +110,3 @@ export const phoneWallpaperModels: PhoneWallpaperModel[] = [
     height: 2469,
   },
 ];
-
-export function closestPhoneWallpaperModel(width: number, height: number) {
-  const targetWidth = Math.min(width, height);
-  const targetHeight = Math.max(width, height);
-  let best = phoneWallpaperModels[0]!;
-  let bestScore = Number.POSITIVE_INFINITY;
-
-  for (const model of phoneWallpaperModels) {
-    const score =
-      Math.abs(model.width - targetWidth) +
-      Math.abs(model.height - targetHeight);
-    if (score < bestScore) {
-      best = model;
-      bestScore = score;
-    }
-  }
-
-  return best;
-}

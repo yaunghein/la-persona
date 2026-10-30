@@ -8,7 +8,6 @@ import type {
   InvitationInvitee,
   InvitationReviewResult,
   JoinLink,
-  JoinLinkPreview,
   MembershipResult,
   ReviewInvitationRequest,
   UpdateCommunitySettingsRequest,
@@ -216,10 +215,6 @@ export function useAcceptInvitationMutation(
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: organizationQueryKeys.all }),
   });
-}
-
-export function fetchJoinLinkPreview(token: string) {
-  return $fetch<JoinLinkPreview>(`/api/public/join-links/${token}` as string);
 }
 
 export function useJoinCommunityMutation(token: MaybeRefOrGetter<string>) {

@@ -1,15 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import type {
   AddToGoogleCalendarResult,
-  CreateEventRequest,
   EventAttendeeCollection,
   EventBroadcastKind,
   EventCollection,
   EventDetailDTO,
-  EventDTO,
   EventMembershipResult,
   TicketLookup,
-  UpdateEventRequest,
 } from '~~/shared/contracts/event';
 import { timezoneOffsetQuery } from '~~/shared/utils/datetime';
 import { organizationQueryKeys } from '~/features/organization/composables/use-user-organizations';
@@ -69,47 +66,6 @@ export function useEventAttendeesQuery(
 function useInvalidateEvents() {
   const queryClient = useQueryClient();
   return () => queryClient.invalidateQueries({ queryKey: eventQueryKeys.all });
-}
-
-export function useCreateEventMutation(
-  organizationSlug: MaybeRefOrGetter<string>
-) {
-  const invalidateEvents = useInvalidateEvents();
-  return useMutation({
-    mutationFn: (request: CreateEventRequest) =>
-      $fetch<EventDTO>(
-        `/api/organizations/${toValue(organizationSlug)}/events` as string,
-        {
-          method: 'POST',
-          body: request,
-        }
-      ),
-    onSuccess: invalidateEvents,
-  });
-}
-
-export function useUpdateEventMutation() {
-  const invalidateEvents = useInvalidateEvents();
-  return useMutation({
-    mutationFn: ({
-      eventId,
-      request,
-    }: {
-      eventId: string;
-      request: UpdateEventRequest;
-    }) =>
-      $fetch<EventDTO>(eventUrl(eventId), { method: 'PATCH', body: request }),
-    onSuccess: invalidateEvents,
-  });
-}
-
-export function useDeleteEventMutation() {
-  const invalidateEvents = useInvalidateEvents();
-  return useMutation({
-    mutationFn: (eventId: string) =>
-      $fetch<void>(eventUrl(eventId), { method: 'DELETE' }),
-    onSuccess: invalidateEvents,
-  });
 }
 
 /** The signed-in member registers for an event (idempotent). */

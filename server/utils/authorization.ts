@@ -63,13 +63,6 @@ export function canAccessOrganization(
   return roleHasPermission(access.membership.role, permission);
 }
 
-export function assertOrganizationPermission(
-  access: Pick<OrganizationAccess, 'membership'>,
-  permission: OrganizationPermissionKey
-): void {
-  if (!canAccessOrganization(access, permission)) throw forbidden();
-}
-
 function toOrganizationAccess(
   event: H3Event,
   principal: Principal,
@@ -85,7 +78,9 @@ function toOrganizationAccess(
   });
 
   const access = { ...membership, principal };
-  if (permission) assertOrganizationPermission(access, permission);
+  if (permission && !canAccessOrganization(access, permission)) {
+    throw forbidden();
+  }
   return access;
 }
 
