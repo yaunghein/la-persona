@@ -389,6 +389,13 @@ function removePhoto(id: string) {
   photos.value = next;
 }
 
+const isRegistrationOpen = computed({
+  get: () => state.registrationMode === 'open',
+  set: (open: boolean) => {
+    state.registrationMode = open ? 'open' : 'closed';
+  },
+});
+
 function openCapacityEditor() {
   capacityDraft.value = state.capacity === null ? '' : String(state.capacity);
   isCapacityEditorOpen.value = true;
@@ -909,6 +916,20 @@ async function copyEventLink() {
               />
             </div>
           </div>
+        </div>
+
+        <div class="flex items-start justify-between gap-4">
+          <div class="space-y-1">
+            <p class="text-sm font-medium text-ink">Registration open</p>
+            <p class="text-sm text-subtle">
+              Turn off to stop new&nbsp;registrations.
+            </p>
+          </div>
+          <USwitch
+            v-model="isRegistrationOpen"
+            color="neutral"
+            aria-label="Registration open"
+          />
         </div>
       </UForm>
     </template>
