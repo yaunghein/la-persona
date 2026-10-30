@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Application } from '@splinetool/runtime';
-import { applyCommunityCardToSpline } from '~/features/card/utils/spline-card';
+import { applyCombinedCardToSpline } from '~/features/card/utils/spline-card';
 
 const props = defineProps<{
   eventTitle?: string | null;
@@ -48,7 +48,7 @@ function applyVariables() {
   splineApp.setBackgroundColor(
     colorMode.value === 'light' ? '#f6f6f8' : '#171717'
   );
-  applyCommunityCardToSpline(splineApp, cardFields.value);
+  applyCombinedCardToSpline(splineApp, cardFields.value);
 }
 
 function disposeSpline() {
