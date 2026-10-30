@@ -241,6 +241,7 @@ onBeforeUnmount(() => {
         <div class="flex flex-col gap-6">
           <div class="flex flex-col gap-4">
             <h1
+              :lang="textLang(event.title)"
               class="text-xl font-medium leading-[1.35] tracking-[0.125rem] uppercase text-ink"
             >
               {{ event.title }}
@@ -248,6 +249,7 @@ onBeforeUnmount(() => {
             <UiRichText
               v-if="event.description"
               :content="event.description"
+              :lang="textLang(event.description)"
               class="text-sm font-normal leading-normal text-subtle"
             />
           </div>

@@ -140,3 +140,8 @@ input[type='reset'] {
     scrollbar-width: none;
   }
 }
+
+:lang(my) {
+  line-height: 1.8;
+  letter-spacing: normal;
+}

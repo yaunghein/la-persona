@@ -36,7 +36,6 @@ const isHtml = computed(() => /<[a-z][^>]*>/i.test(props.content));
 
 .community-rich-text-view :deep(li) {
   margin: 0;
-  line-height: 1.5;
 }
 
 .community-rich-text-view :deep(li + li) {
