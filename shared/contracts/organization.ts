@@ -254,6 +254,15 @@ export type CreateOrganizationRequest = z.infer<
   typeof CreateOrganizationRequest
 >;
 
+/** Thakhin invites an organizer (stored as `admin`) to an existing community. */
+export const CreateOrganizerInvitationRequest = z.object({
+  email: z.email('Enter a valid email').trim().toLowerCase(),
+});
+
+export type CreateOrganizerInvitationRequest = z.infer<
+  typeof CreateOrganizerInvitationRequest
+>;
+
 /** Thakhin repair: give a community member the community card they lack. */
 export const CreateMemberCardRequest = z.object({
   userId: z.string().trim().min(1),

@@ -28,6 +28,7 @@ import type {
   AdminOrganizationDetail,
   AdminOrganizationSummary,
   CreateOrganizationRequest,
+  CreateOrganizerInvitationRequest,
   UpdateOrganizationRequest,
 } from '~~/shared/contracts/organization';
 
@@ -155,6 +156,14 @@ export const adminApi = {
     $fetch<{ id: string; slug: string }>(
       url(`organizations/${organizationId}/cards`),
       { method: 'POST', body: { userId } }
+    ),
+  inviteOrganizer: (
+    organizationId: string,
+    request: CreateOrganizerInvitationRequest
+  ) =>
+    $fetch<{ id: string; email: string }>(
+      url(`organizations/${organizationId}/invitations`),
+      { method: 'POST', body: request }
     ),
 
   getUser: (userId: string) => $fetch<AdminUserDetail>(url(`users/${userId}`)),

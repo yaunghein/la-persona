@@ -318,6 +318,7 @@ async function openOrg(row: OrgRow) {
   orgOpen.value = true;
   orgLoading.value = true;
   orgDetail.value = null;
+  organizerEmail.value = '';
   try {
     orgDetail.value = await adminApi.getOrganization(row.id);
   } catch (error: any) {
@@ -359,6 +360,32 @@ async function createMemberCard(userId: string) {
     });
   } finally {
     creatingCardFor.value = null;
+  }
+}
+
+const organizerEmail = ref('');
+const isInvitingOrganizer = ref(false);
+
+async function inviteOrganizer() {
+  const detail = orgDetail.value;
+  const email = organizerEmail.value.trim();
+  if (!detail || !email) return;
+  isInvitingOrganizer.value = true;
+  try {
+    await adminApi.inviteOrganizer(detail.id, { email });
+    organizerEmail.value = '';
+    toast.add({
+      title: `Organizer invitation sent to ${email}.`,
+      color: 'success',
+    });
+  } catch (error) {
+    toast.add({
+      title: 'Could not invite organizer',
+      description: apiErrorMessage(error),
+      color: 'error',
+    });
+  } finally {
+    isInvitingOrganizer.value = false;
   }
 }
 
@@ -948,6 +975,28 @@ const selectMenuUi = {
             <h3 class="text-xs font-medium tracking-wide text-ink/45 uppercase">
               Members
             </h3>
+            <form
+              v-if="orgDetail.type === ORGANIZATION_TYPES.COMMUNITY"
+              class="flex gap-2"
+              @submit.prevent="inviteOrganizer"
+            >
+              <UInput
+                v-model="organizerEmail"
+                type="email"
+                placeholder="Organizer email"
+                aria-label="Organizer email"
+                class="min-w-0 flex-1"
+                required
+              />
+              <UButton
+                type="submit"
+                label="Invite organizer"
+                color="neutral"
+                variant="soft"
+                icon="i-lucide-mail-plus"
+                :loading="isInvitingOrganizer"
+              />
+            </form>
             <p
               v-if="orgDetail.members.length === 0"
               class="text-sm text-ink/45"

@@ -146,7 +146,7 @@ Follow the `api-design` skill (Microsoft REST guidelines).
 4. Permissions are checked in memory against the roles in `shared/permissions/organization.ts` (admin, member, volunteer) and `platform.ts` (admin, user). Add new permissions there and never compare role strings in handlers. Ownership rules (a member edits only their own card, managers read all) live in the policy.
 5. Organization roles:
    - `admin` is stored in the database and labelled **Organizer** in the UI. Show roles with `formatCommunityRole`, never the raw value.
-   - Only Thakhin (platform) admins invite an `admin`. Organization admins invite only `member` or `volunteer` (`COMMUNITY_INVITE_ROLES`).
+   - Only Thakhin (platform) admins invite an `admin`: when creating a community, or later with `POST /api/admin/organizations/{organizationId}/invitations`. Organization admins invite only `member` or `volunteer` (`COMMUNITY_INVITE_ROLES`).
    - A Thakhin admin (`user.role`) and an organization `admin` (`member.role`) are separate roles.
 6. Never mutate `session.activeOrganizationId` in a guard. Invitee actions check the invite email against `principal.user.email`.
 

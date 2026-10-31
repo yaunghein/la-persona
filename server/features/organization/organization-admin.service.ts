@@ -21,7 +21,7 @@ import {
   updateCommunityCardsBrand,
 } from '~~/server/features/organization/community.repository';
 import { ensureCommunityCard } from '~~/server/features/organization/community.service';
-import { sendOwnerInvitationEmail } from '~~/server/features/organization/invitation.notifications';
+import { sendOrganizerInvitationEmail } from '~~/server/features/organization/invitation.notifications';
 import { sanitizeRichText } from '~~/server/lib/html-sanitizer';
 import type { Collection } from '~~/shared/contracts/collection';
 import {
@@ -98,25 +98,10 @@ export async function createOrganization(
     ownerUserId,
   });
 
-  const ownerInvitation =
+  const invited =
     !isPersonal && request.ownerEmail
-      ? await insertInvitation({
-          organizationId: created.id,
-          email: request.ownerEmail,
-          role: 'admin',
-          inviterId,
-          expiresAt: new Date(
-            Date.now() + OWNER_INVITATION_DAYS * 24 * 60 * 60 * 1000
-          ),
-        })
+      ? await sendOrganizerInvitation(created, request.ownerEmail, inviterId)
       : null;
-  const emails = ownerInvitation
-    ? sendOwnerInvitationEmail({
-        to: ownerInvitation.email,
-        organizationName: created.name,
-        invitationId: ownerInvitation.id,
-      })
-    : null;
 
   return {
     summary: toSummary({
@@ -124,8 +109,53 @@ export async function createOrganization(
       memberCount: ownerUserId ? 1 : 0,
       cardCount: 0,
     }),
-    ownerInvitation,
-    emails,
+    ownerInvitation: invited?.invitation ?? null,
+    emails: invited?.emails ?? null,
+  };
+}
+
+/** Organizers are stored as `admin` and only Thakhin invites them. */
+async function sendOrganizerInvitation(
+  organization: { id: string; name: string },
+  email: string,
+  inviterId: string
+) {
+  const invitation = await insertInvitation({
+    organizationId: organization.id,
+    email,
+    role: 'admin',
+    inviterId,
+    expiresAt: new Date(
+      Date.now() + OWNER_INVITATION_DAYS * 24 * 60 * 60 * 1000
+    ),
+  });
+  const emails = sendOrganizerInvitationEmail({
+    to: invitation.email,
+    organizationName: organization.name,
+    invitationId: invitation.id,
+  });
+  return { invitation, emails };
+}
+
+export async function inviteOrganizer(
+  organizationId: string,
+  email: string,
+  inviterId: string
+) {
+  const detail = await findOrganizationDetail(organizationId);
+  if (!detail) throw notFound('Organization');
+  if (detail.organization.type !== ORGANIZATION_TYPES.COMMUNITY) {
+    throw conflict('Only communities have organizers.', 'not_community');
+  }
+  if (detail.members.some((row) => row.userEmail.toLowerCase() === email)) {
+    throw conflict(
+      'This person is already a member of this community.',
+      'already_member'
+    );
+  }
+  return {
+    organization: detail.organization,
+    ...(await sendOrganizerInvitation(detail.organization, email, inviterId)),
   };
 }
 

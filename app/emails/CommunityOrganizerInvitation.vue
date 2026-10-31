@@ -11,7 +11,7 @@ defineProps<{
 
 <template>
   <EmailLayout
-    :preview="`You're invited to own ${organizationName} on LA PERSONA`"
+    :preview="`You're invited to organize ${organizationName} on LA PERSONA`"
   >
     <EText style="margin: 0; line-height: 1.5">
       You've been invited to
