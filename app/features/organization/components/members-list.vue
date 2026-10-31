@@ -287,14 +287,16 @@ function closeInfo() {
       >
         <template #name-cell="{ row }">
           <div class="flex flex-col gap-0.5">
-            <!-- Lowercase first: CSS capitalize alone leaves ALL-CAPS names untouched -->
+            <!-- Lowercase first: CSS capitalize alone leaves ALL-CAPS text untouched -->
             <span
               class="font-medium text-ink"
               :class="{ capitalize: !row.original.name.includes('@') }"
             >
               {{ row.original.name.toLowerCase() }}
             </span>
-            <span class="text-sm text-subtle">{{ row.original.role }}</span>
+            <span class="text-sm text-subtle capitalize">{{
+              row.original.role.toLowerCase()
+            }}</span>
           </div>
         </template>
         <template #memberRole-cell="{ row }">
@@ -307,7 +309,9 @@ function closeInfo() {
           </span>
         </template>
         <template #company-cell="{ row }">
-          <span class="text-subtle">{{ row.original.company }}</span>
+          <span class="text-subtle capitalize">{{
+            row.original.company.toLowerCase()
+          }}</span>
         </template>
         <template #connections-cell="{ row }">
           <span class="text-subtle">{{ row.original.connections }}</span>
