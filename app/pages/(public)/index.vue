@@ -21,8 +21,7 @@ const { data: session } = await authClient.useSession(useFetch);
 // const heroCtaLabel = computed(() =>
 //   session.value ? 'Go to platform' : 'Try free'
 // );
-const messengerUrl =
-  'https://m.me/61571393589144?text=Hello%20I%20want%20to%20know%20more';
+const messengerUrl = 'https://m.me/61571393589144';
 
 /**
  * Story — scrollytelling: tall track + sticky stage; ScrollTrigger scrub drives word motion
@@ -807,7 +806,7 @@ const premiumPlanFeatures = [
             </p>
           </div>
           <NuxtLink
-            to="https://m.me/61571393589144?text=Hello%20I%20want%20to%20know%20more"
+            to="https://m.me/61571393589144"
             target="_blank"
             class="inline-flex h-10 sm:h-12 items-center justify-center rounded-full border border-ink/10 px-10 text-xs font-light uppercase tracking-[0.1rem] hover:bg-ink hover:text-ink-inverse sm:text-sm sm:tracking-[0.0875rem]"
           >
@@ -899,7 +898,7 @@ const premiumPlanFeatures = [
               </ul>
             </div>
             <UButton
-              to="https://m.me/61571393589144?text=Hello%20I%20want%20to%20know%20more"
+              to="https://m.me/61571393589144"
               target="_blank"
               size="xl"
               class="h-10 sm:h-12 w-fit justify-center rounded-full bg-ink px-8 text-xs font-light uppercase tracking-[0.1rem] text-ink-inverse sm:text-sm sm:tracking-[0.0875rem]"
