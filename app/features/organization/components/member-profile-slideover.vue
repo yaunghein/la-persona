@@ -22,7 +22,7 @@ const roleOptions: { label: string; value: CommunityInviteRole }[] = [
   { label: 'Volunteer', value: 'volunteer' },
 ];
 
-// Owners/admins are managed elsewhere; only member ↔ volunteer is editable here.
+// Admins are managed in Thakhin; only member ↔ volunteer is editable here.
 const editableRole = computed<CommunityInviteRole | null>(() => {
   const role = props.member?.memberRole;
   return role === 'member' || role === 'volunteer' ? role : null;

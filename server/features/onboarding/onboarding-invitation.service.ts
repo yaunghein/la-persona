@@ -207,7 +207,7 @@ export async function acceptOnboardingInvitation(params: {
       .where(
         and(
           eq(member.userId, params.userId),
-          eq(member.role, 'owner'),
+          eq(member.role, 'admin'),
           eq(organization.type, ORGANIZATION_TYPES.PERSONAL),
           ne(organization.id, thakhinOrganizationId),
           ne(organization.id, env.PLACEHOLDER_ORGANIZATION_ID)
@@ -232,7 +232,7 @@ export async function acceptOnboardingInvitation(params: {
           id: nanoid(),
           organizationId: thakhinOrganizationId,
           userId: params.userId,
-          role: 'owner',
+          role: 'admin',
           createdAt: now,
         });
       }

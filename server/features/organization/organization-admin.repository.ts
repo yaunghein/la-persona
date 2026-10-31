@@ -103,7 +103,7 @@ export function insertOrganizationWithOwner(input: {
         id: nanoid(),
         userId: input.ownerUserId,
         organizationId: created.id,
-        role: 'owner',
+        role: 'admin',
         createdAt: new Date(),
       });
     }

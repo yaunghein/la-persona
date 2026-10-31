@@ -111,7 +111,7 @@ async function buildOwnerEmail(params: EventRegistrationEmailParams) {
       .where(
         and(
           eq(member.organizationId, params.organization.id),
-          eq(member.role, 'owner')
+          eq(member.role, 'admin')
         )
       )
       .orderBy(asc(member.createdAt))

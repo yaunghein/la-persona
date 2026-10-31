@@ -77,14 +77,15 @@ export const auth = betterAuth({
     organization({
       ac: organizationAccessControl,
       roles: organizationRoles,
+      creatorRole: 'admin',
       // Organizations are provisioned by the app (personal on sign-up, communities by Thakhin).
       allowUserToCreateOrganization: false,
       organizationHooks: {
-        // Ownership is only ever assigned at creation; never through a role change.
+        // Admins are only ever assigned by Thakhin; never through a role change.
         beforeUpdateMemberRole: async ({ newRole }) => {
-          if (newRole.split(',').includes('owner')) {
+          if (newRole.split(',').includes('admin')) {
             throw new APIError('FORBIDDEN', {
-              message: 'Ownership cannot be granted by a role change.',
+              message: 'The organizer role cannot be granted by a role change.',
             });
           }
         },

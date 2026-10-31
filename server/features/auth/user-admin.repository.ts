@@ -70,7 +70,7 @@ export async function findUserFootprint(userId: string) {
       .where(
         and(
           eq(member.userId, userId),
-          eq(member.role, 'owner'),
+          eq(member.role, 'admin'),
           eq(organization.type, ORGANIZATION_TYPES.PERSONAL)
         )
       )

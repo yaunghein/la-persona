@@ -51,7 +51,7 @@ export function insertPersonalOrganization(input: {
       id: nanoid(),
       userId: input.userId,
       organizationId: created.id,
-      role: 'owner',
+      role: 'admin',
       createdAt: new Date(),
     });
     return created;
@@ -66,7 +66,7 @@ export async function listOwnedPersonalOrganizationIds(userId: string) {
     .where(
       and(
         eq(member.userId, userId),
-        eq(member.role, 'owner'),
+        eq(member.role, 'admin'),
         eq(organization.type, ORGANIZATION_TYPES.PERSONAL)
       )
     );

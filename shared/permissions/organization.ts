@@ -34,19 +34,6 @@ export const organizationVolunteerRole = organizationAccessControl.newRole({
 
 export const organizationAdminRole = organizationAccessControl.newRole({
   insight: ['read'],
-  organization: ['read', 'update'],
-  member: ['create', 'update', 'delete'],
-  invitation: ['create', 'cancel'],
-  event: ['create', 'read', 'update', 'delete'],
-  card: ['create', 'read', 'readAll', 'update', 'delete'],
-  contactExchange: ['create', 'read', 'readAll', 'delete'],
-  cardRequest: ['create', 'update'],
-  media: ['upload'],
-  checkIn: ['read', 'create'],
-});
-
-export const organizationOwnerRole = organizationAccessControl.newRole({
-  insight: ['read'],
   organization: ['read', 'update', 'delete'],
   member: ['create', 'update', 'delete'],
   invitation: ['create', 'cancel'],
@@ -59,7 +46,6 @@ export const organizationOwnerRole = organizationAccessControl.newRole({
 });
 
 export const organizationRoles = {
-  owner: organizationOwnerRole,
   admin: organizationAdminRole,
   member: organizationMemberRole,
   volunteer: organizationVolunteerRole,
@@ -103,7 +89,7 @@ export function roleHasPermission(
     );
 }
 
-export type OrganizationMemberRole = 'owner' | 'admin' | 'member' | 'volunteer';
+export type OrganizationMemberRole = 'admin' | 'member' | 'volunteer';
 
 export const COMMUNITY_INVITE_ROLES = ['member', 'volunteer'] as const;
 
@@ -112,7 +98,7 @@ export type CommunityInviteRole = (typeof COMMUNITY_INVITE_ROLES)[number];
 export function isOrganizationManagerRole(
   role: string | null | undefined
 ): boolean {
-  return role === 'owner' || role === 'admin';
+  return role === 'admin';
 }
 
 export function isCommunityMemberOnly(params: {
@@ -135,5 +121,7 @@ export function canRunCheckIn(role: string | null | undefined): boolean {
 
 export function formatCommunityRole(role: string | null | undefined): string {
   if (!role) return 'Member';
+  // Stored as `admin`; communities call this role Organizer.
+  if (role === 'admin') return 'Organizer';
   return role.charAt(0).toUpperCase() + role.slice(1);
 }

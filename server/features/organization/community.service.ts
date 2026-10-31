@@ -151,8 +151,8 @@ export async function joinCommunity(
 }
 
 /**
- * Removes a member with their community card and registrations. Only owners
- * may remove an owner, and the last owner always stays.
+ * Removes a member with their community card and registrations. Only admins
+ * may remove an admin, and the last admin always stays.
  */
 export async function removeMember(params: {
   memberId: string;
@@ -165,16 +165,16 @@ export async function removeMember(params: {
   );
   if (!target) throw notFound('Member');
 
-  if (target.role === 'owner') {
-    if (params.actorRole !== 'owner') {
+  if (target.role === 'admin') {
+    if (params.actorRole !== 'admin') {
       throw forbidden(
-        'Only an owner can remove another owner.',
+        'Only an organizer can remove another organizer.',
         'owner_protected'
       );
     }
     if ((await countOwners(params.organizationId)) <= 1) {
       throw conflict(
-        'The last owner cannot be removed from this community.',
+        'The last organizer cannot be removed from this community.',
         'last_owner'
       );
     }
@@ -201,7 +201,7 @@ export async function assertMemberRoleChangeable(
   if (!target) throw notFound('Member');
   if (isOrganizationManagerRole(target.role)) {
     throw forbidden(
-      'Owner and admin roles cannot be changed here.',
+      'The organizer role cannot be changed here.',
       'manager_role_locked'
     );
   }

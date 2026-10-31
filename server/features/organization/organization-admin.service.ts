@@ -103,7 +103,7 @@ export async function createOrganization(
       ? await insertInvitation({
           organizationId: created.id,
           email: request.ownerEmail,
-          role: 'owner',
+          role: 'admin',
           inviterId,
           expiresAt: new Date(
             Date.now() + OWNER_INVITATION_DAYS * 24 * 60 * 60 * 1000

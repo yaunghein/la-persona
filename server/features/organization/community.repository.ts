@@ -124,12 +124,12 @@ export async function countOwners(organizationId: string) {
     .select({ value: count() })
     .from(member)
     .where(
-      and(eq(member.organizationId, organizationId), eq(member.role, 'owner'))
+      and(eq(member.organizationId, organizationId), eq(member.role, 'admin'))
     );
   return Number(row?.value ?? 0);
 }
 
-/** The slug of the earliest owner's card, shown as the community's organizer. */
+/** The slug of the earliest admin's card, shown as the community's organizer. */
 export async function findOrganizerCardSlug(organizationId: string) {
   const [row] = await db
     .select({ slug: card.slug })
@@ -142,7 +142,7 @@ export async function findOrganizerCardSlug(organizationId: string) {
       )
     )
     .where(
-      and(eq(member.organizationId, organizationId), eq(member.role, 'owner'))
+      and(eq(member.organizationId, organizationId), eq(member.role, 'admin'))
     )
     .orderBy(asc(member.createdAt), desc(card.createdAt))
     .limit(1);
@@ -255,7 +255,7 @@ export function listPendingInvitations(organizationId: string) {
     );
 }
 
-/** Owner invitations are sent by platform admins, who are not members, so they bypass better-auth's createInvitation. */
+/** Admin (Organizer) invitations are sent by platform admins, who are not members, so they bypass better-auth's createInvitation. */
 export async function insertInvitation(values: {
   organizationId: string;
   email: string;

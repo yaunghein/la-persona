@@ -49,7 +49,7 @@ export type CommunityMember = {
   connections: number;
   eventsAttended: number;
   status: CommunityMemberStatus;
-  /** Org role (owner/admin/member/volunteer). */
+  /** Org role (admin/member/volunteer). */
   memberRole: OrganizationMemberRole;
   email?: string | null;
   /** UTC ISO string; format it in the browser. */

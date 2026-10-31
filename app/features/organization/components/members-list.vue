@@ -79,7 +79,7 @@ const filteredMembers = computed(() => {
     return (
       member.name.toLowerCase().includes(query) ||
       member.role.toLowerCase().includes(query) ||
-      member.memberRole.toLowerCase().includes(query) ||
+      formatCommunityRole(member.memberRole).toLowerCase().includes(query) ||
       member.company.toLowerCase().includes(query) ||
       member.status.toLowerCase().includes(query) ||
       (member.email || '').toLowerCase().includes(query)

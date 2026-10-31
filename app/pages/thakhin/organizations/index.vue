@@ -10,6 +10,7 @@ import {
   type OrganizationType,
 } from '~~/shared/utils/constants';
 import { communityCardPath } from '~~/shared/utils/routes';
+import { formatCommunityRole } from '~~/shared/permissions/organization';
 import {
   ADMIN_ACTIONS_COLUMN,
   ADMIN_TABLE_UI,
@@ -270,7 +271,7 @@ async function onCreate() {
       title: 'Organization created',
       description:
         isCreatingCommunity.value && ownerEmail
-          ? `Owner invitation sent to ${ownerEmail}.`
+          ? `Organizer invitation sent to ${ownerEmail}.`
           : undefined,
       color: 'success',
     });
@@ -640,7 +641,7 @@ const selectMenuUi = {
             </UFormField>
             <UFormField
               v-if="isCreatingCommunity"
-              label="Owner email"
+              label="Organizer email"
               :class="formFieldClass"
             >
               <UInput
@@ -982,8 +983,8 @@ const selectMenuUi = {
                     :disabled="!!creatingCardFor"
                     @click="createMemberCard(member.userId)"
                   />
-                  <UBadge color="neutral" variant="subtle" class="capitalize">
-                    {{ member.role }}
+                  <UBadge color="neutral" variant="subtle">
+                    {{ formatCommunityRole(member.role) }}
                   </UBadge>
                 </div>
               </li>

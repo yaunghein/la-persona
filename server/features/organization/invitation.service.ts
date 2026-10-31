@@ -158,10 +158,10 @@ export async function reviewInvitation(
       'invitation_decided'
     );
   }
-  // Owner invitations come from Thakhin; only the invitee can accept them.
-  if (status === 'accepted' && invitation.role === 'owner') {
+  // Admin invitations come from Thakhin; only the invitee can accept them.
+  if (status === 'accepted' && invitation.role === 'admin') {
     throw forbidden(
-      'Only the invited owner can accept this invitation.',
+      'Only the invited organizer can accept this invitation.',
       'owner_invitation'
     );
   }

@@ -143,8 +143,12 @@ Follow the `api-design` skill (Microsoft REST guidelines).
    - Resource policies (`authorizeCardAccess`, `authorizeEventAccess`, `authorizeContactAccess`, `authorizeMemberAccess`, …) for items.
    - `authorizePlatformAccess(event, 'resource:action')` in admin routes.
    - `assertCommunityOrganization` for community-only features.
-4. Permissions are checked in memory against the roles in `shared/permissions/organization.ts` (owner, admin, member, volunteer) and `platform.ts` (admin, user). Add new permissions there and never compare role strings in handlers. Ownership rules (a member edits only their own card, managers read all) live in the policy.
-5. Never mutate `session.activeOrganizationId` in a guard. Invitee actions check the invite email against `principal.user.email`.
+4. Permissions are checked in memory against the roles in `shared/permissions/organization.ts` (admin, member, volunteer) and `platform.ts` (admin, user). Add new permissions there and never compare role strings in handlers. Ownership rules (a member edits only their own card, managers read all) live in the policy.
+5. Organization roles:
+   - `admin` is stored in the database and labelled **Organizer** in the UI. Show roles with `formatCommunityRole`, never the raw value.
+   - Only Thakhin (platform) admins invite an `admin`. Organization admins invite only `member` or `volunteer` (`COMMUNITY_INVITE_ROLES`).
+   - A Thakhin admin (`user.role`) and an organization `admin` (`member.role`) are separate roles.
+6. Never mutate `session.activeOrganizationId` in a guard. Invitee actions check the invite email against `principal.user.email`.
 
 ## Security
 
@@ -155,7 +159,7 @@ Follow the `api-design` skill (Microsoft REST guidelines).
 - Email content and recipients are built on the server. Never accept a recipient, subject or HTML from the client.
 - Every anonymous write and sign-in has a per-IP rate limit in `nuxt.config.ts` `routeRules`. Add one for each new anonymous write.
 - Join links are permanent by design (one token per community, never rotated or expired) and add people as `member`.
-- Only an owner can remove or demote an owner, and owner can't be granted through the API.
+- Only an admin can remove or demote an admin, and admin can't be granted through the API (only Thakhin invites admins).
 - Bans and user deletes revoke sessions.
 - CSP: never add S3 or other content hosts to `script-src`.
 - Ask the user before shipping a security fix that changes visible behavior.
