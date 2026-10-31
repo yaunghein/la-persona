@@ -79,7 +79,9 @@ function onViewPersona() {
               class="flex items-center justify-center gap-x-2 text-xs text-subtle"
             >
               <span v-if="attendee.role">{{ attendee.role }}</span>
-              <span v-if="attendee.role && attendee.company">·</span>
+              <span v-if="attendee.role && attendee.company" aria-hidden="true"
+                >•</span
+              >
               <span v-if="attendee.company">{{ attendee.company }}</span>
             </p>
             <p v-if="attendee.email" class="text-xs text-subtle">

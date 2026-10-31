@@ -250,7 +250,7 @@ function unavailableLabel(event: CommunityEvent) {
             </h2>
             <p class="flex items-center gap-x-2 text-xs leading-5 text-subtle">
               <span class="whitespace-nowrap">{{ event.dateLabel }}</span>
-              <span>•</span>
+              <span aria-hidden="true">•</span>
               <span class="line-clamp-1">{{ event.location }}</span>
             </p>
           </div>

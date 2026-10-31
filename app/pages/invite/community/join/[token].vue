@@ -26,7 +26,7 @@ usePageSeo({
     const { memberCount, eventCount } = preview.value;
     const members = `${memberCount.toLocaleString()} ${memberCount === 1 ? 'member' : 'members'}`;
     const events = `${eventCount.toLocaleString()} ${eventCount === 1 ? 'event' : 'events'} hosted`;
-    return `${members} · ${events}. Join the community on LA PERSONA.`;
+    return `${members} • ${events}. Join the community on LA PERSONA.`;
   },
   image: () => {
     if (!preview.value) return null;
@@ -50,7 +50,7 @@ useInAppBrowserPreview(() => {
     item: {
       imageUrl: invitationLogoSrc(logoUrl) || communityCoverSrc(coverUrl),
       title: organizationName,
-      description: communityInviteMeta(preview.value).slice(0, 2).join(' · '),
+      description: communityInviteMeta(preview.value).slice(0, 2).join(' • '),
     },
   };
 });

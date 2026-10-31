@@ -131,13 +131,13 @@ const census = computed(() => {
     {
       label: 'Cards',
       value: overview.census.cards.total.toLocaleString(),
-      detail: `${overview.census.cards.claimed} claimed · ${overview.census.cards.unclaimed} unclaimed`,
+      detail: `${overview.census.cards.claimed} claimed • ${overview.census.cards.unclaimed} unclaimed`,
       to: ROUTES.THAKHIN.CARDS,
     },
     {
       label: 'Organizations',
       value: overview.census.organizations.total.toLocaleString(),
-      detail: `${overview.census.organizations.personal} personal · ${overview.census.organizations.community} community`,
+      detail: `${overview.census.organizations.personal} personal • ${overview.census.organizations.community} community`,
       to: ROUTES.THAKHIN.ORGANIZATIONS,
     },
     {
@@ -149,7 +149,7 @@ const census = computed(() => {
     {
       label: 'Analytics stored',
       value: analytics.total.toLocaleString(),
-      detail: `${analytics.today} today · ${analytics.byType.view} views`,
+      detail: `${analytics.today} today • ${analytics.byType.view} views`,
       to: ROUTES.THAKHIN.CARDS,
     },
     {

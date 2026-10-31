@@ -37,7 +37,7 @@ usePageSeo({
         description || 'Register on LA PERSONA.',
       ]
         .filter(Boolean)
-        .join(' · ')
+        .join(' • ')
     );
   },
   image: () => event.value?.coverUrl,

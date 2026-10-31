@@ -82,7 +82,7 @@ const ownerCardItems = computed(() => {
       id: item.id,
       label:
         props.workspace && item.organization.type === 'community'
-          ? `${cardHolderName(item)} · ${item.organization.name}`
+          ? `${cardHolderName(item)} • ${item.organization.name}`
           : cardHolderName(item),
     })),
   ];

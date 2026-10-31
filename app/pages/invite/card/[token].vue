@@ -82,7 +82,7 @@ useInAppBrowserPreview(() => {
     item: {
       imageUrl: INVITATION_COVER_FALLBACK,
       title: [cardFirstName, cardLastName].filter(Boolean).join(' '),
-      description: meta.value.join(' · '),
+      description: meta.value.join(' • '),
     },
   };
 });

@@ -598,7 +598,7 @@ async function onSaveContact() {
                   {{
                     [myCard.position, myCard.company]
                       .filter(Boolean)
-                      .join(' · ')
+                      .join(' • ')
                   }}
                 </span>
               </button>

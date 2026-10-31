@@ -66,7 +66,7 @@ useInAppBrowserPreview(() => {
     item: {
       imageUrl: invitationLogoSrc(logoUrl) || communityCoverSrc(coverUrl),
       title: organizationName,
-      description: communityInviteMeta(data.value).slice(0, 2).join(' · '),
+      description: communityInviteMeta(data.value).slice(0, 2).join(' • '),
     },
   };
 });

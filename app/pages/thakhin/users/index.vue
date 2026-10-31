@@ -458,7 +458,7 @@ const columns: TableColumn<UserRow>[] = [
             <p class="text-ink">Organizations</p>
             <p v-if="detail.memberships.length === 0">None.</p>
             <p v-for="org in detail.memberships" :key="org.id">
-              {{ org.organizationName }} · {{ org.organizationType }} ·
+              {{ org.organizationName }} • {{ org.organizationType }} •
               {{ org.role }}
             </p>
           </div>
@@ -466,7 +466,7 @@ const columns: TableColumn<UserRow>[] = [
             <p class="text-ink">Cards</p>
             <p v-if="detail.cards.length === 0">None.</p>
             <p v-for="card in detail.cards" :key="card.id">
-              {{ card.firstName }} {{ card.lastName }} · {{ card.slug }}
+              {{ card.firstName }} {{ card.lastName }} • {{ card.slug }}
             </p>
           </div>
         </div>

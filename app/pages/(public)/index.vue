@@ -14,7 +14,7 @@ usePageSeo({
     'La Persona transforms how professionals introduce themselves, connect, and unlock opportunities—starting from a single interaction.',
 });
 
-// const { data: session } = await authClient.useSession(useFetch);
+const { data: session } = await authClient.useSession(useFetch);
 // const heroCtaTo = computed(() =>
 //   session.value ? ROUTES.PLATFORM.ROOT : ROUTES.SIGN_IN
 // );
@@ -78,7 +78,6 @@ const storyScrollMinVh = computed(() => Math.max(360, storyLines.length * 150));
 
 /** Set on client; when true we skip Lenis + scrub triggers (static layout). */
 const prefersReducedMotion = ref(false);
-const floatingCtaEl = ref<HTMLElement | null>(null);
 
 const STORY_WORD_TRAVEL_PX = 28;
 /** Within each beat’s scroll segment [0–1]: word stagger-in, full-line hold, stagger-out. */
@@ -207,40 +206,6 @@ onMounted(async () => {
         .to({}, { duration: 0.2 }),
     })
   );
-
-  if (floatingCtaEl.value) {
-    gsap.set(floatingCtaEl.value, { autoAlpha: 0, y: 16 });
-
-    const showCta = () =>
-      gsap.to(floatingCtaEl.value, {
-        autoAlpha: 1,
-        y: 0,
-        duration: 0.3,
-        ease: 'power2.out',
-      });
-    const hideCta = () =>
-      gsap.to(floatingCtaEl.value, {
-        autoAlpha: 0,
-        y: 16,
-        duration: 0.2,
-        ease: 'power2.in',
-      });
-
-    landingV2ScrollTriggers.push(
-      ScrollTrigger.create({
-        trigger: '#landing-v2-hero',
-        start: 'bottom center',
-        onEnter: showCta,
-        onLeaveBack: hideCta,
-      }),
-      ScrollTrigger.create({
-        trigger: '#landing-v2-final-cta',
-        start: 'top bottom+=700',
-        onEnter: hideCta,
-        onLeaveBack: showCta,
-      })
-    );
-  }
 
   landingV2ScrollTriggers.push(
     ScrollTrigger.create({
@@ -429,7 +394,6 @@ const V2_SECTIONS = {
   FEATURES: 'features',
   WHY_LA_PERSONA: 'why-la-persona',
   BESPOKE_CARDS: 'bespoke-cards',
-  PRICING: 'pricing',
 } as const;
 type V2Section = (typeof V2_SECTIONS)[keyof typeof V2_SECTIONS] | null;
 
@@ -437,7 +401,6 @@ const V2_NAV_LINKS = [
   { label: 'Features', id: V2_SECTIONS.FEATURES },
   { label: 'Why La Persona', id: V2_SECTIONS.WHY_LA_PERSONA },
   { label: 'Bespoke Cards', id: V2_SECTIONS.BESPOKE_CARDS },
-  { label: 'Pricing', id: V2_SECTIONS.PRICING },
 ] as const;
 
 const isHeaderVisible = ref(true);
@@ -463,7 +426,7 @@ const premiumPlanFeatures = [
 
 <template>
   <header
-    class="z-30 flex h-15 sm:h-30 justify-center items-center border-b border-ink/10 bg-canvas px-4 sm:px-18"
+    class="sticky top-0 z-30 flex h-15 items-center justify-between border-b border-ink/10 bg-canvas px-4 sm:static sm:h-30 sm:justify-center sm:px-18"
   >
     <NuxtLink
       to="/"
@@ -471,6 +434,18 @@ const premiumPlanFeatures = [
       aria-label="LA PERSONA home"
     >
       <IconLogo class="aspect-[1/0.09] w-full" />
+    </NuxtLink>
+    <NuxtLink
+      :to="session ? ROUTES.PLATFORM.ROOT : ROUTES.SIGN_IN"
+      class="sm:hidden"
+      :aria-label="session ? 'Go to platform' : 'Sign in'"
+    >
+      <UAvatar
+        :src="session?.user.image || undefined"
+        :alt="session?.user.name"
+        icon="i-lucide-user"
+        class="size-6"
+      />
     </NuxtLink>
   </header>
 
@@ -497,6 +472,12 @@ const premiumPlanFeatures = [
         }"
       ></div>
     </button>
+    <NuxtLink
+      :to="ROUTES.SIGN_IN"
+      class="py-6 text-sm font-light uppercase leading-[1.1] tracking-[0.28rem] text-ink/40 transition-colors duration-300 hover:text-ink/70"
+    >
+      Sign In
+    </NuxtLink>
     <div
       class="absolute inset-0 top-auto h-px w-full bg-ink/10 transition-all duration-1000"
       :class="{
@@ -953,21 +934,6 @@ const premiumPlanFeatures = [
     </section>
 
     <!-- Footer -->
-
-    <!-- Floating CTA (hidden for now)
-    <div
-      ref="floatingCtaEl"
-      class="fixed bottom-[5vh] left-1/2 z-50 -translate-x-1/2 invisible"
-    >
-      <UButton
-        to="/sign-in"
-        size="xl"
-        class="h-10 sm:h-12 rounded-full bg-ink px-10 text-xs font-light uppercase tracking-[0.1rem] text-ink-inverse shadow-lg sm:text-sm sm:tracking-[0.0875rem]"
-      >
-        Try Free
-      </UButton>
-    </div>
-    -->
   </main>
   <footer
     class="border-t border-ink/10 px-4 pt-5 sm:pt-12 pb-5 sm:pb-10 sm:px-12"

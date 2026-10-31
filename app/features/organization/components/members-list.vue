@@ -287,7 +287,13 @@ function closeInfo() {
       >
         <template #name-cell="{ row }">
           <div class="flex flex-col gap-0.5">
-            <span class="font-medium text-ink">{{ row.original.name }}</span>
+            <!-- Lowercase first: CSS capitalize alone leaves ALL-CAPS names untouched -->
+            <span
+              class="font-medium text-ink"
+              :class="{ capitalize: !row.original.name.includes('@') }"
+            >
+              {{ row.original.name.toLowerCase() }}
+            </span>
             <span class="text-sm text-subtle">{{ row.original.role }}</span>
           </div>
         </template>

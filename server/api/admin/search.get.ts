@@ -15,7 +15,7 @@ export default defineEventHandler(
     return {
       users: users.map((row) => ({
         id: row.id,
-        label: row.name ? `${row.name} · ${row.email}` : row.email,
+        label: row.name ? `${row.name} • ${row.email}` : row.email,
         href: `${ROUTES.THAKHIN.USERS}?focus=${row.id}`,
       })),
       organizations: organizations.map((row) => ({

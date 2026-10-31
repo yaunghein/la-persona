@@ -219,7 +219,7 @@ onMounted(() => {
       <template #body>
         <div v-if="selected" class="space-y-4 text-sm text-ink/80">
           <p class="whitespace-pre-wrap text-ink">{{ selected.message }}</p>
-          <p>{{ selected.userName }} · {{ selected.userEmail }}</p>
+          <p>{{ selected.userName }} • {{ selected.userEmail }}</p>
           <p>{{ selected.organizationName }}</p>
         </div>
       </template>

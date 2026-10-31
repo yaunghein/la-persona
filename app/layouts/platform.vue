@@ -103,7 +103,7 @@ const groups = computed(() => [
       ...personalLinks.value,
       ...communityOrgs.value.flatMap((org) =>
         communityLinksFor(org).map((item) => ({
-          label: `${org.name} · ${item.label}`,
+          label: `${org.name} • ${item.label}`,
           to: item.to,
           onSelect: closeSidebar,
         }))

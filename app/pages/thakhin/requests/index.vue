@@ -453,20 +453,20 @@ const columns: TableColumn<CardRequestRow>[] = [
             {{ selectedRequest.cardData?.name || 'Untitled' }}
           </p>
           <p>
-            {{ selectedRequest.requesterName }} ·
+            {{ selectedRequest.requesterName }} •
             {{ selectedRequest.requesterEmail }}
           </p>
           <p>
-            {{ selectedRequest.cardData?.position }} ·
+            {{ selectedRequest.cardData?.position }} •
             {{ selectedRequest.cardData?.company }}
           </p>
           <p>
-            {{ selectedRequest.cardData?.phone }} ·
+            {{ selectedRequest.cardData?.phone }} •
             {{ selectedRequest.cardData?.email }}
           </p>
           <p>{{ selectedRequest.cardData?.website }}</p>
           <p>
-            Payment {{ selectedRequest.paymentId || 'none' }} ·
+            Payment {{ selectedRequest.paymentId || 'none' }} •
             {{ selectedRequest.paymentStatus || 'n/a' }}
           </p>
         </div>

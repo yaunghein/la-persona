@@ -291,7 +291,7 @@ const columns: TableColumn<PaymentRow>[] = [
           <span v-if="row.original.linkedRequestId" class="text-ink/80">
             {{ row.original.linkedRequestId }}
             <span v-if="row.original.linkedRequestStatus" class="text-ink/40">
-              · {{ row.original.linkedRequestStatus }}
+              • {{ row.original.linkedRequestStatus }}
             </span>
           </span>
           <span v-else class="text-ink/35">—</span>
@@ -323,7 +323,7 @@ const columns: TableColumn<PaymentRow>[] = [
       <template #body>
         <div v-if="selectedPayment" class="space-y-3 text-sm text-ink/80">
           <p class="text-ink">
-            {{ selectedPayment.payerName }} · {{ selectedPayment.payerEmail }}
+            {{ selectedPayment.payerName }} • {{ selectedPayment.payerEmail }}
           </p>
           <p>
             {{
@@ -348,7 +348,7 @@ const columns: TableColumn<PaymentRow>[] = [
             class="border-t border-line pt-2"
           >
             <p>
-              {{ item.planCode }} ·
+              {{ item.planCode }} •
               {{ formatMoney(item.amountMinor, item.currency) }}
             </p>
             <p>
