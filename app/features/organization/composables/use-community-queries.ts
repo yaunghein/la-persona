@@ -13,13 +13,14 @@ import type {
   UpdateCommunitySettingsRequest,
   UpdateMemberRequest,
 } from '~~/shared/contracts/organization';
+import { eventQueryKeys } from '~/features/event/composables/use-event-queries';
 import { organizationQueryKeys } from '~/features/organization/composables/use-user-organizations';
 import { parseInvitePath } from '~~/shared/utils/routes';
 
 const organizationUrl = (organizationSlug: string, path: string): string =>
   `/api/organizations/${organizationSlug}/${path}`;
 
-export function useCommunityRosterQuery(
+export function useCommunityMembersQuery(
   organizationSlug: MaybeRefOrGetter<string>
 ) {
   return useQuery({
@@ -46,7 +47,7 @@ export function useJoinLinkQuery(organizationSlug: MaybeRefOrGetter<string>) {
   });
 }
 
-function useInvalidateRoster(organizationSlug: MaybeRefOrGetter<string>) {
+function useInvalidateMembers(organizationSlug: MaybeRefOrGetter<string>) {
   const queryClient = useQueryClient();
   return () =>
     queryClient.invalidateQueries({
@@ -57,7 +58,7 @@ function useInvalidateRoster(organizationSlug: MaybeRefOrGetter<string>) {
 export function useInviteMemberMutation(
   organizationSlug: MaybeRefOrGetter<string>
 ) {
-  const invalidateRoster = useInvalidateRoster(organizationSlug);
+  const invalidateMembers = useInvalidateMembers(organizationSlug);
   return useMutation({
     mutationFn: (request: CreateInvitationRequest) =>
       $fetch<{ id: string }>(
@@ -67,14 +68,14 @@ export function useInviteMemberMutation(
           body: request,
         }
       ),
-    onSuccess: invalidateRoster,
+    onSuccess: invalidateMembers,
   });
 }
 
 export function useUpdateMemberRoleMutation(
   organizationSlug: MaybeRefOrGetter<string>
 ) {
-  const invalidateRoster = useInvalidateRoster(organizationSlug);
+  const invalidateMembers = useInvalidateMembers(organizationSlug);
   return useMutation({
     mutationFn: ({
       memberId,
@@ -84,20 +85,20 @@ export function useUpdateMemberRoleMutation(
         method: 'PATCH',
         body: { role },
       }),
-    onSuccess: invalidateRoster,
+    onSuccess: invalidateMembers,
   });
 }
 
 export function useRemoveMemberMutation(
   organizationSlug: MaybeRefOrGetter<string>
 ) {
-  const invalidateRoster = useInvalidateRoster(organizationSlug);
+  const invalidateMembers = useInvalidateMembers(organizationSlug);
   return useMutation({
     mutationFn: (memberId: string) =>
       $fetch<unknown>(`/api/members/${memberId}` as string, {
         method: 'DELETE',
       }),
-    onSuccess: invalidateRoster,
+    onSuccess: invalidateMembers,
   });
 }
 
@@ -105,7 +106,7 @@ export function useRemoveMemberMutation(
 export function useReviewInvitationMutation(
   organizationSlug: MaybeRefOrGetter<string>
 ) {
-  const invalidateRoster = useInvalidateRoster(organizationSlug);
+  const invalidateMembers = useInvalidateMembers(organizationSlug);
   return useMutation({
     mutationFn: ({
       invitationId,
@@ -118,7 +119,7 @@ export function useReviewInvitationMutation(
           body: { status },
         }
       ),
-    onSuccess: invalidateRoster,
+    onSuccess: invalidateMembers,
   });
 }
 
@@ -154,10 +155,11 @@ export function useUpdateCommunitySettingsMutation(
         organizationQueryKeys.detail(toValue(organizationSlug)),
         community
       );
-      // Name and logo show up in the nav.
-      await queryClient.invalidateQueries({
-        queryKey: organizationQueryKeys.all,
-      });
+      // Name and logo show up in the nav; the event list carries the contact organizer.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: organizationQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: eventQueryKeys.all }),
+      ]);
     },
   });
 }

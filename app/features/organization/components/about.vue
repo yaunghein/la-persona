@@ -1,14 +1,21 @@
 <script setup lang="ts">
-import type { CommunityAbout } from '~~/shared/contracts/organization';
+import type { PublicCommunity } from '~~/shared/contracts/organization';
+import { communityCardPath } from '~~/shared/utils/routes';
 
-const props = defineProps<{
-  data: CommunityAbout;
-}>();
+const props = withDefaults(
+  defineProps<{
+    data: PublicCommunity;
+    /** `page` is the public community page: mobile layout, no member actions. */
+    variant?: 'platform' | 'page';
+  }>(),
+  { variant: 'platform' }
+);
 
 const emit = defineEmits<{
   quit: [];
-  viewOrganizer: [];
 }>();
+
+const isPage = computed(() => props.variant === 'page');
 
 const isInfoOpen = ref(false);
 
@@ -29,10 +36,18 @@ const memberLabel = computed(
 );
 
 const eventLabel = computed(
-  () => `${props.data.eventCount.toLocaleString()} Event Hosted`
+  () =>
+    `${props.data.eventCount.toLocaleString()} ${
+      props.data.eventCount === 1 ? 'Event' : 'Events'
+    }`
 );
 
 const foundedLabel = computed(() => `Founded in ${props.data.foundedYear}`);
+const organizerCardUrl = computed(() =>
+  props.data.organizerCardSlug
+    ? communityCardPath(props.data.organizerCardSlug)
+    : ''
+);
 const coverSrc = computed(() => communityCoverSrc(props.data.coverImageUrl));
 const logoSrc = computed(() =>
   communityLogoSrc(props.data.logoUrl, props.data.name)
@@ -41,7 +56,7 @@ const logoSrc = computed(() =>
 
 <template>
   <div class="flex flex-col">
-    <div class="flex items-center gap-3 pb-6 pt-2">
+    <div v-if="!isPage" class="flex items-center gap-3 pb-6 pt-2">
       <h1
         class="text-xl font-normal leading-tight tracking-widest uppercase text-ink sm:text-2xl"
       >
@@ -83,7 +98,10 @@ const logoSrc = computed(() =>
       <div
         class="flex flex-col gap-8 rounded-b-lg bg-surface px-5 py-8 sm:px-8"
       >
-        <div class="flex items-start gap-4 sm:gap-6">
+        <div
+          class="flex flex-col items-center gap-4 text-center"
+          :class="!isPage && 'sm:flex-row sm:text-left'"
+        >
           <div
             class="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-raised sm:size-20"
           >
@@ -95,19 +113,25 @@ const logoSrc = computed(() =>
               class="size-full object-cover"
             />
           </div>
-          <div class="flex min-w-0 flex-col gap-2">
+          <div
+            class="-mx-4 flex min-w-0 flex-col items-center gap-2 self-stretch"
+            :class="!isPage && 'sm:mx-0 sm:items-start sm:self-auto'"
+          >
             <h2
               class="text-lg font-normal leading-tight tracking-widest uppercase text-ink sm:text-2xl"
             >
               {{ data.name }}
             </h2>
-            <ul
-              class="flex flex-col gap-0.5 text-sm font-medium leading-5 text-subtle"
+            <p
+              class="flex justify-center gap-x-2 whitespace-nowrap text-sm font-medium leading-5 text-subtle"
+              :class="!isPage && 'sm:justify-start'"
             >
-              <li>{{ memberLabel }}</li>
-              <li>{{ eventLabel }}</li>
-              <li>{{ foundedLabel }}</li>
-            </ul>
+              <span>{{ memberLabel }}</span>
+              <span aria-hidden="true">•</span>
+              <span>{{ eventLabel }}</span>
+              <span aria-hidden="true">•</span>
+              <span>{{ foundedLabel }}</span>
+            </p>
           </div>
         </div>
 
@@ -131,7 +155,10 @@ const logoSrc = computed(() =>
 
         <div class="h-px w-full bg-raised" />
 
-        <div class="grid grid-cols-1 items-start gap-8 sm:grid-cols-2">
+        <div
+          class="grid grid-cols-1 items-start gap-8"
+          :class="!isPage && 'sm:grid-cols-2'"
+        >
           <section class="flex flex-col gap-4">
             <h3
               class="text-sm font-medium leading-snug tracking-widest uppercase text-ink sm:text-base"
@@ -165,12 +192,15 @@ const logoSrc = computed(() =>
           </section>
         </div>
 
-        <div class="h-px w-full bg-raised" />
+        <div v-if="!isPage || organizerCardUrl" class="h-px w-full bg-raised" />
 
         <div
-          class="flex flex-col-reverse items-stretch justify-end gap-2.5 sm:flex-row sm:items-center"
+          v-if="!isPage || organizerCardUrl"
+          class="flex flex-col-reverse items-stretch justify-end gap-2.5"
+          :class="!isPage && 'sm:flex-row sm:items-center'"
         >
           <UButton
+            v-if="!isPage"
             label="Quit Community"
             leading-icon="i-lucide-log-out"
             color="error"
@@ -179,11 +209,13 @@ const logoSrc = computed(() =>
             @click="emit('quit')"
           />
           <UButton
+            v-if="organizerCardUrl"
             label="View Organizer"
             leading-icon="i-lucide-eye"
             color="neutral"
+            :to="organizerCardUrl"
+            target="_blank"
             class="h-10 cursor-pointer justify-center rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
-            @click="emit('viewOrganizer')"
           />
         </div>
       </div>
@@ -191,6 +223,7 @@ const logoSrc = computed(() =>
   </div>
 
   <UModal
+    v-if="!isPage"
     v-model:open="isInfoOpen"
     title="About this community"
     :ui="{

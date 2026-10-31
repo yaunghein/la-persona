@@ -54,7 +54,7 @@ export function communityInviteMeta(params: {
   const memberLabel = params.memberCount === 1 ? 'Member' : 'Members';
   return [
     `${params.memberCount.toLocaleString()} ${memberLabel}`,
-    `${params.eventCount.toLocaleString()} Event Hosted`,
+    `${params.eventCount.toLocaleString()} ${params.eventCount === 1 ? 'Event' : 'Events'}`,
     `Founded in ${params.foundedYear}`,
   ];
 }

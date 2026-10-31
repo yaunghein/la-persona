@@ -19,6 +19,7 @@ const emptyForm = (): CommunitySettingsFormValues => ({
   splineUrl: '',
   wallpaperUrl: '',
   cardBackUrl: '',
+  organizerMemberId: '',
 });
 
 const {
@@ -46,6 +47,23 @@ watch(
   { immediate: true }
 );
 
+const { data: members } = useCommunityMembersQuery(organizationSlug);
+const organizers = computed(() =>
+  (members.value ?? [])
+    .filter(
+      (member) =>
+        member.kind === 'member' &&
+        member.memberRole === 'admin' &&
+        member.cardSlug
+    )
+    .map((member) => ({
+      id: member.id,
+      name: member.name,
+      title: member.role,
+      avatarUrl: member.avatarUrl ?? null,
+    }))
+);
+
 const { mutate: updateSettings, isPending: isSaving } =
   useUpdateCommunitySettingsMutation(organizationSlug);
 
@@ -58,6 +76,7 @@ function saveSettings(values: CommunitySettingsFormValues) {
       description: values.description,
       guidelines: values.guidelines,
       whyJoin: values.whyJoin,
+      organizerMemberId: values.organizerMemberId || null,
       ...(values.logoUrl !== loaded?.logoUrl && { logoUrl: values.logoUrl }),
       ...(values.coverImageUrl !== loaded?.coverImageUrl && {
         coverImageUrl: values.coverImageUrl,
@@ -103,14 +122,6 @@ function onSubmit() {
 function retry() {
   refetch();
 }
-
-function onDelete() {
-  toast.add({
-    title: 'Delete community',
-    description: 'Deletion is not wired yet.',
-    color: 'warning',
-  });
-}
 </script>
 
 <template>
@@ -132,9 +143,9 @@ function onDelete() {
   <OrganizationSettingsForm
     v-else
     :model-value="form"
+    :organizers="organizers"
     @update:model-value="updateForm"
     :saving="isSaving"
     @submit="onSubmit"
-    @delete="onDelete"
   />
 </template>

@@ -12,6 +12,7 @@ import {
   findMemberInOrganization,
   findMembership,
   findOrganizationById,
+  findCommunityBySlug,
   findOrganizerCardSlug,
   findPersonalCardOfUser,
   findUserAccount,
@@ -20,7 +21,7 @@ import {
   insertMember,
   listCardsOfUsersInOrganization,
   listPendingInvitations,
-  listRosterMembers,
+  listMembersWithUsers,
   listUserOrganizations,
   updateOrganizationProfile,
 } from '~~/server/features/organization/community.repository';
@@ -34,6 +35,7 @@ import { splitPersonName } from '~~/shared/utils/person-name';
 import type { Collection } from '~~/shared/contracts/collection';
 import type {
   CommunityAbout,
+  PublicCommunity,
   CommunityInviteStats,
   CommunityMember,
   CommunitySettings,
@@ -45,6 +47,7 @@ import type {
 } from '~~/shared/contracts/organization';
 import { toCommunitySettings } from '~~/shared/contracts/organization';
 import {
+  formatCommunityRole,
   isOrganizationManagerRole,
   type CommunityInviteRole,
   type OrganizationMemberRole,
@@ -213,10 +216,10 @@ function fullName(firstName: string, lastName?: string | null) {
 }
 
 /** Active members with their card, connections and attendance, plus pending invitations. */
-export async function listCommunityRoster(
+export async function listCommunityMembers(
   organizationId: string
 ): Promise<Collection<CommunityMember>> {
-  const rows = await listRosterMembers(organizationId);
+  const rows = await listMembersWithUsers(organizationId);
   const userIds = rows.map((row) => row.user.id);
   const cards = await listCardsOfUsersInOrganization(userIds, organizationId);
   const cardByUserId = new Map(
@@ -244,7 +247,7 @@ export async function listCommunityRoster(
       role:
         communityCard?.position ||
         (isOrganizationManagerRole(row.member.role)
-          ? row.member.role
+          ? formatCommunityRole(row.member.role)
           : 'Member'),
       company: communityCard?.company || '',
       connections: communityCard ? (connections.get(communityCard.id) ?? 0) : 0,
@@ -269,7 +272,7 @@ export async function listCommunityRoster(
     id: row.id,
     kind: 'invitation',
     name: row.email,
-    role: row.role || 'Member',
+    role: formatCommunityRole(row.role),
     company: '',
     connections: 0,
     eventsAttended: 0,
@@ -364,6 +367,19 @@ export async function updateCommunitySettings(
   organizationId: string,
   changes: UpdateCommunitySettingsRequest
 ): Promise<CommunitySettings> {
+  if (changes.organizerMemberId) {
+    const organizer = await findMemberInOrganization(
+      changes.organizerMemberId,
+      organizationId
+    );
+    if (!organizer || organizer.role !== 'admin') {
+      throw badRequest(
+        'Choose an organizer of this community.',
+        'invalid_organizer'
+      );
+    }
+  }
+
   const organization = await updateOrganizationProfile(organizationId, {
     name: changes.name,
     logo: changes.logoUrl,
@@ -375,6 +391,7 @@ export async function updateCommunitySettings(
     guidelines: sanitizeRichText(changes.guidelines) ?? '',
     whyJoin: sanitizeRichText(changes.whyJoin) ?? '',
     coverUrl: changes.coverImageUrl,
+    organizerMemberId: changes.organizerMemberId,
   });
   if (!setting) throw notFound('Community');
   return toCommunitySettings({
@@ -400,5 +417,25 @@ export async function describeCommunityAbout(
     ...counts,
     foundedYear: (organization?.createdAt ?? new Date()).getFullYear(),
     organizerCardSlug,
+  };
+}
+
+export async function describePublicCommunity(
+  slug: string
+): Promise<PublicCommunity> {
+  const community = await findCommunityBySlug(slug);
+  if (!community) throw notFound('Community');
+  const about = await describeCommunityAbout(community.id);
+  return {
+    name: about.name,
+    logoUrl: about.logoUrl,
+    coverImageUrl: about.coverImageUrl,
+    description: about.description,
+    guidelines: about.guidelines,
+    whyJoin: about.whyJoin,
+    memberCount: about.memberCount,
+    eventCount: about.eventCount,
+    foundedYear: about.foundedYear,
+    organizerCardSlug: about.organizerCardSlug,
   };
 }

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { communityCardPath } from '~~/shared/utils/routes';
-
 definePageMeta({
   layout: 'platform',
 });
@@ -19,20 +17,6 @@ function onQuit() {
     title: 'Quit community',
     description: 'Leaving a community is not wired yet.',
     color: 'warning',
-  });
-}
-
-function onViewOrganizer() {
-  const cardSlug = data.value?.organizerCardSlug;
-  if (cardSlug) {
-    window.open(communityCardPath(cardSlug), '_blank', 'noopener,noreferrer');
-    return;
-  }
-
-  toast.add({
-    title: 'Organizer card',
-    description: 'This organizer does not have a community card yet.',
-    color: 'neutral',
   });
 }
 </script>
@@ -58,6 +42,5 @@ function onViewOrganizer() {
     v-else-if="data"
     :data="data"
     @quit="onQuit"
-    @view-organizer="onViewOrganizer"
   />
 </template>

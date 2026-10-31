@@ -38,7 +38,7 @@ export type CommunityMemberStatus = 'active' | 'pending';
 
 export type CommunityMembersTab = 'all' | 'active' | 'pending';
 
-/** A roster row: an active member, or a pending email invitation. */
+/** A members-list row: an active member, or a pending email invitation. */
 export type CommunityMember = {
   id: string;
   kind: 'member' | 'invitation';
@@ -145,6 +145,8 @@ export type CommunitySettingsFormValues = {
   splineUrl: string;
   wallpaperUrl: string;
   cardBackUrl: string;
+  /** Member id of the organizer "Contact Organizer" opens; '' hides the button. */
+  organizerMemberId: string;
 };
 
 /** Community-branded email artwork; only Thakhin edits these. */
@@ -170,6 +172,8 @@ export const UpdateCommunitySettingsRequest = z.object({
   whyJoin: richText,
   logoUrl: StoredImageReference.optional(),
   coverImageUrl: StoredImageReference.optional(),
+  /** null clears the choice; omitted keeps it. */
+  organizerMemberId: z.string().trim().min(1).nullable().optional(),
 });
 
 export type UpdateCommunitySettingsRequest = z.infer<
@@ -182,6 +186,21 @@ export type CommunityAbout = CommunitySettings & {
   foundedYear: number;
   organizerCardSlug: string | null;
 };
+
+/** The public community page: the About content without settings-only fields. */
+export type PublicCommunity = Pick<
+  CommunityAbout,
+  | 'name'
+  | 'logoUrl'
+  | 'coverImageUrl'
+  | 'description'
+  | 'guidelines'
+  | 'whyJoin'
+  | 'memberCount'
+  | 'eventCount'
+  | 'foundedYear'
+  | 'organizerCardSlug'
+>;
 
 export function toCommunitySettings(params: {
   name: string;
@@ -196,6 +215,7 @@ export function toCommunitySettings(params: {
   emailQrBackgroundUrl?: string | null;
   emailContactExchangeUrl?: string | null;
   emailAfterEventUrl?: string | null;
+  organizerMemberId?: string | null;
 }): CommunitySettings {
   return {
     name: params.name,
@@ -210,10 +230,11 @@ export function toCommunitySettings(params: {
     emailQrBackgroundUrl: params.emailQrBackgroundUrl?.trim() || '',
     emailContactExchangeUrl: params.emailContactExchangeUrl?.trim() || '',
     emailAfterEventUrl: params.emailAfterEventUrl?.trim() || '',
+    organizerMemberId: params.organizerMemberId ?? '',
   };
 }
 
-/** Data the members page renders (page-owned copy + server roster). */
+/** Data the members page renders (page-owned copy + server members). */
 export type CommunityMembersData = {
   title: string;
   searchPlaceholder: string;

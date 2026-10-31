@@ -158,24 +158,23 @@ function onRegister() {
             <span class="shrink-0 text-sm font-normal text-subtle">
               {{ item.label }}
             </span>
-            <div class="flex min-w-0 flex-col items-end gap-1">
-              <span class="text-right text-sm font-bold text-ink">
-                {{ item.value }}
-              </span>
-              <UButton
-                v-if="item.href"
-                :to="item.href"
-                target="_blank"
-                external
-                rel="noopener noreferrer"
-                variant="link"
-                color="neutral"
-                size="sm"
-                trailing-icon="i-lucide-external-link"
-                label="View on Google Map"
-                class="p-0 text-subtle hover:text-ink"
+            <a
+              v-if="item.href"
+              :href="item.href"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex min-w-0 items-center gap-1.5 text-right text-sm font-bold text-ink hover:text-ink/80"
+            >
+              {{ item.value }}
+              <UIcon
+                name="i-lucide-external-link"
+                class="size-4 shrink-0 text-subtle"
+                aria-hidden="true"
               />
-            </div>
+            </a>
+            <span v-else class="text-right text-sm font-bold text-ink">
+              {{ item.value }}
+            </span>
           </div>
         </div>
       </div>

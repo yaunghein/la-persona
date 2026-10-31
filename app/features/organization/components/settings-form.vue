@@ -3,13 +3,19 @@ import type { CommunitySettingsFormValues } from '~~/shared/contracts/organizati
 
 const props = defineProps<{
   modelValue: CommunitySettingsFormValues;
+  /** Organizers with a community card; only they can be the contact. */
+  organizers: {
+    id: string;
+    name: string;
+    title: string;
+    avatarUrl: string | null;
+  }[];
   saving?: boolean;
 }>();
 
 const emit = defineEmits<{
   'update:modelValue': [value: CommunitySettingsFormValues];
   submit: [];
-  delete: [];
 }>();
 
 const toast = useToast();
@@ -46,6 +52,18 @@ const displayCover = computed(() => {
   return communityCoverSrc(resolveMediaUrl(props.modelValue.coverImageUrl));
 });
 
+const organizerItems = computed(() =>
+  props.organizers.map((organizer) => ({
+    label: organizer.name,
+    value: organizer.id,
+    description: organizer.title,
+    avatar: {
+      src: resolveMediaUrl(organizer.avatarUrl ?? '') ?? undefined,
+      alt: organizer.name,
+    },
+  }))
+);
+
 const form = computed({
   get: () => props.modelValue,
   set: (value: CommunitySettingsFormValues) => emit('update:modelValue', value),
@@ -59,10 +77,20 @@ function patch<K extends keyof CommunitySettingsFormValues>(
 }
 
 const formFieldClass =
-  '[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink';
+  '[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink';
 
 const inputUi = {
   base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
+};
+
+const selectUi = {
+  base: 'h-[47px] w-full rounded-[4px] border border-line bg-raised px-4 text-sm text-ink',
+  content: 'border border-line bg-surface',
+  item: 'text-ink data-[highlighted]:bg-raised',
+  itemDescription: 'text-subtle',
+  value: 'text-ink',
+  placeholder: 'text-ink/50',
+  trailingIcon: 'text-subtle',
 };
 
 function openInfo() {
@@ -323,19 +351,31 @@ onUnmounted(() => {
             @update:model-value="patch('whyJoin', $event)"
           />
         </UFormField>
+
+        <UFormField
+          label="Contact Organizer"
+          :description="'Whose card people see when they tap Contact Organizer on your events and About page. Leave it empty to hide the button. Only organizers with a community card are\u00A0listed.'"
+          :class="formFieldClass"
+          :ui="{ description: 'mb-2 max-w-lg text-sm text-subtle' }"
+        >
+          <USelectMenu
+            :model-value="form.organizerMemberId || undefined"
+            :items="organizerItems"
+            value-key="value"
+            placeholder="No contact organizer"
+            :search-input="false"
+            clear
+            color="neutral"
+            class="w-full"
+            :ui="selectUi"
+            @update:model-value="patch('organizerMemberId', $event ?? '')"
+          />
+        </UFormField>
       </section>
 
       <div
         class="flex flex-col-reverse items-stretch justify-end gap-2.5 sm:flex-row sm:items-center"
       >
-        <UButton
-          label="Delete Community"
-          leading-icon="i-lucide-trash-2"
-          color="error"
-          variant="soft"
-          class="h-10 cursor-pointer justify-center rounded-full pr-6 pl-5 text-sm font-medium"
-          @click="emit('delete')"
-        />
         <UButton
           label="Update Changes"
           leading-icon="i-lucide-check"

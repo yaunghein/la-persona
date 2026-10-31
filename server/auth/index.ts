@@ -80,6 +80,7 @@ export const auth = betterAuth({
       creatorRole: 'admin',
       // Organizations are provisioned by the app (personal on sign-up, communities by Thakhin).
       allowUserToCreateOrganization: false,
+      disableOrganizationDeletion: true,
       organizationHooks: {
         // Admins are only ever assigned by Thakhin; never through a role change.
         beforeUpdateMemberRole: async ({ newRole }) => {

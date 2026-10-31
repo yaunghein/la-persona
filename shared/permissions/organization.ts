@@ -34,7 +34,8 @@ export const organizationVolunteerRole = organizationAccessControl.newRole({
 
 export const organizationAdminRole = organizationAccessControl.newRole({
   insight: ['read'],
-  organization: ['read', 'update', 'delete'],
+  // Only Thakhin deletes a community (`/api/admin/organizations/{id}`).
+  organization: ['read', 'update'],
   member: ['create', 'update', 'delete'],
   invitation: ['create', 'cancel'],
   event: ['create', 'read', 'update', 'delete'],

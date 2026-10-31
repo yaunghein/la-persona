@@ -11,7 +11,7 @@ definePageMeta({
 
 const toast = useToast();
 const { organizationSlug } = useOrganizationSlug();
-const { data: roster } = useCommunityRosterQuery(organizationSlug);
+const { data: members } = useCommunityMembersQuery(organizationSlug);
 const { mutate: removeMember, isPending: isRemoving } =
   useRemoveMemberMutation(organizationSlug);
 const { mutate: updateMemberRole } =
@@ -61,7 +61,7 @@ const membersData = computed<CommunityMembersData>(() => ({
         'See connections and event attendance across your community.',
     },
   ],
-  members: roster.value ?? [],
+  members: members.value ?? [],
 }));
 
 function showError(title: string, error: unknown) {

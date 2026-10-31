@@ -216,6 +216,7 @@ const organizer = computed(() =>
     ? {
         name: currentOrg.value.name,
         logoUrl: currentOrg.value.logo,
+        slug: currentOrg.value.slug,
         cardSlug: data.value?.organizerCardSlug,
       }
     : null
@@ -229,14 +230,6 @@ function onRegister(event: { id: string }) {
   registeringEvent.value = findEventById(event.id);
   if (!registeringEvent.value) return;
   isRegisterOpen.value = true;
-}
-
-function onViewOrganizer() {
-  toast.add({
-    title: 'Organizer card',
-    description: 'This organizer does not have a community card yet.',
-    color: 'neutral',
-  });
 }
 </script>
 
@@ -288,7 +281,6 @@ function onViewOrganizer() {
     v-model:open="isRegisterOpen"
     :event="registeringEvent"
     :organizer="organizer"
-    @view-organizer="onViewOrganizer"
   />
   <CardRequestSlideover v-model:open="isRequestCardOpen" />
 </template>

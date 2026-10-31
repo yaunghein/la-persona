@@ -1,8 +1,9 @@
-import { and, asc, count, desc, eq, inArray } from 'drizzle-orm';
+import { and, count, desc, eq, inArray } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { db } from '~~/server/db';
 import {
   card,
+  communitySetting,
   event as eventTable,
   invitation,
   member,
@@ -18,6 +19,20 @@ export async function findOrganizationById(organizationId: string) {
     .select()
     .from(organization)
     .where(eq(organization.id, organizationId))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function findCommunityBySlug(slug: string) {
+  const [row] = await db
+    .select()
+    .from(organization)
+    .where(
+      and(
+        eq(organization.slug, slug),
+        eq(organization.type, ORGANIZATION_TYPES.COMMUNITY)
+      )
+    )
     .limit(1);
   return row ?? null;
 }
@@ -129,11 +144,16 @@ export async function countOwners(organizationId: string) {
   return Number(row?.value ?? 0);
 }
 
-/** The slug of the earliest admin's card, shown as the community's organizer. */
+/**
+ * The card "Contact Organizer" opens: the organizer chosen in community
+ * settings. null (nothing chosen, no longer an organizer, or no card here)
+ * hides the button.
+ */
 export async function findOrganizerCardSlug(organizationId: string) {
   const [row] = await db
     .select({ slug: card.slug })
-    .from(member)
+    .from(communitySetting)
+    .innerJoin(member, eq(member.id, communitySetting.organizerMemberId))
     .innerJoin(
       card,
       and(
@@ -142,9 +162,12 @@ export async function findOrganizerCardSlug(organizationId: string) {
       )
     )
     .where(
-      and(eq(member.organizationId, organizationId), eq(member.role, 'admin'))
+      and(
+        eq(communitySetting.organizationId, organizationId),
+        eq(member.role, 'admin')
+      )
     )
-    .orderBy(asc(member.createdAt), desc(card.createdAt))
+    .orderBy(desc(card.createdAt))
     .limit(1);
   return row?.slug ?? null;
 }
@@ -219,7 +242,7 @@ export async function updateCommunityCardsBrand(
     .where(eq(card.organizationId, organizationId));
 }
 
-export function listRosterMembers(organizationId: string) {
+export function listMembersWithUsers(organizationId: string) {
   return db
     .select({ member, user })
     .from(member)

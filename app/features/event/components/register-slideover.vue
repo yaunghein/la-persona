@@ -8,10 +8,6 @@ defineProps<{
 
 const open = defineModel<boolean>('open', { default: false });
 
-const emit = defineEmits<{
-  viewOrganizer: [event: EventDTO];
-}>();
-
 const step = ref<'confirm' | 'registering' | 'success'>('confirm');
 
 const slideoverTitle = computed(() =>
@@ -40,7 +36,6 @@ const slideoverTitle = computed(() =>
         :event="event"
         :organizer="organizer"
         @step-change="step = $event"
-        @view-organizer="emit('viewOrganizer', $event)"
       />
     </template>
   </USlideover>

@@ -16,6 +16,9 @@ export const ROUTES = {
     PLATFORM: (orgSlug: string, eventId: string) =>
       `${PLATFORM_ROOT}/${orgSlug}/events/${eventId}`,
   },
+  COMMUNITY: {
+    PUBLIC: (orgSlug: string) => `/community/${orgSlug}`,
+  },
   COMMUNITY_SETUP: {
     BOOTSTRAP: (orgSlug: string, eventId: string) =>
       `${PLATFORM_ROOT}/${orgSlug}/community-setup/${eventId}`,

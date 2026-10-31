@@ -12,7 +12,7 @@ import {
   spotsRemaining,
 } from '~~/shared/utils/event-datetime';
 import { eventGalleryImages } from '~~/shared/utils/event-media';
-import { communityCardPath } from '~~/shared/utils/routes';
+import { communityCardPath, ROUTES } from '~~/shared/utils/routes';
 
 const props = withDefaults(
   defineProps<{
@@ -64,7 +64,6 @@ const organizerCardUrl = computed(() =>
 );
 
 const emit = defineEmits<{
-  viewOrganizer: [event: EventDTO];
   register: [event: EventDTO];
   stepChange: [step: RegisterStep];
 }>();
@@ -168,10 +167,6 @@ async function startRegister() {
   }
 }
 
-function onViewOrganizer() {
-  emit('viewOrganizer', props.event);
-}
-
 watch(
   step,
   (value) => {
@@ -252,24 +247,23 @@ watch(
               <span class="shrink-0 text-sm font-normal text-subtle">
                 {{ item.label }}
               </span>
-              <div class="flex min-w-0 flex-col items-end gap-1">
-                <span class="text-right text-sm text-ink">
-                  {{ item.value }}
-                </span>
-                <UButton
-                  v-if="item.href"
-                  :to="item.href"
-                  target="_blank"
-                  external
-                  rel="noopener noreferrer"
-                  variant="link"
-                  color="neutral"
-                  size="sm"
-                  trailing-icon="i-lucide-external-link"
-                  label="View on Google Map"
-                  class="p-0 text-subtle hover:text-ink"
+              <a
+                v-if="item.href"
+                :href="item.href"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="relative min-w-0 text-right text-sm text-ink hover:text-ink/80"
+              >
+                {{ item.value }}
+                <UIcon
+                  name="i-lucide-external-link"
+                  class="absolute top-0.5 left-full ml-1 size-4 text-subtle"
+                  aria-hidden="true"
                 />
-              </div>
+              </a>
+              <span v-else class="text-right text-sm text-ink">
+                {{ item.value }}
+              </span>
             </div>
             <div
               v-if="organizer?.name"
@@ -278,7 +272,17 @@ watch(
               <span class="shrink-0 text-sm font-normal text-subtle">
                 Organizer
               </span>
-              <div class="flex min-w-0 items-center justify-end gap-2">
+              <component
+                :is="organizer.slug ? 'a' : 'div'"
+                :href="
+                  organizer.slug
+                    ? ROUTES.COMMUNITY.PUBLIC(organizer.slug)
+                    : undefined
+                "
+                :target="organizer.slug ? '_blank' : undefined"
+                class="relative flex min-w-0 items-center justify-end gap-2"
+                :class="organizer.slug && 'text-ink hover:text-ink/80'"
+              >
                 <UAvatar
                   :src="organizer.logoUrl || undefined"
                   :alt="organizer.name"
@@ -291,7 +295,13 @@ watch(
                 <span class="text-right text-sm text-ink">
                   {{ organizer.name }}
                 </span>
-              </div>
+                <UIcon
+                  v-if="organizer.slug"
+                  name="i-lucide-external-link"
+                  class="absolute top-1/2 left-full ml-1 size-4 -translate-y-1/2 text-subtle"
+                  aria-hidden="true"
+                />
+              </component>
             </div>
           </div>
         </div>
@@ -352,13 +362,6 @@ watch(
             class="h-13 cursor-pointer rounded-full bg-raised px-5 text-sm font-medium text-ink hover:bg-line"
           />
           <UButton
-            v-else-if="!isPage"
-            label="Contact Organizer"
-            color="neutral"
-            class="h-13 cursor-pointer rounded-full bg-raised px-5 text-sm font-medium text-ink hover:bg-line"
-            @click="onViewOrganizer"
-          />
-          <UButton
             v-if="registrationBlock"
             :label="
               registrationBlock === 'past'
@@ -404,24 +407,14 @@ watch(
             class="h-13 justify-center rounded-full bg-ink/10 px-5 text-sm font-medium text-ink/50 disabled:bg-ink/10 disabled:opacity-100"
             :class="isPage && 'w-full'"
           />
-          <template v-if="isPage">
-            <a
-              v-if="organizerCardUrl"
-              :href="organizerCardUrl"
-              target="_blank"
-              class="text-sm font-medium text-ink underline underline-offset-4 hover:text-ink/80"
-            >
-              Contact Organizer
-            </a>
-            <button
-              v-else
-              type="button"
-              class="cursor-pointer text-sm font-medium text-ink underline underline-offset-4 hover:text-ink/80"
-              @click="onViewOrganizer"
-            >
-              Contact Organizer
-            </button>
-          </template>
+          <a
+            v-if="isPage && organizerCardUrl"
+            :href="organizerCardUrl"
+            target="_blank"
+            class="text-sm font-medium text-ink underline underline-offset-4 hover:text-ink/80"
+          >
+            Contact Organizer
+          </a>
         </template>
         <UButton
           v-else-if="canAddToGoogleCalendar"

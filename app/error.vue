@@ -47,23 +47,18 @@ async function goHome() {
         class="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pb-24 text-center"
       >
         <p
-          class="font-bold uppercase text-ink font-heading"
-          :class="
-            isNotFound
-              ? 'pl-[0.18em] text-[5rem] leading-none sm:text-[8.5rem]'
-              : 'text-sm sm:text-base'
-          "
+          class="pl-[0.18em] font-heading text-[5rem] font-bold leading-none text-ink uppercase sm:text-[8.5rem]"
         >
-          {{ isNotFound ? '404' : error.statusCode || 'Error' }}
+          {{ error.statusCode || 'Error' }}
         </p>
 
         <h1
-          class="mt-8 max-w-2xl text-[1.75rem] font-medium leading-tight tracking-widest text-balance uppercase sm:text-4xl"
+          class="mt-6 max-w-xl text-2xl font-medium leading-tight tracking-wider text-balance uppercase sm:text-3xl"
         >
           {{ heading }}
         </h1>
         <p
-          class="mt-4 max-w-sm text-sm leading-relaxed text-balance text-subtle sm:text-base"
+          class="mt-4 max-w-md text-sm leading-relaxed text-balance text-subtle sm:text-base"
         >
           {{ description }}
         </p>

@@ -79,6 +79,7 @@ export const upsertCommunitySettingByOrganizationId = async (
         | 'emailQrBackgroundUrl'
         | 'emailContactExchangeUrl'
         | 'emailAfterEventUrl'
+        | 'organizerMemberId'
       >
     >
 ) => {
@@ -100,6 +101,9 @@ export const upsertCommunitySettingByOrganizationId = async (
       : {}),
     ...(values.emailAfterEventUrl !== undefined
       ? { emailAfterEventUrl: values.emailAfterEventUrl }
+      : {}),
+    ...(values.organizerMemberId !== undefined
+      ? { organizerMemberId: values.organizerMemberId }
       : {}),
   };
 

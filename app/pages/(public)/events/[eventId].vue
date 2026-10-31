@@ -10,7 +10,6 @@ import {
 import { ROUTES } from '~~/shared/utils/routes';
 
 const route = useRoute();
-const toast = useToast();
 const eventId = computed(() => String(route.params.eventId || ''));
 const onboardingStep = computed(() =>
   parseEventOnboardingStep(route.query.onboarding)
@@ -150,14 +149,6 @@ watch(
   { immediate: true }
 );
 
-function onViewOrganizer() {
-  toast.add({
-    title: 'Organizer card',
-    description: 'This organizer does not have a community card yet.',
-    color: 'neutral',
-  });
-}
-
 function onRegister() {
   if (registrationBlock.value) return;
 
@@ -253,7 +244,6 @@ function onCancelOnboarding() {
         :can-register="canRegister"
         :viewer-registration-status="viewer.viewerRegistrationStatus"
         @register="onRegister"
-        @view-organizer="onViewOrganizer"
       />
     </div>
   </div>

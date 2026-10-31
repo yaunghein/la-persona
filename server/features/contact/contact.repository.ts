@@ -221,7 +221,7 @@ export async function insertLegacyContactExchange(
   return inserted;
 }
 
-/** Contacts per card, for roster "connections" counts. */
+/** Contacts per card, for member "connections" counts. */
 export async function countContactsByCardIds(cardIds: string[]) {
   if (!cardIds.length) return new Map<string, number>();
   const rows = await db
