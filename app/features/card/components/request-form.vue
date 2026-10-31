@@ -83,7 +83,7 @@ const { data: plans } = useSubscriptionPlansQuery();
 const { mutate: submitCardRequest, isPending: isLoading } =
   useSubmitCardRequestMutation(organizationSlug);
 
-const typeItems = [
+const typeItems = computed(() => [
   {
     value: 'new_design',
     label: 'New Design',
@@ -94,8 +94,9 @@ const typeItems = [
     label: 'Existing Design',
     description:
       'Use the same design as an existing card with different contact information.',
+    disabled: !cards.value?.length,
   },
-];
+]);
 
 const designItems = computed(() =>
   (cards.value || []).map((designCard) => ({
