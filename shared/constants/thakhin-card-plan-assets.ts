@@ -4,7 +4,7 @@ export type ThakhinCardPlanAssetDefaults = {
   cardBackS3Key: string;
 };
 
-type ThakhinCardPlanAssetDefaultsKeys = 'friend-family';
+type ThakhinCardPlanAssetDefaultsKeys = 'friend-family' | 'standard';
 
 export const THAKHIN_CARD_PLAN_ASSET_DEFAULTS: Record<
   ThakhinCardPlanAssetDefaultsKeys,
@@ -20,11 +20,11 @@ export const THAKHIN_CARD_PLAN_ASSET_DEFAULTS: Record<
     wallpaperS3Key: 'uploads/wallpaper-friends-family.webp',
     cardBackS3Key: 'uploads/back-friends-family.webp',
   },
-  // standard: {
-  //   splineUrl: 'https://prod.spline.design/vcl6OiI2eMVd1UlQ/scene.splinecode',
-  //   wallpaperS3Key: 'uploads/wallpaper-standard.webp',
-  //   cardBackS3Key: 'uploads/back-standard.webp',
-  // },
+  standard: {
+    splineUrl: 'https://prod.spline.design/vcl6OiI2eMVd1UlQ/scene.splinecode',
+    wallpaperS3Key: 'uploads/wallpaper-standard.webp',
+    cardBackS3Key: 'uploads/back-standard.webp',
+  },
 };
 
 export function getThakhinCardPlanAssetDefaults(

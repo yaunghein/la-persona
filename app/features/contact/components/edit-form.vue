@@ -71,15 +71,6 @@ const detailFields = [
   { name: 'company', label: 'Company / Brand Name', placeholder: 'Acme Inc.' },
 ] as const;
 
-const sharedDetails = computed(() =>
-  [
-    props.contact.position,
-    props.contact.company,
-    props.contact.phone,
-    props.contact.email,
-  ].filter(Boolean)
-);
-
 const eventItems = computed(() => {
   // Keep the current tag selectable even when it isn't in the registered list.
   const current = props.contact.event;
@@ -169,21 +160,6 @@ defineExpose({ isPending });
         />
       </UFormField>
     </template>
-
-    <div v-else class="space-y-1 rounded-[4px] bg-raised p-4">
-      <p class="text-sm font-medium text-ink">{{ contact.name }}</p>
-      <p
-        v-for="detail in sharedDetails"
-        :key="detail ?? ''"
-        class="text-sm text-muted"
-      >
-        {{ detail }}
-      </p>
-      <p class="pt-2 text-xs leading-relaxed text-muted">
-        These details came from the exchange, so only your note and where you
-        met can&nbsp;change.
-      </p>
-    </div>
 
     <UFormField label="Where You Met" name="eventId" :class="fieldClass">
       <USelectMenu

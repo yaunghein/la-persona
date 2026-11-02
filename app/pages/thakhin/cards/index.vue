@@ -4,7 +4,10 @@ definePageMeta({
 });
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
-import { getThakhinCardPlanAssetDefaults } from '~~/shared/constants/thakhin-card-plan-assets';
+import {
+  THAKHIN_CARD_PLAN_ASSET_DEFAULTS,
+  getThakhinCardPlanAssetDefaults,
+} from '~~/shared/constants/thakhin-card-plan-assets';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
 import {
   ADMIN_ACTIONS_COLUMN,
@@ -193,7 +196,7 @@ const orgSelectItems = computed(() =>
 const planSelectItems = computed(() =>
   (plans.value ?? [])
     .filter((plan) => plan.isActive)
-    .filter((p) => p.code === 'friend-family')
+    .filter((p) => p.code in THAKHIN_CARD_PLAN_ASSET_DEFAULTS)
     .map((p) => ({
       label: p.name,
       value: p.code,
