@@ -53,8 +53,8 @@ const optionalText = (max: number) =>
     .string()
     .trim()
     .max(max)
-    .nullish()
-    .transform((value) => value || null);
+    .transform((value) => value || null)
+    .nullish();
 
 /**
  * Fields a card holder may change. Ownership, organization and design assets
@@ -71,8 +71,8 @@ export const UpdateCardRequest = z
     phoneCountryCode: optionalText(4),
     email: z
       .union([z.literal(''), z.email('Enter a valid email').max(254)])
-      .nullish()
-      .transform((value) => value || null),
+      .transform((value) => value || null)
+      .nullish(),
     website: WebsiteUrl.nullish(),
     avatarUrl: StoredImageReference.nullish(),
     socials: z.array(CardSocialLink).max(30),

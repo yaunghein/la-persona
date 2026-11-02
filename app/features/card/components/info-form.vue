@@ -3,10 +3,12 @@ import { Application } from '@splinetool/runtime';
 import type { FormError } from '@nuxt/ui';
 import { useSortable } from '@vueuse/integrations/useSortable';
 import {
+  CARD_LINK_LABELS,
   CARD_LINK_SELECT_ITEMS,
   createEmptyCardLink,
 } from '~~/shared/constants/card-link-options';
 import {
+  CUSTOM_SOCIAL_LABEL,
   createLinkTypeItemsWithCustom,
   getCustomSocialLabelMissingIndexes,
   normalizeSocialLinksForForm,
@@ -15,6 +17,10 @@ import {
 } from '~~/shared/utils/social-links';
 import { applyCombinedCardToSpline } from '~/features/card/utils/spline-card';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
+import {
+  cardBadgeLabel,
+  cardHolderName,
+} from '~/features/card/utils/card-badge';
 
 const route = useRoute();
 const slug = computed(() => String(route.params.slug || ''));
@@ -68,9 +74,18 @@ const socialsSortable = computed({
     state.socials = value;
   },
 });
-const linkTypeItems = computed<string[][]>(() =>
-  createLinkTypeItemsWithCustom(CARD_LINK_SELECT_ITEMS)
-);
+// Each built-in link type appears once per card; Custom can repeat.
+const linkTypeItems = computed<string[][]>(() => {
+  const usedLabels = new Set(
+    state.socials
+      .filter((_, index) => index !== editingSocialIndex.value)
+      .map((link) => link.label)
+  );
+  usedLabels.delete(CUSTOM_SOCIAL_LABEL);
+  return createLinkTypeItemsWithCustom(CARD_LINK_SELECT_ITEMS).map((group) =>
+    group.filter((label) => !usedLabels.has(label))
+  );
+});
 
 const FIELD_LABELS: Record<string, string> = {
   firstName: 'First name',
@@ -289,6 +304,7 @@ function openCreateLinkSlideover() {
   socialEditorMode.value = 'create';
   editingSocialIndex.value = null;
   resetSocialDraft();
+  socialDraft.label = linkTypeItems.value.flat()[0] ?? CUSTOM_SOCIAL_LABEL;
   isSocialSlideoverOpen.value = true;
 }
 
@@ -378,6 +394,82 @@ function saveSocialDraft() {
   }
 
   closeSocialSlideover();
+}
+
+const { data: workspaceCards } = useWorkspaceCardsQuery();
+const importableCards = computed(() =>
+  (workspaceCards.value || []).filter((item) => item.id !== card.value?.id)
+);
+const importCardItems = computed(() =>
+  importableCards.value.map((item) => ({
+    value: item.id,
+    label: cardHolderName(item),
+    badge: cardBadgeLabel(item),
+  }))
+);
+const isImportModalOpen = ref(false);
+const importSourceCardId = ref<string>();
+const isImporting = ref(false);
+
+function openImportModal() {
+  importSourceCardId.value = importableCards.value[0]?.id;
+  isImportModalOpen.value = true;
+}
+
+function closeImportModal() {
+  isImportModalOpen.value = false;
+}
+
+/** Appends the source card's links (skipping ones already here) and saves. */
+async function importSocialLinks() {
+  const source = importableCards.value.find(
+    (item) => item.id === importSourceCardId.value
+  );
+  if (!source) return;
+
+  // Built-in types are keyed by label alone so each appears once; custom
+  // links only skip exact copies.
+  const builtInLabels = new Set<string>(CARD_LINK_LABELS);
+  const linkKey = (link: { label: string; value: string }) =>
+    builtInLabels.has(link.label) ? link.label : `${link.label}|${link.value}`;
+  const existingKeys = new Set(
+    resolveSocialLinksForSubmission(state.socials).map(linkKey)
+  );
+  const imported = normalizeSocialLinksForForm(
+    source.socials.filter((link) => {
+      const key = linkKey(link);
+      if (existingKeys.has(key)) return false;
+      existingKeys.add(key);
+      return true;
+    })
+  );
+  const socials = [...state.socials, ...imported];
+
+  isImporting.value = true;
+  try {
+    await updateCard({
+      socials: normalizeLinkValuesWithHttps(
+        resolveSocialLinksForSubmission(socials)
+      ),
+    });
+    state.socials = socials;
+    isImportModalOpen.value = false;
+    toast.add({
+      title: 'Links imported',
+      description: imported.length
+        ? `${imported.length} link(s) added from ${cardHolderName(source)}.`
+        : 'This card already has all of those links.',
+      color: 'success',
+    });
+  } catch (err) {
+    toast.add({
+      title: 'Unable to import links',
+      description: buildHelpfulApiErrorMessage(err),
+      color: 'error',
+    });
+  } finally {
+    isImporting.value = false;
+  }
 }
 
 function requestRemoveLink(index: number) {
@@ -721,15 +813,27 @@ onBeforeUnmount(() => {
           <h3 class="text-sm font-medium text-ink">
             Social / Professional Links
           </h3>
-          <UButton
-            type="button"
-            label="Add Link"
-            icon="i-lucide-plus"
-            variant="soft"
-            size="sm"
-            class="rounded-full bg-raised text-xs px-3 text-ink hover:bg-line"
-            @click="openCreateLinkSlideover"
-          />
+          <div class="flex items-center gap-2">
+            <UButton
+              v-if="importableCards.length"
+              type="button"
+              label="Import"
+              icon="i-lucide-download"
+              variant="soft"
+              size="sm"
+              class="rounded-full bg-raised text-xs px-3 text-ink hover:bg-line"
+              @click="openImportModal"
+            />
+            <UButton
+              type="button"
+              label="Add Link"
+              icon="i-lucide-plus"
+              variant="soft"
+              size="sm"
+              class="rounded-full bg-raised text-xs px-3 text-ink hover:bg-line"
+              @click="openCreateLinkSlideover"
+            />
+          </div>
         </div>
         <div ref="socialsListEl" class="relative flex flex-col gap-3">
           <div
@@ -918,6 +1022,68 @@ onBeforeUnmount(() => {
         color="error"
         class="h-10 text-sm rounded-full px-6 font-medium"
         @click="confirmRemoveLink"
+      />
+    </template>
+  </UModal>
+
+  <UModal
+    v-model:open="isImportModalOpen"
+    title="Import Links"
+    description="Copy the social links from another of your&nbsp;cards."
+    :ui="{
+      content: 'bg-surface max-w-md',
+      title: 'text-ink',
+      description: 'text-subtle',
+      body: 'pt-4',
+      footer: 'justify-end gap-2',
+    }"
+  >
+    <template #body>
+      <URadioGroup
+        v-model="importSourceCardId"
+        :items="importCardItems"
+        value-key="value"
+        color="neutral"
+        variant="table"
+        class="w-full"
+        :ui="{
+          fieldset: 'space-y-0',
+          item: 'border-line bg-surface px-4 py-3 -mb-px last:mb-0 rounded-none first:rounded-t-[4px] last:rounded-b-[4px]',
+          container: 'items-center',
+          label: 'text-sm text-ink',
+        }"
+      >
+        <template #label="{ item }">
+          <span class="flex items-center justify-between gap-3">
+            <span class="truncate">{{ item.label }}</span>
+            <UBadge
+              :label="item.badge"
+              color="neutral"
+              variant="soft"
+              size="sm"
+              class="shrink-0"
+            />
+          </span>
+        </template>
+      </URadioGroup>
+    </template>
+    <template #footer>
+      <UButton
+        type="button"
+        label="Cancel"
+        color="neutral"
+        variant="ghost"
+        class="h-10 text-sm rounded-full px-5"
+        @click="closeImportModal"
+      />
+      <UButton
+        type="button"
+        label="Import"
+        color="neutral"
+        class="h-10 text-sm rounded-full bg-ink px-6 font-medium text-ink-inverse hover:bg-ink/90"
+        :disabled="!importSourceCardId"
+        :loading="isImporting"
+        @click="importSocialLinks"
       />
     </template>
   </UModal>

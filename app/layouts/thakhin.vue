@@ -186,6 +186,20 @@ const searchGroups = computed(() => {
           popover
           class="[&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1 py-4 [&_a]:py-2 [&_a]:font-semibold"
         />
+        <UNavigationMenu
+          :collapsed="collapsed"
+          :items="[
+            {
+              label: 'Back to Platform',
+              icon: 'i-lucide-arrow-left',
+              to: ROUTES.PLATFORM.ROOT,
+              onSelect: close,
+            },
+          ]"
+          orientation="vertical"
+          tooltip
+          class="mt-auto [&_a]:py-2 [&_a]:font-semibold"
+        />
       </template>
 
       <template #footer="{ collapsed }">
