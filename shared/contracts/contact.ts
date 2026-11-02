@@ -87,6 +87,13 @@ export const CreateManualContactRequest = z.object({
   phone,
   phoneCountryCode,
   email: optionalEmail,
+  note: z
+    .string()
+    .trim()
+    .max(500)
+    .optional()
+    .transform((value) => value || null),
+  eventId: z.string().trim().min(1).max(64).optional(),
 });
 
 export type CreateManualContactRequest = z.infer<

@@ -22,6 +22,7 @@ export default defineEventHandler(async (event) => {
       id: contact.id,
       card_id: contact.cardId,
       source: 'manual',
+      ...(contact.eventId ? { event_id: contact.eventId } : {}),
       ...(contact.email ? { email: contact.email } : {}),
     },
   });

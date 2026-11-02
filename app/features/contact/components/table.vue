@@ -43,11 +43,6 @@ const columns = computed<TableColumn<ContactSummary>[]>(() => [
     header: 'EMAIL',
     meta: { class: { th: headerClass, td: mutedCellClass } },
   },
-  {
-    id: 'met',
-    header: 'WHERE YOU MET',
-    meta: { class: { th: headerClass, td: mutedCellClass } },
-  },
   ...(props.showOrigin
     ? [
         {
@@ -97,20 +92,6 @@ const columns = computed<TableColumn<ContactSummary>[]>(() => [
     }}</template>
     <template #phone-cell="{ row }">{{ row.original.phone || 'N/A' }}</template>
     <template #email-cell="{ row }">{{ row.original.email || 'N/A' }}</template>
-    <template #met-cell="{ row }">
-      <div class="max-w-60 leading-[1.35]">
-        <p class="text-sm font-medium text-ink">
-          {{ row.original.event?.title || 'N/A' }}
-        </p>
-        <p
-          v-if="row.original.note"
-          class="truncate text-sm font-medium text-muted"
-          :title="row.original.note"
-        >
-          {{ row.original.note }}
-        </p>
-      </div>
-    </template>
     <template #origin-cell="{ row }">
       <UButton
         v-if="contactOriginPath(row.original)"

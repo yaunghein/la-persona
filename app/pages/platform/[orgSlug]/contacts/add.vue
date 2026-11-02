@@ -7,6 +7,8 @@ useSeoMeta({ ...getSeoTitle('Create New Contact - LA PERSONA') });
 
 const route = useRoute();
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
+const { data: registeredEvents, isLoading: isRegisteredEventsLoading } =
+  useRegisteredEventsQuery();
 
 async function goBack() {
   await navigateTo(`/platform/${orgSlug.value}/contacts`);
@@ -56,6 +58,8 @@ async function goToContacts() {
       <ContactManualForm
         :organization-slug="orgSlug"
         layout="wide"
+        :events="registeredEvents?.items ?? []"
+        :events-loading="isRegisteredEventsLoading"
         @created="goToContacts"
       />
     </UCard>

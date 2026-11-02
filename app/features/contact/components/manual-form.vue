@@ -1,11 +1,18 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui';
-import { CreateManualContactRequest } from '~~/shared/contracts/contact';
+import { format } from 'date-fns';
+import {
+  CreateManualContactRequest,
+  type ContactEvent,
+} from '~~/shared/contracts/contact';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
 
 const props = withDefaults(
   defineProps<{
     organizationSlug: string;
+    /** Events the card holder registered for. */
+    events: ContactEvent[];
+    eventsLoading: boolean;
     /** `stacked`: one column (slideover). `wide`: three columns (full page). */
     layout?: 'stacked' | 'wide';
   }>(),
@@ -26,7 +33,12 @@ type ManualContactForm = {
   phone: string;
   phoneCountryCode: string;
   email: string;
+  eventId: string;
+  note: string;
 };
+
+// Select items can't use an empty value.
+const NO_EVENT = 'none';
 
 const { state, reset: resetForm } = useFormDraft<ManualContactForm>(
   () => `org:${props.organizationSlug}:manual-contact`,
@@ -38,6 +50,8 @@ const { state, reset: resetForm } = useFormDraft<ManualContactForm>(
     phone: '',
     phoneCountryCode: 'MM',
     email: '',
+    eventId: NO_EVENT,
+    note: '',
   })
 );
 
@@ -51,6 +65,14 @@ const fields = [
   },
   { name: 'company', label: 'Company / Brand Name', placeholder: 'Acme Inc.' },
 ] as const;
+
+const eventItems = computed(() => [
+  { label: 'None', value: NO_EVENT },
+  ...props.events.map((item) => ({
+    label: `${item.title} · ${format(new Date(item.startsAt), 'd MMM yyyy')}`,
+    value: item.id,
+  })),
+]);
 
 const inputUi = {
   base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
@@ -66,6 +88,7 @@ async function onSubmit(event: FormSubmitEvent<CreateManualContactRequest>) {
       ...event.data,
       phone: phoneFields.phone || event.data.phone,
       phoneCountryCode: phoneFields.phoneCountryCode,
+      eventId: event.data.eventId === NO_EVENT ? undefined : event.data.eventId,
     });
     toast.add({
       title: 'Contact created',
@@ -141,6 +164,43 @@ defineExpose({ isPending });
           placeholder="john@example.com"
           class="w-full"
           :ui="inputUi"
+        />
+      </UFormField>
+
+      <UFormField
+        label="Where You Met"
+        name="eventId"
+        class="[&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
+        :class="layout === 'wide' ? '[&_label]:mb-3' : '[&_label]:mb-1'"
+      >
+        <USelectMenu
+          v-model="state.eventId"
+          :items="eventItems"
+          value-key="value"
+          :loading="eventsLoading"
+          :search-input="{ placeholder: 'Search events' }"
+          class="w-full"
+          :ui="{ base: inputUi.base }"
+        />
+      </UFormField>
+
+      <UFormField
+        label="Note"
+        name="note"
+        class="[&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
+        :class="
+          layout === 'wide' ? '[&_label]:mb-3 xl:col-span-3' : '[&_label]:mb-1'
+        "
+      >
+        <UTextarea
+          v-model="state.note"
+          :maxlength="500"
+          :rows="4"
+          autoresize
+          class="w-full"
+          :ui="{
+            base: 'rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
+          }"
         />
       </UFormField>
     </div>

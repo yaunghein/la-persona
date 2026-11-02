@@ -112,10 +112,23 @@ export async function listContactEventCollection(
   };
 }
 
-/**
- * Edits a contact. Details change on manual contacts only; an event must be
- * one the card holder registered for, so it can't point at arbitrary events.
- */
+/** A contact's event must be one the card holder registered for, so it can't point at arbitrary events. */
+async function assertRegisteredEvent(
+  eventId: string,
+  cardUserId: string | null
+) {
+  const registration = cardUserId
+    ? await findRegistrationByEventAndUser(eventId, cardUserId)
+    : null;
+  if (!registration) {
+    throw badRequest(
+      'Choose an event you registered for.',
+      'event_not_registered'
+    );
+  }
+}
+
+/** Edits a contact. Details change on manual contacts only. */
 export async function editContact(
   contact: { id: string; cardUserId: string | null; source: string },
   input: UpdateContactRequest
@@ -132,17 +145,7 @@ export async function editContact(
     );
   }
 
-  if (eventId) {
-    const registration = contact.cardUserId
-      ? await findRegistrationByEventAndUser(eventId, contact.cardUserId)
-      : null;
-    if (!registration) {
-      throw badRequest(
-        'Choose an event you registered for.',
-        'event_not_registered'
-      );
-    }
-  }
+  if (eventId) await assertRegisteredEvent(eventId, contact.cardUserId);
 
   const values = {
     note,
@@ -231,6 +234,9 @@ export async function createManualContact(params: {
   }
 
   const { input } = params;
+  if (input.eventId)
+    await assertRegisteredEvent(input.eventId, targetCard.userId);
+
   const phoneFields = resolvedPhoneFields(input.phone, input.phoneCountryCode);
   return insertContact({
     name: `${input.firstName} ${input.lastName}`.trim(),
@@ -239,6 +245,8 @@ export async function createManualContact(params: {
     email: input.email || null,
     position: input.position,
     company: input.company || null,
+    note: input.note,
+    eventId: input.eventId ?? null,
     cardId: targetCard.id,
     source: 'manual',
   });

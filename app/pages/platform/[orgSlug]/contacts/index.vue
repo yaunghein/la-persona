@@ -126,16 +126,18 @@ function showAllEvents() {
 const contactToEdit = ref<ContactSummary | null>(null);
 const isEditOpen = ref(false);
 const editContactForm = useTemplateRef('editContactForm');
+const isCreateOpen = ref(false);
+const manualContactForm = useTemplateRef('manualContactForm');
 const { data: registeredEvents, isLoading: isRegisteredEventsLoading } =
-  useRegisteredEventsQuery({ enabled: isEditOpen });
+  useRegisteredEventsQuery({
+    enabled: () => isEditOpen.value || isCreateOpen.value,
+  });
 
 function openEditContact(contact: ContactSummary) {
   contactToEdit.value = contact;
   isEditOpen.value = true;
 }
 
-const isCreateOpen = ref(false);
-const manualContactForm = useTemplateRef('manualContactForm');
 const contactToDelete = ref<ContactSummary | null>(null);
 const isDeleteOpen = computed({
   get: () => contactToDelete.value !== null,
@@ -359,6 +361,8 @@ watch(total, (count) => {
         <ContactManualForm
           ref="manualContactForm"
           :organization-slug="orgSlug"
+          :events="registeredEvents?.items ?? []"
+          :events-loading="isRegisteredEventsLoading"
           @created="closeCreateContact"
         />
       </template>
