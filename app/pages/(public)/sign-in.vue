@@ -232,7 +232,6 @@ const onMagicLink = async () => {
               <UInput
                 v-model="email"
                 type="email"
-                placeholder="johndoe@gmail.com"
                 size="xl"
                 class="w-full"
                 :ui="{

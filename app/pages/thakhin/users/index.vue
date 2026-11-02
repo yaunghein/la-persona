@@ -521,12 +521,7 @@ const columns: TableColumn<UserRow>[] = [
             />
           </UFormField>
           <UFormField label="Email" required>
-            <UInput
-              v-model="createForm.email"
-              type="email"
-              class="w-full"
-              placeholder="name@example.com"
-            />
+            <UInput v-model="createForm.email" type="email" class="w-full" />
           </UFormField>
           <UFormField label="Password" required>
             <UInput

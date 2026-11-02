@@ -662,7 +662,6 @@ function onFormError(event: FormErrorEvent) {
         <UInput
           v-model="state.name"
           class="w-full"
-          placeholder="John Doe"
           :ui="{
             base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
           }"
@@ -677,7 +676,6 @@ function onFormError(event: FormErrorEvent) {
         <UInput
           v-model="state.position"
           class="w-full"
-          placeholder="Senior Designer"
           :ui="{
             base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
           }"
@@ -692,7 +690,6 @@ function onFormError(event: FormErrorEvent) {
         <UInput
           v-model="state.company"
           class="w-full"
-          placeholder="Acme Inc."
           :ui="{
             base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
           }"
@@ -725,7 +722,6 @@ function onFormError(event: FormErrorEvent) {
         <UInput
           v-model="state.email"
           class="w-full"
-          placeholder="john@example.com"
           :ui="{
             base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
           }"
@@ -741,7 +737,6 @@ function onFormError(event: FormErrorEvent) {
         <UInput
           v-model="state.website"
           class="w-full"
-          placeholder="https://johndoe.com"
           :ui="{
             base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
           }"
@@ -965,7 +960,6 @@ function onFormError(event: FormErrorEvent) {
         >
           <UInput
             v-model="socialDraft.value"
-            placeholder="www.example.com"
             class="w-full"
             :ui="{
               base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',

@@ -56,14 +56,10 @@ const { state, reset: resetForm } = useFormDraft<ManualContactForm>(
 );
 
 const fields = [
-  { name: 'firstName', label: 'First Name', placeholder: 'Kyaw' },
-  { name: 'lastName', label: 'Last Name', placeholder: 'Gyi' },
-  {
-    name: 'position',
-    label: 'Professional Title / Role',
-    placeholder: 'Senior Designer',
-  },
-  { name: 'company', label: 'Company / Brand Name', placeholder: 'Acme Inc.' },
+  { name: 'firstName', label: 'First Name' },
+  { name: 'lastName', label: 'Last Name' },
+  { name: 'position', label: 'Professional Title / Role' },
+  { name: 'company', label: 'Company / Brand Name' },
 ] as const;
 
 const eventItems = computed(() => [
@@ -129,12 +125,7 @@ defineExpose({ isPending });
         class="[&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         :class="layout === 'wide' ? '[&_label]:mb-3' : '[&_label]:mb-1'"
       >
-        <UInput
-          v-model="state[field.name]"
-          :placeholder="field.placeholder"
-          class="w-full"
-          :ui="inputUi"
-        />
+        <UInput v-model="state[field.name]" class="w-full" :ui="inputUi" />
       </UFormField>
 
       <UFormField
@@ -147,7 +138,6 @@ defineExpose({ isPending });
           v-model="state.phone"
           v-model:country-code="state.phoneCountryCode"
           name="phone"
-          placeholder="Phone number"
           :ui="inputUi"
         />
       </UFormField>
@@ -161,7 +151,6 @@ defineExpose({ isPending });
         <UInput
           v-model="state.email"
           type="email"
-          placeholder="john@example.com"
           class="w-full"
           :ui="inputUi"
         />

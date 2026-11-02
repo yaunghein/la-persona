@@ -769,12 +769,7 @@ async function copyEventLink() {
         </section>
 
         <UFormField label="Event Name" name="title" :class="formFieldClass">
-          <UInput
-            v-model="state.title"
-            placeholder="Tech Leaders Networking Night 2026"
-            class="w-full"
-            :ui="inputUi"
-          />
+          <UInput v-model="state.title" class="w-full" :ui="inputUi" />
         </UFormField>
 
         <UFormField
@@ -860,7 +855,6 @@ async function copyEventLink() {
           <UInput
             v-model="state.mapUrl"
             type="url"
-            placeholder="https://maps.app.goo.gl/..."
             class="w-full"
             :ui="inputUi"
           />
@@ -893,7 +887,6 @@ async function copyEventLink() {
               v-model="capacityDraft"
               type="number"
               min="1"
-              placeholder="50"
               class="w-full"
               :ui="inputUi"
             />

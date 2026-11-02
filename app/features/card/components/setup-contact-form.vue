@@ -181,7 +181,6 @@ function onSubmit() {
       <UFormField label="Professional Title / Role" name="position" required>
         <UInput
           v-model="state.position"
-          placeholder="e.g. Engineer, Designer, etc."
           variant="soft"
           class="w-full"
           size="xl"

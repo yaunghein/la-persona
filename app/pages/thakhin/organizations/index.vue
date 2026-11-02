@@ -754,7 +754,6 @@ const selectMenuUi = {
             <UFormField label="Slug" required :class="formFieldClass">
               <UInput
                 v-model="editForm.slug"
-                placeholder="e.g. acme-corp"
                 class="w-full"
                 size="xl"
                 :ui="inputUi"

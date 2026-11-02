@@ -333,21 +333,11 @@ watch(
             name="firstName"
             :class="formFieldClass"
           >
-            <UInput
-              v-model="state.firstName"
-              placeholder="John"
-              class="w-full"
-              :ui="inputUi"
-            />
+            <UInput v-model="state.firstName" class="w-full" :ui="inputUi" />
           </UFormField>
 
           <UFormField label="Last Name" name="lastName" :class="formFieldClass">
-            <UInput
-              v-model="state.lastName"
-              placeholder="Doe"
-              class="w-full"
-              :ui="inputUi"
-            />
+            <UInput v-model="state.lastName" class="w-full" :ui="inputUi" />
           </UFormField>
 
           <UFormField
@@ -355,12 +345,7 @@ watch(
             name="position"
             :class="formFieldClass"
           >
-            <UInput
-              v-model="state.position"
-              placeholder="Senior Designer"
-              class="w-full"
-              :ui="inputUi"
-            />
+            <UInput v-model="state.position" class="w-full" :ui="inputUi" />
           </UFormField>
 
           <UFormField
@@ -386,7 +371,6 @@ watch(
             <UInput
               v-model="state.email"
               type="email"
-              placeholder="john@example.com"
               class="w-full"
               :ui="inputUi"
             />
@@ -543,7 +527,6 @@ watch(
         >
           <UInput
             v-model="socialDraft.value"
-            placeholder="www.example.com"
             class="w-full"
             :ui="{
               base: 'h-12 border-line bg-raised text-sm text-ink placeholder:text-ink/50',

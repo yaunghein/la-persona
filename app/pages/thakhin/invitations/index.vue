@@ -342,7 +342,6 @@ const selectUi = {
               <UInput
                 v-model="createState.email"
                 type="email"
-                placeholder="name@email.com"
                 class="w-full"
                 size="xl"
                 :ui="inputUi"

@@ -452,7 +452,6 @@ watch(isSocialSlideoverOpen, (open) => {
         >
           <UInput
             v-model="socialDraft.value"
-            placeholder="www.example.com"
             class="w-full"
             variant="soft"
             size="xl"

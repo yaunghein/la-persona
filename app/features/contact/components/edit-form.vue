@@ -62,13 +62,9 @@ watch(
 );
 
 const detailFields = [
-  { name: 'name', label: 'Name', placeholder: 'Kyaw Gyi' },
-  {
-    name: 'position',
-    label: 'Professional Title / Role',
-    placeholder: 'Senior Designer',
-  },
-  { name: 'company', label: 'Company / Brand Name', placeholder: 'Acme Inc.' },
+  { name: 'name', label: 'Name' },
+  { name: 'position', label: 'Professional Title / Role' },
+  { name: 'company', label: 'Company / Brand Name' },
 ] as const;
 
 const eventItems = computed(() => {
@@ -132,12 +128,7 @@ defineExpose({ isPending });
         :name="field.name"
         :class="fieldClass"
       >
-        <UInput
-          v-model="state[field.name]"
-          :placeholder="field.placeholder"
-          class="w-full"
-          :ui="inputUi"
-        />
+        <UInput v-model="state[field.name]" class="w-full" :ui="inputUi" />
       </UFormField>
 
       <UFormField label="Phone Number" name="phone" :class="fieldClass">
@@ -145,7 +136,6 @@ defineExpose({ isPending });
           v-model="state.phone"
           v-model:country-code="state.phoneCountryCode"
           name="phone"
-          placeholder="Phone number"
           :ui="inputUi"
         />
       </UFormField>
@@ -154,7 +144,6 @@ defineExpose({ isPending });
         <UInput
           v-model="state.email"
           type="email"
-          placeholder="john@example.com"
           class="w-full"
           :ui="inputUi"
         />

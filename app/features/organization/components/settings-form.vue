@@ -321,7 +321,6 @@ onUnmounted(() => {
         <UFormField label="Organization Name" :class="formFieldClass">
           <UInput
             :model-value="form.name"
-            placeholder="Yangon Runners Club"
             class="w-full"
             :ui="inputUi"
             @update:model-value="patch('name', String($event))"

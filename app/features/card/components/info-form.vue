@@ -859,7 +859,6 @@ onBeforeUnmount(() => {
         >
           <UInput
             v-model="socialDraft.value"
-            placeholder="www.example.com"
             class="w-full"
             :ui="{
               base: 'h-12 border-line bg-raised text-sm text-ink placeholder:text-ink/50',
