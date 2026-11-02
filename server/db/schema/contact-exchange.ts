@@ -8,6 +8,7 @@ import {
 import { nanoid } from 'nanoid';
 import { user } from './auth';
 import { card } from './card';
+import { event } from './event';
 
 export const contactExchange = pgTable(
   'contact_exchange',
@@ -27,6 +28,9 @@ export const contactExchange = pgTable(
     laPersonaUserId: text().references(() => user.id, { onDelete: 'set null' }),
     laPersonaCardId: text().references(() => card.id, { onDelete: 'set null' }),
     reciprocalExchangeId: text(),
+    // Set automatically when either side is checked in at a live event; the card holder can change it.
+    eventId: text().references(() => event.id, { onDelete: 'set null' }),
+    note: text(),
     createdAt: timestamp().defaultNow().notNull(),
     updatedAt: timestamp()
       .defaultNow()
@@ -36,6 +40,7 @@ export const contactExchange = pgTable(
   (table) => [
     index('contact_exchange_card_idx').on(table.cardId),
     index('contact_exchange_la_persona_user_idx').on(table.laPersonaUserId),
+    index('contact_exchange_event_idx').on(table.eventId),
     uniqueIndex('contact_exchange_card_la_persona_user_uidx').on(
       table.cardId,
       table.laPersonaUserId

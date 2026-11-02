@@ -14,6 +14,7 @@ import {
   card,
   contactExchange,
   contactExchangeBeforePlatform,
+  event,
   organization,
 } from '~~/server/db/schema';
 
@@ -27,6 +28,7 @@ export type ContactScope =
 
 export type ContactFilter = {
   cardId?: string;
+  eventId?: string;
   q?: string;
   limit: number;
   offset: number;
@@ -57,6 +59,7 @@ function searchCondition(q: string | undefined): SQL | undefined {
     ilike(contactExchange.email, pattern),
     ilike(contactExchange.company, pattern),
     ilike(contactExchange.position, pattern),
+    ilike(contactExchange.note, pattern),
     ilike(personaCard.firstName, pattern),
     ilike(personaCard.lastName, pattern),
     ilike(personaCard.email, pattern),
@@ -65,17 +68,8 @@ function searchCondition(q: string | undefined): SQL | undefined {
   );
 }
 
-export async function listContacts(scope: ContactScope, filter: ContactFilter) {
-  const scoped = scopeCondition(scope);
-  if (!scoped) return { rows: [], total: 0 };
-
-  const where = and(
-    scoped,
-    filter.cardId ? eq(contactExchange.cardId, filter.cardId) : undefined,
-    searchCondition(filter.q)
-  );
-
-  const baseQuery = db
+function selectContactRows() {
+  return db
     .select({
       contact: contactExchange,
       card: {
@@ -85,6 +79,7 @@ export async function listContacts(scope: ContactScope, filter: ContactFilter) {
         lastName: card.lastName,
       },
       organizationSlug: organization.slug,
+      event: { id: event.id, title: event.title, startsAt: event.startsAt },
       personaCard: {
         id: personaCard.id,
         slug: personaCard.slug,
@@ -100,10 +95,23 @@ export async function listContacts(scope: ContactScope, filter: ContactFilter) {
     .from(contactExchange)
     .innerJoin(card, eq(contactExchange.cardId, card.id))
     .innerJoin(organization, eq(card.organizationId, organization.id))
-    .leftJoin(personaCard, eq(contactExchange.laPersonaCardId, personaCard.id));
+    .leftJoin(personaCard, eq(contactExchange.laPersonaCardId, personaCard.id))
+    .leftJoin(event, eq(contactExchange.eventId, event.id));
+}
+
+export async function listContacts(scope: ContactScope, filter: ContactFilter) {
+  const scoped = scopeCondition(scope);
+  if (!scoped) return { rows: [], total: 0 };
+
+  const where = and(
+    scoped,
+    filter.cardId ? eq(contactExchange.cardId, filter.cardId) : undefined,
+    filter.eventId ? eq(contactExchange.eventId, filter.eventId) : undefined,
+    searchCondition(filter.q)
+  );
 
   const [rows, [totals]] = await Promise.all([
-    baseQuery
+    selectContactRows()
       .where(where)
       .orderBy(desc(contactExchange.createdAt))
       .limit(filter.limit)
@@ -126,6 +134,14 @@ export type ContactRow = Awaited<
   ReturnType<typeof listContacts>
 >['rows'][number];
 
+export async function getContactRow(contactId: string) {
+  const [row] = await selectContactRows()
+    .where(eq(contactExchange.id, contactId))
+    .limit(1);
+  if (!row) throw notFound('Contact');
+  return row;
+}
+
 /** The contact with the card that owns it, for authorization. */
 export async function findContactOwnership(contactId: string) {
   const [row] = await db
@@ -134,12 +150,52 @@ export async function findContactOwnership(contactId: string) {
       cardId: card.id,
       cardOrganizationId: card.organizationId,
       cardUserId: card.userId,
+      source: contactExchange.source,
     })
     .from(contactExchange)
     .innerJoin(card, eq(contactExchange.cardId, card.id))
     .where(eq(contactExchange.id, contactId))
     .limit(1);
   return row ?? null;
+}
+
+/** The distinct events on contacts in scope, newest first, for the "where you met" filter. */
+export async function listContactEvents(scope: ContactScope) {
+  const scoped = scopeCondition(scope);
+  if (!scoped) return [];
+  return db
+    .selectDistinct({
+      id: event.id,
+      title: event.title,
+      startsAt: event.startsAt,
+    })
+    .from(contactExchange)
+    .innerJoin(card, eq(contactExchange.cardId, card.id))
+    .innerJoin(event, eq(contactExchange.eventId, event.id))
+    .where(scoped)
+    .orderBy(desc(event.startsAt));
+}
+
+export async function updateContact(
+  contactId: string,
+  values: Partial<
+    Pick<
+      typeof contactExchange.$inferInsert,
+      | 'note'
+      | 'eventId'
+      | 'name'
+      | 'position'
+      | 'company'
+      | 'phone'
+      | 'phoneCountryCode'
+      | 'email'
+    >
+  >
+) {
+  await db
+    .update(contactExchange)
+    .set(values)
+    .where(eq(contactExchange.id, contactId));
 }
 
 export async function deleteContact(contactId: string) {
@@ -167,6 +223,7 @@ type SeamlessContactValues = {
   position: string | null;
   laPersonaUserId: string | null;
   laPersonaCardId: string;
+  eventId: string | null;
 };
 
 /**
@@ -180,12 +237,14 @@ export async function upsertSeamlessExchange(
   return db.transaction(async (tx) => {
     const upsert = async (values: SeamlessContactValues) => {
       const row = { ...values, source: 'seamless_exchange' as const };
+      // A re-exchange away from an event keeps where they first met.
+      const { eventId, ...withoutEvent } = row;
       const [saved] = await tx
         .insert(contactExchange)
         .values(row)
         .onConflictDoUpdate({
           target: [contactExchange.cardId, contactExchange.laPersonaUserId],
-          set: { ...row, updatedAt: new Date() },
+          set: { ...(eventId ? row : withoutEvent), updatedAt: new Date() },
         })
         .returning({ id: contactExchange.id });
       if (!saved) throw new Error('Seamless exchange upsert returned no row.');
@@ -219,6 +278,15 @@ export async function insertLegacyContactExchange(
     .returning({ id: contactExchangeBeforePlatform.id });
   if (!inserted) throw new Error('Legacy contact insert returned no row.');
   return inserted;
+}
+
+/** Connections made at an event, for the event overview. */
+export async function countContactsByEventId(eventId: string) {
+  const [row] = await db
+    .select({ value: count() })
+    .from(contactExchange)
+    .where(eq(contactExchange.eventId, eventId));
+  return row?.value ?? 0;
 }
 
 /** Contacts per card, for member "connections" counts. */

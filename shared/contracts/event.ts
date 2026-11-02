@@ -88,6 +88,8 @@ export type EventOverviewStats = {
   checkedIn: number;
   attendanceRate: string;
   newMembersJoined: number;
+  /** Contact exchanges tagged with this event (each side of a seamless swap counts). */
+  connectionsMade: number;
   registrationTrend: {
     labels: string[];
     values: number[];
@@ -287,6 +289,8 @@ export type EventDetailOverview = {
   checkedIn: number;
   attendanceRate: string;
   newMembersJoined: number;
+  /** Contact exchanges tagged with this event (each side of a seamless swap counts). */
+  connectionsMade: number;
   registrationTrend: {
     labels: string[];
     values: number[];

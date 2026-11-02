@@ -17,6 +17,7 @@ const emit = defineEmits<{
   edit: [];
   share: [];
   'send-email': [kind: EventBroadcastKind];
+  delete: [];
   'update:activeTab': [tab: CommunityEventDetailTab];
 }>();
 
@@ -26,19 +27,29 @@ const tabItems: TabsItem[] = [
   { label: 'Check-in', value: 'check-in' },
 ];
 
-const emailActions = computed<DropdownMenuItem[]>(() => [
-  {
-    label: 'Send reminder email',
-    icon: 'i-lucide-bell',
-    disabled: props.phase === 'past',
-    onSelect: () => emit('send-email', 'reminder'),
-  },
-  {
-    label: 'Send after-event email',
-    icon: 'i-lucide-mail-check',
-    disabled: props.phase === 'before',
-    onSelect: () => emit('send-email', 'after_event'),
-  },
+const eventActions = computed<DropdownMenuItem[][]>(() => [
+  [
+    {
+      label: 'Send Reminder Email',
+      icon: 'i-lucide-bell',
+      disabled: props.phase === 'past',
+      onSelect: () => emit('send-email', 'reminder'),
+    },
+    {
+      label: 'Send After-Event Email',
+      icon: 'i-lucide-mail-check',
+      disabled: props.phase === 'before',
+      onSelect: () => emit('send-email', 'after_event'),
+    },
+  ],
+  [
+    {
+      label: 'Delete Event',
+      icon: 'i-lucide-trash-2',
+      color: 'error',
+      onSelect: () => emit('delete'),
+    },
+  ],
 ]);
 
 const selectedTab = computed({
@@ -97,13 +108,13 @@ const selectedTab = computed({
           />
           <UDropdownMenu
             v-if="canEdit"
-            :items="emailActions"
+            :items="eventActions"
             :content="{ align: 'end' }"
           >
             <UButton
               icon="i-lucide-ellipsis"
               color="neutral"
-              aria-label="Event email actions"
+              aria-label="Event actions"
               :ui="{ leadingIcon: 'size-4' }"
               class="h-10! w-20! cursor-pointer rounded-full p-0 text-ink flex items-center justify-center bg-ink/5 hover:bg-ink/15 active:hover:bg-ink/20"
             />

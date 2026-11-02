@@ -71,8 +71,12 @@ const parsePage = (value: unknown) => {
   return Number.isFinite(parsed) && parsed >= 1 ? Math.floor(parsed) : 1;
 };
 
+const parseEventId = (value: unknown) =>
+  typeof value === 'string' && value ? value : undefined;
+
 const viewMode = ref<ViewMode>(parseViewMode(route.query.view));
 const page = ref(parsePage(route.query.page));
+const eventId = ref(parseEventId(route.query.event));
 const pageSize = computed(() => PAGE_SIZE[viewMode.value]);
 
 const listScope = computed<ContactListScope>(() =>
@@ -86,6 +90,7 @@ const { data: contactPage, isLoading } = useContactsQuery(
     scope: listScope.value,
     limit: pageSize.value,
     offset: (page.value - 1) * pageSize.value,
+    eventId: eventId.value,
   }),
   { enabled: () => !isOrgsLoading.value }
 );
@@ -93,6 +98,41 @@ const { data: contactPage, isLoading } = useContactsQuery(
 const contacts = computed(() => contactPage.value?.items ?? []);
 const total = computed(() => contactPage.value?.total ?? 0);
 const hasContacts = computed(() => total.value > 0);
+
+const ALL_EVENTS = 'all';
+const { data: contactEvents } = useContactEventsQuery(listScope, {
+  enabled: () => !isOrgsLoading.value,
+});
+const eventFilterItems = computed(() => [
+  { label: 'All events', value: ALL_EVENTS },
+  ...(contactEvents.value?.items ?? []).map((item) => ({
+    label: `${item.title} · ${format(new Date(item.startsAt), 'd MMM yyyy')}`,
+    value: item.id,
+  })),
+]);
+const eventFilter = computed({
+  get: () => eventId.value ?? ALL_EVENTS,
+  set: (value: string) => {
+    eventId.value = value === ALL_EVENTS ? undefined : value;
+    page.value = 1;
+  },
+});
+
+function showAllEvents() {
+  eventFilter.value = ALL_EVENTS;
+}
+
+// Kept after closing so the slideover body doesn't blank out while it animates away.
+const contactToEdit = ref<ContactSummary | null>(null);
+const isEditOpen = ref(false);
+const editContactForm = useTemplateRef('editContactForm');
+const { data: registeredEvents, isLoading: isRegisteredEventsLoading } =
+  useRegisteredEventsQuery({ enabled: isEditOpen });
+
+function openEditContact(contact: ContactSummary) {
+  contactToEdit.value = contact;
+  isEditOpen.value = true;
+}
 
 const isCreateOpen = ref(false);
 const manualContactForm = useTemplateRef('manualContactForm');
@@ -145,7 +185,9 @@ async function exportContacts() {
     return;
   }
   try {
-    const blob = await downloadContactsCsv(listScope.value);
+    const blob = await downloadContactsCsv(listScope.value, {
+      eventId: eventId.value,
+    });
     downloadFile({
       blob,
       fileName: `contacts-${orgSlug.value || 'org'}-${format(new Date(), 'yyyy-MM-dd')}.csv`,
@@ -182,12 +224,17 @@ watch(
   (query) => {
     viewMode.value = parseViewMode(query.view);
     page.value = parsePage(query.page);
+    eventId.value = parseEventId(query.event);
   }
 );
 
-watch([viewMode, page], async ([view, current]) => {
-  const query = { view, page: String(current) };
-  if (route.query.view === query.view && route.query.page === query.page) {
+watch([viewMode, page, eventId], async ([view, current, event]) => {
+  const query = { view, page: String(current), event };
+  if (
+    route.query.view === query.view &&
+    route.query.page === query.page &&
+    parseEventId(route.query.event) === event
+  ) {
     return;
   }
   await router.replace({ query: { ...route.query, ...query } });
@@ -286,6 +333,17 @@ watch(total, (count) => {
       </div>
     </div>
 
+    <USelectMenu
+      v-if="eventFilterItems.length > 1"
+      v-model="eventFilter"
+      :items="eventFilterItems"
+      value-key="value"
+      icon="i-lucide-calendar"
+      :search-input="{ placeholder: 'Search events' }"
+      aria-label="Filter by where you met"
+      class="w-full sm:w-80"
+    />
+
     <USlideover
       v-model:open="isCreateOpen"
       side="right"
@@ -318,6 +376,40 @@ watch(total, (count) => {
       </template>
     </USlideover>
 
+    <USlideover
+      v-model:open="isEditOpen"
+      side="right"
+      inset
+      title="EDIT CONTACT"
+      :ui="{
+        header: 'border-b-2 border-raised px-6 py-6',
+        title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
+        body: 'px-6',
+      }"
+    >
+      <template v-if="contactToEdit" #body>
+        <ContactEditForm
+          ref="editContactForm"
+          :contact="contactToEdit"
+          :events="registeredEvents?.items ?? []"
+          :events-loading="isRegisteredEventsLoading"
+          @saved="isEditOpen = false"
+        />
+      </template>
+
+      <template #footer>
+        <UButton
+          type="submit"
+          form="edit-contact-form"
+          label="Save Changes"
+          leading-icon="i-lucide-check"
+          color="neutral"
+          :loading="editContactForm?.isPending"
+          class="h-10 cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
+        />
+      </template>
+    </USlideover>
+
     <div v-if="isLoading" class="flex-1 space-y-3">
       <USkeleton
         v-for="index in 6"
@@ -334,20 +426,34 @@ watch(total, (count) => {
         name="i-material-symbols:perm-contact-calendar-sharp"
         class="size-8 text-muted"
       />
-      <h2 class="text-base font-medium uppercase tracking-widest text-ink">
-        No contacts yet
-      </h2>
-      <p class="max-w-[18rem] text-center text-sm text-muted">
-        Once people exchange contacts with your persona card, they will appear
-        here.
-      </p>
-      <UButton
-        label="Create New Contact"
-        leading-icon="i-lucide-plus"
-        color="neutral"
-        class="mt-2 h-10 text-sm rounded-full bg-ink px-5 font-medium text-ink-inverse hover:bg-ink/90"
-        @click="openCreateContact"
-      />
+      <template v-if="eventId">
+        <h2 class="text-base font-medium uppercase tracking-widest text-ink">
+          No contacts from this event
+        </h2>
+        <UButton
+          label="Show all events"
+          color="neutral"
+          variant="ghost"
+          class="h-10 text-sm rounded-full px-5"
+          @click="showAllEvents"
+        />
+      </template>
+      <template v-else>
+        <h2 class="text-base font-medium uppercase tracking-widest text-ink">
+          No contacts yet
+        </h2>
+        <p class="max-w-[18rem] text-center text-sm text-muted">
+          Once people exchange contacts with your persona card, they will appear
+          here.
+        </p>
+        <UButton
+          label="Create New Contact"
+          leading-icon="i-lucide-plus"
+          color="neutral"
+          class="mt-2 h-10 text-sm rounded-full bg-ink px-5 font-medium text-ink-inverse hover:bg-ink/90"
+          @click="openCreateContact"
+        />
+      </template>
     </div>
 
     <div
@@ -358,6 +464,7 @@ watch(total, (count) => {
         :contacts="contacts"
         :show-origin="canSeeOrigin"
         @save="saveContactToPhone"
+        @edit="openEditContact"
         @delete="contactToDelete = $event"
       />
     </div>
@@ -368,6 +475,7 @@ watch(total, (count) => {
       :contacts="contacts"
       :show-origin="canSeeOrigin"
       @save="saveContactToPhone"
+      @edit="openEditContact"
       @delete="contactToDelete = $event"
     />
 

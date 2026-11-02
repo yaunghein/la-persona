@@ -44,6 +44,14 @@ export function toContactSummary(row: ContactRow): ContactSummary {
     ...details,
     source: contact.source as ContactSource,
     createdAt: contact.createdAt.toISOString(),
+    note: contact.note,
+    event: row.event
+      ? {
+          id: row.event.id,
+          title: row.event.title,
+          startsAt: row.event.startsAt.toISOString(),
+        }
+      : null,
     card: row.card
       ? {
           id: row.card.id,

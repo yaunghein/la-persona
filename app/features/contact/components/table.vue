@@ -11,8 +11,9 @@ const props = defineProps<{
   showOrigin: boolean;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   save: [contact: ContactSummary];
+  edit: [contact: ContactSummary];
   delete: [contact: ContactSummary];
 }>();
 
@@ -42,6 +43,11 @@ const columns = computed<TableColumn<ContactSummary>[]>(() => [
     header: 'EMAIL',
     meta: { class: { th: headerClass, td: mutedCellClass } },
   },
+  {
+    id: 'met',
+    header: 'WHERE YOU MET',
+    meta: { class: { th: headerClass, td: mutedCellClass } },
+  },
   ...(props.showOrigin
     ? [
         {
@@ -66,10 +72,11 @@ const columns = computed<TableColumn<ContactSummary>[]>(() => [
     :ui="{
       th: 'px-4 py-4 border-b border-raised',
       td: 'px-4 py-3 border-b border-raised',
-      tr: 'bg-transparent',
+      tr: 'bg-transparent cursor-pointer hover:bg-raised/50',
       empty: 'py-16 text-center text-sm text-muted',
     }"
     class="w-full min-w-250"
+    @select="(_event, row) => emit('edit', row.original)"
   >
     <template #name-cell="{ row }">
       <div class="leading-[1.35]">
@@ -90,6 +97,20 @@ const columns = computed<TableColumn<ContactSummary>[]>(() => [
     }}</template>
     <template #phone-cell="{ row }">{{ row.original.phone || 'N/A' }}</template>
     <template #email-cell="{ row }">{{ row.original.email || 'N/A' }}</template>
+    <template #met-cell="{ row }">
+      <div class="max-w-60 leading-[1.35]">
+        <p class="text-sm font-medium text-ink">
+          {{ row.original.event?.title || 'N/A' }}
+        </p>
+        <p
+          v-if="row.original.note"
+          class="truncate text-sm font-medium text-muted"
+          :title="row.original.note"
+        >
+          {{ row.original.note }}
+        </p>
+      </div>
+    </template>
     <template #origin-cell="{ row }">
       <UButton
         v-if="contactOriginPath(row.original)"
@@ -109,8 +130,9 @@ const columns = computed<TableColumn<ContactSummary>[]>(() => [
     <template #actions-cell="{ row }">
       <ContactActionsMenu
         :contact="row.original"
-        @save="$emit('save', $event)"
-        @delete="$emit('delete', $event)"
+        @save="emit('save', $event)"
+        @edit="emit('edit', $event)"
+        @delete="emit('delete', $event)"
       />
     </template>
   </UTable>

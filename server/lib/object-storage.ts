@@ -19,6 +19,9 @@ let client: S3Client | undefined;
 function objectStorageClient() {
   client ??= new S3Client({
     region: env.AWS_REGION,
+    // The default ('WHEN_SUPPORTED') signs a CRC32 of the empty presign-time
+    // body into the URL, so S3 rejects the real upload with 403.
+    requestChecksumCalculation: 'WHEN_REQUIRED',
     credentials: {
       accessKeyId: env.AWS_ACCESS_KEY,
       secretAccessKey: env.AWS_SECRET_ACCESS_KEY,

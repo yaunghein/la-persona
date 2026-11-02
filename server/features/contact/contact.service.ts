@@ -5,12 +5,19 @@ import {
   type CardRecord,
 } from '~~/server/features/card/card.repository';
 import {
+  getContactRow,
   insertContact,
   insertLegacyContactExchange,
+  listContactEvents,
   listContacts,
+  updateContact,
   upsertSeamlessExchange,
   type ContactScope,
 } from '~~/server/features/contact/contact.repository';
+import {
+  findLiveCheckedInEventId,
+  findRegistrationByEventAndUser,
+} from '~~/server/features/event/registration.repository';
 import { toContactSummary } from '~~/server/features/contact/contact.mapper';
 import {
   sendContactExchangeEmail,
@@ -18,13 +25,15 @@ import {
 } from '~~/server/features/contact/contact.notifications';
 import { toCsv } from '~~/server/lib/csv';
 import type { EmailSendResult } from '~~/server/utils/wide-event';
-import type { Page } from '~~/shared/contracts/collection';
+import type { Collection, Page } from '~~/shared/contracts/collection';
 import type {
+  ContactEvent,
   ContactSummary,
   CreateContactExchangeRequest,
   CreateLegacyContactExchangeRequest,
   CreateManualContactRequest,
   ListContactsQuery,
+  UpdateContactRequest,
 } from '~~/shared/contracts/contact';
 import { cards as legacyCards } from '~~/shared/utils/cards';
 import { contactOriginLabel } from '~~/shared/utils/contact-origin';
@@ -90,6 +99,70 @@ export async function listContactPage(
   };
 }
 
+export async function listContactEventCollection(
+  scope: ContactScope
+): Promise<Collection<ContactEvent>> {
+  const rows = await listContactEvents(scope);
+  return {
+    items: rows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      startsAt: row.startsAt.toISOString(),
+    })),
+  };
+}
+
+/**
+ * Edits a contact. Details change on manual contacts only; an event must be
+ * one the card holder registered for, so it can't point at arbitrary events.
+ */
+export async function editContact(
+  contact: { id: string; cardUserId: string | null; source: string },
+  input: UpdateContactRequest
+): Promise<ContactSummary> {
+  const { note, eventId, phone, phoneCountryCode, ...details } = input;
+  const changesDetails =
+    phone !== undefined ||
+    phoneCountryCode !== undefined ||
+    Object.values(details).some((value) => value !== undefined);
+  if (changesDetails && contact.source !== 'manual') {
+    throw conflict(
+      'Only manually added contacts can change their details.',
+      'contact_not_manual'
+    );
+  }
+
+  if (eventId) {
+    const registration = contact.cardUserId
+      ? await findRegistrationByEventAndUser(eventId, contact.cardUserId)
+      : null;
+    if (!registration) {
+      throw badRequest(
+        'Choose an event you registered for.',
+        'event_not_registered'
+      );
+    }
+  }
+
+  const values = {
+    note,
+    eventId,
+    ...details,
+    ...(phone !== undefined
+      ? {
+          phone,
+          phoneCountryCode: resolvedPhoneFields(phone, phoneCountryCode)
+            .phoneCountryCode,
+        }
+      : {}),
+  };
+  // Drizzle rejects an update with nothing to set.
+  if (Object.values(values).some((value) => value !== undefined)) {
+    await updateContact(contact.id, values);
+  }
+  return toContactSummary(await getContactRow(contact.id));
+}
+
 /** Managers see every card's contacts; members only their own cards'. */
 export function organizationContactScope(
   organizationId: string,
@@ -121,7 +194,7 @@ export async function exportContactsCsv(
     limit: CONTACT_EXPORT_LIMIT,
     offset: 0,
   });
-  const header = ['Name', 'Role', 'Company', 'Phone', 'Email'];
+  const header = ['Name', 'Role', 'Company', 'Phone', 'Email', 'Event', 'Note'];
   return toCsv([
     options.includeOrigin ? [...header, 'Origin'] : header,
     ...items.map((contact) => {
@@ -131,6 +204,8 @@ export async function exportContactsCsv(
         contact.company,
         contact.phone,
         contact.email,
+        contact.event?.title ?? null,
+        contact.note,
       ];
       return options.includeOrigin
         ? [...row, contactOriginLabel(contact)]
@@ -179,9 +254,13 @@ export async function exchangeContactViaForm(
   input: FormExchangeInput
 ) {
   const phone = input.phone.trim();
+  const eventId = ownerCard.userId
+    ? await findLiveCheckedInEventId([ownerCard.userId], new Date())
+    : null;
   const saved = await insertContact({
     cardId: ownerCard.id,
     source: 'public_form',
+    eventId,
     name: input.name,
     phone,
     phoneCountryCode: phone
@@ -203,6 +282,7 @@ export async function exchangeContactViaForm(
 
   return {
     contactId: saved.id,
+    eventId,
     emails: deliverContactExchangeEmails([
       { to: ownerCard.email || ownerAccountEmail, contact: visitor },
       {
@@ -266,6 +346,10 @@ export async function exchangeContactSeamlessly(
   }
 
   const visitorCard = await resolveVisitorCard(ownerCard, visitor);
+  const eventId = await findLiveCheckedInEventId(
+    [ownerCard.userId, visitor.userId],
+    new Date()
+  );
 
   const toSide = (holderCard: CardRecord, contactCard: CardRecord) => ({
     cardId: holderCard.id,
@@ -279,6 +363,7 @@ export async function exchangeContactSeamlessly(
     position: contactCard.position || null,
     laPersonaUserId: contactCard.userId,
     laPersonaCardId: contactCard.id,
+    eventId,
   });
 
   const { ownerContactId, visitorContactId } = await upsertSeamlessExchange(
@@ -294,6 +379,7 @@ export async function exchangeContactSeamlessly(
     ownerContactId,
     visitorContactId,
     visitorCardId: visitorCard.id,
+    eventId,
     emails: deliverContactExchangeEmails([
       {
         to: ownerEmail,

@@ -4,10 +4,12 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/vue-query';
-import type { Page } from '~~/shared/contracts/collection';
+import type { Collection, Page } from '~~/shared/contracts/collection';
 import type {
+  ContactEvent,
   ContactSummary,
   CreateManualContactRequest,
+  UpdateContactRequest,
 } from '~~/shared/contracts/contact';
 
 /** Whose contacts: one organization, or every card the user holds (`workspace`). */
@@ -20,18 +22,40 @@ export type ContactListParams = {
   limit: number;
   offset: number;
   q?: string;
+  eventId?: string;
 };
 
 export const contactQueryKeys = {
   all: ['contacts'] as const,
   list: (params: ContactListParams) =>
     [...contactQueryKeys.all, 'list', params] as const,
+  events: (scope: ContactListScope) =>
+    [...contactQueryKeys.all, 'events', scope] as const,
 };
 
 function contactsUrl(scope: ContactListScope) {
   return 'workspace' in scope
     ? '/api/me/contacts'
     : `/api/organizations/${scope.organizationSlug}/contacts`;
+}
+
+/** Events that appear on contacts in scope, for the "where you met" filter. */
+export function useContactEventsQuery(
+  scope: MaybeRefOrGetter<ContactListScope>,
+  options: { enabled?: MaybeRefOrGetter<boolean> } = {}
+) {
+  return useQuery({
+    queryKey: computed(() => contactQueryKeys.events(toValue(scope))),
+    queryFn: () => {
+      const value = toValue(scope);
+      const url =
+        'workspace' in value
+          ? '/api/me/contact-events'
+          : (`/api/organizations/${value.organizationSlug}/contact-events` as string);
+      return $fetch<Collection<ContactEvent>>(url);
+    },
+    enabled: () => toValue(options.enabled ?? true),
+  });
 }
 
 export function useContactsQuery(
@@ -64,6 +88,25 @@ export function useCreateManualContactMutation(
   });
 }
 
+export function useUpdateContactMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      contactId,
+      input,
+    }: {
+      contactId: string;
+      input: UpdateContactRequest;
+    }) =>
+      $fetch<ContactSummary>(`/api/contacts/${contactId}` as string, {
+        method: 'PATCH',
+        body: input,
+      }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: contactQueryKeys.all }),
+  });
+}
+
 export function useDeleteContactMutation() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -77,8 +120,12 @@ export function useDeleteContactMutation() {
 }
 
 /** Every contact in scope as CSV (server-generated, formula-safe). */
-export function downloadContactsCsv(scope: ContactListScope): Promise<Blob> {
+export function downloadContactsCsv(
+  scope: ContactListScope,
+  query: { eventId?: string } = {}
+): Promise<Blob> {
   return $fetch<Blob>(contactsUrl(scope), {
+    query,
     headers: { Accept: 'text/csv' },
     responseType: 'blob',
   });

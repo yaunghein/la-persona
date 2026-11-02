@@ -12,6 +12,7 @@ defineProps<{
 
 defineEmits<{
   save: [contact: ContactSummary];
+  edit: [contact: ContactSummary];
   delete: [contact: ContactSummary];
 }>();
 </script>
@@ -50,6 +51,19 @@ defineEmits<{
         <p>{{ contact.company || 'N/A' }}</p>
       </div>
 
+      <div
+        v-if="contact.event || contact.note"
+        class="mt-6 space-y-1 text-md leading-snug sm:text-sm"
+      >
+        <p v-if="contact.event" class="flex items-center gap-1.5 text-ink">
+          <UIcon name="i-lucide-calendar" class="size-4 shrink-0 text-muted" />
+          Met at {{ contact.event.title }}
+        </p>
+        <p v-if="contact.note" class="line-clamp-2 text-muted">
+          {{ contact.note }}
+        </p>
+      </div>
+
       <template #footer>
         <div
           class="flex items-end"
@@ -78,6 +92,7 @@ defineEmits<{
           <ContactActionsMenu
             :contact="contact"
             @save="$emit('save', $event)"
+            @edit="$emit('edit', $event)"
             @delete="$emit('delete', $event)"
           />
         </div>

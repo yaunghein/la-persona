@@ -5,6 +5,7 @@ import type { ContactSummary } from '~~/shared/contracts/contact';
 const props = defineProps<{ contact: ContactSummary }>();
 const emit = defineEmits<{
   save: [contact: ContactSummary];
+  edit: [contact: ContactSummary];
   delete: [contact: ContactSummary];
 }>();
 
@@ -14,6 +15,11 @@ const items = computed<DropdownMenuItem[][]>(() => [
       label: 'Save Contact',
       icon: 'i-lucide-download',
       onSelect: () => emit('save', props.contact),
+    },
+    {
+      label: 'Edit Contact',
+      icon: 'i-lucide-pencil',
+      onSelect: () => emit('edit', props.contact),
     },
     ...(props.contact.personaCardSlug
       ? [

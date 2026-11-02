@@ -8,6 +8,8 @@ import type {
   EventMembershipResult,
   TicketLookup,
 } from '~~/shared/contracts/event';
+import type { Collection } from '~~/shared/contracts/collection';
+import type { ContactEvent } from '~~/shared/contracts/contact';
 import { timezoneOffsetQuery } from '~~/shared/utils/datetime';
 import { organizationQueryKeys } from '~/features/organization/composables/use-user-organizations';
 
@@ -19,10 +21,22 @@ export const eventQueryKeys = {
     [...eventQueryKeys.all, 'detail', eventId] as const,
   attendees: (eventId: string) =>
     [...eventQueryKeys.all, 'attendees', eventId] as const,
+  registered: () => [...eventQueryKeys.all, 'registered'] as const,
 };
 
 const eventUrl = (eventId: string, path = ''): string =>
   `/api/events/${eventId}${path ? `/${path}` : ''}`;
+
+/** Events the signed-in user registered for. */
+export function useRegisteredEventsQuery(
+  options: { enabled?: MaybeRefOrGetter<boolean> } = {}
+) {
+  return useQuery({
+    queryKey: eventQueryKeys.registered(),
+    queryFn: () => $fetch<Collection<ContactEvent>>('/api/me/events'),
+    enabled: () => toValue(options.enabled ?? true),
+  });
+}
 
 export function useOrganizationEventsQuery(
   organizationSlug: MaybeRefOrGetter<string>
@@ -95,6 +109,18 @@ export function useApproveRegistrationMutation() {
         { method: 'PATCH', body: { status: 'registered' } }
       ),
     onSuccess: invalidateEvents,
+  });
+}
+
+export function useDeleteEventMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (eventId: string) =>
+      $fetch<void>(`/api/events/${eventId}` as string, { method: 'DELETE' }),
+    // Not awaited, so the caller can leave the detail page before its refetch 404s.
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: eventQueryKeys.all });
+    },
   });
 }
 

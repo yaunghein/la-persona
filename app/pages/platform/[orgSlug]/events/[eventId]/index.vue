@@ -81,6 +81,7 @@ const eventDetail = computed<CommunityEventDetailData | null>(() => {
       checkedIn: event.value.overview.checkedIn,
       attendanceRate: event.value.overview.attendanceRate,
       newMembersJoined: event.value.overview.newMembersJoined,
+      connectionsMade: event.value.overview.connectionsMade,
       registrationTrend: event.value.overview.registrationTrend,
     },
     attendees: attendees.value ?? [],
@@ -212,6 +213,25 @@ function sendBroadcast(kind: EventBroadcastKind) {
   });
 }
 
+const isDeleteOpen = ref(false);
+const { mutate: deleteEvent, isPending: isDeleting } = useDeleteEventMutation();
+
+function confirmDelete() {
+  deleteEvent(eventId.value, {
+    onSuccess: () => {
+      isDeleteOpen.value = false;
+      goBack();
+      toast.add({ title: 'Event deleted', color: 'success' });
+    },
+    onError: (error) =>
+      toast.add({
+        title: 'Failed to delete event',
+        description: apiErrorMessage(error),
+        color: 'error',
+      }),
+  });
+}
+
 function reloadEvent() {
   refetchEvent();
 }
@@ -255,6 +275,7 @@ async function onCheckedIn() {
     @edit="onEdit"
     @share="onShare"
     @send-email="onSendEmail"
+    @delete="isDeleteOpen = true"
     @update:active-tab="activeTab = $event"
   >
     <EventOverview
@@ -304,6 +325,18 @@ async function onCheckedIn() {
     :sending="isSendingBroadcast"
     @confirm="sendBroadcast(broadcastKind)"
   />
+
+  <UiConfirmDeleteModal
+    v-if="canManage"
+    v-model:open="isDeleteOpen"
+    title="Delete Event?"
+    :pending="isDeleting"
+    @confirm="confirmDelete"
+  >
+    This action cannot be undone. The event
+    <span class="font-medium text-ink">"{{ event?.title }}"</span>
+    will be&nbsp;removed.
+  </UiConfirmDeleteModal>
 
   <EventWalkInRegistrationSlideover
     v-model:open="isWalkInOpen"

@@ -472,10 +472,10 @@ const premiumPlanFeatures = [
       ></div>
     </button>
     <NuxtLink
-      :to="ROUTES.SIGN_IN"
+      :to="session ? ROUTES.PLATFORM.ROOT : ROUTES.SIGN_IN"
       class="py-6 text-sm font-light uppercase leading-[1.1] tracking-[0.28rem] text-ink/40 transition-colors duration-300 hover:text-ink/70"
     >
-      Sign In
+      {{ session ? 'Platform' : 'Sign In' }}
     </NuxtLink>
     <div
       class="absolute inset-0 top-auto h-px w-full bg-ink/10 transition-all duration-1000"

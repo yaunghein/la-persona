@@ -28,13 +28,14 @@ export default defineEventHandler(async (event) => {
   });
 
   if (request.mode === 'form') {
-    const { contactId, emails } = await exchangeContactViaForm(
+    const { contactId, eventId, emails } = await exchangeContactViaForm(
       ownerCard,
       request
     );
     enrichLog(event, {
       contact_exchange: {
         id: contactId,
+        event_id: eventId,
         result: 'saved',
         ...(request.email ? { email: request.email } : {}),
       },
@@ -61,6 +62,7 @@ export default defineEventHandler(async (event) => {
     contact_exchange: {
       id: result.ownerContactId,
       visitor_card_id: result.visitorCardId,
+      event_id: result.eventId,
       result: 'exchanged',
     },
     email: {

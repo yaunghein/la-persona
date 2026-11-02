@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gte, inArray, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import {
   event,
@@ -7,6 +7,7 @@ import {
   card,
   user,
 } from '~~/server/db/schema';
+import { countContactsByEventId } from '~~/server/features/contact/contact.repository';
 import type {
   EventOverviewStats,
   EventRegistrationStatus,
@@ -39,6 +40,40 @@ export async function findRegistrationByEventAndUser(
     .limit(1);
 
   return row ?? null;
+}
+
+// People exchange cards in the lobby before doors open and linger after the end.
+const LIVE_EVENT_SLACK_MS = 2 * 60 * 60 * 1000;
+
+/** The live event one of these users is checked in at, newest first; drives "where you met". */
+export async function findLiveCheckedInEventId(userIds: string[], now: Date) {
+  if (userIds.length === 0) return null;
+  const [row] = await db
+    .select({ id: event.id })
+    .from(eventRegistration)
+    .innerJoin(event, eq(eventRegistration.eventId, event.id))
+    .where(
+      and(
+        inArray(eventRegistration.userId, userIds),
+        eq(eventRegistration.status, 'checked_in'),
+        lte(event.startsAt, new Date(now.getTime() + LIVE_EVENT_SLACK_MS)),
+        gte(event.endsAt, new Date(now.getTime() - LIVE_EVENT_SLACK_MS))
+      )
+    )
+    .orderBy(desc(event.startsAt))
+    .limit(1);
+  return row?.id ?? null;
+}
+
+/** Events the user registered for, newest first; the choices for a contact's "where you met". */
+export async function listRegisteredEvents(userId: string) {
+  return db
+    .select({ id: event.id, title: event.title, startsAt: event.startsAt })
+    .from(eventRegistration)
+    .innerJoin(event, eq(eventRegistration.eventId, event.id))
+    .where(eq(eventRegistration.userId, userId))
+    .orderBy(desc(event.startsAt))
+    .limit(100);
 }
 
 export async function countCountedRegistrations(eventId: string) {
@@ -246,13 +281,19 @@ export async function buildEventOverview(
   eventCreatedAt: Date,
   timezoneOffset?: TimezoneOffset
 ): Promise<EventOverviewStats> {
-  const [registrations, checkedIn, newMembersJoined, registrationTrend] =
-    await Promise.all([
-      countCountedRegistrations(eventId),
-      countCheckedInRegistrations(eventId),
-      countMembersJoinedSince(organizationId, eventCreatedAt),
-      getRegistrationTrend(eventId, timezoneOffset),
-    ]);
+  const [
+    registrations,
+    checkedIn,
+    newMembersJoined,
+    connectionsMade,
+    registrationTrend,
+  ] = await Promise.all([
+    countCountedRegistrations(eventId),
+    countCheckedInRegistrations(eventId),
+    countMembersJoinedSince(organizationId, eventCreatedAt),
+    countContactsByEventId(eventId),
+    getRegistrationTrend(eventId, timezoneOffset),
+  ]);
 
   const attendanceRate =
     registrations === 0
@@ -264,6 +305,7 @@ export async function buildEventOverview(
     checkedIn,
     attendanceRate,
     newMembersJoined,
+    connectionsMade,
     registrationTrend,
   };
 }
