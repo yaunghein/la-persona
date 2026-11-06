@@ -99,63 +99,50 @@ const onLinkedIn = async () => {
   }
 };
 
-const magicLinkStatus = ref<{
-  color: 'success' | 'error';
-  title: string;
-  description: string;
-} | null>(null);
-
-watch(email, () => {
-  magicLinkStatus.value = null;
-});
-
-function showMagicLinkError(description: string) {
-  magicLinkStatus.value = {
-    color: 'error',
-    title: "Couldn't send the link",
-    description,
-  };
-}
-
 const onMagicLink = async () => {
   const normalizedEmail = email.value.trim().toLowerCase();
   if (!normalizedEmail) {
-    magicLinkStatus.value = {
-      color: 'error',
+    toast.add({
       title: 'Email required',
       description: 'Enter your email and we will send you a sign-in\u00a0link.',
-    };
+      color: 'warning',
+    });
     return;
   }
   if (!z.email().safeParse(normalizedEmail).success) {
-    magicLinkStatus.value = {
-      color: 'error',
+    toast.add({
       title: 'Invalid email',
       description: 'Enter a valid email address, like\u00a0name@example.com.',
-    };
+      color: 'warning',
+    });
     return;
   }
 
   isMagicLinkSending.value = true;
-  magicLinkStatus.value = null;
   try {
     const { error } = await signInWithMagicLink(normalizedEmail);
     if (error) {
-      showMagicLinkError(
-        error.message || 'Check your email address and try\u00a0again.'
-      );
+      toast.add({
+        title: "Couldn't send the link",
+        description:
+          error.message || 'Check your email address and try\u00a0again.',
+        color: 'error',
+      });
       return;
     }
 
-    magicLinkStatus.value = {
-      color: 'success',
+    toast.add({
       title: 'Check your inbox',
       description: `We sent a sign-in link to ${normalizedEmail}. It expires in 30\u00a0minutes.`,
-    };
+      color: 'success',
+    });
   } catch (error: any) {
-    showMagicLinkError(
-      error?.message || 'Check your email address and try\u00a0again.'
-    );
+    toast.add({
+      title: "Couldn't send the link",
+      description:
+        error?.message || 'Check your email address and try\u00a0again.',
+      color: 'error',
+    });
   } finally {
     isMagicLinkSending.value = false;
   }
@@ -240,51 +227,18 @@ const onMagicLink = async () => {
               />
             </UFormField>
 
-            <div class="relative">
-              <UButton
-                block
-                color="neutral"
-                type="submit"
-                :loading="isMagicLinkSending"
-                class="h-10 text-sm justify-center rounded-full bg-ink font-medium text-ink-inverse hover:bg-ink/90 active:hover:bg-ink/80"
-              >
-                <template #leading>
-                  <UIcon name="i-lucide-sparkles" class="size-4" />
-                </template>
-                Send Magic Link
-              </UButton>
-
-              <div
-                v-if="magicLinkStatus"
-                role="status"
-                aria-live="polite"
-                class="absolute inset-x-0 top-full mt-4 flex items-start gap-3 rounded-sm border px-4 py-3"
-                :class="
-                  magicLinkStatus.color === 'success'
-                    ? 'border-success-ink/20 bg-success-ink/3'
-                    : 'border-error/20 bg-error/5'
-                "
-              >
-                <UIcon
-                  v-if="magicLinkStatus.color === 'success'"
-                  name="i-lucide-mail-check"
-                  class="mt-0.5 size-4 shrink-0 text-ink"
-                />
-                <UIcon
-                  v-else
-                  name="i-lucide-triangle-alert"
-                  class="mt-0.5 size-4 shrink-0 text-ink"
-                />
-                <div class="flex flex-col gap-1">
-                  <p class="text-sm font-medium leading-5 text-ink">
-                    {{ magicLinkStatus.title }}
-                  </p>
-                  <p class="text-sm leading-5 text-subtle">
-                    {{ magicLinkStatus.description }}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <UButton
+              block
+              color="neutral"
+              type="submit"
+              :loading="isMagicLinkSending"
+              class="h-10 text-sm justify-center rounded-full bg-ink font-medium text-ink-inverse hover:bg-ink/90 active:hover:bg-ink/80"
+            >
+              <template #leading>
+                <UIcon name="i-lucide-sparkles" class="size-4" />
+              </template>
+              Send Magic Link
+            </UButton>
           </form>
         </div>
 
