@@ -217,6 +217,7 @@ function revokePreview(item: DraftEventMedia | null) {
   }
 }
 
+/** Remote items carry the resolved URL; the API stores it as a key. */
 async function storedImageUrl(item: DraftEventMedia) {
   if (item.source === 'remote') return item.previewUrl;
   if (!item.file) throw new Error('Upload failed');
@@ -225,7 +226,7 @@ async function storedImageUrl(item: DraftEventMedia) {
     { organizationSlug: organizationSlug.value },
     { maxSizeMB: 1.5, maxWidthOrHeight: 2400 }
   );
-  return resolveObjectStorageUrl(fileKey);
+  return fileKey;
 }
 
 async function uploadedImageUrls() {

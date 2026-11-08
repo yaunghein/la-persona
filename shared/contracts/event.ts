@@ -13,6 +13,10 @@ import {
   isAllowedEventImageUrl,
 } from '~~/shared/utils/event-media';
 import { eventScheduleError, isTimeZone } from '~~/shared/utils/event-datetime';
+import {
+  objectStorageKey,
+  resolveObjectStorageUrl,
+} from '~~/shared/utils/object-storage';
 
 export type SelectEvent = InferSelectModel<typeof event>;
 export type InsertEvent = InferInsertModel<typeof event>;
@@ -106,7 +110,8 @@ const eventImageUrlSchema = z
   .min(1, 'Image is required')
   .refine((url) => isAllowedEventImageUrl(url), {
     message: 'Invalid image URL',
-  });
+  })
+  .transform(objectStorageKey);
 
 const eventBodyFields = {
   title: z.string().trim().min(1, 'Event name is required'),
@@ -363,7 +368,7 @@ export function toCommunityEvent(event: EventListItemDTO): CommunityEvent {
     title: event.title,
     dateLabel: formatEventDateLabel(event.startsAt),
     location: event.location,
-    imageUrl: event.coverUrl,
+    imageUrl: resolveObjectStorageUrl(event.coverUrl),
     status: eventStatus(event.endsAt),
     description: event.description ?? '',
     startsAt: event.startsAt,

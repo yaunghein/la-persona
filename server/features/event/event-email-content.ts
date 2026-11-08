@@ -69,9 +69,11 @@ export async function loadEventEmailContent(params: {
       assetBaseUrl: env.BASE_URL,
     },
     images: {
-      qrBackgroundUrl: setting?.emailQrBackgroundUrl || '',
-      contactExchangeUrl: setting?.emailContactExchangeUrl || '',
-      afterEventUrl: setting?.emailAfterEventUrl || '',
+      qrBackgroundUrl: resolveObjectStorageUrl(setting?.emailQrBackgroundUrl),
+      contactExchangeUrl: resolveObjectStorageUrl(
+        setting?.emailContactExchangeUrl
+      ),
+      afterEventUrl: resolveObjectStorageUrl(setting?.emailAfterEventUrl),
       // Busts the year-long QR image cache when the background changes.
       version: setting?.updatedAt.getTime() ?? 0,
     },

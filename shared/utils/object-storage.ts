@@ -19,6 +19,12 @@ export function isObjectStorageUrl(url: string): boolean {
   }
 }
 
+/** The database stores keys, so a URL in our bucket is reduced to its key. */
+export function objectStorageKey(keyOrUrl: string): string {
+  if (!isObjectStorageUrl(keyOrUrl)) return keyOrUrl;
+  return decodeURIComponent(new URL(keyOrUrl).pathname.slice(1));
+}
+
 /**
  * Turns a stored object key (e.g. `uploads/abc.webp`) into its public URL.
  * Absolute (`http(s):`), root-relative and `data:` / `blob:` URLs pass through unchanged.

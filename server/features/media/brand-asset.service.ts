@@ -19,32 +19,15 @@ import {
   type UploadContentType,
 } from '~~/shared/contracts/media';
 
-// Emails load images outside the app, so they store the full URL, not the key.
 const SETTINGS = {
-  wallpaper: {
-    field: 'wallpaperUrl',
-    fallback: env.DEFAULT_WALLPAPER_URL,
-    storesUrl: false,
-  },
-  back: {
-    field: 'cardBackUrl',
-    fallback: env.DEFAULT_CARD_BACK_URL,
-    storesUrl: false,
-  },
-  'email-qr': { field: 'emailQrBackgroundUrl', fallback: '', storesUrl: true },
-  'email-contact-exchange': {
-    field: 'emailContactExchangeUrl',
-    fallback: '',
-    storesUrl: true,
-  },
-  'email-after-event': {
-    field: 'emailAfterEventUrl',
-    fallback: '',
-    storesUrl: true,
-  },
+  wallpaper: { field: 'wallpaperUrl', fallback: env.DEFAULT_WALLPAPER_URL },
+  back: { field: 'cardBackUrl', fallback: env.DEFAULT_CARD_BACK_URL },
+  'email-qr': { field: 'emailQrBackgroundUrl', fallback: '' },
+  'email-contact-exchange': { field: 'emailContactExchangeUrl', fallback: '' },
+  'email-after-event': { field: 'emailAfterEventUrl', fallback: '' },
 } as const satisfies Record<
   BrandAssetKind,
-  { field: string; fallback: string; storesUrl: boolean }
+  { field: string; fallback: string }
 >;
 
 async function findCommunity(organizationId: string) {
@@ -147,9 +130,10 @@ export async function applyBrandAsset(
       'brand_asset_missing'
     );
   }
-  const setting = SETTINGS[kind];
-  await updateBrandSetting(organizationId, setting.field, () =>
-    setting.storesUrl ? asset.url : asset.key
+  await updateBrandSetting(
+    organizationId,
+    SETTINGS[kind].field,
+    () => asset.key
   );
   return asset;
 }
@@ -165,7 +149,7 @@ export async function deleteBrandAsset(
 
   const { field, fallback } = SETTINGS[kind];
   await updateBrandSetting(organizationId, field, (current) =>
-    [asset.key, asset.url].includes(current) ? fallback : current
+    current === asset.key ? fallback : current
   );
   return asset;
 }

@@ -284,7 +284,7 @@ watch(
                 :class="organizer.slug && 'text-ink hover:text-ink/80'"
               >
                 <UAvatar
-                  :src="organizer.logoUrl || undefined"
+                  :src="resolveObjectStorageUrl(organizer.logoUrl) || undefined"
                   :alt="organizer.name"
                   icon="i-lucide-users"
                   :ui="{

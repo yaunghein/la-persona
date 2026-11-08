@@ -20,7 +20,7 @@ export function communityAvatarFallbackUrl(seed: string) {
 }
 
 export function communityLogoSrc(url: string | null | undefined, name: string) {
-  const value = String(url || '').trim();
+  const value = resolveObjectStorageUrl(url);
   if (!value || value === COMMUNITY_LOGO_PLACEHOLDER) {
     return communityAvatarFallbackUrl(name);
   }
@@ -28,7 +28,7 @@ export function communityLogoSrc(url: string | null | undefined, name: string) {
 }
 
 export function communityCoverSrc(url: string | null | undefined) {
-  const value = String(url || '').trim();
+  const value = resolveObjectStorageUrl(url);
   if (!value || value === COMMUNITY_COVER_PLACEHOLDER) return null;
   return value;
 }
@@ -41,7 +41,7 @@ export function invitationCoverSrc(url: string | null | undefined) {
 }
 
 export function invitationLogoSrc(url: string | null | undefined) {
-  const value = String(url || '').trim();
+  const value = resolveObjectStorageUrl(url);
   if (!value || value === COMMUNITY_LOGO_PLACEHOLDER) return undefined;
   return value;
 }

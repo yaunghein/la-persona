@@ -2,7 +2,10 @@ import { z } from 'zod';
 import { AdminPaginationQuery } from '~~/shared/contracts/collection';
 import type { SubscriptionStatus } from '~~/shared/utils/subscription';
 import type { OrganizationType } from '~~/shared/utils/constants';
-import { isObjectStorageUrl } from '~~/shared/utils/object-storage';
+import {
+  isObjectStorageUrl,
+  objectStorageKey,
+} from '~~/shared/utils/object-storage';
 
 export const CardRouteParams = z.object({
   cardSlug: z.string().trim().min(1),
@@ -46,7 +49,7 @@ export const StoredImageReference = z
       /^[\w-]+(\/[\w.-]+)+$/.test(value),
     'Upload the image again.'
   )
-  .transform((value) => value || null);
+  .transform((value) => objectStorageKey(value) || null);
 
 const optionalText = (max: number) =>
   z

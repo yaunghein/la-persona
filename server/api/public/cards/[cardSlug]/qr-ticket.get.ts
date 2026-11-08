@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
 
   const png = await renderQrTicketPng(
     `${env.BASE_URL}/c/${slug}`,
-    backgroundUrl || undefined
+    resolveObjectStorageUrl(backgroundUrl) || undefined
   );
 
   // Email links carry ?v=<settings version>, so a new background gets a new URL.

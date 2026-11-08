@@ -19,7 +19,8 @@
     "db:studio": "drizzle-kit studio",
     "db:reset": "bun server/scripts/reset.ts",
     "db:seed": "bun server/scripts/seed.ts",
-    "db:backfill-subscriptions": "bun server/scripts/backfill-subscriptions.ts"
+    "db:backfill-subscriptions": "bun server/scripts/backfill-subscriptions.ts",
+    "db:backfill-media-keys": "bun server/scripts/backfill-media-keys.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.975.0",

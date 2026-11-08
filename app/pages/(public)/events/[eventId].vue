@@ -40,7 +40,7 @@ usePageSeo({
         .join(' • ')
     );
   },
-  image: () => event.value?.coverUrl,
+  image: () => resolveObjectStorageUrl(event.value?.coverUrl),
   imageAlt: () => event.value?.title,
 });
 
@@ -50,7 +50,7 @@ useInAppBrowserPreview(() => {
   return {
     heading: 'Register for This Event in Your\u00a0Browser',
     item: {
-      imageUrl: coverUrl || null,
+      imageUrl: resolveObjectStorageUrl(coverUrl) || null,
       title,
       description: description ? truncateSeoText(description, 100) : null,
     },

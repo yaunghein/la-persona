@@ -25,7 +25,7 @@ Not set up yet, so load these only if the task introduces them: `vitest`, `vue-t
 
 - `bun run dev` / `build` / `format` (Prettier). `bun run typecheck` must stay at 0 errors.
 - `db:generate` / `db:migrate`: Drizzle migrations in `server/db/migrations`.
-- `db:seed`, `db:reset`, `db:backfill-subscriptions`: CLI scripts in `server/scripts`.
+- `db:seed`, `db:reset`, `db:backfill-subscriptions`, `db:backfill-media-keys`: CLI scripts in `server/scripts`. Run one against a Railway environment with `railway run -e <environment> -s <service> -- bun run <script>`.
 - Nitro tasks in `server/tasks`:
   - `subscriptions:expire` runs every 10 minutes.
   - `cards:backfill-community` is a one-off: `GET /_nitro/tasks/cards:backfill-community` in dev, `runTask` from a script in production.
@@ -153,6 +153,7 @@ Follow the `api-design` skill (Microsoft REST guidelines).
 ## Security
 
 - Contracts list every writable field. Never `createInsertSchema` / `createUpdateSchema` a whole table, and never spread a request body into a DB write. Ids, owners, slugs, prices and periods come from the server.
+- Image columns store the object key (`uploads/wallpaper-standard.webp`, `organizations/{id}/{uuid}.jpg`), never a full bucket URL, so a bucket or host change needs no data migration. Contracts reduce bucket URLs to keys on write (`objectStorageKey`); resolve with `resolveObjectStorageUrl` where the image is shown or sent (emails included).
 - User-supplied links are https/mailto/tel only, validated server-side with `CardLinkUrl` / `WebsiteUrl` (`shared/contracts/card.ts`).
 - Rich text is sanitized on write (`server/lib/html-sanitizer.ts`). Only sanitized HTML reaches `v-html`.
 - Uploads go through `POST /api/organizations/{orgSlug}/uploads` or `/api/admin/uploads`: a presigned PUT with an image allowlist (PNG, JPEG, WebP; no SVG), a size cap, and server-generated keys. The image proxy streams only our bucket's images, with `nosniff`.

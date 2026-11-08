@@ -36,6 +36,8 @@ const isCreating = ref(false);
 const isDeleteOpen = ref(false);
 const isDeleting = ref(false);
 const orgToDelete = ref<OrgRow | null>(null);
+const isAssetsOpen = ref(false);
+const assetsOrg = ref<OrgRow | null>(null);
 
 const editForm = reactive({
   name: '',
@@ -276,6 +278,15 @@ function getActionItems(row: OrgRow): DropdownMenuItem[][] {
         icon: 'i-lucide-pencil',
         onSelect: () => openEdit(row),
       },
+      ...(row.type === ORGANIZATION_TYPES.COMMUNITY
+        ? [
+            {
+              label: 'Upload assets',
+              icon: 'i-lucide-image-up',
+              onSelect: () => openAssets(row),
+            },
+          ]
+        : []),
       {
         label: 'Delete',
         icon: 'i-lucide-trash-2',
@@ -284,6 +295,11 @@ function getActionItems(row: OrgRow): DropdownMenuItem[][] {
       },
     ],
   ];
+}
+
+function openAssets(row: OrgRow) {
+  assetsOrg.value = row;
+  isAssetsOpen.value = true;
 }
 
 const orgDetail = ref<OrgDetail | null>(null);
@@ -763,83 +779,17 @@ const selectMenuUi = {
                   :ui="inputUi"
                 />
               </UFormField>
-              <div
-                v-if="editingRow"
-                class="flex flex-col gap-6 border-y border-raised py-6"
-              >
-                <div>
-                  <p
-                    class="text-sm font-medium tracking-[1.4px] text-ink uppercase"
-                  >
-                    Images
-                  </p>
-                  <p class="mt-2 text-sm leading-relaxed text-subtle">
-                    Pre-optimize each image to WebP with
-                    <a
-                      href="https://towebp.io/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="text-ink underline underline-offset-2"
-                      >towebp.io</a
-                    >. Uploads are saved right away under the community slug. To
-                    replace one, delete it first and upload the new&nbsp;file.
-                  </p>
-                </div>
-                <AdminBrandAssetField
-                  :organization-id="editingRow.id"
-                  kind="wallpaper"
-                  label="Wallpaper"
-                  delete-note="The file is removed from storage and the community falls back to the default wallpaper. Member cards that already use it show no image until you upload a new&nbsp;one."
+              <div class="rounded-lg border border-ink/10 bg-ink/[0.03] p-4">
+                <UCheckbox
+                  v-model="editForm.applyToMemberCards"
+                  label="Update existing member cards"
+                  :ui="{ label: 'text-sm font-medium text-ink' }"
                 />
-                <AdminBrandAssetField
-                  :organization-id="editingRow.id"
-                  kind="back"
-                  label="Card back"
-                  delete-note="The file is removed from storage and the community falls back to the default card back. Member cards that already use it show no image until you upload a new&nbsp;one."
-                />
-                <div class="rounded-lg border border-ink/10 bg-ink/[0.03] p-4">
-                  <UCheckbox
-                    v-model="editForm.applyToMemberCards"
-                    label="Update existing member cards"
-                    :ui="{ label: 'text-sm font-medium text-ink' }"
-                  />
-                  <p class="mt-2 text-xs leading-relaxed text-ink/50">
-                    Member cards keep the spline, wallpaper, and card back they
-                    received when they joined. Turn this on to copy those three
-                    onto every card in this community when you&nbsp;save.
-                  </p>
-                </div>
-              </div>
-              <div
-                v-if="editingRow"
-                class="flex flex-col gap-6 border-b border-raised pb-6"
-              >
-                <p
-                  class="text-sm font-medium tracking-[1.4px] text-ink uppercase"
-                >
-                  Email images
+                <p class="mt-2 text-xs leading-relaxed text-ink/50">
+                  Member cards keep the spline, wallpaper, and card back they
+                  received when they joined. Turn this on to copy those three
+                  onto every card in this community when you&nbsp;save.
                 </p>
-                <AdminBrandAssetField
-                  :organization-id="editingRow.id"
-                  kind="email-qr"
-                  label="QR ticket background"
-                  hint="Use the ticket template layout (952 × 936). The QR is placed by position, so the white ticket must stay in the same spot."
-                  delete-note="The file is removed from storage and emails use the default ticket&nbsp;background."
-                />
-                <AdminBrandAssetField
-                  :organization-id="editingRow.id"
-                  kind="email-contact-exchange"
-                  label="Contact exchange (reminder email)"
-                  hint="Two phones exchanging cards, 952 px wide."
-                  delete-note="The file is removed from storage and the reminder email hides this&nbsp;image."
-                />
-                <AdminBrandAssetField
-                  :organization-id="editingRow.id"
-                  kind="email-after-event"
-                  label="Community card uses (after-event email)"
-                  hint="The three-panel image (share, stay ready, register), 952 px wide."
-                  delete-note="The file is removed from storage and the after-event email hides this&nbsp;image."
-                />
               </div>
               <UFormField label="Description" :class="formFieldClass">
                 <UiRichTextEditor
@@ -881,6 +831,11 @@ const selectMenuUi = {
         />
       </template>
     </USlideover>
+
+    <AdminBrandAssetsSlideover
+      v-model:open="isAssetsOpen"
+      :organization="assetsOrg"
+    />
 
     <USlideover
       v-model:open="orgOpen"

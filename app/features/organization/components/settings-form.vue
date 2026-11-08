@@ -162,7 +162,7 @@ async function uploadSettingsImage(
     { organizationSlug: organizationSlug.value },
     options
   );
-  return resolveMediaUrl(fileKey);
+  return fileKey;
 }
 
 async function onUpdate() {

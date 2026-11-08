@@ -1,4 +1,7 @@
-import { isObjectStorageUrl } from '~~/shared/utils/object-storage';
+import {
+  isObjectStorageUrl,
+  resolveObjectStorageUrl,
+} from '~~/shared/utils/object-storage';
 
 export const EVENT_PLACEHOLDER_URLS = [
   '/images/event-placeholder-1.jpg',
@@ -21,7 +24,7 @@ export type EventMediaItem = {
 export function toRemoteEventMediaItem(url: string): EventMediaItem {
   return {
     id: crypto.randomUUID(),
-    previewUrl: url,
+    previewUrl: resolveObjectStorageUrl(url),
     source: 'remote',
   };
 }
@@ -30,10 +33,8 @@ export function eventGalleryImages(
   coverUrl?: string | null,
   photoUrls?: string[] | null
 ) {
-  const cover = String(coverUrl || '').trim();
-  const extras = (photoUrls ?? [])
-    .map((url) => String(url || '').trim())
-    .filter(Boolean);
+  const cover = resolveObjectStorageUrl(coverUrl);
+  const extras = (photoUrls ?? []).map(resolveObjectStorageUrl).filter(Boolean);
 
   return cover ? [cover, ...extras] : extras;
 }
@@ -43,5 +44,5 @@ export function isAllowedEventImageUrl(url: string) {
   if ((EVENT_PLACEHOLDER_URLS as readonly string[]).includes(value)) {
     return true;
   }
-  return isObjectStorageUrl(value);
+  return isObjectStorageUrl(value) || /^[\w-]+(\/[\w.-]+)+$/.test(value);
 }
