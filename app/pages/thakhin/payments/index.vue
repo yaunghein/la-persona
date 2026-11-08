@@ -18,11 +18,14 @@ const { data, isLoading: pending } = usePaymentReviewQueueQuery();
 const rows = computed(() => data.value?.items ?? []);
 const { mutateAsync: reviewPayment } = useReviewPaymentMutation();
 
-const filterPayer = ref('');
-const filterStatus = ref<'all' | 'submitted' | 'approved' | 'rejected'>(
-  'submitted'
+const filterPayer = useQueryState('payer', '');
+const filterStatus = useQueryState<
+  'all' | 'submitted' | 'approved' | 'rejected'
+>('status', 'submitted');
+const filterLink = useQueryState<'all' | 'linked' | 'standalone'>(
+  'link',
+  'all'
 );
-const filterLink = ref<'all' | 'linked' | 'standalone'>('all');
 const selectedPayment = ref<PaymentRow | null>(null);
 const paymentOpen = ref(false);
 

@@ -24,7 +24,7 @@ const { data: session } = await authClient.useSession(useFetch);
 const { data: usersData, isLoading: pending } = useAdminUsersQuery();
 
 const rows = computed(() => usersData.value || []);
-const roleFilter = ref<'all' | 'admin' | 'user'>('all');
+const roleFilter = useQueryState<'all' | 'admin' | 'user'>('role', 'all');
 const route = useRoute();
 
 watch(

@@ -1,4 +1,10 @@
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  DeleteObjectCommand,
+  HeadObjectCommand,
+  NotFound,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { env } from '~~/env';
 import type {
@@ -7,12 +13,6 @@ import type {
 } from '~~/shared/contracts/media';
 
 const UPLOAD_TICKET_TTL_SECONDS = 60;
-
-const FILE_EXTENSIONS: Record<UploadContentType, string> = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-};
 
 let client: S3Client | undefined;
 
@@ -35,14 +35,13 @@ function objectStorageClient() {
  * the signature, so the client cannot upload a different type or a larger file.
  */
 export async function createUploadTicket(input: {
-  keyPrefix: string;
+  key: string;
   contentType: UploadContentType;
   contentLength: number;
 }): Promise<UploadTicket> {
-  const key = `${input.keyPrefix}/${crypto.randomUUID()}.${FILE_EXTENSIONS[input.contentType]}`;
   const command = new PutObjectCommand({
     Bucket: env.AWS_BUCKET_NAME,
-    Key: key,
+    Key: input.key,
     ContentType: input.contentType,
     ContentLength: input.contentLength,
   });
@@ -51,11 +50,29 @@ export async function createUploadTicket(input: {
     signableHeaders: new Set(['content-type', 'content-length']),
   });
   return {
-    key,
+    key: input.key,
     uploadUrl,
     headers: { 'Content-Type': input.contentType },
     expiresAt: new Date(
       Date.now() + UPLOAD_TICKET_TTL_SECONDS * 1000
     ).toISOString(),
   };
+}
+
+export async function objectExists(key: string) {
+  try {
+    await objectStorageClient().send(
+      new HeadObjectCommand({ Bucket: env.AWS_BUCKET_NAME, Key: key })
+    );
+    return true;
+  } catch (error) {
+    if (error instanceof NotFound) return false;
+    throw error;
+  }
+}
+
+export async function deleteObject(key: string) {
+  await objectStorageClient().send(
+    new DeleteObjectCommand({ Bucket: env.AWS_BUCKET_NAME, Key: key })
+  );
 }

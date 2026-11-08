@@ -36,9 +36,9 @@ const { data: unclaimedCards } = useAdminCardsQuery({ claimed: false });
 const { data: plans } = useSubscriptionPlansQuery();
 
 const rows = computed(() => invitationsData.value || []);
-const statusFilter = ref<'all' | 'pending' | 'accepted' | 'cancelled'>(
-  'pending'
-);
+const statusFilter = useQueryState<
+  'all' | 'pending' | 'accepted' | 'cancelled'
+>('status', 'pending');
 
 const statusFilterItems = [
   { label: 'All statuses', value: 'all' },

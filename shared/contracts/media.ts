@@ -41,3 +41,31 @@ export type UploadTicket = {
   headers: { 'Content-Type': UploadContentType };
   expiresAt: string;
 };
+
+// ── Community brand assets (Thakhin) ────────────────────────────────────────
+
+export const BRAND_ASSET_KINDS = ['wallpaper', 'back'] as const;
+
+export type BrandAssetKind = (typeof BRAND_ASSET_KINDS)[number];
+
+export const CreateBrandAssetUploadRequest = z.object({
+  kind: z.enum(BRAND_ASSET_KINDS),
+  contentLength: CreateUploadRequest.shape.contentLength,
+});
+
+export type CreateBrandAssetUploadRequest = z.infer<
+  typeof CreateBrandAssetUploadRequest
+>;
+
+export const BrandAssetRouteParams = z.object({
+  organizationId: z.string().trim().min(1),
+  kind: z.enum(BRAND_ASSET_KINDS),
+});
+
+export type BrandAsset = {
+  kind: BrandAssetKind;
+  fileName: string;
+  key: string;
+  url: string;
+  exists: boolean;
+};

@@ -103,10 +103,16 @@ const { data: orgOptions } = useAdminOrganizationsQuery();
 const { data: plans } = useSubscriptionPlansQuery();
 
 const rows = computed(() => cardsData.value || []);
-const claimFilter = ref<'all' | 'linked' | 'unclaimed'>('all');
-const orgFilter = ref('all');
+const claimFilter = useQueryState<'all' | 'linked' | 'unclaimed'>(
+  'claim',
+  'all'
+);
+const orgFilter = useQueryState('organization', 'all');
 
-const subscriptionFilter = ref<SubscriptionFilter>('all');
+const subscriptionFilter = useQueryState<SubscriptionFilter>(
+  'subscription',
+  'all'
+);
 
 const claimFilterItems = [
   { label: 'All cards', value: 'all' },

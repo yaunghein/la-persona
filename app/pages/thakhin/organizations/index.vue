@@ -36,6 +36,8 @@ const isCreating = ref(false);
 const isDeleteOpen = ref(false);
 const isDeleting = ref(false);
 const orgToDelete = ref<OrgRow | null>(null);
+const isAssetsOpen = ref(false);
+const assetsOrg = ref<OrgRow | null>(null);
 
 const editForm = reactive({
   name: '',
@@ -105,7 +107,7 @@ const { data: usersData, isLoading: usersPending } = useAdminUsersQuery();
 const userItems = computed(() => usersData.value || []);
 
 const rows = computed(() => orgsData.value || []);
-const typeFilter = ref<'all' | OrganizationType>('all');
+const typeFilter = useQueryState<'all' | OrganizationType>('type', 'all');
 
 const typeFilterItems = [{ label: 'All types', value: 'all' }, ...typeItems];
 
@@ -300,6 +302,15 @@ function getActionItems(row: OrgRow): DropdownMenuItem[][] {
         icon: 'i-lucide-pencil',
         onSelect: () => openEdit(row),
       },
+      ...(row.type === ORGANIZATION_TYPES.COMMUNITY
+        ? [
+            {
+              label: 'Upload Assets',
+              icon: 'i-lucide-image-up',
+              onSelect: () => openAssets(row),
+            },
+          ]
+        : []),
       {
         label: 'Delete',
         icon: 'i-lucide-trash-2',
@@ -308,6 +319,11 @@ function getActionItems(row: OrgRow): DropdownMenuItem[][] {
       },
     ],
   ];
+}
+
+function openAssets(row: OrgRow) {
+  assetsOrg.value = row;
+  isAssetsOpen.value = true;
 }
 
 const orgDetail = ref<OrgDetail | null>(null);
@@ -1104,6 +1120,11 @@ const selectMenuUi = {
         />
       </template>
     </USlideover>
+
+    <AdminBrandAssetsSlideover
+      v-model:open="isAssetsOpen"
+      :organization="assetsOrg"
+    />
 
     <UModal
       v-model:open="isDeleteOpen"

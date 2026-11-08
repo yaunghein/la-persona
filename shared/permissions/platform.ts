@@ -18,7 +18,7 @@ export const platformPermissionStatements = {
   onboardingInvitation: ['read', 'create', 'send', 'cancel'],
   feedback: ['read', 'delete'],
   insight: ['read'],
-  media: ['upload'],
+  media: ['upload', 'delete'],
 } as const;
 
 export const platformAccessControl = createAccessControl(
@@ -34,7 +34,7 @@ export const platformAdminRole = platformAccessControl.newRole({
   onboardingInvitation: ['read', 'create', 'send', 'cancel'],
   feedback: ['read', 'delete'],
   insight: ['read'],
-  media: ['upload'],
+  media: ['upload', 'delete'],
 });
 
 export const platformUserRole = platformAccessControl.newRole({

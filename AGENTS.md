@@ -155,7 +155,8 @@ Follow the `api-design` skill (Microsoft REST guidelines).
 - Contracts list every writable field. Never `createInsertSchema` / `createUpdateSchema` a whole table, and never spread a request body into a DB write. Ids, owners, slugs, prices and periods come from the server.
 - User-supplied links are https/mailto/tel only, validated server-side with `CardLinkUrl` / `WebsiteUrl` (`shared/contracts/card.ts`).
 - Rich text is sanitized on write (`server/lib/html-sanitizer.ts`). Only sanitized HTML reaches `v-html`.
-- Uploads go through `POST /api/organizations/{orgSlug}/uploads` or `/api/admin/uploads`: a presigned POST with an image allowlist (PNG, JPEG, WebP; no SVG), a size cap, and server-generated keys. The image proxy streams only our bucket's images, with `nosniff`.
+- Uploads go through `POST /api/organizations/{orgSlug}/uploads` or `/api/admin/uploads`: a presigned PUT with an image allowlist (PNG, JPEG, WebP; no SVG), a size cap, and server-generated keys. The image proxy streams only our bucket's images, with `nosniff`.
+- Community wallpaper and card back go through `/api/admin/organizations/{organizationId}/brand-assets`: fixed keys `uploads/{wallpaper|back}-{orgSlug}.webp` named by the server, and an existing file must be deleted before a new upload.
 - Email content and recipients are built on the server. Never accept a recipient, subject or HTML from the client.
 - Every anonymous write and sign-in has a per-IP rate limit in `nuxt.config.ts` `routeRules`. Add one for each new anonymous write.
 - Join links are permanent by design (one token per community, never rotated or expired) and add people as `member`.

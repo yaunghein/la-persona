@@ -18,7 +18,6 @@ type CardRequestRow = CardRequestForReview;
 type UpdateRow = CardUpdateRequestForReview;
 
 const toast = useToast();
-const route = useRoute();
 
 const { data, isLoading: pending } = useCardRequestsQuery();
 const rows = computed(() => data.value?.items ?? []);
@@ -27,15 +26,17 @@ const { mutateAsync: reviewCardUpdateRequest } = useReviewCardRequestMutation(
   'card-update-requests'
 );
 
-const filterName = ref('');
-const filterEmail = ref('');
-const filterType = ref<'all' | 'new_design' | 'existing_design'>('all');
-const filterStatus = ref<'all' | 'pending' | 'approved' | 'declined'>(
+const filterName = useQueryState('name', '');
+const filterEmail = useQueryState('email', '');
+const filterType = useQueryState<'all' | 'new_design' | 'existing_design'>(
+  'type',
+  'all'
+);
+const filterStatus = useQueryState<'all' | 'pending' | 'approved' | 'declined'>(
+  'status',
   'pending'
 );
-const tab = ref<'design' | 'updates'>(
-  route.query.tab === 'updates' ? 'updates' : 'design'
-);
+const tab = useQueryState<'design' | 'updates'>('tab', 'design');
 const selectedRequest = ref<CardRequestRow | null>(null);
 const requestOpen = ref(false);
 
@@ -89,7 +90,8 @@ const updateRows = computed(() =>
     updateStatus.value === 'all' ? true : row.status === updateStatus.value
   )
 );
-const updateStatus = ref<'all' | 'pending' | 'approved' | 'declined'>(
+const updateStatus = useQueryState<'all' | 'pending' | 'approved' | 'declined'>(
+  'updates_status',
   'pending'
 );
 const selectedUpdate = ref<UpdateRow | null>(null);
@@ -102,7 +104,9 @@ const {
   paginationOptions: updatePaginationOptions,
   paginationTotal: updatePaginationTotal,
   onPageChange: onUpdatePageChange,
-} = useAdminTable(() => updateRows.value.length);
+} = useAdminTable(() => updateRows.value.length, {
+  searchQueryKey: 'updates_q',
+});
 
 async function decideUpdate(row: UpdateRow, decision: 'approve' | 'decline') {
   try {

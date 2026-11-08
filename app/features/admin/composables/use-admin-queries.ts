@@ -17,6 +17,12 @@ import type {
 } from '~~/shared/contracts/card';
 import type { Collection } from '~~/shared/contracts/collection';
 import type {
+  BrandAsset,
+  BrandAssetKind,
+  CreateBrandAssetUploadRequest,
+  UploadTicket,
+} from '~~/shared/contracts/media';
+import type {
   FeedbackForReview,
   FeedbackKind,
 } from '~~/shared/contracts/feedback';
@@ -40,6 +46,8 @@ export const adminQueryKeys = {
   feedback: (kind: FeedbackKind | 'all') =>
     [...adminQueryKeys.all, 'feedback', kind] as const,
   organizations: () => [...adminQueryKeys.all, 'organizations'] as const,
+  brandAssets: (organizationId: string) =>
+    [...adminQueryKeys.all, 'brand-assets', organizationId] as const,
   users: () => [...adminQueryKeys.all, 'users'] as const,
   cards: (claimed?: boolean) =>
     [...adminQueryKeys.all, 'cards', claimed ?? 'any'] as const,
@@ -94,6 +102,22 @@ export function useAdminOrganizationsQuery() {
     queryFn: () =>
       $fetch<Collection<AdminOrganizationSummary>>(url('organizations')),
     select: (collection) => collection.items,
+  });
+}
+
+export function useAdminBrandAssetsQuery(
+  organizationId: MaybeRefOrGetter<string>
+) {
+  return useQuery({
+    queryKey: computed(() =>
+      adminQueryKeys.brandAssets(toValue(organizationId))
+    ),
+    queryFn: () =>
+      $fetch<Collection<BrandAsset>>(
+        url(`organizations/${toValue(organizationId)}/brand-assets`)
+      ),
+    select: (collection) => collection.items,
+    enabled: () => !!toValue(organizationId),
   });
 }
 
@@ -157,6 +181,23 @@ export const adminApi = {
       url(`organizations/${organizationId}/cards`),
       { method: 'POST', body: { userId } }
     ),
+  createBrandAssetUpload: (
+    organizationId: string,
+    request: CreateBrandAssetUploadRequest
+  ) =>
+    $fetch<UploadTicket>(url(`organizations/${organizationId}/brand-assets`), {
+      method: 'POST',
+      body: request,
+    }),
+  applyBrandAsset: (organizationId: string, kind: BrandAssetKind) =>
+    $fetch<BrandAsset>(
+      url(`organizations/${organizationId}/brand-assets/${kind}`),
+      { method: 'PUT' }
+    ),
+  deleteBrandAsset: (organizationId: string, kind: BrandAssetKind) =>
+    $fetch<void>(url(`organizations/${organizationId}/brand-assets/${kind}`), {
+      method: 'DELETE',
+    }),
   inviteOrganizer: (
     organizationId: string,
     request: CreateOrganizerInvitationRequest
