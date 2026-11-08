@@ -9,11 +9,14 @@ import {
   deleteObject,
   objectExists,
 } from '~~/server/lib/object-storage';
+import { FILE_EXTENSIONS } from '~~/server/features/media/media.service';
 import {
   BRAND_ASSET_KINDS,
+  UPLOAD_CONTENT_TYPES,
   type BrandAsset,
   type BrandAssetKind,
   type CreateBrandAssetUploadRequest,
+  type UploadContentType,
 } from '~~/shared/contracts/media';
 
 // Emails load images outside the app, so they store the full URL, not the key.
@@ -51,20 +54,36 @@ async function findCommunity(organizationId: string) {
   return organization;
 }
 
-async function findBrandAsset(
+/** Named by the community slug, whatever the uploaded file was called. */
+function brandAssetAt(
   kind: BrandAssetKind,
-  slug: string
-): Promise<BrandAsset> {
-  // Named by the community slug, whatever the uploaded file was called.
-  const fileName = `${kind}-${slug}.webp`;
+  slug: string,
+  contentType: UploadContentType,
+  exists: boolean
+): BrandAsset {
+  const fileName = `${kind}-${slug}.${FILE_EXTENSIONS[contentType]}`;
   const key = `uploads/${fileName}`;
   return {
     kind,
     fileName,
     key,
     url: resolveObjectStorageUrl(key),
-    exists: await objectExists(key),
+    exists,
   };
+}
+
+/** The extension follows the uploaded type, so every allowed one is checked. */
+async function findBrandAsset(kind: BrandAssetKind, slug: string) {
+  const candidates = UPLOAD_CONTENT_TYPES.map((contentType) =>
+    brandAssetAt(kind, slug, contentType, false)
+  );
+  const found = await Promise.all(
+    candidates.map((asset) => objectExists(asset.key))
+  );
+  const index = found.indexOf(true);
+  return index === -1
+    ? { ...candidates[0]!, fileName: `${kind}-${slug}` }
+    : { ...candidates[index]!, exists: true };
 }
 
 /** The upsert rewrites the copy fields, so they are passed through unchanged. */
@@ -99,16 +118,17 @@ export async function issueBrandAssetUploadTicket(
   request: CreateBrandAssetUploadRequest
 ) {
   const { slug } = await findCommunity(organizationId);
-  const asset = await findBrandAsset(request.kind, slug);
-  if (asset.exists) {
+  const existing = await findBrandAsset(request.kind, slug);
+  if (existing.exists) {
     throw conflict(
-      `${asset.fileName} already exists. Delete it before uploading a new one.`,
+      `${existing.fileName} already exists. Delete it before uploading a new one.`,
       'brand_asset_exists'
     );
   }
+  const asset = brandAssetAt(request.kind, slug, request.contentType, false);
   const ticket = await createUploadTicket({
     key: asset.key,
-    contentType: 'image/webp',
+    contentType: request.contentType,
     contentLength: request.contentLength,
   });
   return { asset, ticket };

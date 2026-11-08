@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  brandAssetContentTypes,
   MAX_UPLOAD_BYTES,
   type BrandAssetKind,
 } from '~~/shared/contracts/media';
@@ -19,6 +20,9 @@ const { data: assets, dataUpdatedAt } = useAdminBrandAssetsQuery(
   () => props.organizationId
 );
 const asset = computed(() => assets.value?.find((a) => a.kind === props.kind));
+
+const contentTypes = computed(() => brandAssetContentTypes(props.kind));
+const isEmailImage = computed(() => !contentTypes.value.includes('image/webp'));
 
 const selectedFile = ref<File | null>(null);
 const isUploading = ref(false);
@@ -41,22 +45,25 @@ async function uploadAsset() {
   const file = selectedFile.value;
   if (!file) return;
 
-  const problem =
-    file.type !== 'image/webp'
-      ? 'Convert the image to WebP first.'
-      : file.size > MAX_UPLOAD_BYTES
-        ? 'Images must be 5 MB or smaller.'
-        : '';
-  if (problem) {
+  const contentType = contentTypes.value.find((type) => type === file.type);
+  const problem = !contentType
+    ? isEmailImage.value
+      ? 'Email images must be JPG or PNG.'
+      : 'Upload a JPG, PNG or WebP image.'
+    : file.size > MAX_UPLOAD_BYTES
+      ? 'Images must be 5 MB or smaller.'
+      : '';
+  if (!contentType || problem) {
     toast.add({ title: 'Wrong file', description: problem, color: 'warning' });
     return;
   }
 
   isUploading.value = true;
   try {
-    // Already optimized with towebp.io, so the file is uploaded as is.
+    // Uploaded as is: the admin optimizes it beforehand.
     const ticket = await adminApi.createBrandAssetUpload(props.organizationId, {
       kind: props.kind,
+      contentType,
       contentLength: file.size,
     });
     const response = await fetch(ticket.uploadUrl, {
@@ -120,7 +127,7 @@ async function onConfirmDelete() {
       >
         <img :src="previewUrl" :alt="label" class="size-full object-contain" />
       </div>
-      <div>
+      <div class="flex justify-end">
         <UButton
           label="Delete"
           leading-icon="i-lucide-trash-2"
@@ -139,10 +146,14 @@ async function onConfirmDelete() {
     <template v-else>
       <UFileUpload
         v-model="selectedFile"
-        accept="image/webp"
+        :accept="contentTypes.join(',')"
         icon="i-lucide-image-up"
         :label="`Drop the ${label.toLowerCase()} here`"
-        description="WebP, up to 5 MB"
+        :description="
+          isEmailImage
+            ? 'JPG or PNG, up to 5 MB'
+            : 'WebP recommended, JPG or PNG also work, up to 5 MB'
+        "
         :disabled="isUploading"
         class="aspect-[1/0.6] w-full"
         :ui="{

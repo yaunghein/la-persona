@@ -54,10 +54,22 @@ export const BRAND_ASSET_KINDS = [
 
 export type BrandAssetKind = (typeof BRAND_ASSET_KINDS)[number];
 
-export const CreateBrandAssetUploadRequest = z.object({
+/** Not every email app shows WebP, so email images are JPG or PNG. */
+export function brandAssetContentTypes(
+  kind: BrandAssetKind
+): readonly UploadContentType[] {
+  return kind.startsWith('email-')
+    ? ['image/jpeg', 'image/png']
+    : UPLOAD_CONTENT_TYPES;
+}
+
+export const CreateBrandAssetUploadRequest = CreateUploadRequest.extend({
   kind: z.enum(BRAND_ASSET_KINDS),
-  contentLength: CreateUploadRequest.shape.contentLength,
-});
+}).refine(
+  (request) =>
+    brandAssetContentTypes(request.kind).includes(request.contentType),
+  { path: ['contentType'], message: 'Email images must be JPG or PNG.' }
+);
 
 export type CreateBrandAssetUploadRequest = z.infer<
   typeof CreateBrandAssetUploadRequest

@@ -4,7 +4,7 @@ import type {
   UploadContentType,
 } from '~~/shared/contracts/media';
 
-const FILE_EXTENSIONS: Record<UploadContentType, string> = {
+export const FILE_EXTENSIONS: Record<UploadContentType, string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
   'image/webp': 'webp',
