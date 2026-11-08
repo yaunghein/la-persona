@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { format } from 'date-fns';
 import type {
   CommunityMember,
   CommunityMembersData,
@@ -138,12 +139,24 @@ function askRemove(member: CommunityMember) {
   memberToRemove.value = member;
 }
 
-function exportMembers() {
-  toast.add({
-    title: 'Export coming soon',
-    description: 'Member export is not wired yet.',
-    color: 'neutral',
-  });
+async function exportMembers() {
+  if (!members.value?.length) {
+    toast.add({
+      title: 'Nothing to export',
+      description: 'No members available.',
+      color: 'warning',
+    });
+    return;
+  }
+  try {
+    const blob = await downloadMembersCsv(organizationSlug.value);
+    downloadFile({
+      blob,
+      fileName: `members-${organizationSlug.value}-${format(new Date(), 'yyyy-MM-dd')}.csv`,
+    });
+  } catch (error) {
+    showError('Export failed', error);
+  }
 }
 </script>
 

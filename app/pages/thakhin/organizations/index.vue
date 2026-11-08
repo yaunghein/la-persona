@@ -1019,15 +1019,17 @@ const selectMenuUi = {
                   <UBadge v-if="!item.userId" color="warning" variant="subtle">
                     Unclaimed
                   </UBadge>
-                  <UButton
-                    :to="communityCardPath(item.slug)"
-                    target="_blank"
-                    size="xs"
-                    color="neutral"
-                    variant="ghost"
-                    icon="i-lucide-external-link"
-                    aria-label="Open card"
-                  />
+                  <UTooltip text="Open card">
+                    <UButton
+                      :to="communityCardPath(item.slug)"
+                      target="_blank"
+                      size="xs"
+                      color="neutral"
+                      variant="ghost"
+                      icon="i-lucide-external-link"
+                      aria-label="Open card"
+                    />
+                  </UTooltip>
                 </div>
               </li>
             </ul>

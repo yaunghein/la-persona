@@ -271,7 +271,9 @@ const currentPageLabel = computed(() => {
           class="uppercase text-sm tracking-[1.4px] border-b border-raised bg-surface"
         >
           <template #leading>
-            <UDashboardSidebarCollapse />
+            <UTooltip text="Toggle sidebar">
+              <UDashboardSidebarCollapse />
+            </UTooltip>
           </template>
         </UDashboardNavbar>
       </template>

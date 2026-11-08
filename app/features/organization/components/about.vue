@@ -62,18 +62,16 @@ const logoSrc = computed(() =>
       >
         About community
       </h1>
-      <UButton
-        icon="i-material-symbols:info-outline"
-        color="neutral"
-        variant="ghost"
-        class="size-5 cursor-pointer p-0 text-ink hover:bg-transparent"
-        aria-label="Open about community information"
-        @click="
-          () => {
-            isInfoOpen = true;
-          }
-        "
-      />
+      <UTooltip text="About this community">
+        <UButton
+          icon="i-material-symbols:info-outline"
+          color="neutral"
+          variant="ghost"
+          class="size-5 cursor-pointer p-0 text-ink hover:bg-transparent"
+          aria-label="About this community"
+          @click="isInfoOpen = true"
+        />
+      </UTooltip>
     </div>
 
     <div class="flex w-full flex-col">

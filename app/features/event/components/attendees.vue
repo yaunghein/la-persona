@@ -11,11 +11,14 @@ const props = defineProps<{
   allowApprove?: boolean;
   /** Organizers manage and attach labels; volunteers only see them. */
   canManageLabels?: boolean;
+  /** Organizers download the guest list. Volunteers do not see the button. */
+  canExport?: boolean;
 }>();
 
 const emit = defineEmits<{
   select: [attendee: EventAttendee];
   approve: [attendee: EventAttendee];
+  export: [];
 }>();
 
 type AttendeeTab = 'all' | 'pending' | 'registered' | 'checked_in';
@@ -260,28 +263,43 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
         </div>
 
         <div class="flex items-center gap-2">
-          <UiLabelSelect
-            v-model="selectedLabelIds"
-            :labels="labels ?? []"
-            placeholder="All labels"
-            :manageable="canManageLabels"
-            aria-label="Filter by label"
-            class="min-w-0 flex-1 sm:w-52 sm:flex-none"
-            :ui="filterSelectUi"
-            @manage="isLabelsOpen = true"
-          />
-          <UButton
-            icon="i-lucide-rows-3"
-            label="Group"
-            color="neutral"
-            variant="ghost"
-            class="h-9 shrink-0 cursor-pointer gap-1.5 rounded-full px-3.5 text-sm font-medium ring-1 ring-inset ring-raised hover:bg-raised"
-            :ui="{ leadingIcon: 'size-4' }"
-            :class="isGrouped ? 'bg-raised text-ink' : 'text-muted'"
-            :aria-pressed="isGrouped"
-            aria-label="Group by label"
-            @click="toggleGrouping"
-          />
+          <UTooltip text="Filter by label">
+            <UiLabelSelect
+              v-model="selectedLabelIds"
+              :labels="labels ?? []"
+              placeholder="All labels"
+              :manageable="canManageLabels"
+              aria-label="Filter by label"
+              class="min-w-0 flex-1 sm:w-52 sm:flex-none"
+              :ui="filterSelectUi"
+              @manage="isLabelsOpen = true"
+            />
+          </UTooltip>
+          <UTooltip text="Group by label">
+            <UButton
+              icon="i-lucide-rows-3"
+              label="Group"
+              color="neutral"
+              variant="ghost"
+              class="h-9 shrink-0 cursor-pointer gap-1.5 rounded-full px-3.5 text-sm font-medium ring-1 ring-inset ring-raised hover:bg-raised"
+              :ui="{ leadingIcon: 'size-4' }"
+              :class="isGrouped ? 'bg-raised text-ink' : 'text-muted'"
+              :aria-pressed="isGrouped"
+              aria-label="Group by label"
+              @click="toggleGrouping"
+            />
+          </UTooltip>
+          <UTooltip v-if="canExport" text="Export registered attendees">
+            <UButton
+              icon="i-lucide-download"
+              color="neutral"
+              variant="ghost"
+              class="flex h-9 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full p-0 text-muted ring-1 ring-inset ring-raised hover:bg-raised"
+              :ui="{ leadingIcon: 'size-4' }"
+              aria-label="Export registered attendees"
+              @click="emit('export')"
+            />
+          </UTooltip>
         </div>
       </div>
     </div>
@@ -348,14 +366,16 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
             v-if="row.original.item"
             :items="getActionItems(row.original.item)"
           >
-            <UButton
-              size="xl"
-              icon="i-mdi-dots-vertical"
-              color="neutral"
-              variant="ghost"
-              class="text-muted"
-              :aria-label="`Actions for ${row.original.item.name}`"
-            />
+            <UTooltip :text="`Actions for ${row.original.item.name}`">
+              <UButton
+                size="xl"
+                icon="i-mdi-dots-vertical"
+                color="neutral"
+                variant="ghost"
+                class="text-muted"
+                :aria-label="`Actions for ${row.original.item.name}`"
+              />
+            </UTooltip>
             <template #label-item-leading="{ item }">
               <span
                 class="mx-0.5 size-2.5 shrink-0 rounded-full ring-1 ring-inset ring-ink/15"

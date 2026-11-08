@@ -96,15 +96,17 @@ async function confirmDelete() {
         >
           Your Cards
         </h1>
-        <UButton
-          size="lg"
-          icon="material-symbols:info-outline"
-          color="neutral"
-          variant="ghost"
-          class="flex items-center justify-center rounded-full p-0 text-muted hover:bg-raised cursor-pointer"
-          aria-label="Open cards information"
-          @click="openGuide"
-        />
+        <UTooltip text="What is cards?">
+          <UButton
+            size="lg"
+            icon="material-symbols:info-outline"
+            color="neutral"
+            variant="ghost"
+            class="flex items-center justify-center rounded-full p-0 text-muted hover:bg-raised cursor-pointer"
+            aria-label="What is cards?"
+            @click="openGuide"
+          />
+        </UTooltip>
       </div>
 
       <UButton

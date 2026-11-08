@@ -67,13 +67,15 @@ const selectedTab = computed({
         class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
       >
         <div class="flex min-w-0 items-start gap-3">
-          <UButton
-            icon="i-lucide-chevron-left"
-            color="primary"
-            class="size-7! bg-ink/5 mt-1 mr-1 sm:mr-2 text-ink hover:bg-ink/10 active:hover:bg-ink/20 flex items-center justify-center"
-            aria-label="Back to events"
-            @click="emit('back')"
-          />
+          <UTooltip text="Back to events">
+            <UButton
+              icon="i-lucide-chevron-left"
+              color="primary"
+              class="size-7! bg-ink/5 mt-1 mr-1 sm:mr-2 text-ink hover:bg-ink/10 active:hover:bg-ink/20 flex items-center justify-center"
+              aria-label="Back to events"
+              @click="emit('back')"
+            />
+          </UTooltip>
           <div class="flex min-w-0 flex-wrap items-start gap-x-4 gap-y-2">
             <h1
               class="max-w-124 text-xl font-normal leading-[1.2] tracking-widest uppercase text-ink sm:text-2xl"
@@ -98,26 +100,30 @@ const selectedTab = computed({
             class="h-10 cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
             @click="emit('edit')"
           />
-          <UButton
-            icon="i-lucide-link"
-            color="neutral"
-            aria-label="Copy event link"
-            :ui="{ leadingIcon: 'size-4' }"
-            class="h-10! w-20! cursor-pointer rounded-full p-0 text-ink flex items-center justify-center bg-ink/5 hover:bg-ink/15 active:hover:bg-ink/20"
-            @click="emit('share')"
-          />
+          <UTooltip text="Copy event link">
+            <UButton
+              icon="i-lucide-link"
+              color="neutral"
+              aria-label="Copy event link"
+              :ui="{ leadingIcon: 'size-4' }"
+              class="h-10! w-20! cursor-pointer rounded-full p-0 text-ink flex items-center justify-center bg-ink/5 hover:bg-ink/15 active:hover:bg-ink/20"
+              @click="emit('share')"
+            />
+          </UTooltip>
           <UDropdownMenu
             v-if="canEdit"
             :items="eventActions"
             :content="{ align: 'end' }"
           >
-            <UButton
-              icon="i-lucide-ellipsis"
-              color="neutral"
-              aria-label="Event actions"
-              :ui="{ leadingIcon: 'size-4' }"
-              class="h-10! w-20! cursor-pointer rounded-full p-0 text-ink flex items-center justify-center bg-ink/5 hover:bg-ink/15 active:hover:bg-ink/20"
-            />
+            <UTooltip text="Event actions">
+              <UButton
+                icon="i-lucide-ellipsis"
+                color="neutral"
+                aria-label="Event actions"
+                :ui="{ leadingIcon: 'size-4' }"
+                class="h-10! w-20! cursor-pointer rounded-full p-0 text-ink flex items-center justify-center bg-ink/5 hover:bg-ink/15 active:hover:bg-ink/20"
+              />
+            </UTooltip>
           </UDropdownMenu>
         </div>
       </div>

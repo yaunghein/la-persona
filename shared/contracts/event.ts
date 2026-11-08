@@ -183,6 +183,16 @@ export const EventRouteParams = z.object({
   eventId: z.string().trim().min(1),
 });
 
+/**
+ * CSV roster. `registered` is the guest list (registered and later checked in).
+ * `checked_in` is only people who showed up.
+ */
+export const AttendeeExportQuery = z.object({
+  roster: z.enum(['registered', 'checked_in']),
+});
+
+export type AttendeeExportQuery = z.infer<typeof AttendeeExportQuery>;
+
 export const RegistrationRouteParams = z.object({
   registrationId: z.string().trim().min(1),
 });

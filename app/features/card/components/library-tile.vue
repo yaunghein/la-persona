@@ -105,16 +105,17 @@ function onBadgeClick() {
     <template #footer>
       <div>{{ cardHolderName(card) }}</div>
       <div class="mt-4 flex items-center justify-start gap-2" @click.stop>
-        <UButton
-          v-if="hasSplinePreview"
-          icon="i-lucide-scan-eye"
-          color="primary"
-          size="sm"
-          class="bg-ink/5 text-ink hover:bg-ink/15 active:hover:bg-ink/20"
-          target="_blank"
-          :href="`/c/${card.slug}`"
-          aria-label="Preview card"
-        />
+        <UTooltip v-if="hasSplinePreview" text="Preview card">
+          <UButton
+            icon="i-lucide-scan-eye"
+            color="primary"
+            size="sm"
+            class="bg-ink/5 text-ink hover:bg-ink/15 active:hover:bg-ink/20"
+            target="_blank"
+            :href="`/c/${card.slug}`"
+            aria-label="Preview card"
+          />
+        </UTooltip>
         <UPopover
           v-else
           :ui="{
@@ -122,33 +123,38 @@ function onBadgeClick() {
               'max-w-[240px] rounded-md border border-line bg-surface p-3 text-sm text-ink leading-relaxed',
           }"
         >
+          <UTooltip text="Preview card">
+            <UButton
+              icon="i-lucide-scan-eye"
+              color="primary"
+              size="sm"
+              class="bg-ink/5 text-ink hover:bg-ink/15 active:hover:bg-ink/20"
+              aria-label="Preview card"
+            />
+          </UTooltip>
+          <template #content>3D card is still cooking.</template>
+        </UPopover>
+        <UTooltip text="Edit card">
           <UButton
-            icon="i-lucide-scan-eye"
+            icon="i-lucide-square-pen"
             color="primary"
             size="sm"
             class="bg-ink/5 text-ink hover:bg-ink/15 active:hover:bg-ink/20"
-            aria-label="Preview card"
+            :href="cardEditorPath(card)"
+            aria-label="Edit card"
           />
-          <template #content>3D card is still cooking.</template>
-        </UPopover>
-        <UButton
-          icon="i-lucide-square-pen"
-          color="primary"
-          size="sm"
-          class="bg-ink/5 text-ink hover:bg-ink/15 active:hover:bg-ink/20"
-          :href="cardEditorPath(card)"
-          aria-label="Edit card"
-        />
+        </UTooltip>
         <div class="ml-auto flex items-center gap-3">
-          <UButton
-            v-if="!isCommunity"
-            icon="i-lucide-trash-2"
-            color="error"
-            variant="soft"
-            size="sm"
-            aria-label="Delete card"
-            @click="emit('delete', card)"
-          />
+          <UTooltip v-if="!isCommunity" text="Delete card">
+            <UButton
+              icon="i-lucide-trash-2"
+              color="error"
+              variant="soft"
+              size="sm"
+              aria-label="Delete card"
+              @click="emit('delete', card)"
+            />
+          </UTooltip>
           <!-- The span takes the tooltip's data-state; on USwitch it would override checked/unchecked. -->
           <UTooltip :text="visibilityHint">
             <span class="flex">

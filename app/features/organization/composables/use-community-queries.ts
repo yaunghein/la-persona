@@ -36,6 +36,14 @@ export function useCommunityMembersQuery(
   });
 }
 
+/** Every member and pending invitation as CSV. */
+export function downloadMembersCsv(organizationSlug: string): Promise<Blob> {
+  return $fetch<Blob>(organizationUrl(organizationSlug, 'members'), {
+    headers: { Accept: 'text/csv' },
+    responseType: 'blob',
+  });
+}
+
 export function useJoinLinkQuery(organizationSlug: MaybeRefOrGetter<string>) {
   return useQuery({
     queryKey: computed(() =>

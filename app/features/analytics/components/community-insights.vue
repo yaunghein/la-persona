@@ -123,15 +123,17 @@ const columns: TableColumn<CommunityEventPerformance>[] = [
         >
           {{ data.title }}
         </h1>
-        <UButton
-          size="lg"
-          icon="i-material-symbols:info-outline"
-          color="neutral"
-          variant="ghost"
-          class="flex cursor-pointer items-center justify-center rounded-full p-0 text-muted hover:bg-raised"
-          aria-label="Open community insights information"
-          @click="openInfo"
-        />
+        <UTooltip text="What is community insights?">
+          <UButton
+            size="lg"
+            icon="i-material-symbols:info-outline"
+            color="neutral"
+            variant="ghost"
+            class="flex cursor-pointer items-center justify-center rounded-full p-0 text-muted hover:bg-raised"
+            aria-label="What is community insights?"
+            @click="openInfo"
+          />
+        </UTooltip>
       </div>
 
       <div

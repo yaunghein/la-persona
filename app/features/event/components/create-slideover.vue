@@ -738,14 +738,16 @@ async function copyEventLink() {
                   width="224"
                   class="size-full object-cover"
                 />
-                <button
-                  type="button"
-                  class="absolute top-2 right-2 flex size-7 cursor-pointer items-center justify-center rounded-full bg-dark/80 text-white hover:bg-dark"
-                  aria-label="Remove photo"
-                  @click="removePhoto(photo.id)"
-                >
-                  <UIcon name="i-lucide-x" class="size-4" />
-                </button>
+                <UTooltip text="Remove photo">
+                  <button
+                    type="button"
+                    class="absolute top-2 right-2 flex size-7 cursor-pointer items-center justify-center rounded-full bg-dark/80 text-white hover:bg-dark"
+                    aria-label="Remove photo"
+                    @click="removePhoto(photo.id)"
+                  >
+                    <UIcon name="i-lucide-x" class="size-4" />
+                  </button>
+                </UTooltip>
               </div>
             </div>
 
@@ -926,16 +928,17 @@ async function copyEventLink() {
 
     <template v-if="!success" #footer>
       <div class="flex w-full items-center justify-end gap-2">
-        <UButton
-          v-if="isEdit"
-          icon="i-lucide-trash-2"
-          aria-label="Delete event"
-          color="error"
-          variant="soft"
-          :disabled="isSubmitting"
-          class="mr-auto size-10 shrink-0 cursor-pointer justify-center rounded-full"
-          @click="openDeleteConfirm"
-        />
+        <UTooltip v-if="isEdit" text="Delete event">
+          <UButton
+            icon="i-lucide-trash-2"
+            aria-label="Delete event"
+            color="error"
+            variant="soft"
+            :disabled="isSubmitting"
+            class="mr-auto size-10 shrink-0 cursor-pointer justify-center rounded-full"
+            @click="openDeleteConfirm"
+          />
+        </UTooltip>
         <UButton
           v-if="hasUnsavedChanges"
           label="Discard changes"

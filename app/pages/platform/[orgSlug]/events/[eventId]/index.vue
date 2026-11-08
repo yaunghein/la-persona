@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { format } from 'date-fns';
 import type {
   CommunityEventDetailData,
   CommunityEventDetailTab,
@@ -6,6 +7,7 @@ import type {
   EventBroadcastKind,
 } from '~~/shared/contracts/event';
 import { publicEventAbsoluteUrl } from '~~/shared/utils/routes';
+import { slugify } from '~~/shared/utils/slugify';
 import {
   checkInPhase,
   eventPhase,
@@ -139,6 +141,45 @@ const profileAttendee = computed(
     attendees.value?.find((item) => item.id === selectedAttendee.value?.id) ??
     selectedAttendee.value
 );
+
+function rosterFileName(kind: 'attendees' | 'check-ins') {
+  const title = slugify(event.value?.title ?? '').slice(0, 48);
+  return `${kind}-${title || eventId.value}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+}
+
+async function exportRoster(roster: 'registered' | 'checked_in') {
+  const rows = (attendees.value ?? []).filter((attendee) =>
+    roster === 'checked_in'
+      ? attendee.status === 'checked_in'
+      : attendee.status === 'registered' || attendee.status === 'checked_in'
+  );
+  if (!rows.length) {
+    toast.add({
+      title: 'Nothing to export',
+      description:
+        roster === 'checked_in'
+          ? 'Nobody has checked in yet.'
+          : 'Nobody has registered yet.',
+      color: 'warning',
+    });
+    return;
+  }
+  try {
+    const blob = await downloadAttendeesCsv(eventId.value, roster);
+    downloadFile({
+      blob,
+      fileName: rosterFileName(
+        roster === 'checked_in' ? 'check-ins' : 'attendees'
+      ),
+    });
+  } catch (error) {
+    toast.add({
+      title: 'Export failed',
+      description: apiErrorMessage(error),
+      color: 'error',
+    });
+  }
+}
 
 function onOpenScanner() {
   if (checkInWindow.value !== 'live') return;
@@ -295,8 +336,10 @@ async function onCheckedIn() {
       :attendees="eventDetail.attendees"
       :allow-approve="canManage && phase !== 'past'"
       :can-manage-labels="canManage"
+      :can-export="canManage"
       @select="onSelectAttendee"
       @approve="approveAttendee"
+      @export="exportRoster('registered')"
     />
 
     <EventCheckIn
@@ -304,9 +347,11 @@ async function onCheckedIn() {
       :attendees="eventDetail.attendees"
       :check-in-phase="checkInWindow"
       :can-walk-in="canWalkIn"
+      :can-export="canManage"
       @open-scanner="onOpenScanner"
       @open-walk-in="onOpenWalkIn"
       @select="onSelectAttendee"
+      @export="exportRoster('checked_in')"
     />
   </EventDetailShell>
 

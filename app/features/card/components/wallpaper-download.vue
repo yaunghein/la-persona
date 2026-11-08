@@ -283,15 +283,17 @@ async function downloadQr() {
             class="relative flex h-60 w-60 cursor-pointer flex-col items-center justify-center gap-1.5 overflow-hidden rounded-[6px] border border-line bg-raised p-4 sm:scale-100"
             @click="openWallpaperPreview"
           >
-            <UButton
-              size="xl"
-              icon="i-lucide-expand"
-              color="neutral"
-              variant="ghost"
-              class="absolute flex items-center justify-center right-2 top-2 z-10 cursor-pointer rounded-full bg-black/35 p-3 scale-[0.65] origin-top-right text-white hover:bg-black/50"
-              aria-label="Expand wallpaper preview"
-              @click.stop="openWallpaperPreview"
-            />
+            <UTooltip text="Expand wallpaper preview">
+              <UButton
+                size="xl"
+                icon="i-lucide-expand"
+                color="neutral"
+                variant="ghost"
+                class="absolute flex items-center justify-center right-2 top-2 z-10 cursor-pointer rounded-full bg-black/35 p-3 scale-[0.65] origin-top-right text-white hover:bg-black/50"
+                aria-label="Expand wallpaper preview"
+                @click.stop="openWallpaperPreview"
+              />
+            </UTooltip>
             <p class="text-sm text-ink/50">Preview</p>
             <div
               class="flex h-40 w-40 items-center justify-center rounded-[4px] bg-surface-soft"

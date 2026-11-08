@@ -78,20 +78,22 @@ const items = computed<DropdownMenuItem[][]>(() => [
       item: 'py-2',
     }"
   >
-    <UButton
-      :label="collapsed ? undefined : 'Help & Feedback'"
-      icon="i-material-symbols:help-outline"
-      color="neutral"
-      variant="ghost"
-      block
-      :square="collapsed"
-      :ui="{
-        leadingIcon: 'text-dimmed',
-      }"
-      :class="[
-        'data-[state=open]:bg-elevated',
-        collapsed ? '' : 'justify-start',
-      ]"
-    />
+    <UTooltip text="Help & Feedback" :disabled="!collapsed">
+      <UButton
+        :label="collapsed ? undefined : 'Help & Feedback'"
+        icon="i-material-symbols:help-outline"
+        color="neutral"
+        variant="ghost"
+        block
+        :square="collapsed"
+        :ui="{
+          leadingIcon: 'text-dimmed',
+        }"
+        :class="[
+          'data-[state=open]:bg-elevated',
+          collapsed ? '' : 'justify-start',
+        ]"
+      />
+    </UTooltip>
   </UDropdownMenu>
 </template>

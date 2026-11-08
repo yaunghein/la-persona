@@ -67,49 +67,52 @@ const items = computed<DropdownMenuItem[][]>(() => [
       content: collapsed ? 'w-48' : 'w-(--reka-dropdown-menu-trigger-width)',
     }"
   >
-    <UButton
-      size="xl"
-      color="neutral"
-      variant="ghost"
-      block
-      :square="collapsed"
-      class="data-[state=open]:bg-elevated"
-      :ui="{
-        trailingIcon: 'text-dimmed',
-      }"
-    >
-      <template v-if="collapsed">
-        <UAvatar
-          :src="user.avatar.src"
-          :alt="user.avatar.alt"
-          size="md"
-          class="mx-auto"
-        />
-      </template>
-      <template v-else>
-        <div class="flex w-full items-center justify-between gap-3">
-          <div class="flex min-w-0 items-center gap-3">
-            <UAvatar
-              :src="user.avatar.src"
-              :alt="user.avatar.alt"
-              size="md"
-              class="shrink-0"
-            />
-            <div class="min-w-0 text-left">
-              <p class="truncate text-sm font-medium text-ink">
-                {{ user.name }}
-              </p>
-              <p class="truncate text-xs text-muted">
-                {{ user.email }}
-              </p>
-            </div>
-          </div>
-          <UIcon
-            name="i-lucide-chevrons-up-down"
-            class="shrink-0 text-dimmed size-4"
+    <UTooltip :text="user.name" :disabled="!collapsed">
+      <UButton
+        size="xl"
+        color="neutral"
+        variant="ghost"
+        block
+        :square="collapsed"
+        :aria-label="user.name"
+        class="data-[state=open]:bg-elevated"
+        :ui="{
+          trailingIcon: 'text-dimmed',
+        }"
+      >
+        <template v-if="collapsed">
+          <UAvatar
+            :src="user.avatar.src"
+            :alt="user.avatar.alt"
+            size="md"
+            class="mx-auto"
           />
-        </div>
-      </template>
-    </UButton>
+        </template>
+        <template v-else>
+          <div class="flex w-full items-center justify-between gap-3">
+            <div class="flex min-w-0 items-center gap-3">
+              <UAvatar
+                :src="user.avatar.src"
+                :alt="user.avatar.alt"
+                size="md"
+                class="shrink-0"
+              />
+              <div class="min-w-0 text-left">
+                <p class="truncate text-sm font-medium text-ink">
+                  {{ user.name }}
+                </p>
+                <p class="truncate text-xs text-muted">
+                  {{ user.email }}
+                </p>
+              </div>
+            </div>
+            <UIcon
+              name="i-lucide-chevrons-up-down"
+              class="shrink-0 text-dimmed size-4"
+            />
+          </div>
+        </template>
+      </UButton>
+    </UTooltip>
   </UDropdownMenu>
 </template>

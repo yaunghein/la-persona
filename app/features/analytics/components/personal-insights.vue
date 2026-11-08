@@ -302,15 +302,17 @@ function openInfo() {
         >
           {{ analyticsHeading }}
         </h1>
-        <UButton
-          size="lg"
-          icon="material-symbols:info-outline"
-          color="neutral"
-          variant="ghost"
-          class="flex items-center justify-center rounded-full p-0 text-muted hover:bg-raised cursor-pointer"
-          aria-label="Open analytics information"
-          @click="openInfo"
-        />
+        <UTooltip text="What is analytics?">
+          <UButton
+            size="lg"
+            icon="material-symbols:info-outline"
+            color="neutral"
+            variant="ghost"
+            class="flex items-center justify-center rounded-full p-0 text-muted hover:bg-raised cursor-pointer"
+            aria-label="What is analytics?"
+            @click="openInfo"
+          />
+        </UTooltip>
       </div>
 
       <div

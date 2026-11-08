@@ -136,14 +136,16 @@ function downloadQr() {
             class="flex h-11 items-center justify-between gap-3 rounded-[4px] border border-line bg-raised pr-1 pl-4"
           >
             <p class="truncate text-sm text-ink">{{ inviteLink }}</p>
-            <UButton
-              icon="i-lucide-copy"
-              color="neutral"
-              variant="ghost"
-              class="shrink-0 text-ink hover:bg-line"
-              aria-label="Copy invite link"
-              @click="copyInviteLink"
-            />
+            <UTooltip text="Copy invite link">
+              <UButton
+                icon="i-lucide-copy"
+                color="neutral"
+                variant="ghost"
+                class="shrink-0 text-ink hover:bg-line"
+                aria-label="Copy invite link"
+                @click="copyInviteLink"
+              />
+            </UTooltip>
           </div>
         </section>
 

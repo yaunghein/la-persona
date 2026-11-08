@@ -242,37 +242,48 @@ function getStatusLabel(status: string) {
         Billing & Subscription
       </h1>
 
-      <UButton
-        icon="material-symbols:list-alt-outline-sharp"
-        color="neutral"
-        variant="ghost"
-        class="fixed top-3.75 right-4 z-20 flex items-center justify-center sm:hidden cursor-pointer text-muted"
-        :aria-label="
+      <UTooltip
+        :text="
           viewMode === 'list' ? 'Switch to grid view' : 'Switch to list view'
         "
-        @click="toggleViewMode"
-      />
+        class="fixed top-3.75 right-4 z-20 sm:hidden"
+      >
+        <UButton
+          icon="material-symbols:list-alt-outline-sharp"
+          color="neutral"
+          variant="ghost"
+          class="flex cursor-pointer items-center justify-center text-muted"
+          :aria-label="
+            viewMode === 'list' ? 'Switch to grid view' : 'Switch to list view'
+          "
+          @click="toggleViewMode"
+        />
+      </UTooltip>
 
       <div class="hidden items-center gap-2 sm:flex">
         <UFieldGroup>
-          <UButton
-            size="xl"
-            icon="i-lucide-table-2"
-            class="cursor-pointer size-9 rounded-l-md border-2 border-raised p-0 flex items-center justify-center hover:bg-raised"
-            aria-label="List view"
-            :variant="viewMode === 'list' ? 'solid' : 'ghost'"
-            :class="viewMode === 'list' ? 'bg-raised text-ink' : 'text-muted'"
-            @click="setViewMode('list')"
-          />
-          <UButton
-            size="xl"
-            icon="i-lucide-layout-grid"
-            class="cursor-pointer size-9 rounded-r-md border-2 border-raised p-0 flex items-center justify-center hover:bg-raised"
-            aria-label="Grid view"
-            :variant="viewMode === 'grid' ? 'solid' : 'ghost'"
-            :class="viewMode === 'grid' ? 'bg-raised text-ink' : 'text-muted'"
-            @click="setViewMode('grid')"
-          />
+          <UTooltip text="List view">
+            <UButton
+              size="xl"
+              icon="i-lucide-table-2"
+              class="cursor-pointer size-9 rounded-l-md border-2 border-raised p-0 flex items-center justify-center hover:bg-raised"
+              aria-label="List view"
+              :variant="viewMode === 'list' ? 'solid' : 'ghost'"
+              :class="viewMode === 'list' ? 'bg-raised text-ink' : 'text-muted'"
+              @click="setViewMode('list')"
+            />
+          </UTooltip>
+          <UTooltip text="Grid view">
+            <UButton
+              size="xl"
+              icon="i-lucide-layout-grid"
+              class="cursor-pointer size-9 rounded-r-md border-2 border-raised p-0 flex items-center justify-center hover:bg-raised"
+              aria-label="Grid view"
+              :variant="viewMode === 'grid' ? 'solid' : 'ghost'"
+              :class="viewMode === 'grid' ? 'bg-raised text-ink' : 'text-muted'"
+              @click="setViewMode('grid')"
+            />
+          </UTooltip>
         </UFieldGroup>
       </div>
     </div>
@@ -316,14 +327,17 @@ function getStatusLabel(status: string) {
           class="w-full min-w-245"
         >
           <template #action-cell>
-            <UButton
-              size="xl"
-              icon="i-material-symbols-download-sharp"
-              color="neutral"
-              variant="ghost"
-              class="cursor-pointer p-0 text-muted hover:text-ink"
-              @click="onDownload"
-            />
+            <UTooltip text="Download invoice">
+              <UButton
+                size="xl"
+                icon="i-material-symbols-download-sharp"
+                color="neutral"
+                variant="ghost"
+                class="cursor-pointer p-0 text-muted hover:text-ink"
+                aria-label="Download invoice"
+                @click="onDownload"
+              />
+            </UTooltip>
           </template>
         </UTable>
       </div>
@@ -371,14 +385,17 @@ function getStatusLabel(status: string) {
                   </p>
                 </div>
 
-                <UButton
-                  size="xl"
-                  icon="i-material-symbols-download-sharp"
-                  color="neutral"
-                  variant="ghost"
-                  class="cursor-pointer p-0 text-muted hover:text-ink"
-                  @click="onDownload"
-                />
+                <UTooltip text="Download invoice">
+                  <UButton
+                    size="xl"
+                    icon="i-material-symbols-download-sharp"
+                    color="neutral"
+                    variant="ghost"
+                    class="cursor-pointer p-0 text-muted hover:text-ink"
+                    aria-label="Download invoice"
+                    @click="onDownload"
+                  />
+                </UTooltip>
               </div>
             </div>
           </UCard>

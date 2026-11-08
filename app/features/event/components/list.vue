@@ -163,14 +163,16 @@ function unavailableLabel(event: CommunityEvent) {
           >
             {{ data.title }}
           </h1>
-          <UButton
-            icon="i-material-symbols:info-outline"
-            color="neutral"
-            variant="ghost"
-            class="size-5 cursor-pointer p-0 text-ink hover:bg-transparent"
-            aria-label="Open events information"
-            @click="openInfo"
-          />
+          <UTooltip text="What are events?">
+            <UButton
+              icon="i-material-symbols:info-outline"
+              color="neutral"
+              variant="ghost"
+              class="size-5 cursor-pointer p-0 text-ink hover:bg-transparent"
+              aria-label="What are events?"
+              @click="openInfo"
+            />
+          </UTooltip>
         </div>
 
         <UButton

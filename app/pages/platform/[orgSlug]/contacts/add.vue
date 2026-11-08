@@ -23,15 +23,17 @@ async function goToContacts() {
   <div class="flex flex-col gap-8">
     <div class="space-y-3">
       <div class="flex items-center gap-2">
-        <UButton
-          size="xl"
-          icon="i-lucide-chevron-left"
-          color="neutral"
-          variant="ghost"
-          class="size-7 rounded p-0 text-ink hover:bg-raised"
-          aria-label="Go back to contacts"
-          @click="goBack"
-        />
+        <UTooltip text="Go back to contacts">
+          <UButton
+            size="xl"
+            icon="i-lucide-chevron-left"
+            color="neutral"
+            variant="ghost"
+            class="size-7 rounded p-0 text-ink hover:bg-raised"
+            aria-label="Go back to contacts"
+            @click="goBack"
+          />
+        </UTooltip>
         <h1
           class="text-2xl font-medium uppercase tracking-widest leading-tight"
         >

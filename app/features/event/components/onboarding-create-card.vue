@@ -408,26 +408,30 @@ watch(
                     </p>
                   </div>
                   <div class="flex items-center gap-1">
-                    <UButton
-                      type="button"
-                      size="sm"
-                      icon="i-lucide-pen-square"
-                      color="neutral"
-                      variant="ghost"
-                      class="text-subtle hover:bg-surface hover:text-ink"
-                      :aria-label="`Edit ${resolveSocialLabel(link)}`"
-                      @click="openEditLinkSlideover(index)"
-                    />
-                    <UButton
-                      type="button"
-                      size="sm"
-                      icon="i-lucide-trash-2"
-                      color="error"
-                      variant="ghost"
-                      class="hover:bg-error/10"
-                      :aria-label="`Remove ${resolveSocialLabel(link)}`"
-                      @click="requestRemoveLink(index)"
-                    />
+                    <UTooltip :text="`Edit ${resolveSocialLabel(link)}`">
+                      <UButton
+                        type="button"
+                        size="sm"
+                        icon="i-lucide-pen-square"
+                        color="neutral"
+                        variant="ghost"
+                        class="text-subtle hover:bg-surface hover:text-ink"
+                        :aria-label="`Edit ${resolveSocialLabel(link)}`"
+                        @click="openEditLinkSlideover(index)"
+                      />
+                    </UTooltip>
+                    <UTooltip :text="`Remove ${resolveSocialLabel(link)}`">
+                      <UButton
+                        type="button"
+                        size="sm"
+                        icon="i-lucide-trash-2"
+                        color="error"
+                        variant="ghost"
+                        class="hover:bg-error/10"
+                        :aria-label="`Remove ${resolveSocialLabel(link)}`"
+                        @click="requestRemoveLink(index)"
+                      />
+                    </UTooltip>
                   </div>
                 </div>
               </div>

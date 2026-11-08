@@ -6,12 +6,15 @@ const props = defineProps<{
   attendees: EventAttendee[];
   checkInPhase?: EventPhase;
   canWalkIn?: boolean;
+  /** Organizers download who checked in. Volunteers do not see the button. */
+  canExport?: boolean;
 }>();
 
 const emit = defineEmits<{
   'open-scanner': [];
   'open-walk-in': [];
   select: [attendee: EventAttendee];
+  export: [];
 }>();
 
 const toast = useToast();
@@ -88,26 +91,38 @@ function checkIn(attendee: EventAttendee) {
       <span class="shrink-0 text-center text-sm font-medium text-subtle"
         >or</span
       >
-      <div class="flex min-w-0 flex-1 flex-col gap-2">
-        <UButton
-          label="Check in with scanner"
-          trailing-icon="i-lucide-qr-code"
-          color="neutral"
-          block
-          :disabled="checkInPhase !== 'live'"
-          class="h-10 w-full min-w-0 cursor-pointer justify-between rounded-full bg-ink pr-5 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90 disabled:cursor-not-allowed disabled:bg-raised disabled:text-subtle disabled:opacity-100 sm:flex-1"
-          @click="emit('open-scanner')"
-        />
-        <p
-          v-if="checkInPhase !== 'live'"
-          class="text-center text-sm text-subtle sm:text-left"
-        >
-          {{
-            checkInPhase === 'before'
-              ? 'Check-in opens on the event\u00a0day.'
-              : 'This event has ended.'
-          }}
-        </p>
+      <div class="flex min-w-0 flex-1 items-start gap-2">
+        <div class="flex min-w-0 flex-1 flex-col gap-2">
+          <UButton
+            label="Check in with scanner"
+            trailing-icon="i-lucide-qr-code"
+            color="neutral"
+            block
+            :disabled="checkInPhase !== 'live'"
+            class="h-10 w-full min-w-0 cursor-pointer justify-between rounded-full bg-ink pr-5 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90 disabled:cursor-not-allowed disabled:bg-raised disabled:text-subtle disabled:opacity-100 sm:flex-1"
+            @click="emit('open-scanner')"
+          />
+          <p
+            v-if="checkInPhase !== 'live'"
+            class="text-center text-sm text-subtle sm:text-left"
+          >
+            {{
+              checkInPhase === 'before'
+                ? 'Check-in opens on the event\u00a0day.'
+                : 'This event has ended.'
+            }}
+          </p>
+        </div>
+        <UTooltip v-if="canExport" text="Export check-ins">
+          <UButton
+            icon="i-material-symbols:download-sharp"
+            color="neutral"
+            variant="ghost"
+            class="flex h-10 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-raised p-0 text-ink hover:bg-line"
+            aria-label="Export check-ins"
+            @click="emit('export')"
+          />
+        </UTooltip>
       </div>
     </div>
 
@@ -182,14 +197,16 @@ function checkIn(attendee: EventAttendee) {
           <span v-else class="text-sm font-medium text-subtle">
             Already checked in
           </span>
-          <UButton
-            aria-label="View attendee profile"
-            icon="i-lucide-scan-eye"
-            color="primary"
-            size="lg"
-            class="bg-ink/5 text-ink hover:bg-ink/15 active:hover:bg-ink/20"
-            @click="emit('select', attendee)"
-          />
+          <UTooltip text="View attendee profile">
+            <UButton
+              aria-label="View attendee profile"
+              icon="i-lucide-scan-eye"
+              color="primary"
+              size="lg"
+              class="bg-ink/5 text-ink hover:bg-ink/15 active:hover:bg-ink/20"
+              @click="emit('select', attendee)"
+            />
+          </UTooltip>
         </div>
       </div>
     </div>

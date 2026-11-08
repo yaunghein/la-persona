@@ -208,14 +208,16 @@ function closeInfo() {
           >
             {{ data.title }}
           </h1>
-          <UButton
-            icon="i-material-symbols:info-outline"
-            color="neutral"
-            variant="ghost"
-            class="size-5 cursor-pointer p-0 text-ink hover:bg-transparent"
-            aria-label="Open members information"
-            @click="openInfo"
-          />
+          <UTooltip text="What are members?">
+            <UButton
+              icon="i-material-symbols:info-outline"
+              color="neutral"
+              variant="ghost"
+              class="size-5 cursor-pointer p-0 text-ink hover:bg-transparent"
+              aria-label="What are members?"
+              @click="openInfo"
+            />
+          </UTooltip>
         </div>
 
         <div
@@ -228,14 +230,15 @@ function closeInfo() {
             class="h-10 cursor-pointer rounded-full bg-ink pr-6 pl-5 text-sm font-medium text-ink-inverse shadow-lg hover:bg-ink/90 sm:shadow-none"
             @click="emit('invite')"
           />
-          <!-- Export hidden for now -->
-          <!-- <UButton
-            icon="i-material-symbols:download-sharp"
-            color="neutral"
-            class="h-10 cursor-pointer rounded-full bg-raised px-5 text-ink shadow-lg hover:bg-line sm:shadow-none"
-            aria-label="Export members"
-            @click="emit('export')"
-          /> -->
+          <UTooltip v-if="data.members.length" text="Export members">
+            <UButton
+              icon="i-material-symbols:download-sharp"
+              color="neutral"
+              class="h-10 cursor-pointer rounded-full bg-raised px-5 text-ink shadow-lg hover:bg-line sm:shadow-none"
+              aria-label="Export members"
+              @click="emit('export')"
+            />
+          </UTooltip>
         </div>
       </div>
 
@@ -332,13 +335,16 @@ function closeInfo() {
         </template>
         <template #actions-cell="{ row }">
           <UDropdownMenu :items="getActionItems(row.original)">
-            <UButton
-              size="xl"
-              icon="i-mdi-dots-vertical"
-              color="neutral"
-              variant="ghost"
-              class="text-muted"
-            />
+            <UTooltip :text="`Actions for ${row.original.name}`">
+              <UButton
+                size="xl"
+                icon="i-mdi-dots-vertical"
+                color="neutral"
+                variant="ghost"
+                class="text-muted"
+                :aria-label="`Actions for ${row.original.name}`"
+              />
+            </UTooltip>
           </UDropdownMenu>
         </template>
       </UTable>

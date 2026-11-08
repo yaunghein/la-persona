@@ -229,14 +229,16 @@ onUnmounted(() => {
       >
         Community Settings
       </h1>
-      <UButton
-        icon="i-material-symbols:info-outline"
-        color="neutral"
-        variant="ghost"
-        class="size-5 cursor-pointer p-0 text-ink hover:bg-transparent"
-        aria-label="Open community settings information"
-        @click="openInfo"
-      />
+      <UTooltip text="About settings">
+        <UButton
+          icon="i-material-symbols:info-outline"
+          color="neutral"
+          variant="ghost"
+          class="size-5 cursor-pointer p-0 text-ink hover:bg-transparent"
+          aria-label="About settings"
+          @click="openInfo"
+        />
+      </UTooltip>
     </div>
 
     <div

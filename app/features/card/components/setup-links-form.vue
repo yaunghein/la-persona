@@ -332,13 +332,15 @@ watch(isSocialSlideoverOpen, (open) => {
             :key="`${index}-${link.label}-${link.value}`"
             class="sortable-link-row relative flex items-center gap-3 rounded-[6px] border border-ink/10 bg-ink/5 p-3"
           >
-            <button
-              type="button"
-              class="drag-handle inline-flex h-10 w-9 cursor-grab items-center justify-center rounded-[4px] text-muted hover:bg-ink/5 active:cursor-grabbing"
-              aria-label="Drag to reorder link"
-            >
-              <UIcon name="i-lucide-grip-vertical" class="size-5" />
-            </button>
+            <UTooltip text="Drag to reorder">
+              <button
+                type="button"
+                class="drag-handle inline-flex h-10 w-9 cursor-grab items-center justify-center rounded-[4px] text-muted hover:bg-ink/5 active:cursor-grabbing"
+                aria-label="Drag to reorder link"
+              >
+                <UIcon name="i-lucide-grip-vertical" class="size-5" />
+              </button>
+            </UTooltip>
             <div class="min-w-0 flex-1">
               <p class="truncate text-sm font-medium text-ink">
                 {{ resolveSocialLabel(link) || 'Untitled Link' }}
@@ -348,23 +350,29 @@ watch(isSocialSlideoverOpen, (open) => {
               </p>
             </div>
             <div class="flex items-center gap-1">
-              <UButton
-                type="button"
-                size="sm"
-                icon="i-lucide-pen-square"
-                variant="ghost"
-                class="text-muted hover:bg-ink/5 hover:text-ink"
-                @click="openEditLinkSlideover(index)"
-              />
-              <UButton
-                type="button"
-                size="sm"
-                icon="i-lucide-trash-2"
-                color="error"
-                variant="ghost"
-                class="hover:bg-error/10"
-                @click="requestRemoveLink(index)"
-              />
+              <UTooltip :text="`Edit ${resolveSocialLabel(link) || 'link'}`">
+                <UButton
+                  type="button"
+                  size="sm"
+                  icon="i-lucide-pen-square"
+                  variant="ghost"
+                  class="text-muted hover:bg-ink/5 hover:text-ink"
+                  :aria-label="`Edit ${resolveSocialLabel(link) || 'link'}`"
+                  @click="openEditLinkSlideover(index)"
+                />
+              </UTooltip>
+              <UTooltip :text="`Remove ${resolveSocialLabel(link) || 'link'}`">
+                <UButton
+                  type="button"
+                  size="sm"
+                  icon="i-lucide-trash-2"
+                  color="error"
+                  variant="ghost"
+                  class="hover:bg-error/10"
+                  :aria-label="`Remove ${resolveSocialLabel(link) || 'link'}`"
+                  @click="requestRemoveLink(index)"
+                />
+              </UTooltip>
             </div>
           </div>
         </div>

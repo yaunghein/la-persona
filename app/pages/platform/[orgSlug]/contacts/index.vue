@@ -315,35 +315,48 @@ watch(total, (count) => {
         >
           People you've connected with
         </h1>
-        <UButton
-          size="lg"
-          icon="material-symbols:info-outline"
-          color="neutral"
-          variant="ghost"
-          class="flex cursor-pointer items-center justify-center rounded-full p-0 text-muted hover:bg-raised"
-          aria-label="Open contacts information"
-          @click="openGuide"
-        />
+        <UTooltip text="What is Contacts?">
+          <UButton
+            size="lg"
+            icon="material-symbols:info-outline"
+            color="neutral"
+            variant="ghost"
+            class="flex cursor-pointer items-center justify-center rounded-full p-0 text-muted hover:bg-raised"
+            aria-label="What is Contacts?"
+            @click="openGuide"
+          />
+        </UTooltip>
       </div>
 
       <div class="fixed right-4 top-3.75 flex items-center gap-2 sm:hidden">
-        <UButton
-          icon="material-symbols:list-alt-outline-sharp"
-          color="neutral"
-          variant="ghost"
-          class="flex cursor-pointer items-center justify-center text-muted"
-          aria-label="Toggle view"
-          @click="setViewMode(viewMode === 'list' ? 'grid' : 'list')"
-        />
-        <UButton
-          v-if="hasContacts"
-          icon="material-symbols:download-sharp"
-          color="neutral"
-          variant="ghost"
-          class="flex cursor-pointer items-center justify-center text-muted"
-          aria-label="Export contacts"
-          @click="exportContacts"
-        />
+        <UTooltip
+          :text="
+            viewMode === 'list' ? 'Switch to grid view' : 'Switch to list view'
+          "
+        >
+          <UButton
+            icon="material-symbols:list-alt-outline-sharp"
+            color="neutral"
+            variant="ghost"
+            class="flex cursor-pointer items-center justify-center text-muted"
+            :aria-label="
+              viewMode === 'list'
+                ? 'Switch to grid view'
+                : 'Switch to list view'
+            "
+            @click="setViewMode(viewMode === 'list' ? 'grid' : 'list')"
+          />
+        </UTooltip>
+        <UTooltip v-if="hasContacts" text="Export contacts">
+          <UButton
+            icon="material-symbols:download-sharp"
+            color="neutral"
+            variant="ghost"
+            class="flex cursor-pointer items-center justify-center text-muted"
+            aria-label="Export contacts"
+            @click="exportContacts"
+          />
+        </UTooltip>
       </div>
 
       <div
@@ -357,70 +370,84 @@ watch(total, (count) => {
           class="fixed bottom-6 left-1/2 z-10 -translate-x-1/2 shadow-lg sm:static sm:translate-x-0 sm:shadow-none flex h-10 text-sm cursor-pointer items-center justify-center rounded-full border-2 border-raised bg-ink px-5 font-medium text-ink-inverse hover:bg-ink/90 active:hover:bg-ink/80"
           @click="openCreateContact"
         />
-        <UButton
-          icon="i-material-symbols-download-sharp"
-          color="neutral"
-          variant="ghost"
-          class="hidden h-10 w-16 cursor-pointer items-center justify-center rounded-full border-2 border-raised bg-raised p-0 px-5 text-ink hover:bg-line sm:flex"
-          aria-label="Export contacts"
-          @click="exportContacts"
-        />
+        <UTooltip text="Export contacts" class="hidden sm:flex">
+          <UButton
+            icon="i-material-symbols-download-sharp"
+            color="neutral"
+            variant="ghost"
+            class="h-10 w-16 cursor-pointer items-center justify-center rounded-full border-2 border-raised bg-raised p-0 px-5 text-ink hover:bg-line"
+            aria-label="Export contacts"
+            @click="exportContacts"
+          />
+        </UTooltip>
         <UFieldGroup class="hidden sm:flex">
-          <UButton
-            icon="i-lucide-table-2"
-            class="flex size-9 cursor-pointer items-center justify-center rounded-l-md border-2 border-raised p-0 hover:bg-raised"
-            aria-label="List view"
-            :variant="viewMode === 'list' ? 'solid' : 'ghost'"
-            :class="viewMode === 'list' ? 'bg-raised text-ink' : 'text-muted'"
-            @click="setViewMode('list')"
-          />
-          <UButton
-            size="xl"
-            icon="i-lucide-layout-grid"
-            class="flex size-9 cursor-pointer items-center justify-center rounded-r-md border-2 border-raised p-0 hover:bg-raised"
-            aria-label="Grid view"
-            :variant="viewMode === 'grid' ? 'solid' : 'ghost'"
-            :class="viewMode === 'grid' ? 'bg-raised text-ink' : 'text-muted'"
-            @click="setViewMode('grid')"
-          />
+          <UTooltip text="List view">
+            <UButton
+              icon="i-lucide-table-2"
+              class="flex size-9 cursor-pointer items-center justify-center rounded-l-md border-2 border-raised p-0 hover:bg-raised"
+              aria-label="List view"
+              :variant="viewMode === 'list' ? 'solid' : 'ghost'"
+              :class="viewMode === 'list' ? 'bg-raised text-ink' : 'text-muted'"
+              @click="setViewMode('list')"
+            />
+          </UTooltip>
+          <UTooltip text="Grid view">
+            <UButton
+              size="xl"
+              icon="i-lucide-layout-grid"
+              class="flex size-9 cursor-pointer items-center justify-center rounded-r-md border-2 border-raised p-0 hover:bg-raised"
+              aria-label="Grid view"
+              :variant="viewMode === 'grid' ? 'solid' : 'ghost'"
+              :class="viewMode === 'grid' ? 'bg-raised text-ink' : 'text-muted'"
+              @click="setViewMode('grid')"
+            />
+          </UTooltip>
         </UFieldGroup>
       </div>
     </div>
 
     <div class="flex flex-wrap items-center gap-2">
-      <USelectMenu
+      <UTooltip
         v-if="eventFilterItems.length > 1"
-        v-model="eventFilter"
-        :items="eventFilterItems"
-        value-key="value"
-        icon="i-lucide-calendar"
-        :search-input="{ placeholder: 'Search events' }"
-        aria-label="Filter by where you met"
-        class="w-full sm:w-64"
-        :ui="filterSelectUi"
-      />
-      <UiLabelSelect
-        v-model="labelFilter"
-        :labels="contactLabels ?? []"
-        placeholder="All labels"
-        manageable
-        aria-label="Filter by label"
-        class="min-w-0 flex-1 sm:w-52 sm:flex-none"
-        :ui="filterSelectUi"
-        @manage="isLabelsOpen = true"
-      />
-      <UButton
-        icon="i-lucide-rows-3"
-        label="Group"
-        color="neutral"
-        variant="ghost"
-        class="h-9 shrink-0 cursor-pointer gap-1.5 rounded-full px-3.5 text-sm font-medium ring-1 ring-inset ring-raised hover:bg-raised"
-        :ui="{ leadingIcon: 'size-4' }"
-        :class="isGrouped ? 'bg-raised text-ink' : 'text-muted'"
-        :aria-pressed="isGrouped"
-        aria-label="Group by label"
-        @click="toggleGrouping"
-      />
+        text="Filter by where you met"
+      >
+        <USelectMenu
+          v-model="eventFilter"
+          :items="eventFilterItems"
+          value-key="value"
+          icon="i-lucide-calendar"
+          :search-input="{ placeholder: 'Search events' }"
+          aria-label="Filter by where you met"
+          class="w-full sm:w-64"
+          :ui="filterSelectUi"
+        />
+      </UTooltip>
+      <UTooltip text="Filter by label">
+        <UiLabelSelect
+          v-model="labelFilter"
+          :labels="contactLabels ?? []"
+          placeholder="All labels"
+          manageable
+          aria-label="Filter by label"
+          class="min-w-0 flex-1 sm:w-52 sm:flex-none"
+          :ui="filterSelectUi"
+          @manage="isLabelsOpen = true"
+        />
+      </UTooltip>
+      <UTooltip text="Group by label">
+        <UButton
+          icon="i-lucide-rows-3"
+          label="Group"
+          color="neutral"
+          variant="ghost"
+          class="h-9 shrink-0 cursor-pointer gap-1.5 rounded-full px-3.5 text-sm font-medium ring-1 ring-inset ring-raised hover:bg-raised"
+          :ui="{ leadingIcon: 'size-4' }"
+          :class="isGrouped ? 'bg-raised text-ink' : 'text-muted'"
+          :aria-pressed="isGrouped"
+          aria-label="Group by label"
+          @click="toggleGrouping"
+        />
+      </UTooltip>
     </div>
 
     <ContactLabelsSlideover v-model:open="isLabelsOpen" />

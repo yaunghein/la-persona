@@ -513,14 +513,18 @@ async function onSaveContact() {
       >
         {{ exchangeButtonLabel }}
       </button>
-      <button
-        @click="isMenuOpen = !isMenuOpen"
-        class="grid aspect-square w-13 shrink-0 place-items-center rounded-full border border-line-heavy bg-line-strong"
-      >
-        <div class="aspect-square w-6">
-          <IconMenu />
-        </div>
-      </button>
+      <UTooltip text="Explore">
+        <button
+          type="button"
+          aria-label="Explore"
+          @click="isMenuOpen = !isMenuOpen"
+          class="grid aspect-square w-13 shrink-0 place-items-center rounded-full border border-line-heavy bg-line-strong"
+        >
+          <div class="aspect-square w-6">
+            <IconMenu />
+          </div>
+        </button>
+      </UTooltip>
     </div>
 
     <div
@@ -760,18 +764,22 @@ async function onSaveContact() {
       }"
     >
       <div>
-        <button
-          @click="isMenuOpen = false"
-          class="absolute right-4 top-4 grid aspect-square w-8 place-items-center rounded-full border border-line-heavy bg-line-strong transition duration-750"
-          :class="{
-            'opacity-100': isMenuOpen,
-            'opacity-0': !isMenuOpen,
-          }"
-        >
-          <div class="aspect-square w-[0.62rem]">
-            <IconClose />
-          </div>
-        </button>
+        <UTooltip text="Close">
+          <button
+            type="button"
+            aria-label="Close"
+            @click="isMenuOpen = false"
+            class="absolute right-4 top-4 grid aspect-square w-8 place-items-center rounded-full border border-line-heavy bg-line-strong transition duration-750"
+            :class="{
+              'opacity-100': isMenuOpen,
+              'opacity-0': !isMenuOpen,
+            }"
+          >
+            <div class="aspect-square w-[0.62rem]">
+              <IconClose />
+            </div>
+          </button>
+        </UTooltip>
         <div
           class="text-center text-sm font-bold transition duration-750"
           :class="{

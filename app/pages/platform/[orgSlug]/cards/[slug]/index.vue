@@ -140,12 +140,15 @@ const activeTab = computed({
         <div
           class="flex flex-wrap items-center gap-y-2 -translate-x-2 sm:translate-x-0"
         >
-          <UButton
-            icon="i-lucide-chevron-left"
-            color="primary"
-            class="h-10 bg-transparent mr-1 sm:mr-2 text-ink hover:bg-ink/10 active:hover:bg-ink/20"
-            :to="`/platform/${orgSlug}/cards`"
-          />
+          <UTooltip text="Back to cards">
+            <UButton
+              icon="i-lucide-chevron-left"
+              color="primary"
+              class="h-10 bg-transparent mr-1 sm:mr-2 text-ink hover:bg-ink/10 active:hover:bg-ink/20"
+              aria-label="Back to cards"
+              :to="`/platform/${orgSlug}/cards`"
+            />
+          </UTooltip>
           <h1
             class="text-lg sm:text-2xl font-medium tracking-widest uppercase leading-tight"
           >

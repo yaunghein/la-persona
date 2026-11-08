@@ -198,14 +198,16 @@ const inputBase =
               />
             </span>
           </UTooltip>
-          <UButton
-            icon="i-lucide-trash-2"
-            color="neutral"
-            variant="ghost"
-            class="text-muted"
-            :aria-label="`Delete ${label.name}`"
-            @click="askToDelete(label)"
-          />
+          <UTooltip :text="`Delete ${label.name}`">
+            <UButton
+              icon="i-lucide-trash-2"
+              color="neutral"
+              variant="ghost"
+              class="text-muted"
+              :aria-label="`Delete ${label.name}`"
+              @click="askToDelete(label)"
+            />
+          </UTooltip>
         </li>
       </ul>
     </template>

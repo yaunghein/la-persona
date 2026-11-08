@@ -82,14 +82,16 @@ const items = computed<DropdownMenuItem[][]>(() => [
 
 <template>
   <UDropdownMenu :items="items">
-    <UButton
-      size="xl"
-      icon="i-mdi-dots-vertical"
-      color="neutral"
-      variant="ghost"
-      class="text-muted"
-      :aria-label="`Actions for ${contact.name}`"
-    />
+    <UTooltip :text="`Actions for ${contact.name}`">
+      <UButton
+        size="xl"
+        icon="i-mdi-dots-vertical"
+        color="neutral"
+        variant="ghost"
+        class="text-muted"
+        :aria-label="`Actions for ${contact.name}`"
+      />
+    </UTooltip>
     <template #label-item-leading="{ item }">
       <span
         class="mx-0.5 size-2.5 shrink-0 rounded-full ring-1 ring-inset ring-ink/15"

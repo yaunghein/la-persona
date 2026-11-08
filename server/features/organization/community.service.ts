@@ -1,6 +1,7 @@
 import { nanoid } from 'nanoid';
 import { env } from '~~/env';
 import { countContactsByCardIds } from '~~/server/features/contact/contact.repository';
+import { formatEventDateTime } from '~~/server/features/event/event-email-content';
 import {
   countCheckedInByUsersInOrganization,
   deleteRegistrationsForUserInOrganization,
@@ -30,6 +31,7 @@ import {
   findCommunitySettingByInviteToken,
   upsertCommunitySettingByOrganizationId,
 } from '~~/server/features/organization/community-setting.repository';
+import { toCsv } from '~~/server/lib/csv';
 import { sanitizeRichText } from '~~/server/lib/html-sanitizer';
 import { splitPersonName } from '~~/shared/utils/person-name';
 import type { Collection } from '~~/shared/contracts/collection';
@@ -288,6 +290,41 @@ export async function listCommunityMembers(
   }));
 
   return { items: [...members, ...pending] };
+}
+
+/** The members list, including pending invitations, as a spreadsheet. */
+export async function exportCommunityMembersCsv(organizationId: string) {
+  const { items } = await listCommunityMembers(organizationId);
+  // No venue zone on a membership, so the joined time is Yangon local time.
+  const when = (value: string) =>
+    formatEventDateTime(new Date(value), 'Asia/Yangon');
+  return {
+    rows: items.length,
+    csv: toCsv([
+      [
+        'Name',
+        'Email',
+        'Phone',
+        'Job title',
+        'Company',
+        'Role',
+        'Status',
+        'Joined',
+        'LinkedIn',
+      ],
+      ...items.map((member) => [
+        member.name,
+        member.email ?? '',
+        member.phone ?? '',
+        member.role,
+        member.company,
+        formatCommunityRole(member.memberRole),
+        member.status === 'pending' ? 'Pending' : 'Active',
+        when(member.joinedAt),
+        member.linkedin ?? '',
+      ]),
+    ]),
+  };
 }
 
 // ── Join links ──────────────────────────────────────────────────────────────

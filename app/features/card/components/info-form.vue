@@ -671,16 +671,17 @@ onBeforeUnmount(() => {
               icon: 'size-10',
             }"
           />
-          <UButton
-            v-if="displayAvatar"
-            color="error"
-            variant="solid"
-            size="sm"
-            icon="i-lucide-trash-2"
-            class="scale-80 sm:scale-100 absolute -bottom-1 sm:bottom-0 -right-1 sm:right-0 rounded-full border-2 border-surface dark:border-gray-900"
-            aria-label="Remove photo"
-            @click="openRemovePhotoConfirm"
-          />
+          <UTooltip v-if="displayAvatar" text="Remove photo">
+            <UButton
+              color="error"
+              variant="solid"
+              size="sm"
+              icon="i-lucide-trash-2"
+              class="scale-80 sm:scale-100 absolute -bottom-1 sm:bottom-0 -right-1 sm:right-0 rounded-full border-2 border-surface dark:border-gray-900"
+              aria-label="Remove photo"
+              @click="openRemovePhotoConfirm"
+            />
+          </UTooltip>
         </div>
 
         <div class="flex flex-col gap-3">
@@ -841,13 +842,15 @@ onBeforeUnmount(() => {
             :key="`${index}-${link.label}-${link.value}`"
             class="sortable-link-row relative flex items-center gap-3 rounded-[6px] border border-line bg-raised p-3"
           >
-            <button
-              type="button"
-              class="drag-handle inline-flex h-10 w-9 cursor-grab items-center justify-center rounded-[4px] text-subtle hover:bg-surface active:cursor-grabbing"
-              aria-label="Drag to reorder link"
-            >
-              <UIcon name="i-lucide-grip-vertical" class="size-5" />
-            </button>
+            <UTooltip text="Drag to reorder">
+              <button
+                type="button"
+                class="drag-handle inline-flex h-10 w-9 cursor-grab items-center justify-center rounded-[4px] text-subtle hover:bg-surface active:cursor-grabbing"
+                aria-label="Drag to reorder link"
+              >
+                <UIcon name="i-lucide-grip-vertical" class="size-5" />
+              </button>
+            </UTooltip>
             <div class="min-w-0 flex-1">
               <p class="truncate text-sm font-medium text-ink">
                 {{ resolveSocialLabel(link) || 'Untitled Link' }}
@@ -857,24 +860,30 @@ onBeforeUnmount(() => {
               </p>
             </div>
             <div class="flex items-center gap-1">
-              <UButton
-                type="button"
-                size="sm"
-                icon="i-lucide-pen-square"
-                color="neutral"
-                variant="ghost"
-                class="text-subtle hover:bg-surface hover:text-ink"
-                @click="openEditLinkSlideover(index)"
-              />
-              <UButton
-                type="button"
-                size="sm"
-                icon="i-lucide-trash-2"
-                color="error"
-                variant="ghost"
-                class="hover:bg-error/10"
-                @click="requestRemoveLink(index)"
-              />
+              <UTooltip :text="`Edit ${resolveSocialLabel(link) || 'link'}`">
+                <UButton
+                  type="button"
+                  size="sm"
+                  icon="i-lucide-pen-square"
+                  color="neutral"
+                  variant="ghost"
+                  class="text-subtle hover:bg-surface hover:text-ink"
+                  :aria-label="`Edit ${resolveSocialLabel(link) || 'link'}`"
+                  @click="openEditLinkSlideover(index)"
+                />
+              </UTooltip>
+              <UTooltip :text="`Remove ${resolveSocialLabel(link) || 'link'}`">
+                <UButton
+                  type="button"
+                  size="sm"
+                  icon="i-lucide-trash-2"
+                  color="error"
+                  variant="ghost"
+                  class="hover:bg-error/10"
+                  :aria-label="`Remove ${resolveSocialLabel(link) || 'link'}`"
+                  @click="requestRemoveLink(index)"
+                />
+              </UTooltip>
             </div>
           </div>
         </div>

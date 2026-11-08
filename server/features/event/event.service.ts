@@ -8,7 +8,10 @@ import {
 import { joinCommunity } from '~~/server/features/organization/community.service';
 import { sendEventBroadcastEmail } from '~~/server/features/event/broadcast.notifications';
 import { sendEventCheckInEmail } from '~~/server/features/event/check-in.notifications';
-import { qrTicketImageUrl } from '~~/server/features/event/event-email-content';
+import {
+  formatEventDateTime,
+  qrTicketImageUrl,
+} from '~~/server/features/event/event-email-content';
 import { findCommunitySettingByOrganizationId } from '~~/server/features/organization/community-setting.repository';
 import {
   findEventsByOrganizationId,
@@ -37,9 +40,11 @@ import {
   updateEventRegistrationStatus,
 } from '~~/server/features/event/registration.repository';
 import { sendEventRegistrationEmails } from '~~/server/features/event/registration.notifications';
+import { toCsv } from '~~/server/lib/csv';
 import { sanitizeRichText } from '~~/server/lib/html-sanitizer';
 import type {
   AddToGoogleCalendarResult,
+  AttendeeExportQuery,
   CreateEventRequest,
   EventBroadcastKind,
   EventCollection,
@@ -154,6 +159,49 @@ export async function updateEvent(
 
 export async function listAttendees(record: SelectEvent) {
   return { items: await listEventAttendees(record.id, record.organizationId) };
+}
+
+/** Guest list, or only people who checked in. Pending approvals are left out. */
+export async function exportAttendeesCsv(
+  record: SelectEvent,
+  roster: AttendeeExportQuery['roster']
+) {
+  const items = (
+    await listEventAttendees(record.id, record.organizationId)
+  ).filter((attendee) =>
+    roster === 'checked_in'
+      ? attendee.status === 'checked_in'
+      : attendee.status === 'registered' || attendee.status === 'checked_in'
+  );
+  const when = (value: string | null) =>
+    value ? formatEventDateTime(new Date(value), record.timeZone) : '';
+  return {
+    rows: items.length,
+    csv: toCsv([
+      [
+        'Name',
+        'Email',
+        'Phone',
+        'Job title',
+        'Company',
+        'Status',
+        'Registered at',
+        'Checked in at',
+        'Labels',
+      ],
+      ...items.map((attendee) => [
+        attendee.name,
+        attendee.email ?? '',
+        attendee.phone ?? '',
+        attendee.role,
+        attendee.company,
+        attendee.status === 'checked_in' ? 'Checked-in' : 'Registered',
+        when(attendee.registeredAt),
+        when(attendee.checkedInAt),
+        attendee.labels.map((label) => label.name).join(', '),
+      ]),
+    ]),
+  };
 }
 
 function assertRegistrationOpen(record: SelectEvent, registeredCount: number) {

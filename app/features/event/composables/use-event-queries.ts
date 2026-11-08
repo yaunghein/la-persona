@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import type {
   AddToGoogleCalendarResult,
+  AttendeeExportQuery,
   AttendeeLabelSummary,
   CreateAttendeeLabelRequest,
   EventAttendeeCollection,
@@ -80,6 +81,18 @@ export function useEventAttendeesQuery(
       ),
     select: (collection) => collection.items,
     enabled: () => !!toValue(eventId) && toValue(options.enabled ?? true),
+  });
+}
+
+/** Guest list (`registered`) or check-ins (`checked_in`) as CSV. */
+export function downloadAttendeesCsv(
+  eventId: string,
+  roster: AttendeeExportQuery['roster']
+): Promise<Blob> {
+  return $fetch<Blob>(eventUrl(eventId, 'registrations'), {
+    query: { roster },
+    headers: { Accept: 'text/csv' },
+    responseType: 'blob',
   });
 }
 
