@@ -44,7 +44,13 @@ export type UploadTicket = {
 
 // ── Community brand assets (Thakhin) ────────────────────────────────────────
 
-export const BRAND_ASSET_KINDS = ['wallpaper', 'back'] as const;
+export const BRAND_ASSET_KINDS = [
+  'wallpaper',
+  'back',
+  'email-qr',
+  'email-contact-exchange',
+  'email-after-event',
+] as const;
 
 export type BrandAssetKind = (typeof BRAND_ASSET_KINDS)[number];
 

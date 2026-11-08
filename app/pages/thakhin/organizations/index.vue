@@ -36,8 +36,6 @@ const isCreating = ref(false);
 const isDeleteOpen = ref(false);
 const isDeleting = ref(false);
 const orgToDelete = ref<OrgRow | null>(null);
-const isAssetsOpen = ref(false);
-const assetsOrg = ref<OrgRow | null>(null);
 
 const editForm = reactive({
   name: '',
@@ -48,24 +46,10 @@ const editForm = reactive({
   logoUrl: '',
   coverImageUrl: '',
   splineUrl: '',
-  wallpaperUrl: '',
-  cardBackUrl: '',
-  emailQrBackgroundUrl: '',
-  emailContactExchangeUrl: '',
-  emailAfterEventUrl: '',
   applyToMemberCards: false,
 });
 
-const MEDIA_FIELDS = [
-  'logoUrl',
-  'coverImageUrl',
-  'splineUrl',
-  'wallpaperUrl',
-  'cardBackUrl',
-  'emailQrBackgroundUrl',
-  'emailContactExchangeUrl',
-  'emailAfterEventUrl',
-] as const;
+const MEDIA_FIELDS = ['logoUrl', 'coverImageUrl', 'splineUrl'] as const;
 
 /** Media as loaded, so unchanged values are left out of the save. */
 let loadedMedia: Partial<Record<(typeof MEDIA_FIELDS)[number], string>> = {};
@@ -142,11 +126,6 @@ async function openEdit(row: OrgRow) {
   editForm.logoUrl = row.logo || '';
   editForm.coverImageUrl = '';
   editForm.splineUrl = '';
-  editForm.wallpaperUrl = '';
-  editForm.cardBackUrl = '';
-  editForm.emailQrBackgroundUrl = '';
-  editForm.emailContactExchangeUrl = '';
-  editForm.emailAfterEventUrl = '';
   editForm.applyToMemberCards = false;
   loadedMedia = Object.fromEntries(
     MEDIA_FIELDS.map((field) => [field, editForm[field]])
@@ -163,11 +142,6 @@ async function openEdit(row: OrgRow) {
   editForm.logoUrl = detail.community.logoUrl;
   editForm.coverImageUrl = detail.community.coverImageUrl;
   editForm.splineUrl = detail.community.splineUrl;
-  editForm.wallpaperUrl = detail.community.wallpaperUrl;
-  editForm.cardBackUrl = detail.community.cardBackUrl;
-  editForm.emailQrBackgroundUrl = detail.community.emailQrBackgroundUrl;
-  editForm.emailContactExchangeUrl = detail.community.emailContactExchangeUrl;
-  editForm.emailAfterEventUrl = detail.community.emailAfterEventUrl;
   loadedMedia = Object.fromEntries(
     MEDIA_FIELDS.map((field) => [field, detail.community![field]])
   );
@@ -302,15 +276,6 @@ function getActionItems(row: OrgRow): DropdownMenuItem[][] {
         icon: 'i-lucide-pencil',
         onSelect: () => openEdit(row),
       },
-      ...(row.type === ORGANIZATION_TYPES.COMMUNITY
-        ? [
-            {
-              label: 'Upload Assets',
-              icon: 'i-lucide-image-up',
-              onSelect: () => openAssets(row),
-            },
-          ]
-        : []),
       {
         label: 'Delete',
         icon: 'i-lucide-trash-2',
@@ -319,11 +284,6 @@ function getActionItems(row: OrgRow): DropdownMenuItem[][] {
       },
     ],
   ];
-}
-
-function openAssets(row: OrgRow) {
-  assetsOrg.value = row;
-  isAssetsOpen.value = true;
 }
 
 const orgDetail = ref<OrgDetail | null>(null);
@@ -803,65 +763,82 @@ const selectMenuUi = {
                   :ui="inputUi"
                 />
               </UFormField>
-              <UFormField label="Wallpaper" :class="formFieldClass">
-                <UInput
-                  v-model="editForm.wallpaperUrl"
-                  placeholder="URL or storage key"
-                  class="w-full"
-                  size="xl"
-                  :ui="inputUi"
-                />
-              </UFormField>
-              <UFormField label="Card back" :class="formFieldClass">
-                <UInput
-                  v-model="editForm.cardBackUrl"
-                  placeholder="URL or storage key"
-                  class="w-full"
-                  size="xl"
-                  :ui="inputUi"
-                />
-              </UFormField>
-              <div class="rounded-lg border border-ink/10 bg-ink/[0.03] p-4">
-                <UCheckbox
-                  v-model="editForm.applyToMemberCards"
-                  label="Update existing member cards"
-                  :ui="{ label: 'text-sm font-medium text-ink' }"
-                />
-                <p class="mt-2 text-xs leading-relaxed text-ink/50">
-                  Member cards keep the spline, wallpaper, and card back they
-                  received when they joined. Turn this on to copy the three
-                  values above onto every card in this community.
-                </p>
-              </div>
               <div
                 v-if="editingRow"
                 class="flex flex-col gap-6 border-y border-raised py-6"
+              >
+                <div>
+                  <p
+                    class="text-sm font-medium tracking-[1.4px] text-ink uppercase"
+                  >
+                    Images
+                  </p>
+                  <p class="mt-2 text-sm leading-relaxed text-subtle">
+                    Pre-optimize each image to WebP with
+                    <a
+                      href="https://towebp.io/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-ink underline underline-offset-2"
+                      >towebp.io</a
+                    >. Uploads are saved right away under the community slug. To
+                    replace one, delete it first and upload the new&nbsp;file.
+                  </p>
+                </div>
+                <AdminBrandAssetField
+                  :organization-id="editingRow.id"
+                  kind="wallpaper"
+                  label="Wallpaper"
+                  delete-note="The file is removed from storage and the community falls back to the default wallpaper. Member cards that already use it show no image until you upload a new&nbsp;one."
+                />
+                <AdminBrandAssetField
+                  :organization-id="editingRow.id"
+                  kind="back"
+                  label="Card back"
+                  delete-note="The file is removed from storage and the community falls back to the default card back. Member cards that already use it show no image until you upload a new&nbsp;one."
+                />
+                <div class="rounded-lg border border-ink/10 bg-ink/[0.03] p-4">
+                  <UCheckbox
+                    v-model="editForm.applyToMemberCards"
+                    label="Update existing member cards"
+                    :ui="{ label: 'text-sm font-medium text-ink' }"
+                  />
+                  <p class="mt-2 text-xs leading-relaxed text-ink/50">
+                    Member cards keep the spline, wallpaper, and card back they
+                    received when they joined. Turn this on to copy those three
+                    onto every card in this community when you&nbsp;save.
+                  </p>
+                </div>
+              </div>
+              <div
+                v-if="editingRow"
+                class="flex flex-col gap-6 border-b border-raised pb-6"
               >
                 <p
                   class="text-sm font-medium tracking-[1.4px] text-ink uppercase"
                 >
                   Email images
                 </p>
-                <AdminImageUploadField
-                  v-model="editForm.emailQrBackgroundUrl"
+                <AdminBrandAssetField
                   :organization-id="editingRow.id"
+                  kind="email-qr"
                   label="QR ticket background"
                   hint="Use the ticket template layout (952 × 936). The QR is placed by position, so the white ticket must stay in the same spot."
-                  empty-text="Not set: emails use the default ticket background."
+                  delete-note="The file is removed from storage and emails use the default ticket&nbsp;background."
                 />
-                <AdminImageUploadField
-                  v-model="editForm.emailContactExchangeUrl"
+                <AdminBrandAssetField
                   :organization-id="editingRow.id"
+                  kind="email-contact-exchange"
                   label="Contact exchange (reminder email)"
                   hint="Two phones exchanging cards, 952 px wide."
-                  empty-text="Not set: the reminder email hides this image."
+                  delete-note="The file is removed from storage and the reminder email hides this&nbsp;image."
                 />
-                <AdminImageUploadField
-                  v-model="editForm.emailAfterEventUrl"
+                <AdminBrandAssetField
                   :organization-id="editingRow.id"
+                  kind="email-after-event"
                   label="Community card uses (after-event email)"
                   hint="The three-panel image (share, stay ready, register), 952 px wide."
-                  empty-text="Not set: the after-event email hides this image."
+                  delete-note="The file is removed from storage and the after-event email hides this&nbsp;image."
                 />
               </div>
               <UFormField label="Description" :class="formFieldClass">
@@ -1120,11 +1097,6 @@ const selectMenuUi = {
         />
       </template>
     </USlideover>
-
-    <AdminBrandAssetsSlideover
-      v-model:open="isAssetsOpen"
-      :organization="assetsOrg"
-    />
 
     <UModal
       v-model:open="isDeleteOpen"

@@ -16,10 +16,33 @@ import {
   type CreateBrandAssetUploadRequest,
 } from '~~/shared/contracts/media';
 
-const SETTING_FIELDS = {
-  wallpaper: 'wallpaperUrl',
-  back: 'cardBackUrl',
-} as const satisfies Record<BrandAssetKind, string>;
+// Emails load images outside the app, so they store the full URL, not the key.
+const SETTINGS = {
+  wallpaper: {
+    field: 'wallpaperUrl',
+    fallback: env.DEFAULT_WALLPAPER_URL,
+    storesUrl: false,
+  },
+  back: {
+    field: 'cardBackUrl',
+    fallback: env.DEFAULT_CARD_BACK_URL,
+    storesUrl: false,
+  },
+  'email-qr': { field: 'emailQrBackgroundUrl', fallback: '', storesUrl: true },
+  'email-contact-exchange': {
+    field: 'emailContactExchangeUrl',
+    fallback: '',
+    storesUrl: true,
+  },
+  'email-after-event': {
+    field: 'emailAfterEventUrl',
+    fallback: '',
+    storesUrl: true,
+  },
+} as const satisfies Record<
+  BrandAssetKind,
+  { field: string; fallback: string; storesUrl: boolean }
+>;
 
 async function findCommunity(organizationId: string) {
   const organization = await findOrganizationById(organizationId);
@@ -47,7 +70,7 @@ async function findBrandAsset(
 /** The upsert rewrites the copy fields, so they are passed through unchanged. */
 async function updateBrandSetting(
   organizationId: string,
-  field: (typeof SETTING_FIELDS)[BrandAssetKind],
+  field: (typeof SETTINGS)[BrandAssetKind]['field'],
   value: (current: string) => string
 ) {
   const setting = await ensureCommunitySetting(organizationId);
@@ -91,7 +114,7 @@ export async function issueBrandAssetUploadTicket(
   return { asset, ticket };
 }
 
-/** Points the community's wallpaper or card back at the uploaded file. */
+/** Points the community setting for this kind at the uploaded file. */
 export async function applyBrandAsset(
   organizationId: string,
   kind: BrandAssetKind
@@ -104,15 +127,14 @@ export async function applyBrandAsset(
       'brand_asset_missing'
     );
   }
-  await updateBrandSetting(
-    organizationId,
-    SETTING_FIELDS[kind],
-    () => asset.key
+  const setting = SETTINGS[kind];
+  await updateBrandSetting(organizationId, setting.field, () =>
+    setting.storesUrl ? asset.url : asset.key
   );
   return asset;
 }
 
-/** Deletes the file and falls back to the platform default if it was in use. */
+/** Deletes the file and falls back to the default if it was in use. */
 export async function deleteBrandAsset(
   organizationId: string,
   kind: BrandAssetKind
@@ -121,11 +143,8 @@ export async function deleteBrandAsset(
   const asset = await findBrandAsset(kind, slug);
   if (asset.exists) await deleteObject(asset.key);
 
-  const fallback =
-    kind === 'wallpaper'
-      ? env.DEFAULT_WALLPAPER_URL
-      : env.DEFAULT_CARD_BACK_URL;
-  await updateBrandSetting(organizationId, SETTING_FIELDS[kind], (current) =>
+  const { field, fallback } = SETTINGS[kind];
+  await updateBrandSetting(organizationId, field, (current) =>
     [asset.key, asset.url].includes(current) ? fallback : current
   );
   return asset;
