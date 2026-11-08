@@ -15,8 +15,11 @@ export default defineEventHandler(async (event) => {
   const scope = await workspaceContactScope(principal.user.id);
 
   if (prefersCsv(event)) {
-    const csv = await exportContactsCsv(scope, query, { includeOrigin: true });
+    const csv = await exportContactsCsv(scope, query, {
+      includeOrigin: true,
+      viewerUserId: principal.user.id,
+    });
     return respondCsv(event, 'contacts.csv', csv);
   }
-  return listContactPage(scope, query);
+  return listContactPage(scope, query, principal.user.id);
 });

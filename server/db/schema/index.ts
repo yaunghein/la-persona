@@ -14,5 +14,7 @@ export * from './onboarding-invitation';
 export * from './event';
 export * from './event-registration';
 export * from './community-setting';
+export * from './contact-label';
+export * from './attendee-label';
 
 import './relations';

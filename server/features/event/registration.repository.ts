@@ -1,13 +1,16 @@
-import { and, count, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gte, inArray, lte, ne, sql } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import {
+  attendeeLabel,
   event,
   eventRegistration,
   member,
   card,
+  registrationLabel,
   user,
 } from '~~/server/db/schema';
 import { countContactsByEventId } from '~~/server/features/contact/contact.repository';
+import { listLabelsByRegistrationIds } from '~~/server/features/event/attendee-label.repository';
 import type {
   EventOverviewStats,
   EventRegistrationStatus,
@@ -340,10 +343,13 @@ export async function listEventAttendees(
     .where(eq(eventRegistration.eventId, eventId))
     .orderBy(desc(eventRegistration.registeredAt));
 
-  const checkInCounts = await countCheckedInByUsersInOrganization(
-    rows.map((row) => row.user.id),
-    organizationId
-  );
+  const [checkInCounts, labels] = await Promise.all([
+    countCheckedInByUsersInOrganization(
+      rows.map((row) => row.user.id),
+      organizationId
+    ),
+    listLabelsByRegistrationIds(rows.map((row) => row.registration.id)),
+  ]);
 
   return rows.map((row) => {
     const firstName = row.card?.firstName || row.user.name;
@@ -367,6 +373,7 @@ export async function listEventAttendees(
       avatarUrl: row.card?.avatarUrl || row.user.image || undefined,
       cardSlug: row.card?.slug || undefined,
       splineUrl: row.card?.splineUrl || null,
+      labels: labels.get(row.registration.id) ?? [],
     };
   });
 }
@@ -375,6 +382,10 @@ export async function listEventAttendees(
  * Places a registration while holding a row lock on the event, so concurrent
  * sign-ups cannot exceed capacity. Pending (manual approval) registrations do
  * not take a seat. Returns 'full' when no seat is left.
+ *
+ * The new registration starts with the carry-over labels of the person's
+ * latest earlier registration in the same community. This copy happens once;
+ * later label edits never touch other events.
  */
 export async function insertRegistrationWithinCapacity(values: {
   eventId: string;
@@ -383,7 +394,10 @@ export async function insertRegistrationWithinCapacity(values: {
 }) {
   return db.transaction(async (tx) => {
     const [locked] = await tx
-      .select({ capacity: event.capacity })
+      .select({
+        capacity: event.capacity,
+        organizationId: event.organizationId,
+      })
       .from(event)
       .where(eq(event.id, values.eventId))
       .for('update');
@@ -406,7 +420,45 @@ export async function insertRegistrationWithinCapacity(values: {
       .insert(eventRegistration)
       .values(values)
       .returning();
-    return inserted ?? null;
+    if (!inserted) return null;
+
+    const [previous] = await tx
+      .select({ id: eventRegistration.id })
+      .from(eventRegistration)
+      .innerJoin(event, eq(event.id, eventRegistration.eventId))
+      .where(
+        and(
+          eq(eventRegistration.userId, values.userId),
+          eq(event.organizationId, locked.organizationId),
+          ne(eventRegistration.id, inserted.id)
+        )
+      )
+      .orderBy(desc(eventRegistration.registeredAt))
+      .limit(1);
+    if (previous) {
+      const carried = await tx
+        .select({ labelId: registrationLabel.labelId })
+        .from(registrationLabel)
+        .innerJoin(
+          attendeeLabel,
+          eq(attendeeLabel.id, registrationLabel.labelId)
+        )
+        .where(
+          and(
+            eq(registrationLabel.registrationId, previous.id),
+            eq(attendeeLabel.carriesOver, true)
+          )
+        );
+      if (carried.length) {
+        await tx.insert(registrationLabel).values(
+          carried.map((row) => ({
+            registrationId: inserted.id,
+            labelId: row.labelId,
+          }))
+        );
+      }
+    }
+    return inserted;
   });
 }
 

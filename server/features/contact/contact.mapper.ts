@@ -3,6 +3,7 @@ import type {
   ContactSource,
   ContactSummary,
 } from '~~/shared/contracts/contact';
+import type { Label } from '~~/shared/contracts/label';
 import { normalizePhoneCountryCode } from '~~/shared/utils/phone';
 
 function fullName(firstName: string | null, lastName: string | null) {
@@ -13,7 +14,10 @@ function fullName(firstName: string | null, lastName: string | null) {
  * Seamless contacts mirror the other member's live card, so edits they make
  * later show up here; other contacts are the snapshot captured at exchange.
  */
-export function toContactSummary(row: ContactRow): ContactSummary {
+export function toContactSummary(
+  row: ContactRow,
+  labels: Label[]
+): ContactSummary {
   const { contact, personaCard } = row;
   const isLiveCard =
     contact.source === 'seamless_exchange' && personaCard?.id != null;
@@ -61,5 +65,6 @@ export function toContactSummary(row: ContactRow): ContactSummary {
         }
       : null,
     personaCardSlug: isLiveCard ? (personaCard?.slug ?? null) : null,
+    labels,
   };
 }

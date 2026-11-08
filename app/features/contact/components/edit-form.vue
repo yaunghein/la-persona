@@ -18,6 +18,8 @@ const emit = defineEmits<{ saved: [] }>();
 
 const toast = useToast();
 const { mutateAsync: updateContact, isPending } = useUpdateContactMutation();
+const { data: labels, isLoading: isLabelsLoading } = useContactLabelsQuery();
+const { mutateAsync: createLabel } = useCreateContactLabelMutation();
 
 // Select items can't use an empty value.
 const NO_EVENT = 'none';
@@ -27,6 +29,7 @@ const isManual = computed(() => props.contact.source === 'manual');
 type EditContactForm = {
   note: string;
   eventId: string;
+  labelIds: string[];
   name?: string;
   position?: string;
   company?: string;
@@ -40,6 +43,7 @@ function toFormState(contact: ContactSummary): EditContactForm {
   const shared = {
     note: contact.note ?? '',
     eventId: contact.event?.id ?? NO_EVENT,
+    labelIds: contact.labels.map((label) => label.id),
   };
   if (contact.source !== 'manual') return shared;
   return {
@@ -82,6 +86,28 @@ const eventItems = computed(() => {
     })),
   ];
 });
+
+const selectedLabels = computed(() =>
+  (labels.value ?? []).filter((label) =>
+    state.value.labelIds.includes(label.id)
+  )
+);
+
+async function addNewLabel(name: string) {
+  try {
+    const created = await createLabel({
+      name,
+      color: nextLabelColor(labels.value ?? []),
+    });
+    state.value.labelIds = [...state.value.labelIds, created.id];
+  } catch (error) {
+    toast.add({
+      title: 'Could not create label',
+      description: apiErrorMessage(error),
+      color: 'error',
+    });
+  }
+}
 
 const inputUi = {
   base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
@@ -164,6 +190,31 @@ defineExpose({ isPending });
         <span class="text-xs leading-relaxed text-muted">
           Added automatically when you're checked in at an event, so it can
           occasionally be wrong. Change or clear it&nbsp;here.
+        </span>
+      </template>
+    </UFormField>
+
+    <UFormField label="Labels" name="labelIds" :class="fieldClass">
+      <UiLabelSelect
+        v-model="state.labelIds"
+        :labels="labels ?? []"
+        :loading="isLabelsLoading"
+        placeholder="Add labels"
+        creatable
+        class="w-full"
+        :ui="{ base: inputUi.base }"
+        @create="addNewLabel"
+      />
+      <div v-if="selectedLabels.length" class="mt-2 flex flex-wrap gap-1.5">
+        <UiLabelChip
+          v-for="label in selectedLabels"
+          :key="label.id"
+          :label="label"
+        />
+      </div>
+      <template #help>
+        <span class="text-xs leading-relaxed text-muted">
+          Only you see your labels. They're shared across all your&nbsp;cards.
         </span>
       </template>
     </UFormField>

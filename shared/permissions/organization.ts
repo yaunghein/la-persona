@@ -11,6 +11,8 @@ export const organizationPermissionStatements = {
   media: ['upload'],
   checkIn: ['read', 'create'],
   insight: ['read'],
+  // `update` also covers attaching labels to a registration.
+  attendeeLabel: ['read', 'create', 'update', 'delete'],
 } as const;
 
 export const organizationAccessControl = createAccessControl(
@@ -30,6 +32,7 @@ export const organizationVolunteerRole = organizationAccessControl.newRole({
   card: ['read', 'update'],
   media: ['upload'],
   checkIn: ['read', 'create'],
+  attendeeLabel: ['read'],
 });
 
 export const organizationAdminRole = organizationAccessControl.newRole({
@@ -44,6 +47,7 @@ export const organizationAdminRole = organizationAccessControl.newRole({
   cardRequest: ['create', 'update'],
   media: ['upload'],
   checkIn: ['read', 'create'],
+  attendeeLabel: ['read', 'create', 'update', 'delete'],
 });
 
 export const organizationRoles = {

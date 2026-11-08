@@ -22,8 +22,9 @@ export default defineEventHandler(async (event) => {
   if (prefersCsv(event)) {
     const csv = await exportContactsCsv(scope, query, {
       includeOrigin: ownerUserId === null,
+      viewerUserId: access.principal.user.id,
     });
     return respondCsv(event, `contacts-${orgSlug}.csv`, csv);
   }
-  return listContactPage(scope, query);
+  return listContactPage(scope, query, access.principal.user.id);
 });

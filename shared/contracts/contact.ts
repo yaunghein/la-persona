@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PaginationQuery } from '~~/shared/contracts/collection';
+import { LabelIds, type Label } from '~~/shared/contracts/label';
 
 const optionalText = z
   .string()
@@ -24,10 +25,18 @@ export const LegacyCardRouteParams = z.object({
   legacyCardId: z.string().trim().min(1),
 });
 
-/** `?cardId=` / `?eventId=` narrow the list; `q` searches name, phone, email, company, role and note. */
+/**
+ * `?cardId=` / `?eventId=` narrow the list; `?labelIds=` keeps contacts with
+ * any of those labels; `q` searches name, phone, email, company, role and note.
+ */
 export const ListContactsQuery = PaginationQuery.extend({
   cardId: z.string().trim().min(1).optional(),
   eventId: z.string().trim().min(1).optional(),
+  // A single `?labelIds=` arrives as a string, repeated ones as an array.
+  labelIds: z.preprocess(
+    (value) => (typeof value === 'string' ? [value] : value),
+    LabelIds.optional()
+  ),
   q: z.string().trim().max(100).optional(),
 });
 
@@ -113,9 +122,11 @@ function clearableText(max: number) {
 /**
  * Every contact takes a note and where you met. Contact details (name, role,
  * company, phone, email) are editable on manual contacts only; exchanged ones
- * keep what the other person shared.
+ * keep what the other person shared. `labelIds` replaces the caller's own
+ * labels on the contact.
  */
 export const UpdateContactRequest = z.object({
+  labelIds: LabelIds.optional(),
   note: clearableText(500),
   eventId: z.string().trim().min(1).max(64).nullish(),
   name: z.string().trim().min(1, 'Name is required').max(120).optional(),
@@ -161,6 +172,8 @@ export type ContactSummary = {
   } | null;
   /** Set when the contact is another La Persona member (seamless exchange). */
   personaCardSlug: string | null;
+  /** The viewer's own labels; other people's labels are never included. */
+  labels: Label[];
 };
 
 export type ContactEvent = {

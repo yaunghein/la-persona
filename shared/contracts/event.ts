@@ -1,6 +1,13 @@
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import { z } from 'zod';
 import type { event } from '~~/server/db/schema';
+import {
+  CreateLabelRequest,
+  hasAnyField,
+  LabelIds,
+  type Label,
+  type LabelSummary,
+} from '~~/shared/contracts/label';
 import { formatTimeLabel } from '~~/shared/utils/datetime';
 import {
   eventStatus,
@@ -198,6 +205,35 @@ export const CreateBroadcastRequest = z.object({
   kind: z.enum(EVENT_BROADCAST_KINDS),
 });
 
+export const CreateAttendeeLabelRequest = CreateLabelRequest.extend({
+  carriesOver: z.boolean().default(false),
+});
+
+export type CreateAttendeeLabelRequest = z.input<
+  typeof CreateAttendeeLabelRequest
+>;
+
+export const UpdateAttendeeLabelRequest = CreateLabelRequest.extend({
+  carriesOver: z.boolean(),
+})
+  .partial()
+  .refine(hasAnyField, 'Nothing to update');
+
+export type UpdateAttendeeLabelRequest = z.infer<
+  typeof UpdateAttendeeLabelRequest
+>;
+
+export const ReplaceRegistrationLabelsRequest = z.object({
+  labelIds: LabelIds,
+});
+
+export type ReplaceRegistrationLabelsRequest = z.infer<
+  typeof ReplaceRegistrationLabelsRequest
+>;
+
+/** A community's attendee label; `carriesOver` copies it onto the person's next registration. */
+export type AttendeeLabelSummary = LabelSummary & { carriesOver: boolean };
+
 export type EventCollection = {
   items: EventListItemDTO[];
   organizerCardSlug: string | null;
@@ -272,6 +308,8 @@ export type EventAttendee = {
   position?: string | null;
   website?: string | null;
   planCode?: string | null;
+  /** Organizer-only labels for this registration; never shown to the attendee. */
+  labels: Label[];
 };
 
 export function attendeeStatusLabel(

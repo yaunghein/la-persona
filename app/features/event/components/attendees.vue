@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
+import type { Cell } from '@tanstack/vue-table';
 import {
   attendeeStatusLabel,
   type EventAttendee,
@@ -8,6 +9,8 @@ import {
 const props = defineProps<{
   attendees: EventAttendee[];
   allowApprove?: boolean;
+  /** Organizers manage and attach labels; volunteers only see them. */
+  canManageLabels?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -17,8 +20,16 @@ const emit = defineEmits<{
 
 type AttendeeTab = 'all' | 'pending' | 'registered' | 'checked_in';
 
+const toast = useToast();
+const { organizationSlug } = useOrganizationSlug();
+const { data: labels } = useAttendeeLabelsQuery(organizationSlug);
+const { mutate: replaceLabels } = useReplaceRegistrationLabelsMutation();
+
 const searchQuery = ref('');
 const activeTab = ref<AttendeeTab>('all');
+const selectedLabelIds = ref<string[]>([]);
+const isGrouped = ref(false);
+const isLabelsOpen = ref(false);
 const page = ref(1);
 const itemsPerPage = 10;
 
@@ -53,6 +64,15 @@ const filteredAttendees = computed(() => {
       return false;
     }
 
+    if (
+      selectedLabelIds.value.length &&
+      !attendee.labels.some((label) =>
+        selectedLabelIds.value.includes(label.id)
+      )
+    ) {
+      return false;
+    }
+
     if (!query) return true;
 
     return (
@@ -71,7 +91,36 @@ const pagedAttendees = computed(() => {
   return filteredAttendees.value.slice(start, start + itemsPerPage);
 });
 
-watch([searchQuery, activeTab], () => {
+type AttendeeRow = LabelGroupRow<EventAttendee>;
+
+const collapsedGroupKeys = ref<string[]>([]);
+
+const rows = computed<AttendeeRow[]>(() => {
+  if (!isGrouped.value) {
+    return pagedAttendees.value.map((item) => ({ key: item.id, item }));
+  }
+  const groupLabels = (labels.value ?? []).filter(
+    (label) =>
+      !selectedLabelIds.value.length ||
+      selectedLabelIds.value.includes(label.id)
+  );
+  return labelGroupRows(
+    groupByLabel(filteredAttendees.value, groupLabels),
+    collapsedGroupKeys.value
+  );
+});
+
+function toggleGrouping() {
+  isGrouped.value = !isGrouped.value;
+}
+
+function toggleGroup(key: string) {
+  collapsedGroupKeys.value = collapsedGroupKeys.value.includes(key)
+    ? collapsedGroupKeys.value.filter((item) => item !== key)
+    : [...collapsedGroupKeys.value, key];
+}
+
+watch([searchQuery, activeTab, selectedLabelIds], () => {
   page.value = 1;
 });
 
@@ -80,13 +129,59 @@ watch(filteredAttendees, () => {
   if (page.value > maxPage) page.value = maxPage;
 });
 
-const columns: TableColumn<EventAttendee>[] = [
-  { accessorKey: 'name', header: 'NAME' },
-  { accessorKey: 'company', header: 'COMPANY' },
-  { accessorKey: 'email', header: 'EMAIL' },
-  { accessorKey: 'status', header: 'STATUS' },
-  { id: 'actions', header: '' },
+const hiddenOnGroupRow = {
+  class: {
+    td: (cell: Cell<AttendeeRow, unknown>) =>
+      cell.row.original.group ? 'hidden' : '',
+  },
+};
+
+const columns: TableColumn<AttendeeRow>[] = [
+  {
+    id: 'name',
+    header: 'NAME',
+    meta: {
+      // A group header row is one cell spanning the whole table.
+      colspan: {
+        td: (cell: Cell<AttendeeRow, unknown>) =>
+          cell.row.original.group ? String(cell.row.getAllCells().length) : '1',
+      },
+      class: {
+        td: (cell: Cell<AttendeeRow, unknown>) =>
+          cell.row.original.group ? 'py-2.5' : '',
+      },
+    },
+  },
+  { id: 'company', header: 'COMPANY', meta: hiddenOnGroupRow },
+  { id: 'email', header: 'EMAIL', meta: hiddenOnGroupRow },
+  { id: 'status', header: 'STATUS', meta: hiddenOnGroupRow },
+  { id: 'labels', header: 'LABELS', meta: hiddenOnGroupRow },
+  { id: 'actions', header: '', meta: hiddenOnGroupRow },
 ];
+
+function toggleLabel(
+  attendee: EventAttendee,
+  labelId: string,
+  isChecked: boolean
+) {
+  const current = attendee.labels.map((label) => label.id);
+  replaceLabels(
+    {
+      registrationId: attendee.id,
+      labelIds: isChecked
+        ? [...current, labelId]
+        : current.filter((id) => id !== labelId),
+    },
+    {
+      onError: (error) =>
+        toast.add({
+          title: 'Could not update labels',
+          description: apiErrorMessage(error),
+          color: 'error',
+        }),
+    }
+  );
+}
 
 function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
   const items: DropdownMenuItem[] = [
@@ -102,6 +197,24 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
       label: 'Approve',
       icon: 'i-lucide-check',
       onSelect: () => emit('approve', attendee),
+    });
+  }
+
+  if (props.canManageLabels && labels.value?.length) {
+    items.push({
+      label: 'Labels',
+      icon: 'i-lucide-tag',
+      children: labels.value.map((label) => ({
+        label: label.name,
+        type: 'checkbox' as const,
+        checked: attendee.labels.some((item) => item.id === label.id),
+        onUpdateChecked: (isChecked: boolean) =>
+          toggleLabel(attendee, label.id, isChecked),
+        // Keep the menu open so several labels can be toggled in a row.
+        onSelect: (event: Event) => event.preventDefault(),
+        slot: 'label-item' as const,
+        labelColor: label.color,
+      })),
     });
   }
 
@@ -126,21 +239,48 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
         }"
       />
 
-      <div class="flex gap-8 overflow-x-auto px-5">
-        <button
-          v-for="tab in tabs"
-          :key="tab.value"
-          type="button"
-          class="shrink-0 cursor-pointer border-b pb-1 text-sm font-medium leading-5 whitespace-nowrap transition-colors"
-          :class="
-            activeTab === tab.value
-              ? 'border-ink text-ink'
-              : 'border-transparent text-subtle hover:text-ink'
-          "
-          @click="activeTab = tab.value"
-        >
-          {{ tab.label }}
-        </button>
+      <div
+        class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div class="flex gap-8 overflow-x-auto px-5">
+          <button
+            v-for="tab in tabs"
+            :key="tab.value"
+            type="button"
+            class="shrink-0 cursor-pointer border-b pb-1 text-sm font-medium leading-5 whitespace-nowrap transition-colors"
+            :class="
+              activeTab === tab.value
+                ? 'border-ink text-ink'
+                : 'border-transparent text-subtle hover:text-ink'
+            "
+            @click="activeTab = tab.value"
+          >
+            {{ tab.label }}
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <UiLabelSelect
+            v-model="selectedLabelIds"
+            :labels="labels ?? []"
+            placeholder="All labels"
+            :manageable="canManageLabels"
+            aria-label="Filter by label"
+            class="min-w-0 flex-1 sm:w-52 sm:flex-none"
+            @manage="isLabelsOpen = true"
+          />
+          <UButton
+            icon="i-lucide-rows-3"
+            label="Group"
+            color="neutral"
+            variant="ghost"
+            class="h-8 shrink-0 cursor-pointer rounded-full border-2 border-raised px-3 text-sm font-medium hover:bg-raised"
+            :class="isGrouped ? 'bg-raised text-ink' : 'text-muted'"
+            :aria-pressed="isGrouped"
+            aria-label="Group by label"
+            @click="toggleGrouping"
+          />
+        </div>
       </div>
     </div>
 
@@ -148,8 +288,13 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
       class="hide-scrollbar shrink-0 overflow-x-auto overflow-y-hidden pt-2 pb-6"
     >
       <UTable
-        :data="pagedAttendees"
+        :data="rows"
         :columns="columns"
+        :meta="{
+          class: {
+            tr: (row) => (row.original.group ? 'bg-raised/40' : ''),
+          },
+        }"
         :ui="{
           th: 'px-4 py-4 border-b border-raised text-xs font-medium tracking-wide uppercase text-ink',
           td: 'px-4 py-4 border-b border-raised text-sm',
@@ -159,37 +304,70 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
         class="w-full min-w-200"
       >
         <template #name-cell="{ row }">
-          <div class="flex flex-col gap-0.5">
-            <span class="font-medium text-ink">{{ row.original.name }}</span>
-            <span class="text-xs text-subtle">{{ row.original.role }}</span>
+          <UiLabelGroupHeader
+            v-if="row.original.group"
+            :label="row.original.group.label"
+            :count="row.original.group.items.length"
+            :collapsed="collapsedGroupKeys.includes(row.original.key)"
+            @toggle="toggleGroup(row.original.key)"
+          />
+          <div v-else class="flex flex-col gap-0.5">
+            <span class="font-medium text-ink">{{
+              row.original.item.name
+            }}</span>
+            <span class="text-xs text-subtle">{{
+              row.original.item.role
+            }}</span>
           </div>
         </template>
         <template #company-cell="{ row }">
-          <span class="text-subtle">{{ row.original.company }}</span>
-        </template>
-        <template #email-cell="{ row }">
-          <span class="text-subtle">{{ row.original.email || '—' }}</span>
-        </template>
-        <template #status-cell="{ row }">
-          <span class="text-subtle">{{
-            attendeeStatusLabel(row.original)
+          <span v-if="row.original.item" class="text-subtle">{{
+            row.original.item.company
           }}</span>
         </template>
+        <template #email-cell="{ row }">
+          <span v-if="row.original.item" class="text-subtle">{{
+            row.original.item.email || '—'
+          }}</span>
+        </template>
+        <template #status-cell="{ row }">
+          <span v-if="row.original.item" class="text-subtle">{{
+            attendeeStatusLabel(row.original.item)
+          }}</span>
+        </template>
+        <template #labels-cell="{ row }">
+          <UiLabelDots
+            v-if="row.original.item"
+            :labels="row.original.item.labels"
+          />
+        </template>
         <template #actions-cell="{ row }">
-          <UDropdownMenu :items="getActionItems(row.original)">
+          <UDropdownMenu
+            v-if="row.original.item"
+            :items="getActionItems(row.original.item)"
+          >
             <UButton
               size="xl"
               icon="i-mdi-dots-vertical"
               color="neutral"
               variant="ghost"
               class="text-muted"
+              :aria-label="`Actions for ${row.original.item.name}`"
             />
+            <template #label-item-leading="{ item }">
+              <span
+                class="mx-0.5 size-2.5 shrink-0 rounded-full ring-1 ring-inset ring-ink/15"
+                :style="{
+                  backgroundColor: (item as DropdownMenuItem).labelColor,
+                }"
+              />
+            </template>
           </UDropdownMenu>
         </template>
       </UTable>
     </div>
 
-    <div class="flex items-center justify-end pt-2">
+    <div v-if="!isGrouped" class="flex items-center justify-end pt-2">
       <UPagination
         v-model:page="page"
         :total="total"
@@ -200,5 +378,11 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
         variant="outline"
       />
     </div>
+
+    <EventAttendeeLabelsSlideover
+      v-if="canManageLabels"
+      v-model:open="isLabelsOpen"
+      :organization-slug="organizationSlug"
+    />
   </div>
 </template>

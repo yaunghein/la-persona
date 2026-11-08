@@ -14,6 +14,8 @@ import {
   card,
   contactExchange,
   contactExchangeBeforePlatform,
+  contactLabel,
+  contactLabelAssignment,
   event,
   organization,
 } from '~~/server/db/schema';
@@ -29,6 +31,9 @@ export type ContactScope =
 export type ContactFilter = {
   cardId?: string;
   eventId?: string;
+  /** Contacts carrying any of these labels; only `labelOwnerUserId`'s labels count. */
+  labelIds?: string[];
+  labelOwnerUserId: string;
   q?: string;
   limit: number;
   offset: number;
@@ -65,6 +70,26 @@ function searchCondition(q: string | undefined): SQL | undefined {
     ilike(personaCard.email, pattern),
     ilike(personaCard.company, pattern),
     ilike(personaCard.position, pattern)
+  );
+}
+
+function labelCondition(filter: ContactFilter): SQL | undefined {
+  if (!filter.labelIds?.length) return undefined;
+  return inArray(
+    contactExchange.id,
+    db
+      .select({ id: contactLabelAssignment.contactId })
+      .from(contactLabelAssignment)
+      .innerJoin(
+        contactLabel,
+        eq(contactLabel.id, contactLabelAssignment.labelId)
+      )
+      .where(
+        and(
+          inArray(contactLabelAssignment.labelId, filter.labelIds),
+          eq(contactLabel.userId, filter.labelOwnerUserId)
+        )
+      )
   );
 }
 
@@ -107,6 +132,7 @@ export async function listContacts(scope: ContactScope, filter: ContactFilter) {
     scoped,
     filter.cardId ? eq(contactExchange.cardId, filter.cardId) : undefined,
     filter.eventId ? eq(contactExchange.eventId, filter.eventId) : undefined,
+    labelCondition(filter),
     searchCondition(filter.q)
   );
 

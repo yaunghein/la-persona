@@ -414,6 +414,10 @@ async function lookupCode(code: string) {
       website: result.attendee.website,
       planCode: result.attendee.planCode,
       cardSlug: result.attendee.slug,
+      // The ticket id is the registration id, which the attendee list carries labels for.
+      labels:
+        props.attendees.find((item) => item.id === result.attendee.id)
+          ?.labels ?? [],
     };
 
     state.value = result.status === 'already' ? 'already' : 'success';
@@ -610,6 +614,16 @@ onBeforeUnmount(() => {
         class="relative h-full w-full"
       >
         <canvas ref="splineCanvasEl" class="size-full" />
+        <div
+          v-if="scannedAttendee?.labels.length"
+          class="absolute inset-x-6 top-6 flex flex-wrap justify-center gap-1.5"
+        >
+          <UiLabelChip
+            v-for="label in scannedAttendee.labels"
+            :key="label.id"
+            :label="label"
+          />
+        </div>
         <div
           v-if="isSplineLoading"
           class="absolute inset-0 flex items-center justify-center"

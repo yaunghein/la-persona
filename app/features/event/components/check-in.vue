@@ -158,6 +158,16 @@ function checkIn(attendee: EventAttendee) {
             <p class="text-sm text-subtle">
               {{ attendee.role }} • {{ attendee.company }}
             </p>
+            <div
+              v-if="attendee.labels.length"
+              class="mt-2 flex flex-wrap gap-1.5"
+            >
+              <UiLabelChip
+                v-for="label in attendee.labels"
+                :key="label.id"
+                :label="label"
+              />
+            </div>
           </div>
         </div>
         <div class="flex items-center justify-end gap-3">

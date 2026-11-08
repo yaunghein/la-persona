@@ -17,6 +17,8 @@ definePageMeta({
 type ViewMode = 'list' | 'grid';
 
 const PAGE_SIZE: Record<ViewMode, number> = { list: 10, grid: 6 };
+// Groups split across small pages are hard to read, so grouping loads the API maximum per page.
+const GROUPED_PAGE_SIZE = 100;
 
 const guideItems: FeatureGuideItem[] = [
   {
@@ -73,11 +75,20 @@ const parsePage = (value: unknown) => {
 
 const parseEventId = (value: unknown) =>
   typeof value === 'string' && value ? value : undefined;
+const parseLabelIds = (value: unknown) =>
+  typeof value === 'string' && value ? value.split(',') : [];
 
 const viewMode = ref<ViewMode>(parseViewMode(route.query.view));
 const page = ref(parsePage(route.query.page));
 const eventId = ref(parseEventId(route.query.event));
-const pageSize = computed(() => PAGE_SIZE[viewMode.value]);
+const labelIds = ref(parseLabelIds(route.query.labels));
+const labelIdsQuery = computed(() =>
+  labelIds.value.length ? labelIds.value : undefined
+);
+const isGrouped = ref(route.query.group === 'label');
+const pageSize = computed(() =>
+  isGrouped.value ? GROUPED_PAGE_SIZE : PAGE_SIZE[viewMode.value]
+);
 
 const listScope = computed<ContactListScope>(() =>
   isPersonalWorkspace.value
@@ -91,6 +102,7 @@ const { data: contactPage, isLoading } = useContactsQuery(
     limit: pageSize.value,
     offset: (page.value - 1) * pageSize.value,
     eventId: eventId.value,
+    labelIds: labelIdsQuery.value,
   }),
   { enabled: () => !isOrgsLoading.value }
 );
@@ -118,8 +130,34 @@ const eventFilter = computed({
   },
 });
 
-function showAllEvents() {
+const { data: contactLabels } = useContactLabelsQuery();
+const isLabelsOpen = ref(false);
+const labelFilter = computed({
+  get: () => labelIds.value,
+  set: (value: string[]) => {
+    labelIds.value = value;
+    page.value = 1;
+  },
+});
+
+const groupLabels = computed(() =>
+  isGrouped.value
+    ? (contactLabels.value ?? []).filter(
+        (label) => !labelIds.value.length || labelIds.value.includes(label.id)
+      )
+    : undefined
+);
+
+function toggleGrouping() {
+  isGrouped.value = !isGrouped.value;
+  page.value = 1;
+}
+
+const hasFilters = computed(() => !!eventId.value || labelIds.value.length > 0);
+
+function clearFilters() {
   eventFilter.value = ALL_EVENTS;
+  labelFilter.value = [];
 }
 
 // Kept after closing so the slideover body doesn't blank out while it animates away.
@@ -189,6 +227,7 @@ async function exportContacts() {
   try {
     const blob = await downloadContactsCsv(listScope.value, {
       eventId: eventId.value,
+      labelIds: labelIdsQuery.value,
     });
     downloadFile({
       blob,
@@ -227,20 +266,33 @@ watch(
     viewMode.value = parseViewMode(query.view);
     page.value = parsePage(query.page);
     eventId.value = parseEventId(query.event);
+    labelIds.value = parseLabelIds(query.labels);
+    isGrouped.value = query.group === 'label';
   }
 );
 
-watch([viewMode, page, eventId], async ([view, current, event]) => {
-  const query = { view, page: String(current), event };
-  if (
-    route.query.view === query.view &&
-    route.query.page === query.page &&
-    parseEventId(route.query.event) === event
-  ) {
-    return;
+watch(
+  [viewMode, page, eventId, labelIds, isGrouped],
+  async ([view, current, event, , grouped]) => {
+    const query = {
+      view,
+      page: String(current),
+      event,
+      labels: labelIdsQuery.value?.join(','),
+      group: grouped ? 'label' : undefined,
+    };
+    if (
+      route.query.view === query.view &&
+      route.query.page === query.page &&
+      parseEventId(route.query.event) === event &&
+      parseEventId(route.query.labels) === query.labels &&
+      parseEventId(route.query.group) === query.group
+    ) {
+      return;
+    }
+    await router.replace({ query: { ...route.query, ...query } });
   }
-  await router.replace({ query: { ...route.query, ...query } });
-});
+);
 
 // Stay on a real page after deletes shrink the list.
 watch(total, (count) => {
@@ -335,16 +387,40 @@ watch(total, (count) => {
       </div>
     </div>
 
-    <USelectMenu
-      v-if="eventFilterItems.length > 1"
-      v-model="eventFilter"
-      :items="eventFilterItems"
-      value-key="value"
-      icon="i-lucide-calendar"
-      :search-input="{ placeholder: 'Search events' }"
-      aria-label="Filter by where you met"
-      class="w-full sm:w-80"
-    />
+    <div class="flex flex-col gap-2 sm:flex-row">
+      <USelectMenu
+        v-if="eventFilterItems.length > 1"
+        v-model="eventFilter"
+        :items="eventFilterItems"
+        value-key="value"
+        icon="i-lucide-calendar"
+        :search-input="{ placeholder: 'Search events' }"
+        aria-label="Filter by where you met"
+        class="w-full sm:w-80"
+      />
+      <UiLabelSelect
+        v-model="labelFilter"
+        :labels="contactLabels ?? []"
+        placeholder="All labels"
+        manageable
+        aria-label="Filter by label"
+        class="w-full sm:w-60"
+        @manage="isLabelsOpen = true"
+      />
+      <UButton
+        icon="i-lucide-rows-3"
+        label="Group"
+        color="neutral"
+        variant="ghost"
+        class="h-8 shrink-0 cursor-pointer self-start rounded-full border-2 border-raised px-3 text-sm font-medium hover:bg-raised sm:self-center"
+        :class="isGrouped ? 'bg-raised text-ink' : 'text-muted'"
+        :aria-pressed="isGrouped"
+        aria-label="Group by label"
+        @click="toggleGrouping"
+      />
+    </div>
+
+    <ContactLabelsSlideover v-model:open="isLabelsOpen" />
 
     <USlideover
       v-model:open="isCreateOpen"
@@ -430,16 +506,16 @@ watch(total, (count) => {
         name="i-material-symbols:perm-contact-calendar-sharp"
         class="size-8 text-muted"
       />
-      <template v-if="eventId">
+      <template v-if="hasFilters">
         <h2 class="text-base font-medium uppercase tracking-widest text-ink">
-          No contacts from this event
+          No contacts match these&nbsp;filters
         </h2>
         <UButton
-          label="Show all events"
+          label="Clear filters"
           color="neutral"
           variant="ghost"
           class="h-10 text-sm rounded-full px-5"
-          @click="showAllEvents"
+          @click="clearFilters"
         />
       </template>
       <template v-else>
@@ -467,6 +543,7 @@ watch(total, (count) => {
       <ContactTable
         :contacts="contacts"
         :show-origin="canSeeOrigin"
+        :group-labels="groupLabels"
         @save="saveContactToPhone"
         @edit="openEditContact"
         @delete="contactToDelete = $event"
@@ -478,6 +555,7 @@ watch(total, (count) => {
       class="flex-1"
       :contacts="contacts"
       :show-origin="canSeeOrigin"
+      :group-labels="groupLabels"
       @save="saveContactToPhone"
       @edit="openEditContact"
       @delete="contactToDelete = $event"

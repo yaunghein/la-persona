@@ -18,6 +18,11 @@ import {
   findLiveCheckedInEventId,
   findRegistrationByEventAndUser,
 } from '~~/server/features/event/registration.repository';
+import {
+  countUsersContactLabels,
+  listContactLabelsByContactIds,
+  replaceContactLabels,
+} from '~~/server/features/contact/contact-label.repository';
 import { toContactSummary } from '~~/server/features/contact/contact.mapper';
 import {
   sendContactExchangeEmail,
@@ -86,13 +91,24 @@ function deliverContactExchangeEmails(
   };
 }
 
+/** Labels are the viewer's own, so a manager never sees a member's labels. */
 export async function listContactPage(
   scope: ContactScope,
-  query: ListContactsQuery
+  query: ListContactsQuery,
+  viewerUserId: string
 ): Promise<Page<ContactSummary>> {
-  const { rows, total } = await listContacts(scope, query);
+  const { rows, total } = await listContacts(scope, {
+    ...query,
+    labelOwnerUserId: viewerUserId,
+  });
+  const labels = await listContactLabelsByContactIds(
+    rows.map((row) => row.contact.id),
+    viewerUserId
+  );
   return {
-    items: rows.map(toContactSummary),
+    items: rows.map((row) =>
+      toContactSummary(row, labels.get(row.contact.id) ?? [])
+    ),
     total,
     limit: query.limit,
     offset: query.offset,
@@ -128,12 +144,14 @@ async function assertRegisteredEvent(
   }
 }
 
-/** Edits a contact. Details change on manual contacts only. */
+/** Edits a contact. Details change on manual contacts only; labels are the viewer's own. */
 export async function editContact(
   contact: { id: string; cardUserId: string | null; source: string },
-  input: UpdateContactRequest
+  input: UpdateContactRequest,
+  viewerUserId: string
 ): Promise<ContactSummary> {
-  const { note, eventId, phone, phoneCountryCode, ...details } = input;
+  const { labelIds, note, eventId, phone, phoneCountryCode, ...details } =
+    input;
   const changesDetails =
     phone !== undefined ||
     phoneCountryCode !== undefined ||
@@ -146,6 +164,12 @@ export async function editContact(
   }
 
   if (eventId) await assertRegisteredEvent(eventId, contact.cardUserId);
+  if (
+    labelIds &&
+    (await countUsersContactLabels(viewerUserId, labelIds)) !== labelIds.length
+  ) {
+    throw badRequest('Choose labels from your own list.', 'label_not_found');
+  }
 
   const values = {
     note,
@@ -163,7 +187,13 @@ export async function editContact(
   if (Object.values(values).some((value) => value !== undefined)) {
     await updateContact(contact.id, values);
   }
-  return toContactSummary(await getContactRow(contact.id));
+  if (labelIds) await replaceContactLabels(contact.id, viewerUserId, labelIds);
+
+  const [row, labels] = await Promise.all([
+    getContactRow(contact.id),
+    listContactLabelsByContactIds([contact.id], viewerUserId),
+  ]);
+  return toContactSummary(row, labels.get(contact.id) ?? []);
 }
 
 /** Managers see every card's contacts; members only their own cards'. */
@@ -190,14 +220,23 @@ const CONTACT_EXPORT_LIMIT = 10_000;
 export async function exportContactsCsv(
   scope: ContactScope,
   query: Omit<ListContactsQuery, 'limit' | 'offset'>,
-  options: { includeOrigin: boolean }
+  options: { includeOrigin: boolean; viewerUserId: string }
 ) {
-  const { items } = await listContactPage(scope, {
-    ...query,
-    limit: CONTACT_EXPORT_LIMIT,
-    offset: 0,
-  });
-  const header = ['Name', 'Role', 'Company', 'Phone', 'Email', 'Event', 'Note'];
+  const { items } = await listContactPage(
+    scope,
+    { ...query, limit: CONTACT_EXPORT_LIMIT, offset: 0 },
+    options.viewerUserId
+  );
+  const header = [
+    'Name',
+    'Role',
+    'Company',
+    'Phone',
+    'Email',
+    'Event',
+    'Labels',
+    'Note',
+  ];
   return toCsv([
     options.includeOrigin ? [...header, 'Origin'] : header,
     ...items.map((contact) => {
@@ -208,6 +247,7 @@ export async function exportContactsCsv(
         contact.phone,
         contact.email,
         contact.event?.title ?? null,
+        contact.labels.map((label) => label.name).join(', ') || null,
         contact.note,
       ];
       return options.includeOrigin

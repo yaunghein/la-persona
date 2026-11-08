@@ -1,4 +1,5 @@
 import type { H3Event } from 'h3';
+import { findAttendeeLabel } from '~~/server/features/event/attendee-label.repository';
 import { findEventById } from '~~/server/features/event/event.repository';
 import type { OrganizationPermissionKey } from '~~/shared/permissions/organization';
 
@@ -22,4 +23,23 @@ export async function authorizeEventAccess(
   assertCommunityOrganization(access.organization);
   enrichLog(event, { event: { id: record.id, title: record.title } });
   return { record, ...access };
+}
+
+/** Attendee labels belong to a community; non-members see "not found". */
+export async function authorizeAttendeeLabelAccess(
+  event: H3Event,
+  labelId: string,
+  permission: OrganizationPermissionKey
+) {
+  const label = await findAttendeeLabel(labelId);
+  if (!label) throw notFound('Label');
+
+  const access = await authorizeOrganizationAccessById(
+    event,
+    label.organizationId,
+    permission
+  );
+  assertCommunityOrganization(access.organization);
+  enrichLog(event, { label: { id: label.id } });
+  return { label, ...access };
 }

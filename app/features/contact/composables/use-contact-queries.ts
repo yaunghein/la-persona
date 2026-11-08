@@ -4,6 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/vue-query';
+import type { z } from 'zod';
 import type { Collection, Page } from '~~/shared/contracts/collection';
 import type {
   ContactEvent,
@@ -11,6 +12,12 @@ import type {
   CreateManualContactRequest,
   UpdateContactRequest,
 } from '~~/shared/contracts/contact';
+import type {
+  CreateLabelRequest,
+  Label,
+  LabelSummary,
+  UpdateLabelRequest,
+} from '~~/shared/contracts/label';
 
 /** Whose contacts: one organization, or every card the user holds (`workspace`). */
 export type ContactListScope =
@@ -23,6 +30,7 @@ export type ContactListParams = {
   offset: number;
   q?: string;
   eventId?: string;
+  labelIds?: string[];
 };
 
 export const contactQueryKeys = {
@@ -31,6 +39,7 @@ export const contactQueryKeys = {
     [...contactQueryKeys.all, 'list', params] as const,
   events: (scope: ContactListScope) =>
     [...contactQueryKeys.all, 'events', scope] as const,
+  labels: () => [...contactQueryKeys.all, 'labels'] as const,
 };
 
 function contactsUrl(scope: ContactListScope) {
@@ -96,7 +105,7 @@ export function useUpdateContactMutation() {
       input,
     }: {
       contactId: string;
-      input: UpdateContactRequest;
+      input: z.input<typeof UpdateContactRequest>;
     }) =>
       $fetch<ContactSummary>(`/api/contacts/${contactId}` as string, {
         method: 'PATCH',
@@ -119,10 +128,64 @@ export function useDeleteContactMutation() {
   });
 }
 
+/** The caller's own contact labels, shared across all of their cards. */
+export function useContactLabelsQuery() {
+  return useQuery({
+    queryKey: contactQueryKeys.labels(),
+    queryFn: () => $fetch<Collection<LabelSummary>>('/api/me/contact-labels'),
+    select: (collection) => collection.items,
+  });
+}
+
+// Label changes show up on contact rows, so every contact query refetches.
+export function useCreateContactLabelMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateLabelRequest) =>
+      $fetch<LabelSummary>('/api/me/contact-labels', {
+        method: 'POST',
+        body: input,
+      }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: contactQueryKeys.all }),
+  });
+}
+
+export function useUpdateContactLabelMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      labelId,
+      input,
+    }: {
+      labelId: string;
+      input: UpdateLabelRequest;
+    }) =>
+      $fetch<Label>(`/api/contact-labels/${labelId}` as string, {
+        method: 'PATCH',
+        body: input,
+      }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: contactQueryKeys.all }),
+  });
+}
+
+export function useDeleteContactLabelMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (labelId: string) =>
+      $fetch<void>(`/api/contact-labels/${labelId}` as string, {
+        method: 'DELETE',
+      }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: contactQueryKeys.all }),
+  });
+}
+
 /** Every contact in scope as CSV (server-generated, formula-safe). */
 export function downloadContactsCsv(
   scope: ContactListScope,
-  query: { eventId?: string } = {}
+  query: { eventId?: string; labelIds?: string[] } = {}
 ): Promise<Blob> {
   return $fetch<Blob>(contactsUrl(scope), {
     query,

@@ -6,11 +6,53 @@ defineOptions({ name: 'CommunityEventAttendeeProfileSlideover' });
 
 const props = defineProps<{
   attendee: EventAttendee | null;
+  /** Organizers attach labels; volunteers only see them. */
+  canEditLabels?: boolean;
 }>();
 
 const open = defineModel<boolean>('open', { default: false });
 
 const toast = useToast();
+const { organizationSlug } = useOrganizationSlug();
+const { data: labels, isLoading: isLabelsLoading } = useAttendeeLabelsQuery(
+  () => (props.canEditLabels ? organizationSlug.value : '')
+);
+const { mutateAsync: replaceLabels } = useReplaceRegistrationLabelsMutation();
+const { mutateAsync: createLabel } =
+  useCreateAttendeeLabelMutation(organizationSlug);
+
+const labelIds = computed(
+  () => props.attendee?.labels.map((label) => label.id) ?? []
+);
+
+async function saveLabels(ids: string[]) {
+  if (!props.attendee) return;
+  try {
+    await replaceLabels({ registrationId: props.attendee.id, labelIds: ids });
+  } catch (error) {
+    toast.add({
+      title: 'Could not update labels',
+      description: apiErrorMessage(error),
+      color: 'error',
+    });
+  }
+}
+
+async function addNewLabel(name: string) {
+  try {
+    const created = await createLabel({
+      name,
+      color: nextLabelColor(labels.value ?? []),
+    });
+    await saveLabels([...labelIds.value, created.id]);
+  } catch (error) {
+    toast.add({
+      title: 'Could not create label',
+      description: apiErrorMessage(error),
+      color: 'error',
+    });
+  }
+}
 
 const displayAvatar = computed(() => {
   const raw = String(props.attendee?.avatarUrl || '').trim();
@@ -128,6 +170,37 @@ function onViewPersona() {
                   : '—'
               }}
             </span>
+          </div>
+        </section>
+
+        <section v-if="canEditLabels || attendee.labels.length">
+          <h3 class="pb-3 text-sm font-medium text-ink">Labels</h3>
+          <div class="flex flex-col gap-3 px-4">
+            <UiLabelSelect
+              v-if="canEditLabels"
+              :model-value="labelIds"
+              :labels="labels ?? []"
+              :loading="isLabelsLoading"
+              placeholder="Add labels"
+              creatable
+              class="w-full"
+              :ui="{
+                base: 'h-10 rounded-[4px] border-line bg-raised text-sm text-ink',
+              }"
+              @update:model-value="saveLabels"
+              @create="addNewLabel"
+            />
+            <div v-if="attendee.labels.length" class="flex flex-wrap gap-1.5">
+              <UiLabelChip
+                v-for="label in attendee.labels"
+                :key="label.id"
+                :label="label"
+              />
+            </div>
+            <p class="text-xs leading-relaxed text-subtle">
+              For this event only. Organizers and volunteers see labels;
+              attendees never&nbsp;do.
+            </p>
           </div>
         </section>
 

@@ -133,6 +133,13 @@ function onSelectAttendee(attendee: EventAttendee) {
   isProfileOpen.value = true;
 }
 
+// Follows refetches, so label edits made in the profile show up right away.
+const profileAttendee = computed(
+  () =>
+    attendees.value?.find((item) => item.id === selectedAttendee.value?.id) ??
+    selectedAttendee.value
+);
+
 function onOpenScanner() {
   if (checkInWindow.value !== 'live') return;
   isScannerOpen.value = true;
@@ -287,6 +294,7 @@ async function onCheckedIn() {
       v-else-if="activeTab === 'attendees'"
       :attendees="eventDetail.attendees"
       :allow-approve="canManage && phase !== 'past'"
+      :can-manage-labels="canManage"
       @select="onSelectAttendee"
       @approve="approveAttendee"
     />
@@ -305,7 +313,8 @@ async function onCheckedIn() {
   <EventAttendeeProfileSlideover
     :key="selectedAttendee?.id ?? 'attendee-profile'"
     v-model:open="isProfileOpen"
-    :attendee="selectedAttendee"
+    :attendee="profileAttendee"
+    :can-edit-labels="canManage"
   />
 
   <EventCheckInScanner

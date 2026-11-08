@@ -8,7 +8,7 @@ import {
 export default defineEventHandler(async (event) => {
   const { contactId } = await parseRouteParams(event, ContactRouteParams);
   const request = await parseRequestBody(event, UpdateContactRequest);
-  const { contact } = await authorizeContactAccess(
+  const { contact, principal } = await authorizeContactAccess(
     event,
     contactId,
     'contactExchange:update'
@@ -16,5 +16,8 @@ export default defineEventHandler(async (event) => {
   if (request.eventId !== undefined) {
     enrichLog(event, { contact: { event_id: request.eventId } });
   }
-  return editContact(contact, request);
+  if (request.labelIds) {
+    enrichLog(event, { contact: { label_ids: request.labelIds } });
+  }
+  return editContact(contact, request, principal.user.id);
 });

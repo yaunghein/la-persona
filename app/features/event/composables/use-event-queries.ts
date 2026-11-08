@@ -1,14 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import type {
   AddToGoogleCalendarResult,
+  AttendeeLabelSummary,
+  CreateAttendeeLabelRequest,
   EventAttendeeCollection,
   EventBroadcastKind,
   EventCollection,
   EventDetailDTO,
   EventMembershipResult,
   TicketLookup,
+  UpdateAttendeeLabelRequest,
 } from '~~/shared/contracts/event';
 import type { Collection } from '~~/shared/contracts/collection';
+import type { Label } from '~~/shared/contracts/label';
 import type { ContactEvent } from '~~/shared/contracts/contact';
 import { timezoneOffsetQuery } from '~~/shared/utils/datetime';
 import { organizationQueryKeys } from '~/features/organization/composables/use-user-organizations';
@@ -22,6 +26,8 @@ export const eventQueryKeys = {
   attendees: (eventId: string) =>
     [...eventQueryKeys.all, 'attendees', eventId] as const,
   registered: () => [...eventQueryKeys.all, 'registered'] as const,
+  attendeeLabels: (organizationSlug: string) =>
+    [...eventQueryKeys.all, 'attendee-labels', organizationSlug] as const,
 };
 
 const eventUrl = (eventId: string, path = ''): string =>
@@ -107,6 +113,85 @@ export function useApproveRegistrationMutation() {
       $fetch<{ id: string; status: string }>(
         `/api/registrations/${registrationId}` as string,
         { method: 'PATCH', body: { status: 'registered' } }
+      ),
+    onSuccess: invalidateEvents,
+  });
+}
+
+/** The community's attendee labels (organizers manage them, volunteers read them). */
+export function useAttendeeLabelsQuery(
+  organizationSlug: MaybeRefOrGetter<string>
+) {
+  return useQuery({
+    queryKey: computed(() =>
+      eventQueryKeys.attendeeLabels(toValue(organizationSlug))
+    ),
+    queryFn: () =>
+      $fetch<Collection<AttendeeLabelSummary>>(
+        `/api/organizations/${toValue(organizationSlug)}/attendee-labels` as string
+      ),
+    select: (collection) => collection.items,
+    enabled: () => !!toValue(organizationSlug),
+  });
+}
+
+// Label changes show up on attendee rows, so every event query refetches.
+export function useCreateAttendeeLabelMutation(
+  organizationSlug: MaybeRefOrGetter<string>
+) {
+  const invalidateEvents = useInvalidateEvents();
+  return useMutation({
+    mutationFn: (input: CreateAttendeeLabelRequest) =>
+      $fetch<AttendeeLabelSummary>(
+        `/api/organizations/${toValue(organizationSlug)}/attendee-labels` as string,
+        { method: 'POST', body: input }
+      ),
+    onSuccess: invalidateEvents,
+  });
+}
+
+export function useUpdateAttendeeLabelMutation() {
+  const invalidateEvents = useInvalidateEvents();
+  return useMutation({
+    mutationFn: ({
+      labelId,
+      input,
+    }: {
+      labelId: string;
+      input: UpdateAttendeeLabelRequest;
+    }) =>
+      $fetch<Label>(`/api/attendee-labels/${labelId}` as string, {
+        method: 'PATCH',
+        body: input,
+      }),
+    onSuccess: invalidateEvents,
+  });
+}
+
+export function useDeleteAttendeeLabelMutation() {
+  const invalidateEvents = useInvalidateEvents();
+  return useMutation({
+    mutationFn: (labelId: string) =>
+      $fetch<void>(`/api/attendee-labels/${labelId}` as string, {
+        method: 'DELETE',
+      }),
+    onSuccess: invalidateEvents,
+  });
+}
+
+export function useReplaceRegistrationLabelsMutation() {
+  const invalidateEvents = useInvalidateEvents();
+  return useMutation({
+    mutationFn: ({
+      registrationId,
+      labelIds,
+    }: {
+      registrationId: string;
+      labelIds: string[];
+    }) =>
+      $fetch<Collection<Label>>(
+        `/api/registrations/${registrationId}/labels` as string,
+        { method: 'PUT', body: { labelIds } }
       ),
     onSuccess: invalidateEvents,
   });
