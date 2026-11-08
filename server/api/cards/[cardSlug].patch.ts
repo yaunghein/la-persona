@@ -8,6 +8,8 @@ export default defineEventHandler(async (event) => {
   const changes = await parseRequestBody(event, UpdateCardRequest);
 
   const updated = await updateCard(card, changes);
+  if (changes.visibility)
+    enrichLog(event, { card: { visibility: changes.visibility } });
   if (updated.slug !== cardSlug)
     enrichLog(event, { card: { new_slug: updated.slug } });
   return updated;

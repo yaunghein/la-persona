@@ -120,6 +120,13 @@
       "when": 1794149427108,
       "tag": "0016_slim_shooting_star",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1794151215116,
+      "tag": "0017_fluffy_bedlam",
+      "breakpoints": true
     }
   ]
 }

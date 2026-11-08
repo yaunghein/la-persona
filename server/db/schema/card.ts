@@ -25,6 +25,10 @@ export const card = pgTable(
       .default([]),
     wallpaperUrl: text(),
     cardBackUrl: text(),
+    visibility: text()
+      .$type<'public' | 'members'>()
+      .notNull()
+      .default('public'),
     organizationId: text()
       .notNull()
       .references(() => organization.id, { onDelete: 'cascade' }),

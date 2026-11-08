@@ -241,109 +241,43 @@ async function downloadQr() {
       </div>
     </div>
 
-    <div v-else class="space-y-8 grid sm:grid-cols-2">
-      <div class="space-y-8">
-        <div class="space-y-2">
-          <h2
-            class="text-md sm:text-xl font-medium uppercase tracking-widest text-ink"
-          >
-            QR & Wallpaper
-          </h2>
-          <p class="max-w-160 text-sm leading-5.25 text-subtle">
-            Choose your phone model for a perfect-fit wallpaper, or download
-            only the QR to share your persona card anywhere.
-          </p>
-        </div>
-
-        <UFormField
-          label="Choose Your Phone Model"
-          name="phoneModel"
-          class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
+    <div v-else class="grid gap-8 sm:grid-cols-2">
+      <div class="space-y-2 sm:col-start-1">
+        <h2
+          class="text-md sm:text-xl font-medium uppercase tracking-widest text-ink"
         >
-          <USelectMenu
-            v-model="selectedModel"
-            :items="phoneModels"
-            value-key="value"
-            label-key="label"
-            :search-input="{ placeholder: 'Search phone model...' }"
-            class="w-full"
-            :ui="{
-              base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink',
-              placeholder: 'text-ink/50',
-              trailingIcon: 'text-subtle',
-              content: 'bg-surface border border-line',
-            }"
-          />
-        </UFormField>
-
-        <div class="space-y-5">
-          <div class="w-full max-w-190 space-y-7">
-            <div class="grid sm:grid-cols-2 gap-5">
-              <div
-                class="space-y-3 flex sm:static flex-col items-center text-center sm:items-start"
-              >
-                <p class="text-sm font-medium text-ink">QR Color</p>
-                <UColorPicker
-                  v-model="qrColor"
-                  size="sm"
-                  class="sm:w-full"
-                  aria-label="Pick QR color"
-                />
-              </div>
-              <div
-                class="space-y-3 flex sm:static flex-col items-center text-center sm:items-start"
-              >
-                <p class="text-sm font-medium text-ink">Background Color</p>
-                <UColorPicker
-                  v-model="qrLayerBgColor"
-                  size="sm"
-                  class="sm:w-full"
-                  aria-label="Pick QR background color"
-                />
-              </div>
-            </div>
-
-            <div class="griddd sm:grid-cols-2 gap-5 hidden">
-              <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                  <p class="text-sm font-medium text-ink">Border Opacity</p>
-                  <span class="text-xs text-ink/60">
-                    {{ Math.round(qrBorderOpacity * 100) }}%
-                  </span>
-                </div>
-                <USlider
-                  v-model="qrBorderOpacity"
-                  :min="0"
-                  :max="1"
-                  :step="0.05"
-                  size="sm"
-                  color="neutral"
-                  class="w-full"
-                />
-              </div>
-              <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                  <p class="text-sm font-medium text-ink">Background Opacity</p>
-                  <span class="text-xs text-ink/60">
-                    {{ Math.round(qrLayerBgOpacity * 100) }}%
-                  </span>
-                </div>
-                <USlider
-                  v-model="qrLayerBgOpacity"
-                  :min="0"
-                  :max="1"
-                  :step="0.05"
-                  size="sm"
-                  color="neutral"
-                  class="w-full"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+          QR & Wallpaper
+        </h2>
+        <p class="max-w-160 text-sm leading-5.25 text-subtle">
+          Choose your phone model for a perfect-fit wallpaper, or download only
+          the QR to share your persona card anywhere.
+        </p>
       </div>
 
-      <div class="flex items-start justify-center flex-wrap gap-10">
+      <UFormField
+        label="Choose Your Phone Model"
+        name="phoneModel"
+        class="sm:col-start-1 [&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
+      >
+        <USelectMenu
+          v-model="selectedModel"
+          :items="phoneModels"
+          value-key="value"
+          label-key="label"
+          :search-input="{ placeholder: 'Search phone model...' }"
+          class="w-full"
+          :ui="{
+            base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink',
+            placeholder: 'text-ink/50',
+            trailingIcon: 'text-subtle',
+            content: 'bg-surface border border-line',
+          }"
+        />
+      </UFormField>
+
+      <div
+        class="flex flex-wrap items-start justify-center gap-10 sm:col-start-2 sm:row-span-3 sm:row-start-1"
+      >
         <div class="flex flex-col items-center gap-6">
           <div
             class="relative flex h-60 w-60 cursor-pointer flex-col items-center justify-center gap-1.5 overflow-hidden rounded-[6px] border border-line bg-raised p-4 sm:scale-100"
@@ -436,6 +370,72 @@ async function downloadQr() {
             :loading="isGeneratingQr"
             @click="downloadQr"
           />
+        </div>
+      </div>
+
+      <div class="space-y-5 sm:col-start-1">
+        <div class="w-full max-w-190 space-y-7">
+          <div class="grid sm:grid-cols-2 gap-5">
+            <div
+              class="space-y-3 flex sm:static flex-col items-center text-center sm:items-start"
+            >
+              <p class="text-sm font-medium text-ink">QR Color</p>
+              <UColorPicker
+                v-model="qrColor"
+                size="sm"
+                class="sm:w-full"
+                aria-label="Pick QR color"
+              />
+            </div>
+            <div
+              class="space-y-3 flex sm:static flex-col items-center text-center sm:items-start"
+            >
+              <p class="text-sm font-medium text-ink">Background Color</p>
+              <UColorPicker
+                v-model="qrLayerBgColor"
+                size="sm"
+                class="sm:w-full"
+                aria-label="Pick QR background color"
+              />
+            </div>
+          </div>
+
+          <div class="griddd sm:grid-cols-2 gap-5 hidden">
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <p class="text-sm font-medium text-ink">Border Opacity</p>
+                <span class="text-xs text-ink/60">
+                  {{ Math.round(qrBorderOpacity * 100) }}%
+                </span>
+              </div>
+              <USlider
+                v-model="qrBorderOpacity"
+                :min="0"
+                :max="1"
+                :step="0.05"
+                size="sm"
+                color="neutral"
+                class="w-full"
+              />
+            </div>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <p class="text-sm font-medium text-ink">Background Opacity</p>
+                <span class="text-xs text-ink/60">
+                  {{ Math.round(qrLayerBgOpacity * 100) }}%
+                </span>
+              </div>
+              <USlider
+                v-model="qrLayerBgOpacity"
+                :min="0"
+                :max="1"
+                :step="0.05"
+                size="sm"
+                color="neutral"
+                class="w-full"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

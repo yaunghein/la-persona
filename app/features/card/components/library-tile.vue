@@ -21,6 +21,37 @@ const isPending = computed(
 );
 const hasSplinePreview = computed(() => !!props.card.splineUrl?.trim());
 
+const toast = useToast();
+const { mutateAsync: updateCard, isPending: isUpdatingVisibility } =
+  useUpdateCardMutation(() => props.card.slug);
+const isPublic = computed(() => props.card.visibility === 'public');
+const visibilityHint = computed(() => {
+  const label = cardBadgeLabel(props.card);
+  return isPublic.value
+    ? `Anyone can see your ${label}\u00a0card.`
+    : `Only LA PERSONA users can see your ${label}\u00a0card.`;
+});
+
+async function changeVisibility(makePublic: boolean) {
+  try {
+    await updateCard({ visibility: makePublic ? 'public' : 'members' });
+    const label = cardBadgeLabel(props.card);
+    toast.add({
+      title: makePublic ? 'Card is public' : 'Card is members only',
+      description: makePublic
+        ? `Anyone can see your ${label} card\u00a0now.`
+        : `Only LA PERSONA users can see your ${label} card\u00a0now.`,
+      color: 'success',
+    });
+  } catch (error) {
+    toast.add({
+      title: 'Could not change card visibility',
+      description: apiErrorMessage(error),
+      color: 'error',
+    });
+  }
+}
+
 function onBadgeClick() {
   if (isPending.value) emit('showPendingInfo', cardHolderName(props.card));
 }
@@ -108,16 +139,38 @@ function onBadgeClick() {
           :href="cardEditorPath(card)"
           aria-label="Edit card"
         />
-        <UButton
-          v-if="!isCommunity"
-          icon="i-lucide-trash-2"
-          color="error"
-          variant="soft"
-          size="sm"
-          class="ml-auto"
-          aria-label="Delete card"
-          @click="emit('delete', card)"
-        />
+        <div class="ml-auto flex items-center gap-3">
+          <UButton
+            v-if="!isCommunity"
+            icon="i-lucide-trash-2"
+            color="error"
+            variant="soft"
+            size="sm"
+            aria-label="Delete card"
+            @click="emit('delete', card)"
+          />
+          <!-- The span takes the tooltip's data-state; on USwitch it would override checked/unchecked. -->
+          <UTooltip :text="visibilityHint">
+            <span class="flex">
+              <USwitch
+                :model-value="isPublic"
+                :disabled="isUpdatingVisibility"
+                checked-icon="i-lucide-globe"
+                unchecked-icon="i-lucide-lock"
+                size="md"
+                :ui="{
+                  container: 'h-7',
+                  base: 'h-7 w-12 px-0.5 data-[state=checked]:bg-ink/5 data-[state=unchecked]:bg-ink/5',
+                  thumb:
+                    'size-5 shadow-none data-[state=checked]:translate-x-5 data-[state=checked]:bg-ink data-[state=unchecked]:bg-ink/20',
+                  icon: 'size-3 group-data-[state=checked]:text-dark group-data-[state=unchecked]:text-ink',
+                }"
+                :aria-label="visibilityHint"
+                @update:model-value="changeVisibility"
+              />
+            </span>
+          </UTooltip>
+        </div>
       </div>
     </template>
   </UCard>

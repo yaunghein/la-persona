@@ -59,6 +59,13 @@ const optionalText = (max: number) =>
     .transform((value) => value || null)
     .nullish();
 
+/** `members` cards open only for signed-in LA PERSONA users. */
+const CARD_VISIBILITIES = ['public', 'members'] as const;
+
+export const CardVisibility = z.enum(CARD_VISIBILITIES);
+
+export type CardVisibility = z.infer<typeof CardVisibility>;
+
 /**
  * Fields a card holder may change. Ownership, organization and design assets
  * (Spline scene, wallpaper, card back) are managed by La Persona and cannot be
@@ -89,6 +96,7 @@ export const UpdateCardRequest = z
         CARD_SLUG_PATTERN,
         'Card URL slugs can only include lowercase letters, numbers, and hyphens.'
       ),
+    visibility: CardVisibility,
   })
   .partial();
 
@@ -118,6 +126,7 @@ export type CardDetail = {
   splineUrl: string | null;
   wallpaperUrl: string | null;
   cardBackUrl: string | null;
+  visibility: CardVisibility;
   organizationId: string;
   userId: string | null;
   createdAt: string;

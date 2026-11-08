@@ -32,6 +32,7 @@ export function toCardDetail(row: CardWithContext): CardDetail {
     splineUrl: card.splineUrl,
     wallpaperUrl: card.wallpaperUrl,
     cardBackUrl: card.cardBackUrl,
+    visibility: card.visibility,
     organizationId: card.organizationId,
     userId: card.userId,
     createdAt: card.createdAt.toISOString(),

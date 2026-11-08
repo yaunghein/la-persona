@@ -1,0 +1,1 @@
+ALTER TABLE "card" ADD COLUMN "visibility" text DEFAULT 'public' NOT NULL;

@@ -8,14 +8,18 @@ import { downloadFile } from '~/utils/share-or-download';
 import { applyCombinedCardToSpline } from '~/features/card/utils/spline-card';
 import { vcfPhoneLines } from '~~/shared/utils/phone';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
+import { ROUTES } from '~~/shared/utils/routes';
 
 const route = useRoute();
 const { normalizeCardLinkValue } = useUrlNormalization();
 
 const { slug } = route.params;
-const { data: card } = await useFetch<PublicCard>(`/api/public/cards/${slug}`);
+const { data: card, error: cardError } = await useFetch<PublicCard>(
+  `/api/public/cards/${slug}`
+);
+const isMembersOnly = cardError.value?.statusCode === 401;
 
-if (!card.value) {
+if (!card.value && !isMembersOnly) {
   throw createError({
     statusCode: 404,
     statusMessage: 'Page not found',
@@ -73,6 +77,7 @@ usePageSeo({
   image: () => resolveObjectStorageUrl(card.value?.cardBackUrl),
   imageAlt: () => cardFullName.value || 'LA PERSONA',
   type: 'profile',
+  noindex: isMembersOnly,
 });
 
 useInAppBrowserPreview(() => {
@@ -854,4 +859,23 @@ async function onSaveContact() {
       </div>
     </div>
   </div>
+
+  <main
+    v-else-if="isMembersOnly"
+    class="flex min-h-dvh flex-col items-center justify-center gap-4 px-6 text-center"
+  >
+    <UIcon name="i-lucide-lock" class="size-8 text-muted" />
+    <h1 class="text-base font-medium uppercase tracking-widest text-ink">
+      Members only
+    </h1>
+    <p class="max-w-80 text-sm text-muted">
+      This card is only visible to LA PERSONA members. Sign in to&nbsp;view it.
+    </p>
+    <UButton
+      label="Sign in"
+      color="neutral"
+      class="mt-2 h-10 text-sm rounded-full bg-ink px-8 font-medium text-ink-inverse hover:bg-ink/90"
+      :to="{ path: ROUTES.SIGN_IN, query: { redirectTo: route.fullPath } }"
+    />
+  </main>
 </template>
