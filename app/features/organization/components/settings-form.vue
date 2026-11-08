@@ -79,6 +79,8 @@ function patch<K extends keyof CommunitySettingsFormValues>(
 const formFieldClass =
   '[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink';
 
+const currentYear = new Date().getFullYear();
+
 const inputUi = {
   base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
 };
@@ -324,6 +326,20 @@ onUnmounted(() => {
             class="w-full"
             :ui="inputUi"
             @update:model-value="patch('name', String($event))"
+          />
+        </UFormField>
+
+        <UFormField label="Founded In" :class="formFieldClass">
+          <UInputNumber
+            :model-value="form.foundedYear"
+            :min="1900"
+            :max="currentYear"
+            :format-options="{ useGrouping: false }"
+            :increment="false"
+            :decrement="false"
+            class="w-full"
+            :ui="inputUi"
+            @update:model-value="patch('foundedYear', $event ?? currentYear)"
           />
         </UFormField>
 

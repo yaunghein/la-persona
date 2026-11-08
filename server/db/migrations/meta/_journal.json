@@ -113,6 +113,13 @@
       "when": 1793624148139,
       "tag": "0015_right_plazm",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1794149427108,
+      "tag": "0016_slim_shooting_star",
+      "breakpoints": true
     }
   ]
 }

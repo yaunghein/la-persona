@@ -83,15 +83,14 @@ export async function listOrganizationsOfUser(
 export async function communityInviteStats(
   organizationId: string
 ): Promise<CommunityInviteStats> {
-  const [organization, setting, counts] = await Promise.all([
-    findOrganizationById(organizationId),
+  const [setting, counts] = await Promise.all([
     ensureCommunitySetting(organizationId),
     countMembersAndEvents(organizationId),
   ]);
   return {
     coverUrl: setting?.coverUrl ?? null,
     ...counts,
-    foundedYear: (organization?.createdAt ?? new Date()).getFullYear(),
+    foundedYear: setting?.foundedYear ?? new Date().getFullYear(),
   };
 }
 
@@ -392,6 +391,7 @@ export async function updateCommunitySettings(
     whyJoin: sanitizeRichText(changes.whyJoin) ?? '',
     coverUrl: changes.coverImageUrl,
     organizerMemberId: changes.organizerMemberId,
+    foundedYear: changes.foundedYear,
   });
   if (!setting) throw notFound('Community');
   return toCommunitySettings({
@@ -404,20 +404,12 @@ export async function updateCommunitySettings(
 export async function describeCommunityAbout(
   organizationId: string
 ): Promise<CommunityAbout> {
-  const [settings, counts, organization, organizerCardSlug] = await Promise.all(
-    [
-      describeCommunitySettings(organizationId),
-      countMembersAndEvents(organizationId),
-      findOrganizationById(organizationId),
-      findOrganizerCardSlug(organizationId),
-    ]
-  );
-  return {
-    ...settings,
-    ...counts,
-    foundedYear: (organization?.createdAt ?? new Date()).getFullYear(),
-    organizerCardSlug,
-  };
+  const [settings, counts, organizerCardSlug] = await Promise.all([
+    describeCommunitySettings(organizationId),
+    countMembersAndEvents(organizationId),
+    findOrganizerCardSlug(organizationId),
+  ]);
+  return { ...settings, ...counts, organizerCardSlug };
 }
 
 export async function describePublicCommunity(

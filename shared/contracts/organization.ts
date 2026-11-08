@@ -147,6 +147,7 @@ export type CommunitySettingsFormValues = {
   cardBackUrl: string;
   /** Member id of the organizer "Contact Organizer" opens; '' hides the button. */
   organizerMemberId: string;
+  foundedYear: number;
 };
 
 /** Community-branded email artwork; only Thakhin edits these. */
@@ -174,6 +175,14 @@ export const UpdateCommunitySettingsRequest = z.object({
   coverImageUrl: StoredImageReference.optional(),
   /** null clears the choice; omitted keeps it. */
   organizerMemberId: z.string().trim().min(1).nullable().optional(),
+  foundedYear: z
+    .number()
+    .int()
+    .min(1900)
+    .refine((year) => year <= new Date().getFullYear(), {
+      message: 'Founded year cannot be in the future.',
+    })
+    .optional(),
 });
 
 export type UpdateCommunitySettingsRequest = z.infer<
@@ -183,7 +192,6 @@ export type UpdateCommunitySettingsRequest = z.infer<
 export type CommunityAbout = CommunitySettings & {
   memberCount: number;
   eventCount: number;
-  foundedYear: number;
   organizerCardSlug: string | null;
 };
 
@@ -216,6 +224,7 @@ export function toCommunitySettings(params: {
   emailContactExchangeUrl?: string | null;
   emailAfterEventUrl?: string | null;
   organizerMemberId?: string | null;
+  foundedYear?: number | null;
 }): CommunitySettings {
   return {
     name: params.name,
@@ -231,6 +240,7 @@ export function toCommunitySettings(params: {
     emailContactExchangeUrl: params.emailContactExchangeUrl?.trim() || '',
     emailAfterEventUrl: params.emailAfterEventUrl?.trim() || '',
     organizerMemberId: params.organizerMemberId ?? '',
+    foundedYear: params.foundedYear ?? new Date().getFullYear(),
   };
 }
 

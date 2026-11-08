@@ -1,0 +1,1 @@
+ALTER TABLE "community_setting" ADD COLUMN "founded_year" integer;

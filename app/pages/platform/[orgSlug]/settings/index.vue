@@ -20,6 +20,7 @@ const emptyForm = (): CommunitySettingsFormValues => ({
   wallpaperUrl: '',
   cardBackUrl: '',
   organizerMemberId: '',
+  foundedYear: new Date().getFullYear(),
 });
 
 const {
@@ -77,6 +78,7 @@ function saveSettings(values: CommunitySettingsFormValues) {
       guidelines: values.guidelines,
       whyJoin: values.whyJoin,
       organizerMemberId: values.organizerMemberId || null,
+      foundedYear: values.foundedYear,
       ...(values.logoUrl !== loaded?.logoUrl && { logoUrl: values.logoUrl }),
       ...(values.coverImageUrl !== loaded?.coverImageUrl && {
         coverImageUrl: values.coverImageUrl,

@@ -80,6 +80,7 @@ export const upsertCommunitySettingByOrganizationId = async (
         | 'emailContactExchangeUrl'
         | 'emailAfterEventUrl'
         | 'organizerMemberId'
+        | 'foundedYear'
       >
     >
 ) => {
@@ -104,6 +105,9 @@ export const upsertCommunitySettingByOrganizationId = async (
       : {}),
     ...(values.organizerMemberId !== undefined
       ? { organizerMemberId: values.organizerMemberId }
+      : {}),
+    ...(values.foundedYear !== undefined
+      ? { foundedYear: values.foundedYear }
       : {}),
   };
 

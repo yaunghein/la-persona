@@ -1,4 +1,10 @@
-import { pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import {
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core';
 import { nanoid } from 'nanoid';
 import { member, organization } from './auth';
 
@@ -27,6 +33,8 @@ export const communitySetting = pgTable(
     description: text().default('').notNull(),
     guidelines: text().default('').notNull(),
     whyJoin: text().default('').notNull(),
+    /** null shows the current year. */
+    foundedYear: integer(),
     /** The organizer whose card "Contact Organizer" opens; null hides the button. */
     organizerMemberId: text().references(() => member.id, {
       onDelete: 'set null',
