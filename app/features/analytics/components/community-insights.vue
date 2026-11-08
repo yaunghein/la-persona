@@ -45,6 +45,7 @@ function closeInfo() {
 }
 
 const chartColors = useChartColors();
+const yAxis = computed(() => wholeNumberYAxis(props.data.memberGrowth.values));
 
 const chartData = computed(() => ({
   labels: props.data.memberGrowth.labels,
@@ -59,6 +60,7 @@ const chartData = computed(() => ({
       pointHoverRadius: 5,
       pointBackgroundColor: chartColors.value.ink,
       borderWidth: 2,
+      clip: false as const,
     },
   ],
 }));
@@ -66,6 +68,7 @@ const chartData = computed(() => ({
 const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
+  layout: { padding: { top: 8 } },
   scales: {
     x: {
       grid: { color: chartColors.value.grid },
@@ -73,9 +76,13 @@ const chartOptions = computed(() => ({
       border: { display: false },
     },
     y: {
-      beginAtZero: true,
+      ...yAxis.value,
       grid: { color: chartColors.value.grid },
-      ticks: { color: chartColors.value.tick, font: { size: 11 } },
+      ticks: {
+        ...yAxis.value.ticks,
+        color: chartColors.value.tick,
+        font: { size: 11 },
+      },
       border: { display: false },
     },
   },

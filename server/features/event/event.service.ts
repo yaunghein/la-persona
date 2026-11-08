@@ -112,6 +112,7 @@ export async function describeEvent(
       record.id,
       record.organizationId,
       record.createdAt,
+      record.endsAt,
       timezoneOffset
     ),
   ]);

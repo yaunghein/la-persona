@@ -1,4 +1,15 @@
-import { and, count, desc, eq, gte, inArray, lte, ne, sql } from 'drizzle-orm';
+import {
+  and,
+  count,
+  desc,
+  eq,
+  gte,
+  inArray,
+  lt,
+  lte,
+  ne,
+  sql,
+} from 'drizzle-orm';
 import { db } from '~~/server/db';
 import {
   attendeeLabel,
@@ -18,9 +29,10 @@ import type {
 } from '~~/shared/contracts/event';
 import type { EventAttendee } from '~~/shared/contracts/event';
 import {
-  viewerRecentDays,
+  viewerDaysBetween,
   type TimezoneOffset,
 } from '~~/shared/utils/datetime';
+import { viewerDaySql } from '~~/server/utils/request-timezone';
 
 const COUNTED_STATUSES: EventRegistrationStatus[] = [
   'registered',
@@ -235,17 +247,21 @@ export async function countCheckedInByUsersInOrganization(
   return new Map(rows.map((row) => [row.userId, Number(row.value)]));
 }
 
-export async function countMembersJoinedSince(
+export async function countMembersJoinedBetween(
   organizationId: string,
-  since: Date
+  from: Date,
+  until: Date
 ) {
+  if (until <= from) return 0;
+
   const [row] = await db
     .select({ value: count() })
     .from(member)
     .where(
       and(
         eq(member.organizationId, organizationId),
-        gte(member.createdAt, since)
+        gte(member.createdAt, from),
+        lt(member.createdAt, until)
       )
     );
 
@@ -254,36 +270,55 @@ export async function countMembersJoinedSince(
 
 export async function getRegistrationTrend(
   eventId: string,
+  eventCreatedAt: Date,
+  eventEndsAt: Date,
   timezoneOffset?: TimezoneOffset
 ) {
-  const labels: string[] = [];
-  const values: number[] = [];
+  const days = viewerDaysBetween(eventCreatedAt, eventEndsAt, timezoneOffset);
+  const first = days[0];
+  const last = days[days.length - 1];
+  if (!first || !last) return { labels: [], values: [] };
 
-  for (const day of viewerRecentDays(7, timezoneOffset)) {
-    const [row] = await db
-      .select({ value: count() })
-      .from(eventRegistration)
-      .where(
-        and(
-          eq(eventRegistration.eventId, eventId),
-          gte(eventRegistration.registeredAt, day.start),
-          sql`${eventRegistration.registeredAt} < ${day.end}`
-        )
-      );
+  const rows = await db
+    .select({
+      date: viewerDaySql(eventRegistration.registeredAt, timezoneOffset).as(
+        'day'
+      ),
+      value: count(),
+    })
+    .from(eventRegistration)
+    .where(
+      and(
+        eq(eventRegistration.eventId, eventId),
+        inArray(eventRegistration.status, COUNTED_STATUSES),
+        gte(eventRegistration.registeredAt, first.start),
+        lt(eventRegistration.registeredAt, last.end)
+      )
+    )
+    .groupBy(sql`day`);
 
-    labels.push(day.label);
-    values.push(row?.value ?? 0);
-  }
+  const byDay = new Map(rows.map((row) => [row.date, Number(row.value ?? 0)]));
 
-  return { labels, values };
+  return {
+    labels: days.map((day) => day.label),
+    values: days.map((day) => byDay.get(day.key) ?? 0),
+  };
 }
 
 export async function buildEventOverview(
   eventId: string,
   organizationId: string,
   eventCreatedAt: Date,
+  eventEndsAt: Date,
   timezoneOffset?: TimezoneOffset
 ): Promise<EventOverviewStats> {
+  const eventDay = viewerDaysBetween(
+    eventEndsAt,
+    eventEndsAt,
+    timezoneOffset
+  )[0];
+  const membersUntil = eventDay?.end ?? eventEndsAt;
+
   const [
     registrations,
     checkedIn,
@@ -293,9 +328,9 @@ export async function buildEventOverview(
   ] = await Promise.all([
     countCountedRegistrations(eventId),
     countCheckedInRegistrations(eventId),
-    countMembersJoinedSince(organizationId, eventCreatedAt),
+    countMembersJoinedBetween(organizationId, eventCreatedAt, membersUntil),
     countContactsByEventId(eventId),
-    getRegistrationTrend(eventId, timezoneOffset),
+    getRegistrationTrend(eventId, eventCreatedAt, eventEndsAt, timezoneOffset),
   ]);
 
   const attendanceRate =

@@ -387,7 +387,7 @@ watch(total, (count) => {
       </div>
     </div>
 
-    <div class="flex flex-col gap-2 sm:flex-row">
+    <div class="flex flex-wrap items-center gap-2">
       <USelectMenu
         v-if="eventFilterItems.length > 1"
         v-model="eventFilter"
@@ -396,7 +396,8 @@ watch(total, (count) => {
         icon="i-lucide-calendar"
         :search-input="{ placeholder: 'Search events' }"
         aria-label="Filter by where you met"
-        class="w-full sm:w-80"
+        class="w-full sm:w-64"
+        :ui="filterSelectUi"
       />
       <UiLabelSelect
         v-model="labelFilter"
@@ -404,7 +405,8 @@ watch(total, (count) => {
         placeholder="All labels"
         manageable
         aria-label="Filter by label"
-        class="w-full sm:w-60"
+        class="min-w-0 flex-1 sm:w-52 sm:flex-none"
+        :ui="filterSelectUi"
         @manage="isLabelsOpen = true"
       />
       <UButton
@@ -412,7 +414,8 @@ watch(total, (count) => {
         label="Group"
         color="neutral"
         variant="ghost"
-        class="h-8 shrink-0 cursor-pointer self-start rounded-full border-2 border-raised px-3 text-sm font-medium hover:bg-raised sm:self-center"
+        class="h-9 shrink-0 cursor-pointer gap-1.5 rounded-full px-3.5 text-sm font-medium ring-1 ring-inset ring-raised hover:bg-raised"
+        :ui="{ leadingIcon: 'size-4' }"
         :class="isGrouped ? 'bg-raised text-ink' : 'text-muted'"
         :aria-pressed="isGrouped"
         aria-label="Group by label"

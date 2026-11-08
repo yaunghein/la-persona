@@ -267,6 +267,7 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
             :manageable="canManageLabels"
             aria-label="Filter by label"
             class="min-w-0 flex-1 sm:w-52 sm:flex-none"
+            :ui="filterSelectUi"
             @manage="isLabelsOpen = true"
           />
           <UButton
@@ -274,7 +275,8 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
             label="Group"
             color="neutral"
             variant="ghost"
-            class="h-8 shrink-0 cursor-pointer rounded-full border-2 border-raised px-3 text-sm font-medium hover:bg-raised"
+            class="h-9 shrink-0 cursor-pointer gap-1.5 rounded-full px-3.5 text-sm font-medium ring-1 ring-inset ring-raised hover:bg-raised"
+            :ui="{ leadingIcon: 'size-4' }"
             :class="isGrouped ? 'bg-raised text-ink' : 'text-muted'"
             :aria-pressed="isGrouped"
             aria-label="Group by label"

@@ -35,6 +35,9 @@ const metrics = computed(() => [
 ]);
 
 const chartColors = useChartColors();
+const yAxis = computed(() =>
+  wholeNumberYAxis(props.data.registrationTrend.values)
+);
 
 const chartData = computed(() => ({
   labels: props.data.registrationTrend.labels,
@@ -49,6 +52,7 @@ const chartData = computed(() => ({
       pointHoverRadius: 5,
       pointBackgroundColor: chartColors.value.ink,
       borderWidth: 2,
+      clip: false as const,
     },
   ],
 }));
@@ -56,19 +60,24 @@ const chartData = computed(() => ({
 const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
+  layout: { padding: { top: 8 } },
   scales: {
     x: {
       grid: { color: chartColors.value.grid, borderDash: [4, 4] },
-      ticks: { color: chartColors.value.tick, font: { size: 12 } },
-      border: { display: false },
-    },
-    y: {
-      beginAtZero: true,
-      max: 160,
       ticks: {
         color: chartColors.value.tick,
         font: { size: 12 },
-        stepSize: 40,
+        autoSkip: true,
+        maxTicksLimit: 8,
+      },
+      border: { display: false },
+    },
+    y: {
+      ...yAxis.value,
+      ticks: {
+        ...yAxis.value.ticks,
+        color: chartColors.value.tick,
+        font: { size: 12 },
       },
       grid: { color: chartColors.value.grid, borderDash: [4, 4] },
       border: { display: false },

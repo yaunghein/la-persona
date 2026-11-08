@@ -10,7 +10,7 @@ const props = defineProps<{
   /** Shows a "Manage labels" link in the dropdown footer. */
   manageable?: boolean;
   loading?: boolean;
-  ui?: { base?: string };
+  ui?: Record<string, string>;
 }>();
 
 const emit = defineEmits<{ create: [name: string]; manage: [] }>();
