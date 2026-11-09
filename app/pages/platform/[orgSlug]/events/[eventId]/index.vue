@@ -344,12 +344,14 @@ async function onCheckedIn() {
 
     <EventCheckIn
       v-else-if="activeTab === 'check-in'"
+      :event-id="eventId"
       :attendees="eventDetail.attendees"
       :check-in-phase="checkInWindow"
       :can-walk-in="canWalkIn"
       :can-export="canManage"
       @open-scanner="onOpenScanner"
       @open-walk-in="onOpenWalkIn"
+      @checked-in="onCheckedIn"
       @select="onSelectAttendee"
       @export="exportRoster('checked_in')"
     />

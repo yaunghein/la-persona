@@ -81,7 +81,14 @@ const items = computed<DropdownMenuItem[][]>(() => [
 </script>
 
 <template>
-  <UDropdownMenu :items="items">
+  <UDropdownMenu
+    :items="items"
+    :ui="{
+      item: 'items-center',
+      itemLeadingIcon: 'size-4',
+      itemTrailingIcon: 'size-4',
+    }"
+  >
     <UTooltip :text="`Actions for ${contact.name}`">
       <UButton
         size="xl"
@@ -94,7 +101,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
     </UTooltip>
     <template #label-item-leading="{ item }">
       <span
-        class="mx-0.5 size-2.5 shrink-0 rounded-full ring-1 ring-inset ring-ink/15"
+        class="size-2.5 shrink-0 rounded-full ring-1 ring-inset ring-ink/15"
         :style="{ backgroundColor: (item as DropdownMenuItem).labelColor }"
       />
     </template>

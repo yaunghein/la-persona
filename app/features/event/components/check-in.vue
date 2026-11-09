@@ -3,6 +3,7 @@ import type { EventAttendee } from '~~/shared/contracts/event';
 import type { EventPhase } from '~~/shared/utils/event-datetime';
 
 const props = defineProps<{
+  eventId: string;
   attendees: EventAttendee[];
   checkInPhase?: EventPhase;
   canWalkIn?: boolean;
@@ -13,12 +14,14 @@ const props = defineProps<{
 const emit = defineEmits<{
   'open-scanner': [];
   'open-walk-in': [];
+  'checked-in': [];
   select: [attendee: EventAttendee];
   export: [];
 }>();
 
 const toast = useToast();
 const searchQuery = ref('');
+const checkingInId = ref<string | null>(null);
 
 const hasQuery = computed(() => searchQuery.value.trim().length > 0);
 
@@ -59,14 +62,37 @@ function displayAvatar(attendee: EventAttendee) {
   return resolveObjectStorageUrl(raw);
 }
 
-function checkIn(attendee: EventAttendee) {
-  if (props.checkInPhase !== 'live') return;
-  toast.add({
-    title: 'Checked in',
-    description: `${attendee.name} has been checked in.`,
-    color: 'success',
-  });
-  searchQuery.value = '';
+async function checkIn(attendee: EventAttendee) {
+  if (props.checkInPhase !== 'live' || checkingInId.value) return;
+  if (attendee.status !== 'registered') return;
+  if (!attendee.cardSlug) {
+    toast.add({
+      title: 'Check-in failed',
+      description: 'This attendee has no card to check in.',
+      color: 'error',
+    });
+    return;
+  }
+
+  checkingInId.value = attendee.id;
+  try {
+    await checkInAttendee(props.eventId, attendee.cardSlug);
+    toast.add({
+      title: 'Checked in',
+      description: `${attendee.name} has been checked in.`,
+      color: 'success',
+    });
+    searchQuery.value = '';
+    emit('checked-in');
+  } catch (error) {
+    toast.add({
+      title: 'Check-in failed',
+      description: apiErrorMessage(error, 'Try again.'),
+      color: 'error',
+    });
+  } finally {
+    checkingInId.value = null;
+  }
 }
 </script>
 
@@ -188,14 +214,18 @@ function checkIn(attendee: EventAttendee) {
         </div>
         <div class="flex shrink-0 items-center gap-3">
           <UButton
-            v-if="attendee.status !== 'checked_in'"
+            v-if="attendee.status === 'registered'"
             label="Check-in"
             color="neutral"
-            :disabled="checkInPhase !== 'live'"
+            :loading="checkingInId === attendee.id"
+            :disabled="checkInPhase !== 'live' || checkingInId === attendee.id"
             class="h-10 cursor-pointer justify-center rounded-full bg-ink px-6 text-sm font-medium text-ink-inverse hover:bg-ink/90 disabled:cursor-not-allowed disabled:bg-raised disabled:text-subtle disabled:opacity-100"
             @click="checkIn(attendee)"
           />
-          <span v-else class="text-sm font-medium text-subtle">
+          <span
+            v-else-if="attendee.status === 'checked_in'"
+            class="text-sm font-medium text-subtle"
+          >
             Already checked in
           </span>
           <UTooltip text="View attendee profile">

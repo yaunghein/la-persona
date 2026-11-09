@@ -365,6 +365,11 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
           <UDropdownMenu
             v-if="row.original.item"
             :items="getActionItems(row.original.item)"
+            :ui="{
+              item: 'items-center',
+              itemLeadingIcon: 'size-4',
+              itemTrailingIcon: 'size-4',
+            }"
           >
             <UTooltip :text="`Actions for ${row.original.item.name}`">
               <UButton
@@ -378,7 +383,7 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
             </UTooltip>
             <template #label-item-leading="{ item }">
               <span
-                class="mx-0.5 size-2.5 shrink-0 rounded-full ring-1 ring-inset ring-ink/15"
+                class="size-2.5 shrink-0 rounded-full ring-1 ring-inset ring-ink/15"
                 :style="{
                   backgroundColor: (item as DropdownMenuItem).labelColor,
                 }"
