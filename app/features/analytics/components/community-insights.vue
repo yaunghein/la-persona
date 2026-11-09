@@ -11,6 +11,7 @@ import {
   PointElement,
   CategoryScale,
 } from 'chart.js';
+import { lineChartOptions, lineSeries } from '~/utils/line-chart';
 import type {
   CommunityEventPerformance,
   CommunityInsightsData,
@@ -50,59 +51,18 @@ const yAxis = computed(() => wholeNumberYAxis(props.data.memberGrowth.values));
 const chartData = computed(() => ({
   labels: props.data.memberGrowth.labels,
   datasets: [
-    {
+    lineSeries(chartColors.value, props.data.memberGrowth.values, {
       label: 'Members',
-      data: props.data.memberGrowth.values,
-      borderColor: chartColors.value.ink,
-      backgroundColor: 'transparent',
-      tension: 0.35,
-      pointRadius: 3,
-      pointHoverRadius: 5,
-      pointBackgroundColor: chartColors.value.ink,
-      borderWidth: 2,
-      clip: false as const,
-    },
+    }),
   ],
 }));
 
-const chartOptions = computed(() => ({
-  responsive: true,
-  maintainAspectRatio: false,
-  layout: { padding: { top: 8 } },
-  scales: {
-    x: {
-      grid: { color: chartColors.value.grid },
-      ticks: { color: chartColors.value.tick, font: { size: 11 } },
-      border: { display: false },
-    },
-    y: {
-      ...yAxis.value,
-      grid: { color: chartColors.value.grid },
-      ticks: {
-        ...yAxis.value.ticks,
-        color: chartColors.value.tick,
-        font: { size: 11 },
-      },
-      border: { display: false },
-    },
-  },
-  plugins: {
-    legend: { display: false },
-    tooltip: {
-      enabled: true,
-      displayColors: false,
-      backgroundColor: chartColors.value.tooltipBackground,
-      borderColor: chartColors.value.tooltipBorder,
-      borderWidth: 1,
-      titleColor: chartColors.value.ink,
-      bodyColor: chartColors.value.ink,
-      padding: 10,
-      callbacks: {
-        label: (ctx: any) => `Members: ${ctx?.parsed?.y ?? 0}`,
-      },
-    },
-  },
-}));
+const chartOptions = computed(() =>
+  lineChartOptions(chartColors.value, {
+    y: yAxis.value,
+    tooltipLabel: (value) => `Members: ${value}`,
+  })
+);
 
 const columns: TableColumn<CommunityEventPerformance>[] = [
   { accessorKey: 'event', header: 'EVENT' },

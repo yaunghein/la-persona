@@ -21,6 +21,7 @@ import {
   type AnalyticsPeriod,
 } from '~~/shared/utils/analytics-period';
 import { format, parseISO } from 'date-fns';
+import { lineChartOptions, lineSeries } from '~/utils/line-chart';
 
 ChartJS.register(
   Title,
@@ -220,64 +221,24 @@ const hasSocialRows = computed(() => socialRows.value.length > 0);
 const hasLinkRows = computed(() => linkRows.value.length > 0);
 
 const chartColors = useChartColors();
+const viewCounts = computed(
+  () => stats.value?.dailyViews.map((view) => view.count) || []
+);
 
 const chartData = computed(() => ({
   labels:
-    stats.value?.dailyViews.map((v) => format(parseISO(v.date), 'MMM d')) || [],
-  datasets: [
-    {
-      data: stats.value?.dailyViews.map((v) => v.count) || [],
-      borderColor: chartColors.value.ink,
-      borderWidth: 2,
-      backgroundColor: 'transparent',
-      tension: 0.35,
-      pointRadius: 0,
-      pointHoverRadius: 4,
-      pointHitRadius: 24,
-      pointHoverBackgroundColor: chartColors.value.ink,
-      pointHoverBorderColor: chartColors.value.ink,
-      pointHoverBorderWidth: 0,
-    },
-  ],
+    stats.value?.dailyViews.map((view) =>
+      format(parseISO(view.date), 'MMM d')
+    ) || [],
+  datasets: [lineSeries(chartColors.value, viewCounts.value)],
 }));
 
-const chartOptions = computed(() => ({
-  responsive: true,
-  maintainAspectRatio: false,
-  interaction: {
-    mode: 'index' as const,
-    intersect: false,
-  },
-  scales: {
-    y: {
-      beginAtZero: true,
-      grid: { color: chartColors.value.grid },
-      border: { color: chartColors.value.axis },
-      ticks: { color: chartColors.value.tick, font: { size: 10 } },
-    },
-    x: {
-      grid: { color: chartColors.value.grid },
-      border: { color: chartColors.value.axis },
-      ticks: { color: chartColors.value.tick, font: { size: 10 } },
-    },
-  },
-  plugins: {
-    legend: { display: false },
-    tooltip: {
-      enabled: true,
-      displayColors: false,
-      backgroundColor: chartColors.value.tooltipBackground,
-      borderColor: chartColors.value.tooltipBorder,
-      borderWidth: 1,
-      titleColor: chartColors.value.ink,
-      bodyColor: chartColors.value.ink,
-      padding: 10,
-      callbacks: {
-        label: (ctx: any) => `Views: ${ctx?.parsed?.y ?? 0}`,
-      },
-    },
-  },
-}));
+const chartOptions = computed(() =>
+  lineChartOptions(chartColors.value, {
+    y: wholeNumberYAxis(viewCounts.value),
+    tooltipLabel: (value) => `Views: ${value}`,
+  })
+);
 
 function openInfo() {
   isInfoOpen.value = true;

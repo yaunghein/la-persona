@@ -11,6 +11,7 @@ import {
   CategoryScale,
 } from 'chart.js';
 import type { EventDetailOverview } from '~~/shared/contracts/event';
+import { lineChartOptions, lineSeries } from '~/utils/line-chart';
 
 ChartJS.register(
   Title,
@@ -42,65 +43,18 @@ const yAxis = computed(() =>
 const chartData = computed(() => ({
   labels: props.data.registrationTrend.labels,
   datasets: [
-    {
+    lineSeries(chartColors.value, props.data.registrationTrend.values, {
       label: 'Registrations',
-      data: props.data.registrationTrend.values,
-      borderColor: chartColors.value.ink,
-      backgroundColor: 'transparent',
-      tension: 0.35,
-      pointRadius: 3,
-      pointHoverRadius: 5,
-      pointBackgroundColor: chartColors.value.ink,
-      borderWidth: 2,
-      clip: false as const,
-    },
+    }),
   ],
 }));
 
-const chartOptions = computed(() => ({
-  responsive: true,
-  maintainAspectRatio: false,
-  layout: { padding: { top: 8 } },
-  scales: {
-    x: {
-      grid: { color: chartColors.value.grid, borderDash: [4, 4] },
-      ticks: {
-        color: chartColors.value.tick,
-        font: { size: 12 },
-        autoSkip: true,
-        maxTicksLimit: 8,
-      },
-      border: { display: false },
-    },
-    y: {
-      ...yAxis.value,
-      ticks: {
-        ...yAxis.value.ticks,
-        color: chartColors.value.tick,
-        font: { size: 12 },
-      },
-      grid: { color: chartColors.value.grid, borderDash: [4, 4] },
-      border: { display: false },
-    },
-  },
-  plugins: {
-    legend: { display: false },
-    tooltip: {
-      enabled: true,
-      displayColors: false,
-      backgroundColor: chartColors.value.tooltipBackground,
-      borderColor: chartColors.value.tooltipBorder,
-      borderWidth: 1,
-      titleColor: chartColors.value.ink,
-      bodyColor: chartColors.value.ink,
-      padding: 10,
-      callbacks: {
-        label: (ctx: { parsed?: { y?: number } }) =>
-          `Registrations: ${ctx?.parsed?.y ?? 0}`,
-      },
-    },
-  },
-}));
+const chartOptions = computed(() =>
+  lineChartOptions(chartColors.value, {
+    y: yAxis.value,
+    tooltipLabel: (value) => `Registrations: ${value}`,
+  })
+);
 </script>
 
 <template>

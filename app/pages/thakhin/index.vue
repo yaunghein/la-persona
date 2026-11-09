@@ -10,6 +10,7 @@ import {
   PointElement,
   CategoryScale,
 } from 'chart.js';
+import { lineChartOptions, lineSeries } from '~/utils/line-chart';
 
 ChartJS.register(
   Title,
@@ -27,24 +28,37 @@ definePageMeta({
 
 const { data, isLoading } = useAdminOverviewQuery();
 
-const colorMode = useColorMode();
+const chartColors = useChartColors();
+const activeCounts = computed(() =>
+  (data.value?.series.dailyActive || []).map((point) => point.count)
+);
+const analyticsCounts = computed(() =>
+  (data.value?.series.analytics || []).flatMap((point) => [
+    point.views,
+    point.other,
+  ])
+);
+const revenueAmounts = computed(() =>
+  (data.value?.series.revenue || []).map((point) => point.amountMinor)
+);
 
-const chartOptions = computed(() => {
-  const isLight = colorMode.value === 'light';
-  const tick = isLight ? '#6b6b74' : '#a3a3a3';
-  const grid = isLight ? '#dcdce1' : '#2a2a2a';
-  return {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { labels: { color: isLight ? '#45454d' : '#d4d4d4' } },
-    },
-    scales: {
-      x: { ticks: { color: tick, maxTicksLimit: 6 }, grid: { color: grid } },
-      y: { beginAtZero: true, ticks: { color: tick }, grid: { color: grid } },
-    },
-  };
-});
+const chartOptions = computed(() =>
+  lineChartOptions(chartColors.value, {
+    y: wholeNumberYAxis(activeCounts.value),
+  })
+);
+const comparedChartOptions = computed(() =>
+  lineChartOptions(chartColors.value, {
+    legend: true,
+    y: wholeNumberYAxis(analyticsCounts.value),
+  })
+);
+const revenueChartOptions = computed(() =>
+  lineChartOptions(chartColors.value, {
+    y: wholeNumberYAxis(revenueAmounts.value),
+    tooltipLabel: (value) => money(value),
+  })
+);
 
 function money(amount: number) {
   return `${amount.toLocaleString()} MMK`;
@@ -57,59 +71,55 @@ function signed(current: number, previous: number) {
   return `${sign}${diff.toLocaleString()} vs last month`;
 }
 
-const activeChart = computed(() => ({
-  labels: (data.value?.series.dailyActive || []).map((point) =>
-    point.day.slice(5)
-  ),
-  datasets: [
-    {
-      label: 'Daily active users',
-      data: (data.value?.series.dailyActive || []).map((point) => point.count),
-      borderColor: '#d6b25e',
-      backgroundColor: '#d6b25e',
-      tension: 0.3,
-    },
-  ],
-}));
-
-const analyticsChart = computed(() => ({
-  labels: (data.value?.series.analytics || []).map((point) =>
-    point.day.slice(5)
-  ),
-  datasets: [
-    {
-      label: 'Views',
-      data: (data.value?.series.analytics || []).map((point) => point.views),
-      borderColor: '#d6b25e',
-      backgroundColor: '#d6b25e',
-      tension: 0.3,
-    },
-    {
-      label: 'Other events',
-      data: (data.value?.series.analytics || []).map((point) => point.other),
-      borderColor: '#8d8d8d',
-      backgroundColor: '#8d8d8d',
-      tension: 0.3,
-    },
-  ],
-}));
-
-const revenueChart = computed(() => ({
-  labels: (data.value?.series.revenue || []).map((point) =>
-    point.week.slice(5)
-  ),
-  datasets: [
-    {
-      label: 'Approved revenue',
-      data: (data.value?.series.revenue || []).map(
-        (point) => point.amountMinor
+const activeChart = computed(() => {
+  const points = data.value?.series.dailyActive || [];
+  return {
+    labels: points.map((point) => point.day.slice(5)),
+    datasets: [
+      lineSeries(
+        chartColors.value,
+        points.map((point) => point.count),
+        { label: 'Daily active users' }
       ),
-      borderColor: '#d6b25e',
-      backgroundColor: '#d6b25e',
-      tension: 0.3,
-    },
-  ],
-}));
+    ],
+  };
+});
+
+const analyticsChart = computed(() => {
+  const points = data.value?.series.analytics || [];
+  return {
+    labels: points.map((point) => point.day.slice(5)),
+    datasets: [
+      lineSeries(
+        chartColors.value,
+        points.map((point) => point.views),
+        { label: 'Views' }
+      ),
+      lineSeries(
+        chartColors.value,
+        points.map((point) => point.other),
+        {
+          label: 'Other events',
+          color: chartColors.value.gold,
+        }
+      ),
+    ],
+  };
+});
+
+const revenueChart = computed(() => {
+  const points = data.value?.series.revenue || [];
+  return {
+    labels: points.map((point) => point.week.slice(5)),
+    datasets: [
+      lineSeries(
+        chartColors.value,
+        points.map((point) => point.amountMinor),
+        { label: 'Approved revenue' }
+      ),
+    ],
+  };
+});
 
 const census = computed(() => {
   const overview = data.value;
@@ -308,13 +318,13 @@ const census = computed(() => {
         <div class="rounded-lg border border-line bg-surface p-4">
           <p class="mb-3 text-sm text-ink/70">Card analytics</p>
           <div class="h-56">
-            <Line :data="analyticsChart" :options="chartOptions" />
+            <Line :data="analyticsChart" :options="comparedChartOptions" />
           </div>
         </div>
         <div class="rounded-lg border border-line bg-surface p-4">
           <p class="mb-3 text-sm text-ink/70">Approved revenue</p>
           <div class="h-56">
-            <Line :data="revenueChart" :options="chartOptions" />
+            <Line :data="revenueChart" :options="revenueChartOptions" />
           </div>
         </div>
       </div>

@@ -15,6 +15,7 @@ export function useChartColors() {
           axis: 'rgba(0, 0, 0, 0.15)',
           tooltipBackground: '#f6f6f8',
           tooltipBorder: '#dcdce1',
+          gold: '#c8a97e',
         }
       : {
           ink: '#ffffff',
@@ -24,6 +25,7 @@ export function useChartColors() {
           axis: 'rgba(255, 255, 255, 0.15)',
           tooltipBackground: '#171717',
           tooltipBorder: '#2a2a2a',
+          gold: '#c8a97e',
         }
   );
 }
