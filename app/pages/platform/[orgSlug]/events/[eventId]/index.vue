@@ -35,6 +35,7 @@ const activeTab = ref<CommunityEventDetailTab>('overview');
 const isProfileOpen = ref(false);
 const isScannerOpen = ref(false);
 const isWalkInOpen = ref(false);
+const isManualRegistrationOpen = ref(false);
 const isEditOpen = ref(false);
 const selectedAttendee = ref<EventAttendee | null>(null);
 const isBroadcastOpen = ref(false);
@@ -189,6 +190,11 @@ function onOpenScanner() {
 function onOpenWalkIn() {
   if (!canWalkIn.value) return;
   isWalkInOpen.value = true;
+}
+
+function onOpenManualRegistration() {
+  if (checkInWindow.value !== 'live') return;
+  isManualRegistrationOpen.value = true;
 }
 
 function onEdit() {
@@ -351,6 +357,7 @@ async function onCheckedIn() {
       :can-export="canManage"
       @open-scanner="onOpenScanner"
       @open-walk-in="onOpenWalkIn"
+      @open-manual-registration="onOpenManualRegistration"
       @checked-in="onCheckedIn"
       @select="onSelectAttendee"
       @export="exportRoster('checked_in')"
@@ -397,6 +404,11 @@ async function onCheckedIn() {
   <EventWalkInRegistrationSlideover
     v-model:open="isWalkInOpen"
     :walk-in-url="walkInUrl"
+  />
+
+  <EventManualRegistrationSlideover
+    v-model:open="isManualRegistrationOpen"
+    :event-id="eventId"
   />
 
   <EventCreateSlideover

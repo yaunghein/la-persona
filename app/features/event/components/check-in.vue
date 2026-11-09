@@ -14,6 +14,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'open-scanner': [];
   'open-walk-in': [];
+  'open-manual-registration': [];
   'checked-in': [];
   select: [attendee: EventAttendee];
   export: [];
@@ -163,18 +164,27 @@ async function checkIn(attendee: EventAttendee) {
         <p class="text-sm text-subtle">
           {{
             canWalkIn
-              ? 'No registered attendee matches this search. Register them as a walk-in instead.'
-              : 'No registered attendee matches this search.'
+              ? 'No registered attendee matches this search. Register them as a walk-in, or use No email check-in if they have no\u00a0email.'
+              : 'No registered attendee matches this search. Use No email check-in if they have no\u00a0email.'
           }}
         </p>
       </div>
-      <UButton
-        v-if="canWalkIn"
-        label="Register as walk-in"
-        color="neutral"
-        class="h-10 cursor-pointer justify-center rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
-        @click="emit('open-walk-in')"
-      />
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <UButton
+          v-if="canWalkIn"
+          label="Register as walk-in"
+          color="neutral"
+          class="h-10 cursor-pointer justify-center rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
+          @click="emit('open-walk-in')"
+        />
+        <UButton
+          label="No email check-in"
+          color="neutral"
+          :disabled="checkInPhase !== 'live'"
+          class="h-10 cursor-pointer justify-center rounded-full bg-raised px-5 text-sm font-medium text-ink hover:bg-line disabled:cursor-not-allowed disabled:bg-raised disabled:text-subtle disabled:opacity-100"
+          @click="emit('open-manual-registration')"
+        />
+      </div>
     </div>
 
     <div v-else-if="hasQuery" class="flex flex-col gap-3">
@@ -194,7 +204,10 @@ async function checkIn(attendee: EventAttendee) {
           }"
         />
         <div class="min-w-0 flex-1">
-          <p class="truncate font-medium text-ink">{{ attendee.name }}</p>
+          <div class="flex min-w-0 items-center gap-2">
+            <p class="truncate font-medium text-ink">{{ attendee.name }}</p>
+            <EventNoEmailBadge v-if="!attendee.hasEmail" />
+          </div>
           <p
             v-if="attendee.role || attendee.company"
             class="truncate text-sm text-subtle"
@@ -251,18 +264,27 @@ async function checkIn(attendee: EventAttendee) {
         <p class="text-sm text-subtle">
           {{
             canWalkIn
-              ? 'Find a registered attendee by name, company, or email. If they are not on the list, register them as a walk-in.'
-              : 'Find a registered attendee by name, company, or email.'
+              ? 'Find a registered attendee by name, company, or email. If they are not on the list, register them as a walk-in, or use No email check-in if they have no\u00a0email.'
+              : 'Find a registered attendee by name, company, or email. If someone has no email, use No email\u00a0check-in.'
           }}
         </p>
       </div>
-      <UButton
-        v-if="canWalkIn"
-        label="Register as walk-in"
-        color="neutral"
-        class="h-10 cursor-pointer justify-center rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
-        @click="emit('open-walk-in')"
-      />
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <UButton
+          v-if="canWalkIn"
+          label="Register as walk-in"
+          color="neutral"
+          class="h-10 cursor-pointer justify-center rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
+          @click="emit('open-walk-in')"
+        />
+        <UButton
+          label="No email check-in"
+          color="neutral"
+          :disabled="checkInPhase !== 'live'"
+          class="h-10 cursor-pointer justify-center rounded-full bg-raised px-5 text-sm font-medium text-ink hover:bg-line disabled:cursor-not-allowed disabled:bg-raised disabled:text-subtle disabled:opacity-100"
+          @click="emit('open-manual-registration')"
+        />
+      </div>
     </div>
   </div>
 </template>

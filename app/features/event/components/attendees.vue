@@ -21,7 +21,7 @@ const emit = defineEmits<{
   export: [];
 }>();
 
-type AttendeeTab = 'all' | 'pending' | 'registered' | 'checked_in';
+type AttendeeTab = 'all' | 'pending' | 'registered' | 'checked_in' | 'no_email';
 
 const toast = useToast();
 const { organizationSlug } = useOrganizationSlug();
@@ -41,6 +41,7 @@ const tabCounts = computed(() => ({
   pending: props.attendees.filter((a) => a.status === 'pending').length,
   registered: props.attendees.filter((a) => a.status === 'registered').length,
   checkedIn: props.attendees.filter((a) => a.status === 'checked_in').length,
+  noEmail: props.attendees.filter((a) => !a.hasEmail).length,
 }));
 
 const tabs = computed(() => [
@@ -57,13 +58,22 @@ const tabs = computed(() => [
     label: `Checked-in (${tabCounts.value.checkedIn})`,
     value: 'checked_in' as const,
   },
+  {
+    label: `No Email (${tabCounts.value.noEmail})`,
+    value: 'no_email' as const,
+  },
 ]);
 
 const filteredAttendees = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
 
   return props.attendees.filter((attendee) => {
-    if (activeTab.value !== 'all' && attendee.status !== activeTab.value) {
+    if (activeTab.value === 'no_email') {
+      if (attendee.hasEmail) return false;
+    } else if (
+      activeTab.value !== 'all' &&
+      attendee.status !== activeTab.value
+    ) {
       return false;
     }
 
@@ -83,7 +93,8 @@ const filteredAttendees = computed(() => {
       attendee.role.toLowerCase().includes(query) ||
       attendee.company.toLowerCase().includes(query) ||
       attendeeStatusLabel(attendee).toLowerCase().includes(query) ||
-      (attendee.email || '').toLowerCase().includes(query)
+      (attendee.email || '').toLowerCase().includes(query) ||
+      (!attendee.hasEmail && 'no email'.includes(query))
     );
   });
 });
@@ -332,9 +343,12 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
             @toggle="toggleGroup(row.original.key)"
           />
           <div v-else class="flex flex-col gap-0.5">
-            <span class="font-medium text-ink">{{
-              row.original.item.name
-            }}</span>
+            <span class="flex items-center gap-2">
+              <span class="font-medium text-ink">{{
+                row.original.item.name
+              }}</span>
+              <EventNoEmailBadge v-if="!row.original.item.hasEmail" />
+            </span>
             <span class="text-xs text-subtle">{{
               row.original.item.role
             }}</span>

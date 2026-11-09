@@ -35,6 +35,7 @@ import {
   findRegistrationByEventAndUser,
   findViewerRegistrations,
   insertRegistrationWithinCapacity,
+  insertWalkInRegistration,
   listEventAttendees,
   toViewerStatus,
   updateEventRegistrationStatus,
@@ -46,6 +47,7 @@ import type {
   AddToGoogleCalendarResult,
   AttendeeExportQuery,
   CreateEventRequest,
+  CreateWalkInRequest,
   EventBroadcastKind,
   EventCollection,
   EventDetailDTO,
@@ -64,6 +66,7 @@ import {
   registrationBlockReason,
 } from '~~/shared/utils/event-datetime';
 import { isCommunityCardComplete } from '~~/shared/utils/event-flow';
+import { resolvedPhoneFields } from '~~/shared/utils/phone';
 import type { TimezoneOffset } from '~~/shared/utils/datetime';
 
 type Organization = { id: string; slug: string; name: string };
@@ -191,7 +194,7 @@ export async function exportAttendeesCsv(
       ],
       ...items.map((attendee) => [
         attendee.name,
-        attendee.email ?? '',
+        attendee.hasEmail ? (attendee.email ?? '') : 'No Email',
         attendee.phone ?? '',
         attendee.role,
         attendee.company,
@@ -275,7 +278,7 @@ export async function approveRegistration(
   params: {
     record: SelectEvent;
     organization: Organization;
-    registration: { id: string; userId: string; status: string };
+    registration: { id: string; userId: string | null; status: string };
   }
 ) {
   const { record, organization, registration } = params;
@@ -292,7 +295,7 @@ export async function approveRegistration(
     throw conflict('This event is at capacity.', 'event_full');
   if (updated === 'not_found') throw notFound('Event');
 
-  if (updated) {
+  if (updated && registration.userId) {
     await sendEventRegistrationEmails(h3Event, {
       userId: registration.userId,
       organization,
@@ -401,6 +404,33 @@ export async function checkInAttendee(
     });
   }
   return { registration: updated ?? registration, created: true };
+}
+
+/**
+ * Staff register a walk-in who has no email. They are already at the venue,
+ * so registration mode and capacity do not apply; only the check-in window does.
+ */
+export async function createWalkInRegistration(params: {
+  record: SelectEvent;
+  createdByUserId: string;
+  request: CreateWalkInRequest;
+}) {
+  const { record, createdByUserId, request } = params;
+  assertCheckInOpen(record);
+  const phoneFields = resolvedPhoneFields(
+    request.phone,
+    request.phoneCountryCode
+  );
+  return insertWalkInRegistration({
+    eventId: record.id,
+    createdByUserId,
+    guestName: request.name,
+    guestPhone: phoneFields.phone,
+    guestPhoneCountryCode: phoneFields.phoneCountryCode,
+    guestCompany: request.company,
+    guestPosition: request.position,
+    guestNote: request.note,
+  });
 }
 
 export async function broadcastToAttendees(

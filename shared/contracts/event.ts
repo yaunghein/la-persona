@@ -211,6 +211,26 @@ export const CreateCheckInRequest = z.object({
   cardSlug: z.string().trim().min(1, 'QR code is required'),
 });
 
+const optionalGuestText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .nullish()
+    .transform((value) => value || null);
+
+/** Staff enter a walk-in who has no email; saving also checks them in. */
+export const CreateWalkInRequest = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(120),
+  phone: optionalGuestText(40),
+  phoneCountryCode: z.string().trim().max(4).optional().nullable(),
+  company: optionalGuestText(200),
+  position: optionalGuestText(200),
+  note: optionalGuestText(500),
+});
+
+export type CreateWalkInRequest = z.infer<typeof CreateWalkInRequest>;
+
 export const CreateBroadcastRequest = z.object({
   kind: z.enum(EVENT_BROADCAST_KINDS),
 });
@@ -318,6 +338,10 @@ export type EventAttendee = {
   position?: string | null;
   website?: string | null;
   planCode?: string | null;
+  /** False for a walk-in staff entered by hand; they have no account. */
+  hasEmail: boolean;
+  /** Staff note on a walk-in entered by hand. */
+  note?: string | null;
   /** Organizer-only labels for this registration; never shown to the attendee. */
   labels: Label[];
 };

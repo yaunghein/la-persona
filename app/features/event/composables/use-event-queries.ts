@@ -4,6 +4,7 @@ import type {
   AttendeeExportQuery,
   AttendeeLabelSummary,
   CreateAttendeeLabelRequest,
+  CreateWalkInRequest,
   EventAttendeeCollection,
   EventBroadcastKind,
   EventCollection,
@@ -127,6 +128,18 @@ export function useApproveRegistrationMutation() {
         `/api/registrations/${registrationId}` as string,
         { method: 'PATCH', body: { status: 'registered' } }
       ),
+    onSuccess: invalidateEvents,
+  });
+}
+
+export function useCreateWalkInMutation(eventId: MaybeRefOrGetter<string>) {
+  const invalidateEvents = useInvalidateEvents();
+  return useMutation({
+    mutationFn: (input: CreateWalkInRequest) =>
+      $fetch<{ id: string }>(eventUrl(toValue(eventId), 'walk-ins'), {
+        method: 'POST',
+        body: input,
+      }),
     onSuccess: invalidateEvents,
   });
 }

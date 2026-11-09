@@ -1,9 +1,11 @@
+import { sql } from 'drizzle-orm';
 import {
   pgTable,
   text,
   timestamp,
   index,
   uniqueIndex,
+  check,
 } from 'drizzle-orm/pg-core';
 import { nanoid } from 'nanoid';
 import { event } from './event';
@@ -28,9 +30,17 @@ export const eventRegistration = pgTable(
     eventId: text()
       .notNull()
       .references(() => event.id, { onDelete: 'cascade' }),
-    userId: text()
-      .notNull()
-      .references(() => user.id, { onDelete: 'cascade' }),
+    // Null for a walk-in with no email, entered by staff at the door.
+    userId: text().references(() => user.id, { onDelete: 'cascade' }),
+    guestName: text(),
+    guestPhone: text(),
+    guestPhoneCountryCode: text(),
+    guestCompany: text(),
+    guestPosition: text(),
+    guestNote: text(),
+    createdByUserId: text().references(() => user.id, {
+      onDelete: 'set null',
+    }),
     status: text()
       .$type<EventRegistrationStatus>()
       .default('registered')
@@ -50,5 +60,9 @@ export const eventRegistration = pgTable(
     ),
     index('event_registration_event_idx').on(table.eventId),
     index('event_registration_user_idx').on(table.userId),
+    check(
+      'event_registration_user_or_guest_chk',
+      sql`${table.userId} is not null or ${table.guestName} is not null`
+    ),
   ]
 );

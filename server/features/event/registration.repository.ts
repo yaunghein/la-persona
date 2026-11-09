@@ -360,7 +360,7 @@ export async function listEventAttendees(
       card,
     })
     .from(eventRegistration)
-    .innerJoin(user, eq(user.id, eventRegistration.userId))
+    .leftJoin(user, eq(user.id, eventRegistration.userId))
     .leftJoin(
       member,
       and(
@@ -380,13 +380,35 @@ export async function listEventAttendees(
 
   const [checkInCounts, labels] = await Promise.all([
     countCheckedInByUsersInOrganization(
-      rows.map((row) => row.user.id),
+      rows.flatMap((row) => (row.user ? [row.user.id] : [])),
       organizationId
     ),
     listLabelsByRegistrationIds(rows.map((row) => row.registration.id)),
   ]);
 
-  return rows.map((row) => {
+  return rows.map((row): EventAttendee => {
+    const { registration } = row;
+    if (!row.user) {
+      return {
+        id: registration.id,
+        name: registration.guestName ?? '',
+        role: registration.guestPosition ?? '',
+        company: registration.guestCompany ?? '',
+        status: registration.status,
+        membershipStatus: 'Guest',
+        joinedAt: null,
+        registeredAt: registration.registeredAt.toISOString(),
+        checkedInAt: registration.checkedInAt?.toISOString() ?? null,
+        eventsAttended: 0,
+        connectionsMade: 0,
+        phone: registration.guestPhone ?? undefined,
+        phoneCountryCode: registration.guestPhoneCountryCode,
+        note: registration.guestNote,
+        hasEmail: false,
+        labels: labels.get(registration.id) ?? [],
+      };
+    }
+
     const firstName = row.card?.firstName || row.user.name;
     const lastName = row.card?.lastName || '';
     const name = [firstName, lastName].filter(Boolean).join(' ').trim();
@@ -408,6 +430,7 @@ export async function listEventAttendees(
       avatarUrl: row.card?.avatarUrl || row.user.image || undefined,
       cardSlug: row.card?.slug || undefined,
       splineUrl: row.card?.splineUrl || null,
+      hasEmail: true,
       labels: labels.get(row.registration.id) ?? [],
     };
   });
@@ -495,6 +518,30 @@ export async function insertRegistrationWithinCapacity(values: {
     }
     return inserted;
   });
+}
+
+/** A walk-in with no account, checked in as staff save them. */
+export async function insertWalkInRegistration(values: {
+  eventId: string;
+  createdByUserId: string;
+  guestName: string;
+  guestPhone: string | null;
+  guestPhoneCountryCode: string | null;
+  guestCompany: string | null;
+  guestPosition: string | null;
+  guestNote: string | null;
+}) {
+  const now = new Date();
+  const [inserted] = await db
+    .insert(eventRegistration)
+    .values({
+      ...values,
+      status: 'checked_in',
+      registeredAt: now,
+      checkedInAt: now,
+    })
+    .returning();
+  return inserted!;
 }
 
 /** Moves a pending registration to registered if a seat is still free. */

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { EventAttendee } from '~~/shared/contracts/event';
 import { formatDateLabel, formatTimeLabel } from '~~/shared/utils/datetime';
+import { internationalPhone } from '~~/shared/utils/phone';
 
 defineOptions({ name: 'CommunityEventAttendeeProfileSlideover' });
 
@@ -129,10 +130,33 @@ function onViewPersona() {
             <p v-if="attendee.email" class="text-xs text-subtle">
               {{ attendee.email }}
             </p>
+            <div v-if="!attendee.hasEmail" class="flex justify-center pt-1">
+              <EventNoEmailBadge />
+            </div>
           </div>
         </div>
 
-        <div>
+        <section v-if="!attendee.hasEmail">
+          <h3 class="pb-3 text-sm font-medium text-ink">Walk-in Details</h3>
+          <div
+            class="flex items-center justify-between border-b border-line px-4 py-3"
+          >
+            <span class="text-sm text-subtle">Phone</span>
+            <span class="text-sm font-bold text-ink">{{
+              attendee.phone
+                ? internationalPhone(attendee.phone, attendee.phoneCountryCode)
+                : '—'
+            }}</span>
+          </div>
+          <div class="flex flex-col gap-1 px-4 py-3">
+            <span class="text-sm text-subtle">Note</span>
+            <p class="text-sm whitespace-pre-line text-ink">
+              {{ attendee.note || '—' }}
+            </p>
+          </div>
+        </section>
+
+        <div v-else>
           <div
             class="flex items-center justify-between border-b border-line px-4 py-3"
           >
@@ -204,7 +228,7 @@ function onViewPersona() {
           </div>
         </section>
 
-        <section>
+        <section v-if="attendee.hasEmail">
           <h3 class="pb-3 text-sm font-medium text-ink">Community Activity</h3>
           <div
             class="flex items-center justify-between border-b border-line px-4 py-3"
@@ -224,7 +248,7 @@ function onViewPersona() {
       </div>
     </template>
 
-    <template v-if="attendee" #footer>
+    <template v-if="attendee?.hasEmail" #footer>
       <div class="flex w-full justify-end">
         <UButton
           label="View Persona Card"

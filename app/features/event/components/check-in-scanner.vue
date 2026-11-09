@@ -414,6 +414,7 @@ async function lookupCode(code: string) {
       website: result.attendee.website,
       planCode: result.attendee.planCode,
       cardSlug: result.attendee.slug,
+      hasEmail: true,
       // The ticket id is the registration id, which the attendee list carries labels for.
       labels:
         props.attendees.find((item) => item.id === result.attendee.id)
