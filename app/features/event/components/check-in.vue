@@ -72,58 +72,57 @@ function checkIn(attendee: EventAttendee) {
 
 <template>
   <div class="flex flex-col gap-8">
-    <div
-      class="flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:gap-6"
-    >
-      <UInput
-        v-model="searchQuery"
-        placeholder="Search Attendees"
-        trailing-icon="i-lucide-search"
-        color="neutral"
-        variant="soft"
-        class="w-full min-w-0 sm:flex-1"
-        :ui="{
-          base: 'h-10 rounded-full border-0 bg-raised ps-5 pe-11 text-sm font-medium text-ink ring-0 placeholder:text-subtle focus-visible:ring-0',
-          trailing: 'pe-5',
-          trailingIcon: 'size-4.5 text-subtle',
-        }"
-      />
-      <span class="shrink-0 text-center text-sm font-medium text-subtle"
-        >or</span
-      >
-      <div class="flex min-w-0 flex-1 items-start gap-2">
-        <div class="flex min-w-0 flex-1 flex-col gap-2">
+    <div class="flex flex-col gap-2">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
+        <UInput
+          v-model="searchQuery"
+          placeholder="Search Attendees"
+          trailing-icon="i-lucide-search"
+          color="neutral"
+          variant="soft"
+          class="w-full min-w-0 sm:flex-1"
+          :ui="{
+            base: 'h-10 rounded-full border-0 bg-raised ps-5 pe-11 text-sm font-medium text-ink ring-0 placeholder:text-subtle focus-visible:ring-0',
+            trailing: 'pe-5',
+            trailingIcon: 'size-4.5 text-subtle',
+          }"
+        />
+        <span class="shrink-0 text-center text-sm font-medium text-subtle"
+          >or</span
+        >
+        <div class="flex min-w-0 flex-1 items-center gap-2">
           <UButton
             label="Check in with scanner"
             trailing-icon="i-lucide-qr-code"
             color="neutral"
             block
             :disabled="checkInPhase !== 'live'"
-            class="h-10 w-full min-w-0 cursor-pointer justify-between rounded-full bg-ink pr-5 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90 disabled:cursor-not-allowed disabled:bg-raised disabled:text-subtle disabled:opacity-100 sm:flex-1"
+            class="h-10 min-w-0 flex-1 cursor-pointer justify-between rounded-full bg-ink pr-5 pl-5 text-sm font-medium text-ink-inverse hover:bg-ink/90 disabled:cursor-not-allowed disabled:bg-raised disabled:text-subtle disabled:opacity-100"
             @click="emit('open-scanner')"
           />
-          <p
-            v-if="checkInPhase !== 'live'"
-            class="text-center text-sm text-subtle sm:text-left"
-          >
-            {{
-              checkInPhase === 'before'
-                ? 'Check-in opens on the event\u00a0day.'
-                : 'This event has ended.'
-            }}
-          </p>
+          <UTooltip v-if="canExport" text="Export check-ins">
+            <UButton
+              icon="i-material-symbols:download-sharp"
+              color="neutral"
+              variant="ghost"
+              class="flex h-10 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-raised p-0 text-ink hover:bg-line"
+              aria-label="Export check-ins"
+              @click="emit('export')"
+            />
+          </UTooltip>
         </div>
-        <UTooltip v-if="canExport" text="Export check-ins">
-          <UButton
-            icon="i-material-symbols:download-sharp"
-            color="neutral"
-            variant="ghost"
-            class="flex h-10 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-raised p-0 text-ink hover:bg-line"
-            aria-label="Export check-ins"
-            @click="emit('export')"
-          />
-        </UTooltip>
       </div>
+      <p
+        v-if="checkInPhase !== 'live'"
+        class="text-center text-sm text-subtle sm:text-right"
+        :class="canExport ? 'sm:pr-13' : undefined"
+      >
+        {{
+          checkInPhase === 'before'
+            ? 'Check-in opens on the event\u00a0day.'
+            : 'This event has ended.'
+        }}
+      </p>
     </div>
 
     <div
@@ -156,36 +155,38 @@ function checkIn(attendee: EventAttendee) {
       <div
         v-for="attendee in matchingAttendees"
         :key="attendee.id"
-        class="flex flex-col gap-4 rounded-lg bg-surface p-4 sm:flex-row sm:items-center sm:justify-between"
+        class="flex items-center gap-4 rounded-lg bg-surface p-4"
       >
-        <div class="flex items-center gap-4">
-          <UAvatar
-            :src="displayAvatar(attendee)"
-            :alt="attendee.name"
-            icon="i-lucide-user"
-            :ui="{
-              root: 'size-12 bg-raised',
-              icon: 'size-5 text-subtle',
-            }"
-          />
-          <div>
-            <p class="font-medium text-ink">{{ attendee.name }}</p>
-            <p class="text-sm text-subtle">
-              {{ attendee.role }} • {{ attendee.company }}
-            </p>
-            <div
-              v-if="attendee.labels.length"
-              class="mt-2 flex flex-wrap gap-1.5"
-            >
-              <UiLabelChip
-                v-for="label in attendee.labels"
-                :key="label.id"
-                :label="label"
-              />
-            </div>
+        <UAvatar
+          :src="displayAvatar(attendee)"
+          :alt="attendee.name"
+          icon="i-lucide-user"
+          class="shrink-0"
+          :ui="{
+            root: 'size-12 bg-raised',
+            icon: 'size-5 text-subtle',
+          }"
+        />
+        <div class="min-w-0 flex-1">
+          <p class="truncate font-medium text-ink">{{ attendee.name }}</p>
+          <p
+            v-if="attendee.role || attendee.company"
+            class="truncate text-sm text-subtle"
+          >
+            {{ [attendee.role, attendee.company].filter(Boolean).join(' • ') }}
+          </p>
+          <div
+            v-if="attendee.labels.length"
+            class="mt-2 flex flex-wrap gap-1.5"
+          >
+            <UiLabelChip
+              v-for="label in attendee.labels"
+              :key="label.id"
+              :label="label"
+            />
           </div>
         </div>
-        <div class="flex items-center justify-end gap-3">
+        <div class="flex shrink-0 items-center gap-3">
           <UButton
             v-if="attendee.status !== 'checked_in'"
             label="Check-in"
