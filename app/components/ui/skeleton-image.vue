@@ -3,6 +3,10 @@
 // Attributes (class, width, alt, ...) fall through to the <img>, so layout is unchanged.
 const props = defineProps<{ src?: string | null }>();
 
+const emit = defineEmits<{
+  load: [];
+}>();
+
 const image = useTemplateRef<{ $el?: HTMLImageElement }>('image');
 const isLoaded = ref(false);
 // Only fade in images the user actually waited for; cached ones show at once.
@@ -16,13 +20,19 @@ watch(
   }
 );
 
+function markLoaded(cached: boolean) {
+  if (isLoaded.value) return;
+  if (cached) shouldFadeIn.value = false;
+  isLoaded.value = true;
+  emit('load');
+}
+
 // Server-rendered or cached images can finish (load or fail) before hydration
 // attaches @load / @error.
 onMounted(() => {
   const element = image.value?.$el;
   if (!props.src || !element?.complete) return;
-  shouldFadeIn.value = false;
-  isLoaded.value = true;
+  markLoaded(true);
 });
 </script>
 
@@ -35,7 +45,7 @@ onMounted(() => {
         ? shouldFadeIn && 'motion-safe:animate-fade-in'
         : 'motion-safe:animate-skeleton bg-elevated text-transparent'
     "
-    @load="isLoaded = true"
-    @error="isLoaded = true"
+    @load="markLoaded(false)"
+    @error="markLoaded(false)"
   />
 </template>

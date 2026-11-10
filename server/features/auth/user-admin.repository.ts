@@ -1,4 +1,4 @@
-import { and, asc, count, eq } from 'drizzle-orm';
+import { and, count, desc, eq } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { card, member, organization, user } from '~~/server/db/schema';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
@@ -15,7 +15,7 @@ export function listUsers() {
       createdAt: user.createdAt,
     })
     .from(user)
-    .orderBy(asc(user.name));
+    .orderBy(desc(user.createdAt), desc(user.id));
 }
 
 export async function findUser(userId: string) {

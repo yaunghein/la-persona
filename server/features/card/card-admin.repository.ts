@@ -39,7 +39,7 @@ export function listAdminCards(filter: { claimed?: boolean }) {
           ? isNotNull(card.userId)
           : isNull(card.userId)
     )
-    .orderBy(desc(card.updatedAt));
+    .orderBy(desc(card.createdAt), desc(card.id));
 }
 
 export type AdminCardRow = Awaited<ReturnType<typeof listAdminCards>>[number];

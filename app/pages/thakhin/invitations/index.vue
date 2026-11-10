@@ -60,9 +60,7 @@ const {
   paginationTotal,
   resetPage,
   onPageChange,
-} = useAdminTable(() => filteredRows.value.length, {
-  defaultSort: [{ id: 'expiresAt', desc: true }],
-});
+} = useAdminTable(() => filteredRows.value.length);
 
 watch(statusFilter, resetPage);
 const cardItems = computed(() =>
@@ -217,6 +215,7 @@ const columns: TableColumn<InvitationRow>[] = [
   },
   { accessorKey: 'planName', header: sortableHeader('PLAN') },
   { accessorKey: 'freeMonths', header: sortableHeader('FREE MONTHS') },
+  { accessorKey: 'createdAt', header: sortableHeader('CREATED') },
   { accessorKey: 'expiresAt', header: sortableHeader('EXPIRES AT') },
   { accessorKey: 'status', header: sortableHeader('STATUS') },
   { accessorKey: 'lastSentAt', header: sortableHeader('LAST SENT') },
@@ -297,6 +296,11 @@ const selectUi = {
           {{
             `${row.original.cardFirstName} ${row.original.cardLastName || ''}`.trim()
           }}
+        </template>
+        <template #createdAt-cell="{ row }">
+          <span class="text-ink/55">{{
+            formatDate(row.original.createdAt)
+          }}</span>
         </template>
         <template #expiresAt-cell="{ row }">
           <span class="text-ink/55">{{

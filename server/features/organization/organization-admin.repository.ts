@@ -130,7 +130,8 @@ export async function findOrganizationDetail(organizationId: string) {
       })
       .from(member)
       .innerJoin(user, eq(user.id, member.userId))
-      .where(eq(member.organizationId, organizationId)),
+      .where(eq(member.organizationId, organizationId))
+      .orderBy(desc(member.createdAt), desc(member.id)),
     db
       .select({
         id: card.id,
@@ -140,7 +141,8 @@ export async function findOrganizationDetail(organizationId: string) {
         userId: card.userId,
       })
       .from(card)
-      .where(eq(card.organizationId, organizationId)),
+      .where(eq(card.organizationId, organizationId))
+      .orderBy(desc(card.createdAt), desc(card.id)),
   ]);
   return { organization: existing, members, cards };
 }

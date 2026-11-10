@@ -78,6 +78,40 @@ const galleryImages = computed(() =>
   eventGalleryImages(props.event.coverUrl, props.event.photoUrls)
 );
 
+const gallery = useTemplateRef<{
+  emblaApi?: { reInit: () => void } | { value?: { reInit: () => void } };
+}>('gallery');
+
+const galleryCarouselUi = computed(() =>
+  isPage.value
+    ? {
+        container:
+          'ms-0 items-start motion-safe:transition-[height] motion-safe:duration-300 motion-safe:ease-out',
+        item: 'min-w-0 basis-full self-start ps-0',
+        dots: 'absolute inset-x-0 bottom-3 z-10 flex items-center justify-center gap-2',
+        dot: 'size-2 rounded-full bg-ink/40 data-[state=active]:bg-ink',
+      }
+    : {
+        viewport: 'size-full',
+        container: 'ms-0 h-full items-stretch',
+        item: 'relative h-full min-h-0 basis-full overflow-hidden ps-0',
+        dots: 'absolute inset-x-0 bottom-3 z-10 flex items-center justify-center gap-2',
+        dot: 'size-2 rounded-full bg-ink/40 data-[state=active]:bg-ink',
+      }
+);
+
+// Embla measures slide height at init. Uploaded images decode later, so the
+// public page remeasures once each image has its real aspect ratio.
+function syncGalleryHeight() {
+  if (!isPage.value || galleryImages.value.length < 2) return;
+  nextTick(() => {
+    const exposed = gallery.value?.emblaApi;
+    if (!exposed) return;
+    const api = 'reInit' in exposed ? exposed : exposed.value;
+    api?.reInit();
+  });
+}
+
 const registeredCount = computed(() => {
   const value = (props.event as { registeredCount?: number }).registeredCount;
   return typeof value === 'number' ? value : 0;
@@ -188,29 +222,31 @@ watch(
         :class="isPage ? 'max-w-120 sm:max-w-md' : ''"
       >
         <div
-          class="relative aspect-[1/0.75] w-full overflow-hidden rounded-lg bg-raised"
+          class="relative w-full overflow-hidden rounded-lg bg-raised"
+          :class="isPage ? '' : 'aspect-[1/0.75]'"
         >
           <UCarousel
             v-if="galleryImages.length > 1"
+            ref="gallery"
             v-slot="{ item }"
             loop
             dots
             align="start"
+            :auto-height="isPage"
             :items="galleryImages"
-            class="size-full"
-            :ui="{
-              viewport: 'size-full',
-              container: 'ms-0 h-full items-stretch',
-              item: 'relative h-full min-h-0 basis-full overflow-hidden ps-0',
-              dots: 'absolute inset-x-0 bottom-3 z-10 flex items-center justify-center gap-2',
-              dot: 'size-2 rounded-full bg-ink/40 data-[state=active]:bg-ink',
-            }"
+            :class="isPage ? 'w-full' : 'size-full'"
+            :ui="galleryCarouselUi"
           >
             <UiSkeletonImage
               :src="item"
               :alt="event.title"
               width="480"
-              class="absolute inset-0 size-full object-cover"
+              :class="
+                isPage
+                  ? 'block h-auto w-full'
+                  : 'absolute inset-0 size-full object-cover'
+              "
+              @load="syncGalleryHeight"
             />
           </UCarousel>
           <UiSkeletonImage
@@ -218,7 +254,7 @@ watch(
             :src="galleryImages[0]"
             :alt="event.title"
             width="480"
-            class="size-full object-cover"
+            :class="isPage ? 'block h-auto w-full' : 'size-full object-cover'"
           />
         </div>
 

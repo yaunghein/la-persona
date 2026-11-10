@@ -376,7 +376,7 @@ export async function listEventAttendees(
       )
     )
     .where(eq(eventRegistration.eventId, eventId))
-    .orderBy(desc(eventRegistration.registeredAt));
+    .orderBy(desc(eventRegistration.createdAt), desc(eventRegistration.id));
 
   const [checkInCounts, labels] = await Promise.all([
     countCheckedInByUsersInOrganization(

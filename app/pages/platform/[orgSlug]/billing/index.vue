@@ -40,8 +40,8 @@ const rows = computed(() => data.value || []);
 const sortedRows = computed(() => {
   const direction = sortOrder.value === 'asc' ? 1 : -1;
   return [...rows.value].sort((a, b) => {
-    const aTime = new Date(a.dueDate).getTime();
-    const bTime = new Date(b.dueDate).getTime();
+    const aTime = new Date(a.createdAt).getTime();
+    const bTime = new Date(b.createdAt).getTime();
     return (aTime - bTime) * direction;
   });
 });

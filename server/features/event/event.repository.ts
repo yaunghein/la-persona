@@ -24,7 +24,7 @@ export const findEventsByOrganizationId = (organizationId: string) => {
     .select()
     .from(event)
     .where(eq(event.organizationId, organizationId))
-    .orderBy(desc(event.startsAt));
+    .orderBy(desc(event.createdAt), desc(event.id));
 };
 
 export const findPublicEventById = async (id: string) => {

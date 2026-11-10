@@ -125,7 +125,7 @@ export async function insertCardPayment(input: {
   });
 }
 
-/** Line items of an organization's payments, newest term first. */
+/** Line items of an organization's payments, most recently added first. */
 export function listOrganizationBillingHistory(organizationId: string) {
   return db
     .select({
@@ -152,8 +152,8 @@ export function listOrganizationBillingHistory(organizationId: string) {
     )
     .where(eq(subscriptionPayment.organizationId, organizationId))
     .orderBy(
-      desc(subscriptionPaymentItem.endAt),
-      desc(subscriptionPayment.createdAt)
+      desc(subscriptionPayment.createdAt),
+      desc(subscriptionPaymentItem.id)
     );
 }
 

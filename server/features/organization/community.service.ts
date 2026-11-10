@@ -289,7 +289,10 @@ export async function listCommunityMembers(
     linkedin: null,
   }));
 
-  return { items: [...members, ...pending] };
+  const items = [...members, ...pending].sort(
+    (a, b) => Date.parse(b.joinedAt) - Date.parse(a.joinedAt)
+  );
+  return { items };
 }
 
 /** The members list, including pending invitations, as a spreadsheet. */

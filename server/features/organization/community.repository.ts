@@ -247,7 +247,8 @@ export function listMembersWithUsers(organizationId: string) {
     .select({ member, user })
     .from(member)
     .innerJoin(user, eq(user.id, member.userId))
-    .where(eq(member.organizationId, organizationId));
+    .where(eq(member.organizationId, organizationId))
+    .orderBy(desc(member.createdAt), desc(member.id));
 }
 
 export function listCardsOfUsersInOrganization(
@@ -275,7 +276,8 @@ export function listPendingInvitations(organizationId: string) {
         eq(invitation.organizationId, organizationId),
         eq(invitation.status, 'pending')
       )
-    );
+    )
+    .orderBy(desc(invitation.createdAt), desc(invitation.id));
 }
 
 /** Admin (Organizer) invitations are sent by platform admins, who are not members, so they bypass better-auth's createInvitation. */

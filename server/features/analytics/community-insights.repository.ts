@@ -2,6 +2,7 @@ import {
   and,
   count,
   countDistinct,
+  desc,
   eq,
   gte,
   inArray,
@@ -154,8 +155,8 @@ export async function getCommunityInsights(
       .from(event)
       .leftJoin(eventRegistration, eq(eventRegistration.eventId, event.id))
       .where(eventWindow)
-      .groupBy(event.id, event.title, event.startsAt)
-      .orderBy(sql`${event.startsAt} desc`),
+      .groupBy(event.id, event.title, event.createdAt)
+      .orderBy(desc(event.createdAt), desc(event.id)),
   ]);
 
   const totalMembers = Number(totalMembersRow?.value ?? 0);
