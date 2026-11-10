@@ -14,9 +14,13 @@ export function useAdminTable(
     itemsPerPage?: number;
     /** Query key for the search box; a page with two tables needs two. */
     searchQueryKey?: string;
+    /** Template `ref` name; a page with two tables needs two. */
+    tableRef?: string;
   }
 ) {
-  const table = useTemplateRef<{ tableApi: AdminTableApi }>('table');
+  const table = useTemplateRef<{ tableApi: AdminTableApi }>(
+    options?.tableRef ?? 'table'
+  );
   const globalFilter = useQueryState(options?.searchQueryKey ?? 'q', '');
   const sorting = ref<AdminTableSorting>(
     options?.defaultSort ?? [{ id: 'createdAt', desc: true }]

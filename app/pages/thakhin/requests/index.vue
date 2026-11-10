@@ -106,6 +106,7 @@ const {
   onPageChange: onUpdatePageChange,
 } = useAdminTable(() => updateRows.value.length, {
   searchQueryKey: 'updates_q',
+  tableRef: 'updateTable',
 });
 
 async function decideUpdate(row: UpdateRow, decision: 'approve' | 'decline') {
