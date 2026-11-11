@@ -79,10 +79,17 @@ export type PublicEventViewer = {
   viewerRegistrationStatus: ViewerRegistrationStatus;
 };
 
+export type ImageDimensions = {
+  width: number;
+  height: number;
+};
+
 export type PublicEventDTO = EventDTO & {
   organizer: EventOrganizer;
   registeredCount: number;
   viewer: PublicEventViewer | null;
+  /** Keyed by the stored cover and photo values. Present before the file loads. */
+  imageSizes: Record<string, ImageDimensions>;
 };
 
 export type EventListItemDTO = EventDTO & {

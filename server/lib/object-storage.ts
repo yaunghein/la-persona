@@ -1,5 +1,6 @@
 import {
   DeleteObjectCommand,
+  GetObjectCommand,
   HeadObjectCommand,
   NotFound,
   PutObjectCommand,
@@ -75,4 +76,17 @@ export async function deleteObject(key: string) {
   await objectStorageClient().send(
     new DeleteObjectCommand({ Bucket: env.AWS_BUCKET_NAME, Key: key })
   );
+}
+
+/** Inclusive byte range. Used to read an image header without the whole file. */
+export async function readObjectRange(key: string, start: number, end: number) {
+  const response = await objectStorageClient().send(
+    new GetObjectCommand({
+      Bucket: env.AWS_BUCKET_NAME,
+      Key: key,
+      Range: `bytes=${start}-${end}`,
+    })
+  );
+  if (!response.Body) return Buffer.alloc(0);
+  return Buffer.from(await response.Body.transformToByteArray());
 }

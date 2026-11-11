@@ -43,6 +43,7 @@ import {
 import { sendEventRegistrationEmails } from '~~/server/features/event/registration.notifications';
 import { toCsv } from '~~/server/lib/csv';
 import { sanitizeRichText } from '~~/server/lib/html-sanitizer';
+import { readEventImageSizes } from '~~/server/lib/image-dimensions';
 import type {
   AddToGoogleCalendarResult,
   AttendeeExportQuery,
@@ -566,13 +567,18 @@ export async function describePublicEvent(
 ): Promise<PublicEventDTO> {
   const row = await findPublicEventById(eventId);
   if (!row) throw notFound('Event');
-  const [viewer, organizerCardSlug, registeredCount] = await Promise.all([
-    viewerUserId
-      ? viewerOfEvent(viewerUserId, row.event.organizationId, eventId)
-      : null,
-    findOrganizerCardSlug(row.event.organizationId),
-    countCountedRegistrations(eventId),
-  ]);
+  const [viewer, organizerCardSlug, registeredCount, imageSizes] =
+    await Promise.all([
+      viewerUserId
+        ? viewerOfEvent(viewerUserId, row.event.organizationId, eventId)
+        : null,
+      findOrganizerCardSlug(row.event.organizationId),
+      countCountedRegistrations(eventId),
+      readEventImageSizes([
+        row.event.coverUrl,
+        ...(row.event.photoUrls ?? []),
+      ]),
+    ]);
   return {
     ...toEventDTO(row.event),
     organizer: {
@@ -583,6 +589,7 @@ export async function describePublicEvent(
     },
     registeredCount,
     viewer,
+    imageSizes,
   };
 }
 
