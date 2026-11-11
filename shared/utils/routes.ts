@@ -10,6 +10,9 @@ export const ROUTES = {
     PUBLIC: (eventId: string) => `/events/${eventId}`,
     PUBLIC_MINGALARBAR: (eventId: string) =>
       `/events/${eventId}?onboarding=mingalarbar`,
+    WALK_IN: (eventId: string) => `/events/${eventId}/walk-in`,
+    WALK_IN_MINGALARBAR: (eventId: string) =>
+      `/events/${eventId}/walk-in?onboarding=mingalarbar`,
     PLATFORM_LIST: (orgSlug: string) => `${PLATFORM_ROOT}/${orgSlug}/events`,
     PLATFORM_LIST_EVENT: (orgSlug: string, eventId: string) =>
       `${PLATFORM_ROOT}/${orgSlug}/events?event=${encodeURIComponent(eventId)}`,
@@ -25,12 +28,13 @@ export const ROUTES = {
     CARD: (
       orgSlug: string,
       cardSlug: string,
-      params?: { step?: string; eventId?: string }
+      params?: { step?: string; eventId?: string; intent?: string }
     ) => {
       const path = `${PLATFORM_ROOT}/${orgSlug}/cards/${cardSlug}/community-setup`;
       const query = new URLSearchParams();
       if (params?.step) query.set('step', params.step);
       if (params?.eventId) query.set('eventId', params.eventId);
+      if (params?.intent) query.set('intent', params.intent);
       const qs = query.toString();
       return qs ? `${path}?${qs}` : path;
     },
@@ -90,6 +94,10 @@ export function isCommunitySetupBootstrapPath(path: string) {
 
 export function publicEventAbsoluteUrl(eventId: string) {
   return `${env.BASE_URL.replace(/\/$/, '')}${ROUTES.EVENTS.PUBLIC(eventId)}`;
+}
+
+export function publicWalkInAbsoluteUrl(eventId: string) {
+  return `${env.BASE_URL.replace(/\/$/, '')}${ROUTES.EVENTS.WALK_IN(eventId)}`;
 }
 
 export function communityCardPath(cardSlug: string) {

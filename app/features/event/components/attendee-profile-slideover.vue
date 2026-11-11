@@ -130,8 +130,12 @@ function onViewPersona() {
             <p v-if="attendee.email" class="text-xs text-subtle">
               {{ attendee.email }}
             </p>
-            <div v-if="!attendee.hasEmail" class="flex justify-center pt-1">
-              <EventNoEmailBadge />
+            <div
+              v-if="!attendee.hasEmail || attendee.isWalkIn"
+              class="flex justify-center gap-2 pt-1"
+            >
+              <EventNoEmailBadge v-if="!attendee.hasEmail" />
+              <EventWalkInBadge v-if="attendee.isWalkIn" />
             </div>
           </div>
         </div>

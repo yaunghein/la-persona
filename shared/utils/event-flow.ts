@@ -13,6 +13,14 @@ export type EventFlowViewer = {
   viewerRegistrationStatus: ViewerRegistrationStatus;
 };
 
+export type RegistrationIntent = 'public' | 'walk_in';
+
+export function registrationIntentFromQuery(
+  value: unknown
+): RegistrationIntent {
+  return value === 'walk-in' ? 'walk_in' : 'public';
+}
+
 export function isCommunityCardComplete(card: {
   firstName?: string | null;
   position?: string | null;
@@ -27,10 +35,28 @@ export function isCommunityCardComplete(card: {
   );
 }
 
-function eventHome(eventId?: string | null, orgSlug?: string | null) {
-  if (eventId) return ROUTES.EVENTS.PUBLIC(eventId);
+function eventHome(
+  eventId?: string | null,
+  orgSlug?: string | null,
+  intent: RegistrationIntent = 'public'
+) {
+  if (eventId) {
+    return intent === 'walk_in'
+      ? ROUTES.EVENTS.WALK_IN(eventId)
+      : ROUTES.EVENTS.PUBLIC(eventId);
+  }
   if (orgSlug) return `${ROUTES.PLATFORM.ROOT}/${orgSlug}`;
   return ROUTES.PLATFORM.ROOT;
+}
+
+export function communitySetupBootstrapPath(
+  orgSlug: string,
+  eventId: string,
+  intent: RegistrationIntent = 'public'
+) {
+  const path = ROUTES.COMMUNITY_SETUP.BOOTSTRAP(orgSlug, eventId);
+  if (intent !== 'walk_in') return path;
+  return `${path}?intent=walk-in`;
 }
 
 export function resolveCommunitySetupStep(input: {
@@ -44,42 +70,50 @@ export function resolveEventFlowPath(input: {
   orgSlug: string;
   viewer: EventFlowViewer;
   source: 'register' | 'mingalarbar' | 'bootstrap' | 'setup';
+  intent?: RegistrationIntent;
 }): string {
   const { eventId, orgSlug, viewer, source } = input;
+  const intent = input.intent ?? 'public';
 
   if (!viewer.isAuthenticated) {
     if (source === 'mingalarbar' || source === 'register') {
-      return eventId
-        ? ROUTES.EVENTS.PUBLIC_MINGALARBAR(eventId)
-        : ROUTES.SIGN_IN;
+      if (!eventId) return ROUTES.SIGN_IN;
+      return intent === 'walk_in'
+        ? ROUTES.EVENTS.WALK_IN_MINGALARBAR(eventId)
+        : ROUTES.EVENTS.PUBLIC_MINGALARBAR(eventId);
     }
     return ROUTES.SIGN_IN;
   }
 
   if (!viewer.isMember) {
-    if (!eventId) return eventHome(eventId, orgSlug);
-    return ROUTES.COMMUNITY_SETUP.BOOTSTRAP(orgSlug, eventId);
+    if (!eventId) return eventHome(eventId, orgSlug, intent);
+    return communitySetupBootstrapPath(orgSlug, eventId, intent);
   }
 
   if (!viewer.cardComplete) {
     if (!viewer.cardSlug) {
-      if (!eventId) return eventHome(eventId, orgSlug);
-      return ROUTES.COMMUNITY_SETUP.BOOTSTRAP(orgSlug, eventId);
+      if (!eventId) return eventHome(eventId, orgSlug, intent);
+      return communitySetupBootstrapPath(orgSlug, eventId, intent);
     }
     return ROUTES.COMMUNITY_SETUP.CARD(orgSlug, viewer.cardSlug, {
       step: 'create-card',
       eventId: eventId || undefined,
+      intent: intent === 'walk_in' ? 'walk-in' : undefined,
     });
   }
 
-  return eventHome(eventId, orgSlug);
+  return eventHome(eventId, orgSlug, intent);
 }
 
-export function communitySetupSignInPath(orgSlug: string, eventId: string) {
+export function communitySetupSignInPath(
+  orgSlug: string,
+  eventId: string,
+  intent: RegistrationIntent = 'public'
+) {
   return {
     path: ROUTES.SIGN_IN,
     query: {
-      redirectTo: ROUTES.COMMUNITY_SETUP.BOOTSTRAP(orgSlug, eventId),
+      redirectTo: communitySetupBootstrapPath(orgSlug, eventId, intent),
     },
   };
 }

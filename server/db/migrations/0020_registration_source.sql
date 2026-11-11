@@ -1,0 +1,2 @@
+ALTER TABLE "event_registration" ADD COLUMN "source" text;--> statement-breakpoint
+ALTER TABLE "event_registration" ADD CONSTRAINT "event_registration_source_chk" CHECK ("event_registration"."source" is null or "event_registration"."source" in ('online', 'walk_in'));

@@ -1,13 +1,24 @@
 <script setup lang="ts">
 import type { PublicEventDTO } from '~~/shared/contracts/event';
-import { registrationBlockReason } from '~~/shared/utils/event-datetime';
+import {
+  checkInPhase,
+  registrationBlockReason,
+} from '~~/shared/utils/event-datetime';
 import { parseEventOnboardingStep } from '~~/shared/utils/event-onboarding';
 import {
   communitySetupSignInPath,
   resolveEventFlowPath,
   type EventFlowViewer,
+  type RegistrationIntent,
 } from '~~/shared/utils/event-flow';
 import { ROUTES } from '~~/shared/utils/routes';
+
+const props = withDefaults(
+  defineProps<{
+    intent?: RegistrationIntent;
+  }>(),
+  { intent: 'public' }
+);
 
 const route = useRoute();
 const eventId = computed(() => String(route.params.eventId || ''));
@@ -23,6 +34,28 @@ const {
   error,
   refresh,
 } = await useFetch<PublicEventDTO>(() => `/api/public/events/${eventId.value}`);
+
+if (props.intent === 'walk_in') {
+  const phase = event.value
+    ? checkInPhase(
+        event.value.startsAt,
+        event.value.endsAt,
+        event.value.timeZone
+      )
+    : 'before';
+  if (phase !== 'live') {
+    throw createError({
+      statusCode: 404,
+      statusMessage: 'Page not found',
+    });
+  }
+}
+
+function eventPath() {
+  return props.intent === 'walk_in'
+    ? ROUTES.EVENTS.WALK_IN(eventId.value)
+    : ROUTES.EVENTS.PUBLIC(eventId.value);
+}
 
 usePageSeo({
   title: () =>
@@ -101,18 +134,25 @@ const {
   orgSlug,
   endsAt: () => event.value?.endsAt,
   isRegistered: () => registeredStatus.value === 'registered',
-  returnPath: () => ROUTES.EVENTS.PUBLIC(eventId.value),
+  returnPath: () => eventPath(),
 });
 
 const registrationBlock = computed(() => {
   if (!event.value) return null;
-  return registrationBlockReason({
+  const block = registrationBlockReason({
     startsAt: event.value.startsAt,
     endsAt: event.value.endsAt,
     registrationMode: event.value.registrationMode,
     capacity: event.value.capacity,
     registeredCount: event.value.registeredCount,
   });
+  if (
+    props.intent === 'walk_in' &&
+    (block === 'closed' || block === 'invite_only')
+  ) {
+    return null;
+  }
+  return block;
 });
 
 const canRegister = computed(
@@ -134,13 +174,14 @@ watch(
       return;
     }
     if (registrationBlock.value) {
-      return navigateTo(ROUTES.EVENTS.PUBLIC(eventId.value));
+      return navigateTo(eventPath());
     }
     const next = resolveEventFlowPath({
       eventId: eventId.value,
       orgSlug: orgSlug.value,
       viewer: viewer.value,
       source: 'mingalarbar',
+      intent: props.intent,
     });
     if (next !== route.fullPath) {
       navigateTo(next);
@@ -164,10 +205,15 @@ function onRegister() {
     orgSlug: orgSlug.value,
     viewer: viewer.value,
     source: 'register',
+    intent: props.intent,
   });
 
   if (!viewer.value.isAuthenticated) {
-    return navigateTo(ROUTES.EVENTS.PUBLIC_MINGALARBAR(eventId.value));
+    return navigateTo(
+      props.intent === 'walk_in'
+        ? ROUTES.EVENTS.WALK_IN_MINGALARBAR(eventId.value)
+        : ROUTES.EVENTS.PUBLIC_MINGALARBAR(eventId.value)
+    );
   }
 
   return navigateTo(next);
@@ -175,11 +221,13 @@ function onRegister() {
 
 function onCreateAccount() {
   if (!orgSlug.value) return;
-  return navigateTo(communitySetupSignInPath(orgSlug.value, eventId.value));
+  return navigateTo(
+    communitySetupSignInPath(orgSlug.value, eventId.value, props.intent)
+  );
 }
 
 function onCancelOnboarding() {
-  return navigateTo(ROUTES.EVENTS.PUBLIC(eventId.value));
+  return navigateTo(eventPath());
 }
 </script>
 
@@ -238,6 +286,7 @@ function onCancelOnboarding() {
         v-else
         class="min-h-0 flex-1"
         variant="page"
+        :intent="intent"
         :event="event"
         :organizer="event.organizer"
         :organization-slug="orgSlug"

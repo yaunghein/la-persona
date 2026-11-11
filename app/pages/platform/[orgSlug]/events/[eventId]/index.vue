@@ -6,14 +6,16 @@ import type {
   EventAttendee,
   EventBroadcastKind,
 } from '~~/shared/contracts/event';
-import { publicEventAbsoluteUrl } from '~~/shared/utils/routes';
+import {
+  publicEventAbsoluteUrl,
+  publicWalkInAbsoluteUrl,
+} from '~~/shared/utils/routes';
 import { slugify } from '~~/shared/utils/slugify';
 import {
   checkInPhase,
   eventPhase,
   formatEventDateTimeRange,
   formatEventDateValue,
-  registrationBlockReason,
 } from '~~/shared/utils/event-datetime';
 
 definePageMeta({
@@ -112,20 +114,9 @@ const checkInWindow = computed(() =>
     : 'before'
 );
 
-const canWalkIn = computed(() => {
-  if (!event.value) return false;
-  return (
-    registrationBlockReason({
-      startsAt: event.value.startsAt,
-      endsAt: event.value.endsAt,
-      registrationMode: event.value.registrationMode,
-      capacity: event.value.capacity,
-      registeredCount: event.value.registeredCount,
-    }) === null
-  );
-});
+const canWalkIn = computed(() => checkInWindow.value === 'live');
 
-const walkInUrl = computed(() => publicEventAbsoluteUrl(eventId.value));
+const walkInUrl = computed(() => publicWalkInAbsoluteUrl(eventId.value));
 
 function goBack() {
   navigateTo(`/platform/${organizationSlug.value}/events`);

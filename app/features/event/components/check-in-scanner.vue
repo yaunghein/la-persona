@@ -392,6 +392,9 @@ async function lookupCode(code: string) {
       return;
     }
 
+    const listed = props.attendees.find(
+      (item) => item.id === result.attendee.id
+    );
     scannedAttendee.value = {
       id: result.attendee.id,
       name: result.attendee.name,
@@ -415,10 +418,9 @@ async function lookupCode(code: string) {
       planCode: result.attendee.planCode,
       cardSlug: result.attendee.slug,
       hasEmail: true,
+      isWalkIn: listed?.isWalkIn ?? false,
       // The ticket id is the registration id, which the attendee list carries labels for.
-      labels:
-        props.attendees.find((item) => item.id === result.attendee.id)
-          ?.labels ?? [],
+      labels: listed?.labels ?? [],
     };
 
     state.value = result.status === 'already' ? 'already' : 'success';

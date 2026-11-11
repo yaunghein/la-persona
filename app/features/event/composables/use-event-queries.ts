@@ -112,10 +112,27 @@ export function registerForEvent(eventId: string) {
   );
 }
 
+export function registerWalkIn(eventId: string) {
+  return $fetch<{ id: string; status: string }>(
+    eventUrl(eventId, 'walk-in-registrations'),
+    {
+      method: 'POST',
+    }
+  );
+}
+
 export function useRegisterForEventMutation() {
   const invalidateEvents = useInvalidateEvents();
   return useMutation({
     mutationFn: registerForEvent,
+    onSuccess: invalidateEvents,
+  });
+}
+
+export function useRegisterWalkInMutation() {
+  const invalidateEvents = useInvalidateEvents();
+  return useMutation({
+    mutationFn: registerWalkIn,
     onSuccess: invalidateEvents,
   });
 }
@@ -278,6 +295,19 @@ export function useJoinEventCommunityMutation() {
   return useMutation({
     mutationFn: (eventId: string) =>
       $fetch<EventMembershipResult>(eventUrl(eventId, 'memberships'), {
+        method: 'POST',
+      }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: organizationQueryKeys.all }),
+  });
+}
+
+/** Joins the community from the walk-in page. */
+export function useJoinWalkInCommunityMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (eventId: string) =>
+      $fetch<EventMembershipResult>(eventUrl(eventId, 'walk-in-memberships'), {
         method: 'POST',
       }),
     onSuccess: () =>

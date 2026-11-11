@@ -180,6 +180,14 @@ export default defineNuxtConfig({
     },
   },
   routeRules: {
+    // temporary redirect for Imagine First event walk-in
+    // dont forget to do this just before the event Friday night
+    // '/events/EYA2FcWBYgWwlXxE6LUst': {
+    //   redirect: {
+    //     to: '/events/EYA2FcWBYgWwlXxE6LUst/walk-in',
+    //     statusCode: 302,
+    //   },
+    // },
     '/': { prerender: true },
     '/privacy-policy': { prerender: true },
     '/platform': { ssr: false },

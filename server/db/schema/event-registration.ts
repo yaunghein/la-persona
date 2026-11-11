@@ -20,6 +20,11 @@ export const EVENT_REGISTRATION_STATUSES = [
 export type EventRegistrationStatus =
   (typeof EVENT_REGISTRATION_STATUSES)[number];
 
+export const EVENT_REGISTRATION_SOURCES = ['online', 'walk_in'] as const;
+
+export type EventRegistrationSource =
+  (typeof EVENT_REGISTRATION_SOURCES)[number];
+
 export const eventRegistration = pgTable(
   'event_registration',
   {
@@ -41,6 +46,9 @@ export const eventRegistration = pgTable(
     createdByUserId: text().references(() => user.id, {
       onDelete: 'set null',
     }),
+    // Null on rows from before this column, and on staff no-email guests.
+    // Account registrations set online or walk_in and keep it through check-in.
+    source: text().$type<EventRegistrationSource>(),
     status: text()
       .$type<EventRegistrationStatus>()
       .default('registered')
@@ -63,6 +71,10 @@ export const eventRegistration = pgTable(
     check(
       'event_registration_user_or_guest_chk',
       sql`${table.userId} is not null or ${table.guestName} is not null`
+    ),
+    check(
+      'event_registration_source_chk',
+      sql`${table.source} is null or ${table.source} in ('online', 'walk_in')`
     ),
   ]
 );

@@ -348,7 +348,7 @@ const columns: TableColumn<CardRequestRow>[] = [
           :pagination-options="paginationOptions"
           :get-row-id="(row) => row.id"
           :ui="ADMIN_TABLE_UI"
-          class="w-full min-w-[48rem]"
+          class="w-full min-w-4xl"
           @select="
             (_event, row) => {
               selectedRequest = row.original;

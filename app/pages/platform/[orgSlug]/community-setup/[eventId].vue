@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { registrationIntentFromQuery } from '~~/shared/utils/event-flow';
 import { ROUTES } from '~~/shared/utils/routes';
 
 definePageMeta({
@@ -7,10 +8,19 @@ definePageMeta({
 
 const route = useRoute();
 const { mutateAsync: joinEventCommunity } = useJoinEventCommunityMutation();
+const { mutateAsync: joinWalkInCommunity } = useJoinWalkInCommunityMutation();
 const { mutateAsync: registerForEvent } = useRegisterForEventMutation();
+const { mutateAsync: registerWalkIn } = useRegisterWalkInMutation();
 const toast = useToast();
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
 const eventId = computed(() => String(route.params.eventId || ''));
+const intent = computed(() => registrationIntentFromQuery(route.query.intent));
+
+function eventPath() {
+  return intent.value === 'walk_in'
+    ? ROUTES.EVENTS.WALK_IN(eventId.value)
+    : ROUTES.EVENTS.PUBLIC(eventId.value);
+}
 
 const { data: session } = await authClient.useSession(useFetch);
 
@@ -33,11 +43,15 @@ onMounted(async () => {
   }
 
   try {
-    const result = await joinEventCommunity(eventId.value);
+    const result = await (
+      intent.value === 'walk_in' ? joinWalkInCommunity : joinEventCommunity
+    )(eventId.value);
 
     if (result.alreadyMember && result.cardComplete) {
-      await registerForEvent(result.eventId);
-      await navigateTo(ROUTES.EVENTS.PUBLIC(result.eventId), { replace: true });
+      await (intent.value === 'walk_in' ? registerWalkIn : registerForEvent)(
+        result.eventId
+      );
+      await navigateTo(eventPath(), { replace: true });
       return;
     }
 
@@ -49,6 +63,7 @@ onMounted(async () => {
       ROUTES.COMMUNITY_SETUP.CARD(result.organizationSlug, result.cardSlug, {
         step: 'create-card',
         eventId: result.eventId,
+        intent: intent.value === 'walk_in' ? 'walk-in' : undefined,
       }),
       { replace: true }
     );
@@ -61,7 +76,7 @@ onMounted(async () => {
       ),
       color: 'error',
     });
-    await navigateTo(ROUTES.EVENTS.PUBLIC(eventId.value), { replace: true });
+    await navigateTo(eventPath(), { replace: true });
   }
 });
 </script>

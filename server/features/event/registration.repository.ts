@@ -19,6 +19,7 @@ import {
   card,
   registrationLabel,
   user,
+  type EventRegistrationSource,
 } from '~~/server/db/schema';
 import { countContactsByEventId } from '~~/server/features/contact/contact.repository';
 import { listLabelsByRegistrationIds } from '~~/server/features/event/attendee-label.repository';
@@ -405,6 +406,7 @@ export async function listEventAttendees(
         phoneCountryCode: registration.guestPhoneCountryCode,
         note: registration.guestNote,
         hasEmail: false,
+        isWalkIn: registration.source === 'walk_in',
         labels: labels.get(registration.id) ?? [],
       };
     }
@@ -431,6 +433,7 @@ export async function listEventAttendees(
       cardSlug: row.card?.slug || undefined,
       splineUrl: row.card?.splineUrl || null,
       hasEmail: true,
+      isWalkIn: row.registration.source === 'walk_in',
       labels: labels.get(row.registration.id) ?? [],
     };
   });
@@ -449,6 +452,7 @@ export async function insertRegistrationWithinCapacity(values: {
   eventId: string;
   userId: string;
   status: EventRegistrationStatus;
+  source: EventRegistrationSource;
 }) {
   return db.transaction(async (tx) => {
     const [locked] = await tx

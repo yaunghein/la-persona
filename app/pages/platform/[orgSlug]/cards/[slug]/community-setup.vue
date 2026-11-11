@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import {
+  communitySetupBootstrapPath,
   isCommunityCardComplete,
+  registrationIntentFromQuery,
   resolveCommunitySetupStep,
   resolveEventFlowPath,
 } from '~~/shared/utils/event-flow';
@@ -18,12 +20,14 @@ const eventId = computed(() => {
   const value = route.query.eventId;
   return typeof value === 'string' ? value : '';
 });
+const intent = computed(() => registrationIntentFromQuery(route.query.intent));
 
 const { data: session } = await authClient.useSession(useFetch);
 
 const { data: card, isPending: pending, error } = useCardQuery(cardSlug);
 const { mutateAsync: updateCard } = useUpdateCardMutation(cardSlug);
 const { mutateAsync: registerForEvent } = useRegisterForEventMutation();
+const { mutateAsync: registerWalkIn } = useRegisterWalkInMutation();
 
 const submitting = ref(false);
 
@@ -33,7 +37,8 @@ const formCopy = computed(() =>
         title: 'Registration form',
         description:
           "Register for the event by filling out the form below. Don't worry about getting everything perfect. You can edit your information\u00a0anytime.",
-        submitLabel: 'Register',
+        submitLabel:
+          intent.value === 'walk_in' ? 'Register as walk-in' : 'Register',
         submittingLabel: 'Registering...',
       }
     : {
@@ -67,7 +72,11 @@ watch(
     if (card.value.userId && card.value.userId !== session.value.user.id) {
       if (eventId.value) {
         navigateTo(
-          ROUTES.COMMUNITY_SETUP.BOOTSTRAP(orgSlug.value, eventId.value),
+          communitySetupBootstrapPath(
+            orgSlug.value,
+            eventId.value,
+            intent.value
+          ),
           { replace: true }
         );
       }
@@ -79,6 +88,7 @@ watch(
       orgSlug: orgSlug.value,
       viewer: viewer.value,
       source: 'setup',
+      intent: intent.value,
     });
 
     if (next !== route.fullPath) {
@@ -89,9 +99,10 @@ watch(
 );
 
 function eventHome() {
-  return eventId.value
-    ? ROUTES.EVENTS.PUBLIC(eventId.value)
-    : `${ROUTES.PLATFORM.ROOT}/${orgSlug.value}`;
+  if (!eventId.value) return `${ROUTES.PLATFORM.ROOT}/${orgSlug.value}`;
+  return intent.value === 'walk_in'
+    ? ROUTES.EVENTS.WALK_IN(eventId.value)
+    : ROUTES.EVENTS.PUBLIC(eventId.value);
 }
 
 async function onCreateCard(payload: {
@@ -129,7 +140,9 @@ async function onCreateCard(payload: {
   // The event page shows the "You're all set" screen once the viewer is registered.
   if (eventId.value) {
     try {
-      await registerForEvent(eventId.value);
+      await (intent.value === 'walk_in' ? registerWalkIn : registerForEvent)(
+        eventId.value
+      );
     } catch (error: any) {
       toast.add({
         title: 'Could not register',

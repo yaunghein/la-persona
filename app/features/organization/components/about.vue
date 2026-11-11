@@ -69,7 +69,7 @@ const logoSrc = computed(() =>
           variant="ghost"
           class="size-5 cursor-pointer p-0 text-ink hover:bg-transparent"
           aria-label="About this community"
-          @click="isInfoOpen = true"
+          @click="() => { isInfoOpen = true }"
         />
       </UTooltip>
     </div>

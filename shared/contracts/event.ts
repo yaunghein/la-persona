@@ -347,6 +347,8 @@ export type EventAttendee = {
   planCode?: string | null;
   /** False for a walk-in staff entered by hand; they have no account. */
   hasEmail: boolean;
+  /** True when they registered on the walk-in page. Stays set after check-in. */
+  isWalkIn: boolean;
   /** Staff note on a walk-in entered by hand. */
   note?: string | null;
   /** Organizer-only labels for this registration; never shown to the attendee. */

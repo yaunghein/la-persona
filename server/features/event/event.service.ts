@@ -192,6 +192,7 @@ export async function exportAttendeesCsv(
         'Registered at',
         'Checked in at',
         'Labels',
+        'Walk-in',
       ],
       ...items.map((attendee) => [
         attendee.name,
@@ -203,6 +204,7 @@ export async function exportAttendeesCsv(
         when(attendee.registeredAt),
         when(attendee.checkedInAt),
         attendee.labels.map((label) => label.name).join(', '),
+        attendee.isWalkIn ? 'Yes' : '',
       ]),
     ]),
   };
@@ -242,6 +244,7 @@ export async function registerForEvent(
     eventId: record.id,
     userId,
     status,
+    source: 'online',
   });
   if (inserted === 'full')
     throw conflict(registrationBlockMessage('full'), 'event_full');
@@ -306,6 +309,50 @@ export async function approveRegistration(
     });
   }
   return { status: 'registered' };
+}
+
+function assertWalkInWindow(record: SelectEvent) {
+  if (
+    checkInPhase(record.startsAt, record.endsAt, record.timeZone) !== 'live'
+  ) {
+    throw notFound('Event');
+  }
+}
+
+/**
+ * The caller registers from the walk-in page (idempotent). Closed and
+ * invite-only events still accept them during the check-in window. An
+ * existing registration is returned unchanged, so an earlier online signup
+ * is not relabeled. Manual approval is skipped.
+ */
+export async function registerWalkIn(
+  h3Event: H3Event,
+  params: { record: SelectEvent; organization: Organization; userId: string }
+) {
+  const { record, organization, userId } = params;
+  assertWalkInWindow(record);
+
+  const existing = await findRegistrationByEventAndUser(record.id, userId);
+  if (existing) return { registration: existing, created: false };
+
+  const inserted = await insertRegistrationWithinCapacity({
+    eventId: record.id,
+    userId,
+    status: 'registered',
+    source: 'walk_in',
+  });
+  if (inserted === 'full')
+    throw conflict(registrationBlockMessage('full'), 'event_full');
+  if (inserted === 'not_found' || !inserted) throw notFound('Event');
+
+  await sendEventRegistrationEmails(h3Event, {
+    userId,
+    organization,
+    event: { id: record.id, title: record.title },
+    status: 'registered',
+    notifyOwner: true,
+  });
+  return { registration: inserted, created: true };
 }
 
 function assertCheckInOpen(record: SelectEvent) {
@@ -574,10 +621,7 @@ export async function describePublicEvent(
         : null,
       findOrganizerCardSlug(row.event.organizationId),
       countCountedRegistrations(eventId),
-      readEventImageSizes([
-        row.event.coverUrl,
-        ...(row.event.photoUrls ?? []),
-      ]),
+      readEventImageSizes([row.event.coverUrl, ...(row.event.photoUrls ?? [])]),
     ]);
   return {
     ...toEventDTO(row.event),
@@ -593,14 +637,22 @@ export async function describePublicEvent(
   };
 }
 
-/** Visitors of a public event join its community (while registration is open). */
-export async function joinEventCommunity(
+async function joinHostingCommunity(
   eventId: string,
-  userId: string
+  userId: string,
+  gate: 'registration' | 'walk_in'
 ): Promise<EventMembershipResult & { organizationId: string }> {
   const row = await findPublicEventById(eventId);
   if (!row) throw notFound('Event');
-  assertRegistrationOpen(row.event, await countCountedRegistrations(eventId));
+  const registeredCount = await countCountedRegistrations(eventId);
+  if (gate === 'walk_in') {
+    assertWalkInWindow(row.event);
+    if (row.event.capacity != null && registeredCount >= row.event.capacity) {
+      throw conflict(registrationBlockMessage('full'), 'event_full');
+    }
+  } else {
+    assertRegistrationOpen(row.event, registeredCount);
+  }
 
   const organizationId = row.event.organizationId;
   const alreadyMember = !!(await findMembership(userId, organizationId));
@@ -614,4 +666,14 @@ export async function joinEventCommunity(
     alreadyMember,
     cardComplete: card ? isCommunityCardComplete(card) : false,
   };
+}
+
+/** Visitors of a public event join its community (while registration is open). */
+export function joinEventCommunity(eventId: string, userId: string) {
+  return joinHostingCommunity(eventId, userId, 'registration');
+}
+
+/** Door registration joins the community during the check-in window. */
+export function joinWalkInCommunity(eventId: string, userId: string) {
+  return joinHostingCommunity(eventId, userId, 'walk_in');
 }

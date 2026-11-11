@@ -14,6 +14,7 @@ import {
 } from '~~/shared/utils/event-datetime';
 import { resolveObjectStorageUrl } from '~~/shared/utils/object-storage';
 import { communityCardPath, ROUTES } from '~~/shared/utils/routes';
+import type { RegistrationIntent } from '~~/shared/utils/event-flow';
 
 const props = withDefaults(
   defineProps<{
@@ -23,11 +24,13 @@ const props = withDefaults(
     organizationSlug?: string;
     canRegister?: boolean;
     viewerRegistrationStatus?: ViewerRegistrationStatus;
+    intent?: RegistrationIntent;
   }>(),
   {
     variant: 'slideover',
     canRegister: true,
     viewerRegistrationStatus: 'none',
+    intent: 'public',
   }
 );
 
@@ -109,15 +112,22 @@ const registeredCount = computed(() => {
   return typeof value === 'number' ? value : 0;
 });
 
-const registrationBlock = computed(() =>
-  registrationBlockReason({
+const registrationBlock = computed(() => {
+  const block = registrationBlockReason({
     startsAt: props.event.startsAt,
     endsAt: props.event.endsAt,
     registrationMode: props.event.registrationMode,
     capacity: props.event.capacity,
     registeredCount: registeredCount.value,
-  })
-);
+  });
+  if (
+    props.intent === 'walk_in' &&
+    (block === 'closed' || block === 'invite_only')
+  ) {
+    return null;
+  }
+  return block;
+});
 
 const details = computed(() => {
   const rows: { label: string; value: string; href?: string }[] = [
@@ -177,7 +187,10 @@ async function startRegister() {
 
   step.value = 'registering';
   try {
-    const result = await registerForEvent(props.event.id);
+    const result =
+      props.intent === 'walk_in'
+        ? await registerWalkIn(props.event.id)
+        : await registerForEvent(props.event.id);
     registrationStatus.value =
       result.status === 'pending' ? 'pending' : 'registered';
     step.value = 'success';
@@ -427,10 +440,10 @@ watch(
             @click="startRegister"
           >
             <span class="text-sm font-medium leading-[1.1] text-ink-inverse">
-              Register
+              {{ intent === 'walk_in' ? 'Register as walk-in' : 'Register' }}
             </span>
             <span
-              v-if="spotsLabel"
+              v-if="spotsLabel && intent !== 'walk_in'"
               class="text-[0.6875rem] font-semibold tracking-[0.55px] text-danger-ink"
             >
               {{ spotsLabel }}

@@ -78,7 +78,7 @@ const selectedTab = computed({
           </UTooltip>
           <div class="flex min-w-0 flex-wrap items-start gap-x-4 gap-y-2">
             <h1
-              class="max-w-124 text-xl font-normal leading-[1.2] tracking-widest uppercase text-ink sm:text-2xl"
+              class="mt-1 max-w-124 text-xl font-normal leading-[1.2] tracking-widest uppercase text-ink sm:text-2xl"
             >
               {{ title }}
             </h1>

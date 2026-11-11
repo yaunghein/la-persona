@@ -69,8 +69,8 @@ function downloadQr() {
           <div class="space-y-3">
             <h3 class="text-sm font-medium text-ink">Register By QR</h3>
             <p class="text-sm leading-normal text-subtle">
-              Ask attendees to scan this QR code. It opens the event page, where
-              they can register. Once they finish, they'll appear in the
+              Ask attendees to scan this QR code. It opens the walk-in page,
+              where they can register. Once they finish, they'll appear in the
               attendee list.
             </p>
           </div>

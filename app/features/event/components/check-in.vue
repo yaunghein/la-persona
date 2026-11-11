@@ -207,6 +207,7 @@ async function checkIn(attendee: EventAttendee) {
           <div class="flex min-w-0 items-center gap-2">
             <p class="truncate font-medium text-ink">{{ attendee.name }}</p>
             <EventNoEmailBadge v-if="!attendee.hasEmail" />
+            <EventWalkInBadge v-if="attendee.isWalkIn" />
           </div>
           <p
             v-if="attendee.role || attendee.company"

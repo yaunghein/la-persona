@@ -21,7 +21,13 @@ const emit = defineEmits<{
   export: [];
 }>();
 
-type AttendeeTab = 'all' | 'pending' | 'registered' | 'checked_in' | 'no_email';
+type AttendeeTab =
+  | 'all'
+  | 'pending'
+  | 'registered'
+  | 'checked_in'
+  | 'walk_in'
+  | 'no_email';
 
 const toast = useToast();
 const { organizationSlug } = useOrganizationSlug();
@@ -41,6 +47,7 @@ const tabCounts = computed(() => ({
   pending: props.attendees.filter((a) => a.status === 'pending').length,
   registered: props.attendees.filter((a) => a.status === 'registered').length,
   checkedIn: props.attendees.filter((a) => a.status === 'checked_in').length,
+  walkIn: props.attendees.filter((a) => a.isWalkIn).length,
   noEmail: props.attendees.filter((a) => !a.hasEmail).length,
 }));
 
@@ -59,6 +66,10 @@ const tabs = computed(() => [
     value: 'checked_in' as const,
   },
   {
+    label: `Walk-in (${tabCounts.value.walkIn})`,
+    value: 'walk_in' as const,
+  },
+  {
     label: `No Email (${tabCounts.value.noEmail})`,
     value: 'no_email' as const,
   },
@@ -70,6 +81,8 @@ const filteredAttendees = computed(() => {
   return props.attendees.filter((attendee) => {
     if (activeTab.value === 'no_email') {
       if (attendee.hasEmail) return false;
+    } else if (activeTab.value === 'walk_in') {
+      if (!attendee.isWalkIn) return false;
     } else if (
       activeTab.value !== 'all' &&
       attendee.status !== activeTab.value
@@ -94,7 +107,8 @@ const filteredAttendees = computed(() => {
       attendee.company.toLowerCase().includes(query) ||
       attendeeStatusLabel(attendee).toLowerCase().includes(query) ||
       (attendee.email || '').toLowerCase().includes(query) ||
-      (!attendee.hasEmail && 'no email'.includes(query))
+      (!attendee.hasEmail && 'no email'.includes(query)) ||
+      (attendee.isWalkIn && 'walk-in'.includes(query))
     );
   });
 });
@@ -282,7 +296,14 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
               :manageable="canManageLabels"
               aria-label="Filter by label"
               class="min-w-0 flex-1 sm:w-52 sm:flex-none"
-              :ui="filterSelectUi"
+              :ui="{
+                ...filterSelectUi,
+                base: 'h-9 w-full rounded-full border-0 bg-ink/5 ps-9 pe-9 text-sm font-medium text-ink ring-0 hover:bg-ink/15 focus-visible:ring-1 focus-visible:ring-line-strong',
+                leadingIcon: 'size-4 text-ink',
+                trailingIcon: 'size-4 text-ink',
+                placeholder: 'text-ink',
+                value: 'truncate text-ink',
+              }"
               @manage="isLabelsOpen = true"
             />
           </UTooltip>
@@ -291,10 +312,9 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
               icon="i-lucide-rows-3"
               label="Group"
               color="neutral"
-              variant="ghost"
-              class="h-9 shrink-0 cursor-pointer gap-1.5 rounded-full px-3.5 text-sm font-medium ring-1 ring-inset ring-raised hover:bg-raised"
+              class="h-9 shrink-0 cursor-pointer gap-1.5 rounded-full px-3.5 text-sm font-medium text-ink hover:bg-ink/15 active:hover:bg-ink/20"
               :ui="{ leadingIcon: 'size-4' }"
-              :class="isGrouped ? 'bg-raised text-ink' : 'text-muted'"
+              :class="isGrouped ? 'bg-ink/15' : 'bg-ink/5'"
               :aria-pressed="isGrouped"
               aria-label="Group by label"
               @click="toggleGrouping"
@@ -304,8 +324,7 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
             <UButton
               icon="i-lucide-download"
               color="neutral"
-              variant="ghost"
-              class="flex h-9 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full p-0 text-muted ring-1 ring-inset ring-raised hover:bg-raised"
+              class="flex h-9 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-ink/5 p-0 text-ink hover:bg-ink/15 active:hover:bg-ink/20"
               :ui="{ leadingIcon: 'size-4' }"
               aria-label="Export registered attendees"
               @click="emit('export')"
@@ -348,6 +367,7 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
                 row.original.item.name
               }}</span>
               <EventNoEmailBadge v-if="!row.original.item.hasEmail" />
+              <EventWalkInBadge v-if="row.original.item.isWalkIn" />
             </span>
             <span class="text-xs text-subtle">{{
               row.original.item.role

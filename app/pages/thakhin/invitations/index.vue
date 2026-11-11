@@ -287,7 +287,7 @@ const selectUi = {
         :pagination-options="paginationOptions"
         :get-row-id="(row) => row.id"
         :ui="ADMIN_TABLE_UI"
-        class="w-full min-w-[56rem]"
+        class="w-full min-w-4xl"
       >
         <template #email-cell="{ row }">
           <span class="font-medium text-ink">{{ row.original.email }}</span>
