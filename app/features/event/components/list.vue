@@ -26,6 +26,7 @@ const searchQuery = ref('');
 const activeTab = ref<EventsTab>('upcoming');
 const page = ref(1);
 const itemsPerPage = 6;
+const { siblingCount, showEdges } = usePaginationWindow();
 const isInfoOpen = ref(false);
 
 function isRegisteredEvent(event: CommunityEvent) {
@@ -295,13 +296,16 @@ function unavailableLabel(event: CommunityEvent) {
       </div>
     </div>
 
-    <div class="mt-auto flex items-center justify-end pt-0 pb-10">
+    <div
+      class="mt-auto flex w-full min-w-0 items-center justify-center pt-0 pb-10 sm:justify-end"
+    >
       <UPagination
         v-model:page="page"
         :total="total"
         :items-per-page="itemsPerPage"
+        :sibling-count="siblingCount"
+        :show-edges="showEdges"
         show-controls
-        show-edges
         color="neutral"
         variant="outline"
       />

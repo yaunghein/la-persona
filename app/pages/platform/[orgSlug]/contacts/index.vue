@@ -80,6 +80,7 @@ const parseLabelIds = (value: unknown) =>
 
 const viewMode = ref<ViewMode>(parseViewMode(route.query.view));
 const page = ref(parsePage(route.query.page));
+const { siblingCount, showEdges } = usePaginationWindow(0);
 const eventId = ref(parseEventId(route.query.event));
 const labelIds = ref(parseLabelIds(route.query.labels));
 const labelIdsQuery = computed(() =>
@@ -439,10 +440,9 @@ watch(total, (count) => {
           icon="i-lucide-rows-3"
           label="Group"
           color="neutral"
-          variant="ghost"
-          class="h-9 shrink-0 cursor-pointer gap-1.5 rounded-full px-3.5 text-sm font-medium ring-1 ring-inset ring-raised hover:bg-raised"
+          class="h-9 shrink-0 cursor-pointer gap-1.5 rounded-full px-3.5 text-sm font-medium text-ink hover:bg-ink/15 active:hover:bg-ink/20"
           :ui="{ leadingIcon: 'size-4' }"
-          :class="isGrouped ? 'bg-raised text-ink' : 'text-muted'"
+          :class="isGrouped ? 'bg-ink/15' : 'bg-ink/5'"
           :aria-pressed="isGrouped"
           aria-label="Group by label"
           @click="toggleGrouping"
@@ -599,9 +599,9 @@ watch(total, (count) => {
         v-model:page="page"
         :total="total"
         :items-per-page="pageSize"
-        :sibling-count="0"
+        :sibling-count="siblingCount"
+        :show-edges="showEdges"
         show-controls
-        show-edges
         color="neutral"
         variant="outline"
         active-color="neutral"

@@ -12,6 +12,7 @@ const emit = defineEmits<{
 const pageCount = computed(() =>
   Math.max(1, Math.ceil(props.total / Math.max(props.itemsPerPage, 1)))
 );
+const { siblingCount } = usePaginationWindow();
 </script>
 
 <template>
@@ -33,6 +34,7 @@ const pageCount = computed(() =>
         :page="page"
         :total="total"
         :items-per-page="itemsPerPage"
+        :sibling-count="siblingCount"
         size="sm"
         color="neutral"
         variant="ghost"

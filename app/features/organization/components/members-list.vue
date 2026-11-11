@@ -27,6 +27,7 @@ const searchQuery = ref('');
 const activeTab = ref<CommunityMembersTab>('all');
 const page = ref(1);
 const itemsPerPage = 10;
+const { siblingCount, showEdges } = usePaginationWindow();
 const isInfoOpen = ref(false);
 const isProfileOpen = ref(false);
 const selectedMember = ref<CommunityMember | null>(null);
@@ -283,10 +284,11 @@ function closeInfo() {
         :ui="{
           th: 'px-4 py-4 border-b border-raised text-xs font-medium tracking-wide uppercase text-ink',
           td: 'px-4 py-4 border-b border-raised text-sm',
-          tr: 'bg-transparent',
+          tr: 'bg-transparent cursor-pointer hover:bg-raised/50',
           empty: 'py-16 text-center text-sm text-muted',
         }"
         class="w-full min-w-225"
+        @select="(_event, row) => openProfile(row.original)"
       >
         <template #name-cell="{ row }">
           <div class="flex flex-col gap-0.5">
@@ -350,13 +352,16 @@ function closeInfo() {
       </UTable>
     </div>
 
-    <div class="flex items-center justify-end pt-2">
+    <div
+      class="flex w-full min-w-0 items-center justify-center pt-2 sm:justify-end"
+    >
       <UPagination
         v-model:page="page"
         :total="total"
         :items-per-page="itemsPerPage"
+        :sibling-count="siblingCount"
+        :show-edges="showEdges"
         show-controls
-        show-edges
         color="neutral"
         variant="outline"
       />

@@ -41,6 +41,7 @@ const isGrouped = ref(false);
 const isLabelsOpen = ref(false);
 const page = ref(1);
 const itemsPerPage = 10;
+const { siblingCount, showEdges } = usePaginationWindow();
 
 const tabCounts = computed(() => ({
   all: props.attendees.length,
@@ -296,14 +297,7 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
               :manageable="canManageLabels"
               aria-label="Filter by label"
               class="min-w-0 flex-1 sm:w-52 sm:flex-none"
-              :ui="{
-                ...filterSelectUi,
-                base: 'h-9 w-full rounded-full border-0 bg-ink/5 ps-9 pe-9 text-sm font-medium text-ink ring-0 hover:bg-ink/15 focus-visible:ring-1 focus-visible:ring-line-strong',
-                leadingIcon: 'size-4 text-ink',
-                trailingIcon: 'size-4 text-ink',
-                placeholder: 'text-ink',
-                value: 'truncate text-ink',
-              }"
+              :ui="filterSelectUi"
               @manage="isLabelsOpen = true"
             />
           </UTooltip>
@@ -428,13 +422,17 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
       </UTable>
     </div>
 
-    <div v-if="!isGrouped" class="flex items-center justify-end pt-2">
+    <div
+      v-if="!isGrouped"
+      class="flex w-full min-w-0 items-center justify-center pt-2 sm:justify-end"
+    >
       <UPagination
         v-model:page="page"
         :total="total"
         :items-per-page="itemsPerPage"
+        :sibling-count="siblingCount"
+        :show-edges="showEdges"
         show-controls
-        show-edges
         color="neutral"
         variant="outline"
       />

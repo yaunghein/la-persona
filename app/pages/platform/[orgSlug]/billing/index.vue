@@ -31,6 +31,7 @@ const parsePage = (value: unknown) => {
 const viewMode = ref<'list' | 'grid'>(parseViewMode(route.query.view));
 const sortOrder = ref<'desc' | 'asc'>(parseSortOrder(route.query.sort));
 const page = ref(parsePage(route.query.page));
+const { siblingCount, showEdges } = usePaginationWindow();
 
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
 const { data, isLoading: pending } = useBillingHistoryQuery(orgSlug);
@@ -402,13 +403,16 @@ function getStatusLabel(status: string) {
         </div>
       </div>
 
-      <div class="mt-auto flex items-center justify-end pt-4">
+      <div
+        class="mt-auto flex w-full min-w-0 items-center justify-center pt-4 sm:justify-end"
+      >
         <UPagination
           v-model:page="page"
           :total="total"
           :items-per-page="itemsPerPage"
+          :sibling-count="siblingCount"
+          :show-edges="showEdges"
           show-controls
-          show-edges
           color="neutral"
           variant="outline"
           active-color="neutral"
