@@ -115,6 +115,14 @@ function timeZoneOffsetMs(date: Date, timeZone: string) {
   return wallClock - Math.floor(date.getTime() / 1000) * 1000;
 }
 
+/** Midnight at the start of `date`'s calendar day in `timeZone`. */
+function startOfZonedDay(date: Date, timeZone: string) {
+  const offset = timeZoneOffsetMs(date, timeZone);
+  return new Date(
+    Math.floor((date.getTime() + offset) / DAY_MS) * DAY_MS - offset
+  );
+}
+
 /** Check-in opens at midnight in the event's zone on the start day and closes when the event ends. */
 export function checkInPhase(
   startsAt: Date | string,
@@ -123,12 +131,22 @@ export function checkInPhase(
 ): EventPhase {
   const now = Date.now();
   if (asDate(endsAt).getTime() < now) return 'past';
-  const start = asDate(startsAt);
-  const offset = timeZoneOffsetMs(start, timeZone);
-  const startDayMs =
-    Math.floor((start.getTime() + offset) / DAY_MS) * DAY_MS - offset;
-  if (startDayMs > now) return 'before';
+  if (startOfZonedDay(asDate(startsAt), timeZone).getTime() > now)
+    return 'before';
   return 'live';
+}
+
+/** True from midnight on the start day through midnight at the end of the end day, in `timeZone`. */
+export function isDuringEventDays(
+  now: Date,
+  startsAt: Date | string,
+  endsAt: Date | string,
+  timeZone: string
+) {
+  const time = now.getTime();
+  const start = startOfZonedDay(asDate(startsAt), timeZone).getTime();
+  const end = startOfZonedDay(asDate(endsAt), timeZone).getTime() + DAY_MS;
+  return time >= start && time < end;
 }
 
 export function eventStatus(endsAt: Date | string): 'upcoming' | 'past' {

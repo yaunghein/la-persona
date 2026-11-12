@@ -33,6 +33,7 @@ import {
   viewerDaysBetween,
   type TimezoneOffset,
 } from '~~/shared/utils/datetime';
+import { isDuringEventDays } from '~~/shared/utils/event-datetime';
 import { viewerDaySql } from '~~/server/utils/request-timezone';
 
 const COUNTED_STATUSES: EventRegistrationStatus[] = [
@@ -58,27 +59,35 @@ export async function findRegistrationByEventAndUser(
   return row ?? null;
 }
 
-// People exchange cards in the lobby before doors open and linger after the end.
-const LIVE_EVENT_SLACK_MS = 2 * 60 * 60 * 1000;
+// A calendar day is at most 25 hours, so this cannot drop a row the day check would keep.
+const EVENT_DAY_BOUND_MS = 26 * 60 * 60 * 1000;
 
-/** The live event one of these users is checked in at, newest first; drives "where you met". */
+/** The checked-in event whose calendar days include `now`, newest first; drives "where you met". */
 export async function findLiveCheckedInEventId(userIds: string[], now: Date) {
   if (userIds.length === 0) return null;
-  const [row] = await db
-    .select({ id: event.id })
+  const rows = await db
+    .select({
+      id: event.id,
+      startsAt: event.startsAt,
+      endsAt: event.endsAt,
+      timeZone: event.timeZone,
+    })
     .from(eventRegistration)
     .innerJoin(event, eq(eventRegistration.eventId, event.id))
     .where(
       and(
         inArray(eventRegistration.userId, userIds),
         eq(eventRegistration.status, 'checked_in'),
-        lte(event.startsAt, new Date(now.getTime() + LIVE_EVENT_SLACK_MS)),
-        gte(event.endsAt, new Date(now.getTime() - LIVE_EVENT_SLACK_MS))
+        lte(event.startsAt, new Date(now.getTime() + EVENT_DAY_BOUND_MS)),
+        gte(event.endsAt, new Date(now.getTime() - EVENT_DAY_BOUND_MS))
       )
     )
-    .orderBy(desc(event.startsAt))
-    .limit(1);
-  return row?.id ?? null;
+    .orderBy(desc(event.startsAt));
+  return (
+    rows.find((row) =>
+      isDuringEventDays(now, row.startsAt, row.endsAt, row.timeZone)
+    )?.id ?? null
+  );
 }
 
 /** Events the user registered for, newest first; the choices for a contact's "where you met". */

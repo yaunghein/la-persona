@@ -28,7 +28,7 @@ export const contactExchange = pgTable(
     laPersonaUserId: text().references(() => user.id, { onDelete: 'set null' }),
     laPersonaCardId: text().references(() => card.id, { onDelete: 'set null' }),
     reciprocalExchangeId: text(),
-    // Set automatically when either side is checked in at a live event; the card holder can change it.
+    // Set when either side is checked in during the event's calendar days; the card holder can change it.
     eventId: text().references(() => event.id, { onDelete: 'set null' }),
     note: text(),
     createdAt: timestamp().defaultNow().notNull(),
