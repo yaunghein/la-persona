@@ -182,12 +182,12 @@ export default defineNuxtConfig({
   routeRules: {
     // temporary redirect for Imagine First event walk-in
     // dont forget to do this just before the event Friday night
-    // '/events/EYA2FcWBYgWwlXxE6LUst': {
-    //   redirect: {
-    //     to: '/events/EYA2FcWBYgWwlXxE6LUst/walk-in',
-    //     statusCode: 302,
-    //   },
-    // },
+    '/events/EYA2FcWBYgWwlXxE6LUst': {
+      redirect: {
+        to: '/events/EYA2FcWBYgWwlXxE6LUst/walk-in',
+        statusCode: 302,
+      },
+    },
     '/': { prerender: true },
     '/privacy-policy': { prerender: true },
     '/platform': { ssr: false },
@@ -206,8 +206,9 @@ export default defineNuxtConfig({
     '/api/public/leads': {
       security: { rateLimiter: { tokensPerInterval: 5, interval: 300000 } },
     },
+    // Venue Wi-Fi is one public IP, so a walk-in queue shares this budget.
     '/api/auth/sign-in/**': {
-      security: { rateLimiter: { tokensPerInterval: 10, interval: 300000 } },
+      security: { rateLimiter: { tokensPerInterval: 60, interval: 300000 } },
     },
     // Pages can request many images; keep them out of the shared request budget.
     '/_ipx/**': {

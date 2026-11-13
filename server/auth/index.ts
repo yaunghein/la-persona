@@ -62,6 +62,8 @@ export const auth = betterAuth({
   plugins: [
     magicLink({
       expiresIn: 60 * 30,
+      // Library default is 5 per minute per IP, which stalls a walk-in queue on venue Wi-Fi.
+      rateLimit: { window: 60, max: 30 },
       sendMagicLink: async ({ email, url }, _ctx) => {
         await sendEmail({
           to: [email],
