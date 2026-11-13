@@ -78,6 +78,7 @@ export const auth = betterAuth({
       ac: organizationAccessControl,
       roles: organizationRoles,
       creatorRole: 'admin',
+      membershipLimit: 500,
       // Organizations are provisioned by the app (personal on sign-up, communities by Thakhin).
       allowUserToCreateOrganization: false,
       disableOrganizationDeletion: true,
