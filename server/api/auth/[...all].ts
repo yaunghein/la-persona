@@ -15,7 +15,8 @@ function withMagicLinkErrorCallback(request: Request) {
   if (url.pathname !== '/api/auth/magic-link/verify') return request;
 
   const errorCallbackURL = url.searchParams.get('errorCallbackURL');
-  if (!errorCallbackURL?.startsWith('/')) return request;
+  const prefix = '/sign-in?redirectTo=';
+  if (!errorCallbackURL?.startsWith(prefix)) return request;
 
   let decoded: string;
   try {
@@ -23,17 +24,17 @@ function withMagicLinkErrorCallback(request: Request) {
   } catch {
     return request;
   }
-  if (decoded.split('?').length < 3) return request;
+  if (!decoded.startsWith(prefix)) return request;
+  const redirectTo = getSafeInternalPath(decoded.slice(prefix.length));
+  // Other sign-in links have no nested search. Leave them untouched.
+  if (!redirectTo?.includes('?')) return request;
 
-  const redirectTo = getSafeInternalPath(
-    new URL(decoded, env.BASE_URL).searchParams.get('redirectTo')
-  );
-  if (!redirectTo) return request;
-
+  // Verify decodes this value once more. Keep "?" and "&" encoded through
+  // that pass so the return path is not split apart.
   url.searchParams.set(
     'errorCallbackURL',
     new URL(
-      `/sign-in?redirectTo=${encodeURIComponent(redirectTo)}`,
+      `/sign-in?redirectTo=${encodeURIComponent(encodeURIComponent(redirectTo))}`,
       env.BASE_URL
     ).href
   );
