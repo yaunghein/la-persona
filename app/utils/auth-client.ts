@@ -53,7 +53,14 @@ function getAuthErrorCallbackURL() {
     return ROUTES.SIGN_IN;
   }
 
-  return `${ROUTES.SIGN_IN}?redirectTo=${encodeURIComponent(redirectTo)}`;
+  const path = `${ROUTES.SIGN_IN}?redirectTo=${encodeURIComponent(redirectTo)}`;
+  if (!redirectTo.includes('?')) return path;
+
+  // Magic-link verify decodes this query a second time. A return path that
+  // already has a search (`?intent=walk-in`) then contains two "?", which
+  // Better Auth rejects as a relative callback. Same-origin absolute URLs
+  // are checked by origin, and the nested search still round-trips.
+  return new URL(path, env.BASE_URL).href;
 }
 
 export const signInWithSocial = async (
