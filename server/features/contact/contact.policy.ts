@@ -6,8 +6,9 @@ import type { OrganizationPermissionKey } from '~~/shared/permissions/organizati
 
 /**
  * A contact belongs to the organization of the card it was exchanged with.
- * Managers (`contactExchange:readAll`) reach every card's contacts; members
- * only those of cards they hold. Anything else is reported as not found.
+ * The card holder can change their own. Managers (`contactExchange:readAll`)
+ * reach every card's contacts, and need `permission` to change someone else's.
+ * Anyone else is reported as not found.
  */
 export async function authorizeContactAccess(
   event: H3Event,
@@ -19,8 +20,7 @@ export async function authorizeContactAccess(
 
   const access = await authorizeOrganizationAccessById(
     event,
-    contact.cardOrganizationId,
-    permission
+    contact.cardOrganizationId
   );
   const isCardHolder = contact.cardUserId === access.principal.user.id;
   if (
@@ -28,6 +28,11 @@ export async function authorizeContactAccess(
     !canAccessOrganization(access, 'contactExchange:readAll')
   ) {
     throw notFound('Contact');
+  }
+  // Personal contacts include community cards. The holder is a member there,
+  // not an organizer, so the organizer permission only applies to someone else's contact.
+  if (!isCardHolder && !canAccessOrganization(access, permission)) {
+    throw forbidden();
   }
   enrichLog(event, { contact: { id: contact.id, card_id: contact.cardId } });
   return { contact, ...access };
