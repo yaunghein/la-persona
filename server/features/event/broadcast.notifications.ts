@@ -9,7 +9,7 @@ import {
 } from '~~/server/db/schema';
 import {
   cardContactInfoUrl,
-  communityContactsUrl,
+  personalContactsUrl,
   firstName,
   loadEventEmailContent,
   publicCardUrl,
@@ -110,7 +110,7 @@ function buildProps(
     return {
       ...shared,
       afterEventImageUrl: content.images.afterEventUrl,
-      contactsUrl: communityContactsUrl(params.orgSlug),
+      contactsUrl: personalContactsUrl(),
     };
   }
 

@@ -3,7 +3,7 @@ import type { H3Event } from 'h3';
 import { db } from '~~/server/db';
 import { user } from '~~/server/db/schema';
 import {
-  communityContactsUrl,
+  personalContactsUrl,
   firstName,
   formatEventDateTime,
   loadEventEmailContent,
@@ -60,7 +60,7 @@ export async function sendEventCheckInEmail(
               content.timeZone
             ),
             contactExchangeImageUrl: content.images.contactExchangeUrl,
-            contactsUrl: communityContactsUrl(params.organization.slug),
+            contactsUrl: personalContactsUrl(),
             assetBaseUrl: content.details.assetBaseUrl,
           }),
           renderQrTicketPng(

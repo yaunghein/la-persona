@@ -97,8 +97,9 @@ export function cardContactInfoUrl(orgSlug: string, cardSlug: string) {
   return `${env.BASE_URL}${ROUTES.PLATFORM.ROOT}/${orgSlug}/cards/${cardSlug}`;
 }
 
-export function communityContactsUrl(orgSlug: string) {
-  return `${env.BASE_URL}${ROUTES.PLATFORM.ROOT}/${orgSlug}/contacts`;
+/** Attendees open their own contacts. Community members cannot open the community contacts page. */
+export function personalContactsUrl() {
+  return `${env.BASE_URL}${ROUTES.PLATFORM.CONTACTS}`;
 }
 
 export function firstName(
