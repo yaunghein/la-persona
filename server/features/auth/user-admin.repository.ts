@@ -47,7 +47,8 @@ export async function findUserFootprint(userId: string) {
       })
       .from(member)
       .innerJoin(organization, eq(organization.id, member.organizationId))
-      .where(eq(member.userId, userId)),
+      .where(eq(member.userId, userId))
+      .orderBy(desc(member.createdAt), desc(member.id)),
     db
       .select({
         id: card.id,
@@ -57,7 +58,8 @@ export async function findUserFootprint(userId: string) {
         organizationId: card.organizationId,
       })
       .from(card)
-      .where(eq(card.userId, userId)),
+      .where(eq(card.userId, userId))
+      .orderBy(desc(card.createdAt), desc(card.id)),
     db
       .select({
         id: organization.id,
@@ -74,7 +76,8 @@ export async function findUserFootprint(userId: string) {
           eq(organization.type, ORGANIZATION_TYPES.PERSONAL)
         )
       )
-      .groupBy(organization.id, organization.name),
+      .groupBy(organization.id, organization.name, organization.createdAt)
+      .orderBy(desc(organization.createdAt), desc(organization.id)),
   ]);
   return { memberships, cards, personalOrganizations };
 }

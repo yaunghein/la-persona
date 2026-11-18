@@ -69,7 +69,7 @@ const selectedTab = computed({
 const filteredEvents = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
 
-  return props.data.events.filter((event) => {
+  const matches = props.data.events.filter((event) => {
     const matchesTab =
       activeTab.value === 'registered'
         ? isRegisteredEvent(event)
@@ -86,6 +86,19 @@ const filteredEvents = computed(() => {
       event.location.toLowerCase().includes(query) ||
       event.dateLabel.toLowerCase().includes(query)
     );
+  });
+
+  return matches.sort((a, b) => {
+    const aTime = Date.parse(a.startsAt);
+    const bTime = Date.parse(b.startsAt);
+    if (activeTab.value === 'past') return bTime - aTime;
+    if (activeTab.value === 'registered' && a.status !== b.status) {
+      return a.status === 'past' ? 1 : -1;
+    }
+    if (activeTab.value === 'registered' && a.status === 'past') {
+      return bTime - aTime;
+    }
+    return aTime - bTime;
   });
 });
 

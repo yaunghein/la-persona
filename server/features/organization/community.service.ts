@@ -223,11 +223,11 @@ export async function listCommunityMembers(
   const rows = await listMembersWithUsers(organizationId);
   const userIds = rows.map((row) => row.user.id);
   const cards = await listCardsOfUsersInOrganization(userIds, organizationId);
-  const cardByUserId = new Map(
-    cards
-      .filter((item) => item.userId)
-      .map((item) => [item.userId as string, item])
-  );
+  const cardByUserId = new Map<string, (typeof cards)[number]>();
+  for (const item of cards) {
+    if (!item.userId || cardByUserId.has(item.userId)) continue;
+    cardByUserId.set(item.userId, item);
+  }
 
   const [checkIns, connections, invitations] = await Promise.all([
     countCheckedInByUsersInOrganization(userIds, organizationId),

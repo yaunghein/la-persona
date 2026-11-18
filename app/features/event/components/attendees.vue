@@ -3,6 +3,7 @@ import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import type { Cell } from '@tanstack/vue-table';
 import {
   attendeeStatusLabel,
+  compareCheckedInDesc,
   type EventAttendee,
 } from '~~/shared/contracts/event';
 
@@ -79,7 +80,7 @@ const tabs = computed(() => [
 const filteredAttendees = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
 
-  return props.attendees.filter((attendee) => {
+  const matches = props.attendees.filter((attendee) => {
     if (activeTab.value === 'no_email') {
       if (attendee.hasEmail) return false;
     } else if (activeTab.value === 'walk_in') {
@@ -112,6 +113,11 @@ const filteredAttendees = computed(() => {
       (attendee.isWalkIn && 'walk-in'.includes(query))
     );
   });
+
+  if (activeTab.value === 'checked_in') {
+    matches.sort(compareCheckedInDesc);
+  }
+  return matches;
 });
 
 const total = computed(() => filteredAttendees.value.length);

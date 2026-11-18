@@ -367,6 +367,19 @@ export function attendeeStatusLabel(
   return 'Registered';
 }
 
+/** Newest check-in first. A missing time stays at the end. */
+export function compareCheckedInDesc(
+  a: Pick<EventAttendee, 'id' | 'checkedInAt'>,
+  b: Pick<EventAttendee, 'id' | 'checkedInAt'>
+) {
+  if (a.checkedInAt !== b.checkedInAt) {
+    if (!a.checkedInAt) return 1;
+    if (!b.checkedInAt) return -1;
+    return a.checkedInAt < b.checkedInAt ? 1 : -1;
+  }
+  return a.id < b.id ? 1 : -1;
+}
+
 export type EventDetailOverview = {
   dateTime: string;
   place: string;

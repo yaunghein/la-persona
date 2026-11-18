@@ -62,7 +62,8 @@ export function listUserOrganizations(userId: string) {
     })
     .from(organization)
     .innerJoin(member, eq(member.organizationId, organization.id))
-    .where(eq(member.userId, userId));
+    .where(eq(member.userId, userId))
+    .orderBy(desc(member.createdAt), desc(organization.id));
 }
 
 export async function countMembersAndEvents(organizationId: string) {
@@ -264,7 +265,8 @@ export function listCardsOfUsersInOrganization(
         eq(card.organizationId, organizationId),
         inArray(card.userId, userIds)
       )
-    );
+    )
+    .orderBy(desc(card.createdAt), desc(card.id));
 }
 
 export function listPendingInvitations(organizationId: string) {

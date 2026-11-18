@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import type { EventAttendee } from '~~/shared/contracts/event';
+import {
+  compareCheckedInDesc,
+  type EventAttendee,
+} from '~~/shared/contracts/event';
+import { formatTimeLabel } from '~~/shared/utils/datetime';
 import type { EventPhase } from '~~/shared/utils/event-datetime';
 
 const props = defineProps<{
@@ -26,6 +30,12 @@ const checkingInId = ref<string | null>(null);
 
 const hasQuery = computed(() => searchQuery.value.trim().length > 0);
 
+const checkedInAttendees = computed(() =>
+  props.attendees
+    .filter((attendee) => attendee.status === 'checked_in')
+    .sort(compareCheckedInDesc)
+);
+
 const matchingAttendees = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
   if (!query) return [];
@@ -47,6 +57,10 @@ const matchingAttendees = computed(() => {
     return Boolean(phoneDigits) && phoneDigits.includes(queryDigits);
   });
 });
+
+const visibleAttendees = computed(() =>
+  hasQuery.value ? matchingAttendees.value : checkedInAttendees.value
+);
 
 function displayAvatar(attendee: EventAttendee) {
   const raw = String(attendee.avatarUrl || '').trim();
@@ -187,9 +201,30 @@ async function checkIn(attendee: EventAttendee) {
       </div>
     </div>
 
-    <div v-else-if="hasQuery" class="flex flex-col gap-3">
+    <div v-else-if="visibleAttendees.length" class="flex flex-col gap-3">
+      <template v-if="!hasQuery">
+        <p class="text-sm font-medium text-subtle">
+          Checked in ({{ checkedInAttendees.length }})
+        </p>
+        <div class="flex flex-wrap items-center gap-3">
+          <UButton
+            v-if="canWalkIn"
+            label="Register as walk-in"
+            color="neutral"
+            class="h-10 cursor-pointer justify-center rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
+            @click="emit('open-walk-in')"
+          />
+          <UButton
+            label="No email check-in"
+            color="neutral"
+            :disabled="checkInPhase !== 'live'"
+            class="h-10 cursor-pointer justify-center rounded-full bg-raised px-5 text-sm font-medium text-ink hover:bg-line disabled:cursor-not-allowed disabled:bg-raised disabled:text-subtle disabled:opacity-100"
+            @click="emit('open-manual-registration')"
+          />
+        </div>
+      </template>
       <div
-        v-for="attendee in matchingAttendees"
+        v-for="attendee in visibleAttendees"
         :key="attendee.id"
         class="flex items-center gap-4 rounded-lg bg-surface p-4"
       >
@@ -240,7 +275,11 @@ async function checkIn(attendee: EventAttendee) {
             v-else-if="attendee.status === 'checked_in'"
             class="text-sm font-medium text-subtle"
           >
-            Already checked in
+            {{
+              attendee.checkedInAt
+                ? formatTimeLabel(attendee.checkedInAt)
+                : 'Checked in'
+            }}
           </span>
           <UTooltip text="View attendee profile">
             <UButton

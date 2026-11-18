@@ -44,20 +44,21 @@ import { sendEventRegistrationEmails } from '~~/server/features/event/registrati
 import { toCsv } from '~~/server/lib/csv';
 import { sanitizeRichText } from '~~/server/lib/html-sanitizer';
 import { readEventImageSizes } from '~~/server/lib/image-dimensions';
-import type {
-  AddToGoogleCalendarResult,
-  AttendeeExportQuery,
-  CreateEventRequest,
-  CreateWalkInRequest,
-  EventBroadcastKind,
-  EventCollection,
-  EventDetailDTO,
-  EventMembershipResult,
-  PublicEventDTO,
-  PublicEventViewer,
-  SelectEvent,
-  TicketLookup,
-  UpdateEventRequest,
+import {
+  compareCheckedInDesc,
+  type AddToGoogleCalendarResult,
+  type AttendeeExportQuery,
+  type CreateEventRequest,
+  type CreateWalkInRequest,
+  type EventBroadcastKind,
+  type EventCollection,
+  type EventDetailDTO,
+  type EventMembershipResult,
+  type PublicEventDTO,
+  type PublicEventViewer,
+  type SelectEvent,
+  type TicketLookup,
+  type UpdateEventRequest,
 } from '~~/shared/contracts/event';
 import {
   checkInPhase,
@@ -177,6 +178,7 @@ export async function exportAttendeesCsv(
       ? attendee.status === 'checked_in'
       : attendee.status === 'registered' || attendee.status === 'checked_in'
   );
+  if (roster === 'checked_in') items.sort(compareCheckedInDesc);
   const when = (value: string | null) =>
     value ? formatEventDateTime(new Date(value), record.timeZone) : '';
   return {
