@@ -297,6 +297,7 @@ const linkAssetMap: Record<string, string> = {
   linkedin: '/images/card/linkedin.png',
   telegram: '/images/card/telegram.png',
   tiktok: '/images/card/tiktok.png',
+  viber: '/images/card/viber.png',
   whatsapp: '/images/card/whatsapp.png',
   website: 'world',
   phone: 'phone',

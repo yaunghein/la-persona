@@ -7,6 +7,7 @@ export const SOCIAL_MEDIA_LINK_LABELS = [
   'LinkedIn',
   'Telegram',
   'Tiktok',
+  'Viber',
   'WhatsApp',
 ] as const;
 
