@@ -21,6 +21,12 @@ export const RecordCardInteractionRequest = z.object({
       action: z.string().trim().max(60).optional(),
       url: z.string().trim().max(2048).optional(),
       path: z.string().trim().max(512).optional(),
+      photoHost: z
+        .string()
+        .trim()
+        .max(253)
+        .regex(/^[a-z0-9.-]+(?::\d+)?$/i)
+        .optional(),
     })
     .strict()
     .optional(),

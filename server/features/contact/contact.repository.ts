@@ -115,6 +115,7 @@ function selectContactRows() {
         email: personaCard.email,
         company: personaCard.company,
         position: personaCard.position,
+        avatarUrl: personaCard.avatarUrl,
       },
     })
     .from(contactExchange)

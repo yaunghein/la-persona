@@ -65,6 +65,7 @@ export function toContactSummary(
         }
       : null,
     personaCardSlug: isLiveCard ? (personaCard?.slug ?? null) : null,
+    avatarUrl: isLiveCard ? personaCard.avatarUrl?.trim() || null : null,
     labels,
   };
 }

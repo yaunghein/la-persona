@@ -233,8 +233,9 @@ export function emitWideEvent(event: H3Event) {
     /^\/api\/public\/cards\/[^/]+\/interactions$/.test(path);
   const method = wide.method.toUpperCase();
   const isRead = method === 'GET' || method === 'HEAD' || method === 'OPTIONS';
+  const photoMissing = !!wide.vcf_photo && typeof wide.vcf_photo === 'object';
   // Logged: failures, slow calls, and writes outside the noisy routes.
-  if (!failed && !slow && (isRead || isNoisy)) return;
+  if (!failed && !slow && !photoMissing && (isRead || isNoisy)) return;
 
   const level =
     status >= 500 || emailFailed ? 'error' : failed || slow ? 'warn' : 'info';

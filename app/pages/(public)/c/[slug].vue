@@ -350,6 +350,8 @@ function toBase64(buffer: ArrayBuffer) {
   return btoa(binary);
 }
 
+type VcfPhoto = { base64: string; imageType: 'JPEG' | 'PNG' };
+
 function resolveCardAvatarUrl(avatarUrl: string | null | undefined) {
   const raw = String(avatarUrl || '').trim();
   if (!raw) return null;
@@ -365,34 +367,85 @@ function resolveCardAvatarUrl(avatarUrl: string | null | undefined) {
   return resolveObjectStorageUrl(raw);
 }
 
-async function getPhotoForVcf() {
-  const avatarUrl = resolveCardAvatarUrl(card.value?.avatarUrl);
-  const candidateUrls = [
-    avatarUrl ? imageProxyUrl(avatarUrl) : null,
-    avatarUrl,
-    '/images/reveal-image.webp',
-  ].filter(Boolean) as string[];
+function avatarHost(url: string) {
+  if (!/^https?:\/\//i.test(url)) return undefined;
+  try {
+    const host = new URL(url).host;
+    return /^[a-z0-9.-]+(?::\d+)?$/i.test(host) ? host : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
-  for (const rawUrl of candidateUrls) {
+function imageKind(bytes: Uint8Array, mimeType: string) {
+  if (
+    bytes.length >= 3 &&
+    bytes[0] === 0xff &&
+    bytes[1] === 0xd8 &&
+    bytes[2] === 0xff
+  ) {
+    return 'jpeg';
+  }
+  if (
+    bytes.length >= 8 &&
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47
+  ) {
+    return 'png';
+  }
+  if (
+    bytes.length >= 12 &&
+    bytes[0] === 0x52 &&
+    bytes[1] === 0x49 &&
+    bytes[2] === 0x46 &&
+    bytes[3] === 0x46 &&
+    bytes[8] === 0x57 &&
+    bytes[9] === 0x45 &&
+    bytes[10] === 0x42 &&
+    bytes[11] === 0x50
+  ) {
+    return 'webp';
+  }
+
+  const mime = mimeType.toLowerCase();
+  if (mime.includes('png')) return 'png';
+  if (mime.includes('jpeg') || mime.includes('jpg')) return 'jpeg';
+  if (mime.includes('webp')) return 'webp';
+  return null;
+}
+
+async function photoFromBlob(blob: Blob): Promise<VcfPhoto | null> {
+  const buffer = await blob.arrayBuffer();
+  const kind = imageKind(new Uint8Array(buffer), blob.type);
+  if (kind !== 'jpeg' && kind !== 'png') return null;
+  return {
+    base64: toBase64(buffer),
+    imageType: kind === 'png' ? 'PNG' : 'JPEG',
+  };
+}
+
+async function getPhotoForVcf(): Promise<{
+  photo: VcfPhoto | null;
+  host?: string;
+}> {
+  const avatarUrl = resolveCardAvatarUrl(card.value?.avatarUrl);
+  if (!avatarUrl) return { photo: null };
+
+  const host = avatarHost(avatarUrl);
+  for (const rawUrl of [imageProxyUrl(avatarUrl), avatarUrl]) {
     try {
       const response = await fetch(rawUrl, { cache: 'no-store' });
       if (!response.ok) continue;
-
-      const blob = await response.blob();
-      const arrayBuffer = await blob.arrayBuffer();
-      const mimeType = (blob.type || '').toUpperCase();
-      const imageType = mimeType.includes('PNG') ? 'PNG' : 'JPEG';
-
-      return {
-        base64: toBase64(arrayBuffer),
-        imageType,
-      };
+      const photo = await photoFromBlob(await response.blob());
+      if (photo) return { photo };
     } catch {
-      // Try next image source.
+      continue;
     }
   }
 
-  return null;
+  return { photo: null, ...(host ? { host } : {}) };
 }
 
 function buildCardVcf(photo: { base64: string; imageType: string } | null) {
@@ -458,7 +511,7 @@ async function onSaveContact() {
 
   isSavingContact.value = true;
   try {
-    const photo = await getPhotoForVcf();
+    const { photo, host } = await getPhotoForVcf();
     const vcf = buildCardVcf(photo);
     if (!vcf) throw new Error('Unable to generate VCF.');
 
@@ -470,7 +523,10 @@ async function onSaveContact() {
 
     recordCardInteraction(card.value!.slug, {
       type: 'save_action',
-      metadata: { action: 'vcf_download' },
+      metadata: {
+        action: 'vcf_download',
+        ...(host ? { photoHost: host } : {}),
+      },
     });
   } catch {
     toast.add({

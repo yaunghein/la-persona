@@ -172,6 +172,7 @@ export type ContactSummary = {
   } | null;
   /** Set when the contact is another La Persona member (seamless exchange). */
   personaCardSlug: string | null;
+  avatarUrl: string | null;
   /** The viewer's own labels; other people's labels are never included. */
   labels: Label[];
 };

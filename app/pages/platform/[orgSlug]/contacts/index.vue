@@ -6,6 +6,7 @@ import type { ContactListScope } from '~/features/contact/composables/use-contac
 import { roleHasPermission } from '~~/shared/permissions/organization';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 import {
+  contactAvatarPhoto,
   contactVcardFileName,
   toContactVcard,
 } from '~/features/contact/utils/contact-vcard';
@@ -187,9 +188,10 @@ const isDeleteOpen = computed({
 const { mutateAsync: deleteContact, isPending: isDeleting } =
   useDeleteContactMutation();
 
-function saveContactToPhone(contact: ContactSummary) {
+async function saveContactToPhone(contact: ContactSummary) {
+  const photo = await contactAvatarPhoto(contact.avatarUrl);
   downloadFile({
-    blob: new Blob([toContactVcard(contact)], {
+    blob: new Blob([toContactVcard(contact, photo)], {
       type: 'text/vcard;charset=utf-8',
     }),
     fileName: contactVcardFileName(contact),

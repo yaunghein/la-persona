@@ -14,6 +14,15 @@ export default defineEventHandler(async (event) => {
   const card = await findCardBySlug(cardSlug);
   if (!card) throw notFound('Card');
 
+  const metadata = request.metadata ? { ...request.metadata } : undefined;
+  if (metadata?.action === 'vcf_download' && metadata.photoHost) {
+    enrichLog(event, {
+      card: { id: card.id, slug: card.slug },
+      vcf_photo: { host: metadata.photoHost },
+    });
+    delete metadata.photoHost;
+  }
+
   // The owner looking at their own card isn't engagement.
   if (event.context.principal?.user.id === card.userId)
     return respondNoContent(event);
@@ -35,7 +44,7 @@ export default defineEventHandler(async (event) => {
     organizationId: card.organizationId,
     userId: card.userId,
     type: request.type,
-    metadata: request.metadata,
+    metadata,
   });
   return respondNoContent(event);
 });
