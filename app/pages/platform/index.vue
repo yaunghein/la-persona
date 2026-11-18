@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { cardNeedsSetup } from '~~/shared/utils/card-setup';
 import { getSafeInternalPath } from '~~/shared/utils/safe-redirect';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
@@ -106,11 +107,7 @@ watch(
     let dest = `/platform/${slug}`;
     if (newCards.length === 1) {
       const card = newCards[0];
-      if (
-        card &&
-        (!card.socials || card.socials.length === 0) &&
-        card.website == null
-      ) {
+      if (card && cardNeedsSetup(card)) {
         dest = `/platform/${slug}/cards/${card.slug}/setup`;
       }
     }

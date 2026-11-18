@@ -49,7 +49,8 @@ The simplest code that works wins. No layers, helpers, config, or abstractions t
 - Before inlining, check behavior. For example, `UForm` awaits whatever `@submit` returns and disables the form while it waits.
 - A question is not a request to change code. Answer it; edit only when asked.
 - No scope creep: no extra refactors, docs, or drive-by cleanups.
-- Comment only a non-obvious why (a constraint, gotcha, or business rule), never what the code says.
+- No naive comments. A comment that restates the code, the name, or the next line does not belong. Comment only a non-obvious why (a constraint, gotcha, or business rule).
+- Don't break existing behavior. A change stays inside the case it was asked to change. Check every caller of a function or route you touch, and leave those paths working.
 - Read similar pages and components first, and match their naming and placement.
 
 ## Layout

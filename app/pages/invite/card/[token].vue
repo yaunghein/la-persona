@@ -6,11 +6,14 @@ type InvitationDetails = OnboardingInvitationPreview;
 
 type AcceptResult = {
   organizationSlug: string;
+  cardSlug: string;
+  needsSetup: boolean;
 };
 
 const route = useRoute();
 const toast = useToast();
 const queryClient = useQueryClient();
+const { data: session } = await authClient.useSession(useFetch);
 const isAccepting = ref(false);
 const hasAccepted = ref(false);
 
@@ -40,18 +43,22 @@ async function onAccept() {
       { method: 'PATCH', body: { status: 'accepted' } }
     );
     hasAccepted.value = true;
-    await queryClient.invalidateQueries({
-      queryKey: organizationQueryKeys.all,
-    });
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: organizationQueryKeys.all }),
+      queryClient.invalidateQueries({ queryKey: cardQueryKeys.all }),
+    ]);
     toast.add({
       title: 'Invitation accepted',
       description: 'Your workspace is now ready.',
       color: 'success',
     });
-    const cardsPath = accepted.organizationSlug
-      ? `${ROUTES.PLATFORM.ROOT}/${accepted.organizationSlug}/cards`
-      : ROUTES.PLATFORM.ROOT;
-    await navigateTo(cardsPath);
+    const slug = accepted.organizationSlug;
+    const dest = !slug
+      ? ROUTES.PLATFORM.ROOT
+      : accepted.needsSetup
+        ? `${ROUTES.PLATFORM.ROOT}/${slug}/cards/${accepted.cardSlug}/setup`
+        : `${ROUTES.PLATFORM.ROOT}/${slug}/cards`;
+    await navigateTo(dest);
   } catch (acceptError: any) {
     toast.add({
       title: 'Accept failed',
@@ -92,43 +99,54 @@ const isAcceptInProgress = computed(
   () => isAccepting.value || hasAccepted.value
 );
 
+const isOtherAccount = computed(
+  () => apiErrorCode(error.value) === 'not_invitee'
+);
+
 const notice = computed(() => {
   if (!invitation.value || isAcceptInProgress.value) return '';
   if (invitation.value.isExpired) return 'This invitation is expired.';
   if (invitation.value.status !== 'pending') {
     return 'This invitation has already been processed.';
   }
-  if (invitation.value.isEmailMatched === false) {
-    return 'This invitation belongs to a different email account.';
-  }
   return '';
 });
 
 const noticeColor = computed(() => {
-  if (!invitation.value) return 'neutral' as const;
-  if (invitation.value.isExpired) return 'warning' as const;
-  if (invitation.value.isEmailMatched === false) return 'error' as const;
+  if (invitation.value?.isExpired) return 'warning' as const;
   return 'neutral' as const;
 });
 
+const errorTitle = computed(() => {
+  if (invitation.value && !error.value) return undefined;
+  return isOtherAccount.value
+    ? 'Signed in with another account'
+    : 'Invitation not found';
+});
+
 const errorMessage = computed(() => {
-  const acceptError = error.value as {
-    data?: { statusMessage?: string };
-    message?: string;
-  } | null;
-  return (
-    acceptError?.data?.statusMessage ||
-    acceptError?.message ||
+  const message = apiErrorMessage(
+    error.value,
     'This invitation does not exist or is no longer available.'
   );
+  const viewerEmail = session.value?.user.email;
+  return isOtherAccount.value && viewerEmail
+    ? `${message} You're signed in as ${viewerEmail}.`
+    : message;
 });
+
+function onRetry() {
+  if (isOtherAccount.value) return signOut();
+  void refresh();
+}
 </script>
 
 <template>
   <UiInvitationScreen
     :pending="pending"
-    :error-title="error || !invitation ? 'Invitation not found' : undefined"
-    :error-message="error || !invitation ? errorMessage : undefined"
+    :error-title="errorTitle"
+    :error-message="errorTitle ? errorMessage : undefined"
+    :retry-label="isOtherAccount ? 'Sign out & switch account' : undefined"
     :cover-src="INVITATION_COVER_FALLBACK"
     cover-aspect-class="aspect-[1/0.583]"
     :organization-name="invitation?.organizationName"
@@ -139,6 +157,6 @@ const errorMessage = computed(() => {
     :action-loading="isAcceptInProgress"
     :action-disabled="!isAcceptInProgress && !invitation?.canAccept"
     @action="onAccept"
-    @retry="() => void refresh()"
+    @retry="onRetry"
   />
 </template>

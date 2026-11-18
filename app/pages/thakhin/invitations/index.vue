@@ -25,7 +25,7 @@ const createState = reactive({
   cardId: '',
   subscriptionPlanCode: '',
   freeMonths: 6,
-  expirationMinutes: 60,
+  expirationMinutes: 60 * 24,
   sendNow: false,
 });
 
@@ -37,7 +37,7 @@ const { data: plans } = useSubscriptionPlansQuery();
 
 const rows = computed(() => invitationsData.value || []);
 const statusFilter = useQueryState<
-  'all' | 'pending' | 'accepted' | 'cancelled'
+  'all' | 'pending' | 'accepted' | 'cancelled' | 'expired'
 >('status', 'pending');
 
 const statusFilterItems = [
@@ -45,11 +45,22 @@ const statusFilterItems = [
   { label: 'Pending', value: 'pending' },
   { label: 'Accepted', value: 'accepted' },
   { label: 'Cancelled', value: 'cancelled' },
+  { label: 'Expired', value: 'expired' },
 ];
+
+function displayStatus(row: InvitationRow) {
+  if (
+    row.status === 'pending' &&
+    new Date(row.expiresAt).getTime() <= Date.now()
+  ) {
+    return 'expired';
+  }
+  return row.status;
+}
 
 const filteredRows = computed(() => {
   if (statusFilter.value === 'all') return rows.value;
-  return rows.value.filter((row) => row.status === statusFilter.value);
+  return rows.value.filter((row) => displayStatus(row) === statusFilter.value);
 });
 
 const {
@@ -86,6 +97,7 @@ function formatDate(value?: string | null) {
 function getStatusColor(status: string) {
   if (status === 'accepted') return 'success';
   if (status === 'cancelled') return 'neutral';
+  if (status === 'expired') return 'error';
   return 'warning';
 }
 
@@ -104,7 +116,7 @@ async function onCreateInvitation() {
     createState.cardId = '';
     createState.subscriptionPlanCode = '';
     createState.freeMonths = 6;
-    createState.expirationMinutes = 60;
+    createState.expirationMinutes = 60 * 24;
     createState.sendNow = false;
     toast.add({
       title: 'Invitation created',
@@ -313,8 +325,11 @@ const selectUi = {
           }}</span>
         </template>
         <template #status-cell="{ row }">
-          <UBadge :color="getStatusColor(row.original.status)" variant="subtle">
-            {{ row.original.status }}
+          <UBadge
+            :color="getStatusColor(displayStatus(row.original))"
+            variant="subtle"
+          >
+            {{ displayStatus(row.original) }}
           </UBadge>
         </template>
         <template #actions-cell="{ row }">
@@ -400,6 +415,7 @@ const selectUi = {
             </UFormField>
             <UFormField
               label="Expiration (minutes)"
+              help="1440 minutes is one day."
               required
               :class="formFieldClass"
             >

@@ -14,6 +14,7 @@ import {
 } from '~~/server/db/schema';
 import { sendEmail } from '~~/server/lib/mailer';
 import { env } from '~~/env';
+import { cardNeedsSetup } from '~~/shared/utils/card-setup';
 import { slugify } from '~~/shared/utils/slugify';
 import { ROUTES } from '~~/shared/utils/routes';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
@@ -38,6 +39,19 @@ export function normalizeEmail(value: string) {
 }
 
 export async function getPendingOnboardingInvitationByEmail(email: string) {
+  return findLatestPendingOnboardingInvitation(email, { openOnly: true });
+}
+
+export async function getLatestPendingOnboardingInvitationByEmail(
+  email: string
+) {
+  return findLatestPendingOnboardingInvitation(email, { openOnly: false });
+}
+
+async function findLatestPendingOnboardingInvitation(
+  email: string,
+  options: { openOnly: boolean }
+) {
   const normalized = normalizeEmail(email);
   if (!normalized) return null;
 
@@ -49,13 +63,22 @@ export async function getPendingOnboardingInvitationByEmail(email: string) {
       and(
         sql`lower(${onboardingInvitation.email}) = ${normalized}`,
         eq(onboardingInvitation.status, 'pending'),
-        gt(onboardingInvitation.expiresAt, now)
+        options.openOnly ? gt(onboardingInvitation.expiresAt, now) : undefined
       )
     )
     .orderBy(desc(onboardingInvitation.createdAt))
     .limit(1);
 
   return invite ?? null;
+}
+
+function maskEmail(email: string) {
+  const [local = '', domain = ''] = email.split('@');
+  const masked =
+    local.length <= 2
+      ? `${local[0] ?? ''}*`
+      : `${local[0]}${'*'.repeat(local.length - 2)}${local.at(-1)}`;
+  return `${masked}@${domain}`;
 }
 
 export async function createOnboardingInvitation(params: {
@@ -199,6 +222,27 @@ export async function acceptOnboardingInvitation(params: {
       throw forbidden('This invitation is for a different email address');
     }
 
+    const invitedCard = await tx.query.card.findFirst({
+      where: eq(card.id, invite.cardId),
+      columns: {
+        id: true,
+        organizationId: true,
+        userId: true,
+        slug: true,
+        socials: true,
+        website: true,
+      },
+    });
+    if (!invitedCard) {
+      throw notFound("'Invited card'");
+    }
+    if (invitedCard.organizationId !== invite.organizationId) {
+      throw conflict('Invited card is not linked to invitation organization');
+    }
+    if (invitedCard.userId) {
+      throw conflict('This card is already linked to an account.');
+    }
+
     const thakhinOrganizationId = invite.organizationId;
     const [existingPersonal] = await tx
       .select({ id: organization.id })
@@ -236,17 +280,6 @@ export async function acceptOnboardingInvitation(params: {
           createdAt: now,
         });
       }
-    }
-
-    const invitedCard = await tx.query.card.findFirst({
-      where: eq(card.id, invite.cardId),
-      columns: { id: true, organizationId: true },
-    });
-    if (!invitedCard) {
-      throw notFound("'Invited card'");
-    }
-    if (invitedCard.organizationId !== thakhinOrganizationId) {
-      throw conflict('Invited card is not linked to invitation organization');
     }
 
     await tx
@@ -353,7 +386,11 @@ export async function acceptOnboardingInvitation(params: {
       throw new Error('Failed to finalize invitation acceptance');
     }
 
-    return { organizationSlug: targetOrganization.slug };
+    return {
+      organizationSlug: targetOrganization.slug,
+      cardSlug: invitedCard.slug,
+      needsSetup: cardNeedsSetup(invitedCard),
+    };
   });
 }
 
@@ -473,9 +510,13 @@ export async function previewInvitationForUser(
   const row = await findOnboardingInvitationWithContext(invitationId);
   if (!row) throw notFound('Invitation');
   const { invitation } = row;
+  if (normalizeEmail(viewerEmail) !== normalizeEmail(invitation.email)) {
+    throw forbidden(
+      `This invitation was sent to ${maskEmail(invitation.email)}.`,
+      'not_invitee'
+    );
+  }
   const isExpired = invitation.expiresAt <= new Date();
-  const isEmailMatched =
-    normalizeEmail(viewerEmail) === normalizeEmail(invitation.email);
   return {
     id: invitation.id,
     email: invitation.email,
@@ -490,8 +531,8 @@ export async function previewInvitationForUser(
     cardLastName: row.cardLastName,
     planName: row.planName,
     isExpired,
-    isEmailMatched,
-    canAccept: invitation.status === 'pending' && !isExpired && isEmailMatched,
+    isEmailMatched: true,
+    canAccept: invitation.status === 'pending' && !isExpired,
   };
 }
 
