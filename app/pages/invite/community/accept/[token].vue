@@ -37,6 +37,7 @@ const { data: session } = await authClient.useSession(useFetch);
 const isOtherAccount = computed(
   () => apiErrorCode(error.value) === 'not_invitee'
 );
+const isMissing = computed(() => apiErrorStatus(error.value) === 404);
 
 const errorTitle = computed(() => {
   if (!isError.value) return undefined;
@@ -53,8 +54,14 @@ const errorMessage = computed(() => {
     : message;
 });
 
+async function openCards() {
+  const orgs = await loadUserOrganizations().catch(() => []);
+  return navigateTo(workspaceCardsPath(orgs));
+}
+
 function onRetry() {
   if (isOtherAccount.value) return signOut();
+  if (isMissing.value) return openCards();
   void refetch();
 }
 
@@ -88,6 +95,15 @@ const notice = computed(() => {
   if (data.value.alreadyMember) {
     return 'You are already a member of this community.';
   }
+  if (data.value.status === 'accepted') {
+    return 'This invitation has already been\u00a0accepted.';
+  }
+  if (data.value.status === 'rejected') {
+    return 'This invitation was\u00a0declined.';
+  }
+  if (data.value.status === 'canceled' || data.value.status === 'cancelled') {
+    return 'This invitation was\u00a0cancelled.';
+  }
   if (data.value.expired) return 'This invitation has expired.';
   if (data.value.status !== 'pending') {
     return 'This invitation has already been processed.';
@@ -105,14 +121,15 @@ const actionLabel = computed(() => {
   if (isAcceptInProgress.value) return 'Accept Invitation';
   if (data.value.alreadyMember) return 'Open community';
   if (canAccept.value) return 'Accept Invitation';
-  return '';
+  return 'View cards';
 });
 
 function onAction() {
   if (data.value?.alreadyMember) {
     return navigateTo(`${ROUTES.PLATFORM.ROOT}/${data.value.organizationSlug}`);
   }
-  accept();
+  if (canAccept.value) return accept();
+  return openCards();
 }
 </script>
 
@@ -121,7 +138,13 @@ function onAction() {
     :pending="isPending"
     :error-title="errorTitle"
     :error-message="isError ? errorMessage : undefined"
-    :retry-label="isOtherAccount ? 'Sign out & switch account' : undefined"
+    :retry-label="
+      isOtherAccount
+        ? 'Sign out & switch account'
+        : isMissing
+          ? 'View cards'
+          : undefined
+    "
     :cover-src="data ? invitationCoverSrc(data.coverUrl) : undefined"
     :logo-src="data ? invitationLogoSrc(data.logoUrl) : undefined"
     :organization-name="data?.organizationName"

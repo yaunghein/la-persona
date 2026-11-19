@@ -1,4 +1,5 @@
 import { env } from '~~/env';
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 import { getSafeInternalPath } from '~~/shared/utils/safe-redirect';
 const PLATFORM_ROOT = '/platform';
 const THAKHIN_ROOT = '/thakhin';
@@ -64,6 +65,18 @@ export const ROUTES = {
   },
   API: '/api',
 } as const;
+
+/** Cards list for the personal workspace, or the first workspace they belong to. */
+export function workspaceCardsPath(
+  organizations: readonly { type: string; slug: string }[]
+) {
+  const workspace =
+    organizations.find((org) => org.type === ORGANIZATION_TYPES.PERSONAL) ||
+    organizations[0];
+  return workspace
+    ? `${ROUTES.PLATFORM.ROOT}/${workspace.slug}/cards`
+    : ROUTES.PLATFORM.ROOT;
+}
 
 /** Community join links stay public so signed-out visitors and link previews see the community. */
 export function isProtectedInvitePath(path: string) {

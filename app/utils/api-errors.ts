@@ -17,6 +17,14 @@ export function apiErrorCode(error: unknown): string | undefined {
   return apiErrorBody(error)?.code;
 }
 
+export function apiErrorStatus(error: unknown): number | undefined {
+  if (!error || typeof error !== 'object') return undefined;
+  const value = error as { statusCode?: unknown; status?: unknown };
+  if (typeof value.statusCode === 'number') return value.statusCode;
+  if (typeof value.status === 'number') return value.status;
+  return undefined;
+}
+
 /** A message safe to show in a toast. */
 export function apiErrorMessage(
   error: unknown,

@@ -120,6 +120,7 @@ const emit = defineEmits<{
             :title="notice"
             class="w-full text-center"
           />
+          <slot name="support" />
           <UButton
             v-if="actionLabel"
             :label="actionLabel"

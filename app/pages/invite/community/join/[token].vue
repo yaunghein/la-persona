@@ -71,9 +71,21 @@ function joinCommunity() {
   });
 }
 
+const isMissing = computed(() => apiErrorStatus(error.value) === 404);
+
 const errorMessage = computed(() =>
   apiErrorMessage(error.value, 'This invite link is invalid or has expired.')
 );
+
+const retryLabel = computed(() => {
+  if (!isMissing.value) return undefined;
+  return session.value ? 'View cards' : 'Back to home';
+});
+
+async function openCards() {
+  const orgs = await loadUserOrganizations().catch(() => []);
+  return navigateTo(workspaceCardsPath(orgs));
+}
 
 const meta = computed(() =>
   data.value ? communityInviteMeta(data.value) : []
@@ -100,7 +112,9 @@ function onAction() {
 }
 
 function onRetry() {
-  void refreshPreview();
+  if (!isMissing.value) return refreshPreview();
+  if (!session.value) return navigateTo(ROUTES.HOME);
+  return openCards();
 }
 </script>
 
@@ -109,6 +123,7 @@ function onRetry() {
     :pending="isPreviewPending"
     :error-title="error ? 'Invite unavailable' : undefined"
     :error-message="error ? errorMessage : undefined"
+    :retry-label="retryLabel"
     :cover-src="data ? invitationCoverSrc(data.coverUrl) : undefined"
     :logo-src="data ? invitationLogoSrc(data.logoUrl) : undefined"
     :organization-name="data?.organizationName"

@@ -18,6 +18,8 @@ const isAccepting = ref(false);
 const hasAccepted = ref(false);
 
 const invitationId = computed(() => String(route.params.token || ''));
+const { data: organizations, isSuccess: hasLoadedOrganizations } =
+  useUserOrganizations();
 
 const {
   data: invitation,
@@ -102,10 +104,21 @@ const isAcceptInProgress = computed(
 const isOtherAccount = computed(
   () => apiErrorCode(error.value) === 'not_invitee'
 );
+const isMissing = computed(() => apiErrorStatus(error.value) === 404);
+
+const isClaimed = computed(() => invitation.value?.status === 'accepted');
+const isCancelled = computed(
+  () =>
+    invitation.value?.status === 'cancelled' ||
+    invitation.value?.status === 'canceled'
+);
+const hasWorkspace = computed(() => (organizations.value?.length ?? 0) > 0);
 
 const notice = computed(() => {
   if (!invitation.value || isAcceptInProgress.value) return '';
-  if (invitation.value.isExpired) return 'This invitation is expired.';
+  if (isClaimed.value) return 'This card is already\u00a0claimed.';
+  if (isCancelled.value) return 'This invitation was\u00a0cancelled.';
+  if (invitation.value.isExpired) return 'This invitation has\u00a0expired.';
   if (invitation.value.status !== 'pending') {
     return 'This invitation has already been processed.';
   }
@@ -117,14 +130,21 @@ const noticeColor = computed(() => {
   return 'neutral' as const;
 });
 
+const isLoadFailure = computed(
+  () => !!error.value && !isOtherAccount.value && !isMissing.value
+);
+
 const errorTitle = computed(() => {
   if (invitation.value && !error.value) return undefined;
-  return isOtherAccount.value
-    ? 'Signed in with another account'
-    : 'Invitation not found';
+  if (isOtherAccount.value) return 'Signed in with another account';
+  if (isLoadFailure.value) return "Couldn't load this invitation";
+  return 'Invitation not found';
 });
 
 const errorMessage = computed(() => {
+  if (isLoadFailure.value) {
+    return 'Something went wrong. Try again in a\u00a0moment.';
+  }
   const message = apiErrorMessage(
     error.value,
     'This invitation does not exist or is no longer available.'
@@ -135,8 +155,52 @@ const errorMessage = computed(() => {
     : message;
 });
 
+// An expired invite is where someone with no workspace lands. A cards link
+// would open /platform, which brings them straight back.
+const isStrandedExpiredInvite = computed(() => {
+  const invite = invitation.value;
+  return (
+    !!invite &&
+    !isAcceptInProgress.value &&
+    invite.status === 'pending' &&
+    invite.isExpired &&
+    !hasWorkspace.value
+  );
+});
+
+const showExpiredSupport = computed(
+  () => isStrandedExpiredInvite.value && hasLoadedOrganizations.value
+);
+
+const actionLabel = computed(() => {
+  const invite = invitation.value;
+  if (!invite) return '';
+  if (isAcceptInProgress.value || invite.canAccept) return 'Accept Invitation';
+  if (isClaimed.value) return 'View cards';
+  if (isStrandedExpiredInvite.value) return '';
+  return 'View cards';
+});
+
+async function openCards() {
+  if (isClaimed.value && invitation.value?.organizationSlug) {
+    return navigateTo(
+      `${ROUTES.PLATFORM.ROOT}/${invitation.value.organizationSlug}/cards`
+    );
+  }
+  const orgs =
+    organizations.value ?? (await loadUserOrganizations().catch(() => []));
+  return navigateTo(workspaceCardsPath(orgs));
+}
+
+function onAction() {
+  if (isAcceptInProgress.value) return;
+  if (invitation.value?.canAccept) return onAccept();
+  return openCards();
+}
+
 function onRetry() {
   if (isOtherAccount.value) return signOut();
+  if (isMissing.value) return openCards();
   void refresh();
 }
 </script>
@@ -146,17 +210,53 @@ function onRetry() {
     :pending="pending"
     :error-title="errorTitle"
     :error-message="errorTitle ? errorMessage : undefined"
-    :retry-label="isOtherAccount ? 'Sign out & switch account' : undefined"
+    :retry-label="
+      isOtherAccount
+        ? 'Sign out & switch account'
+        : isMissing
+          ? 'View cards'
+          : undefined
+    "
     :cover-src="INVITATION_COVER_FALLBACK"
     cover-aspect-class="aspect-[1/0.583]"
     :organization-name="invitation?.organizationName"
     :meta="meta"
     :notice="notice"
     :notice-color="noticeColor"
-    action-label="Accept Invitation"
+    :action-label="actionLabel"
     :action-loading="isAcceptInProgress"
-    :action-disabled="!isAcceptInProgress && !invitation?.canAccept"
-    @action="onAccept"
+    @action="onAction"
     @retry="onRetry"
-  />
+  >
+    <template v-if="showExpiredSupport" #support>
+      <UAlert
+        color="info"
+        variant="soft"
+        title="Contact La Persona"
+        class="w-full text-center"
+      >
+        <template #description>
+          <p>
+            Ask for a new invitation on
+            <a
+              href="https://www.facebook.com/share/1BBTr3Emyh/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-ink underline underline-offset-2"
+            >
+              Facebook
+            </a>
+            or&nbsp;<a
+              href="https://m.me/61571393589144"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-ink underline underline-offset-2"
+            >
+              Messenger</a
+            >.
+          </p>
+        </template>
+      </UAlert>
+    </template>
+  </UiInvitationScreen>
 </template>
