@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import type { PublicCard } from '~~/shared/contracts/card';
 import type { CreateContactExchangeRequest } from '~~/shared/contracts/contact';
+import { env } from '~~/env';
 import { Application } from '@splinetool/runtime';
+import { renderDottedQrDataUrl } from '~/features/card/utils/wallpaper-image';
 import type { ConcreteComponent } from 'vue';
 import { SOCIAL_MEDIA_LINK_LABELS } from '~~/shared/constants/card-link-options';
 import { downloadFile } from '~/utils/share-or-download';
+import { cardEditorPath } from '~/features/card/utils/card-badge';
 import { applyCombinedCardToSpline } from '~/features/card/utils/spline-card';
 import { vcfPhoneLines } from '~~/shared/utils/phone';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
@@ -14,9 +17,11 @@ const route = useRoute();
 const { normalizeCardLinkValue } = useUrlNormalization();
 
 const { slug } = route.params;
-const { data: card, error: cardError } = await useFetch<PublicCard>(
-  `/api/public/cards/${slug}`
-);
+const {
+  data: card,
+  error: cardError,
+  refresh: refreshPublicCard,
+} = await useFetch<PublicCard>(`/api/public/cards/${slug}`);
 const isMembersOnly = cardError.value?.statusCode === 401;
 
 if (!card.value && !isMembersOnly) {
@@ -31,13 +36,21 @@ const { data: myCards, refetch: refetchMyCards } = useWorkspaceCardsQuery({
   enabled: () => !!session.value,
 });
 
-const isOwnCard = computed(
-  () => !!myCards.value?.some((myCard) => myCard.slug === card.value?.slug)
+const ownCard = computed(
+  () =>
+    myCards.value?.find((myCard) => myCard.slug === card.value?.slug) ?? null
 );
 
 const cardFullName = computed(() =>
   [card.value?.firstName, card.value?.lastName].filter(Boolean).join(' ').trim()
 );
+
+const qrDetailLine = computed(() => {
+  const position = card.value?.position?.trim();
+  const company = card.value?.company?.trim();
+  if (position && company) return `${position} · ${company}`;
+  return position || company || '';
+});
 
 const seoTitle = computed(() => {
   const name = cardFullName.value;
@@ -90,6 +103,13 @@ useInAppBrowserPreview(() => {
   };
 });
 
+let splineApp: Application | null = null;
+
+function disposeSpline() {
+  splineApp?.dispose();
+  splineApp = null;
+}
+
 onMounted(async () => {
   if (!card || !card.value) return;
 
@@ -101,26 +121,127 @@ onMounted(async () => {
 
   loading.value = true;
 
-  const canvas = document.querySelector('#card') as HTMLCanvasElement;
+  const canvas = document.querySelector('#card') as HTMLCanvasElement | null;
+  if (!canvas) return;
   const spline = new Application(canvas);
-  spline.load(card.value?.splineUrl + `?v=${new Date().getTime()}`).then(() => {
-    loading.value = false;
-    if (!card.value) return;
-    applyCombinedCardToSpline(spline, {
-      firstName: card.value.firstName,
-      lastName: card.value.lastName,
-      position: card.value.position,
-      phone: card.value.phone,
-      phoneCountryCode: card.value.phoneCountryCode,
-      email: card.value.email,
-      website: card.value.website,
-      planCode: card.value.plan?.code,
-      joinedAt: card.value.joinedAt,
+  splineApp = spline;
+  spline
+    .load(card.value?.splineUrl + `?v=${new Date().getTime()}`)
+    .then(() => {
+      if (splineApp !== spline) return;
+      loading.value = false;
+      if (!card.value) return;
+      applyCombinedCardToSpline(spline, {
+        firstName: card.value.firstName,
+        lastName: card.value.lastName,
+        position: card.value.position,
+        phone: card.value.phone,
+        phoneCountryCode: card.value.phoneCountryCode,
+        email: card.value.email,
+        website: card.value.website,
+        planCode: card.value.plan?.code,
+        joinedAt: card.value.joinedAt,
+      });
     });
-  });
 });
 
 const isMenuOpen = ref(false);
+const isQrOpen = ref(false);
+
+const publicCardUrl = computed(() => {
+  const cardSlug = card.value?.slug;
+  if (!cardSlug) return '';
+  return `${env.BASE_URL.replace(/\/$/, '')}/c/${cardSlug}`;
+});
+const dottedQrUrl = ref('');
+
+watch(
+  publicCardUrl,
+  (url) => {
+    if (!url || !import.meta.client) {
+      dottedQrUrl.value = '';
+      return;
+    }
+    renderDottedQrDataUrl(url).then((dataUrl) => {
+      if (publicCardUrl.value === url) dottedQrUrl.value = dataUrl;
+    });
+  },
+  { immediate: true }
+);
+
+const qrScale = ref(0.84);
+let qrVelocity = 0;
+let qrFrame = 0;
+
+function springQrScale(target: number) {
+  cancelAnimationFrame(qrFrame);
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    qrVelocity = 0;
+    qrScale.value = target;
+    return;
+  }
+  let value = qrScale.value;
+  let last = performance.now();
+  const stiffness = 380;
+  const damping = 16;
+  const step = (now: number) => {
+    const dt = Math.min((now - last) / 1000, 0.032);
+    last = now;
+    qrVelocity += (-stiffness * (value - target) - damping * qrVelocity) * dt;
+    value += qrVelocity * dt;
+    qrScale.value = value;
+    if (Math.abs(value - target) < 0.0005 && Math.abs(qrVelocity) < 0.008) {
+      qrVelocity = 0;
+      qrScale.value = target;
+      return;
+    }
+    qrFrame = requestAnimationFrame(step);
+  };
+  qrFrame = requestAnimationFrame(step);
+}
+
+watch(isQrOpen, (open) => {
+  springQrScale(open ? 1 : 0.84);
+});
+
+onBeforeUnmount(() => {
+  disposeSpline();
+  cancelAnimationFrame(qrFrame);
+});
+
+function toggleExplore() {
+  isMenuOpen.value = !isMenuOpen.value;
+  if (isMenuOpen.value) isQrOpen.value = false;
+}
+
+function toggleCardQr() {
+  isQrOpen.value = !isQrOpen.value;
+  if (isQrOpen.value) isMenuOpen.value = false;
+}
+
+const router = useRouter();
+const canGoBack = ref(false);
+
+onMounted(() => {
+  canGoBack.value = typeof router.options.history.state.back === 'string';
+});
+
+function goBack() {
+  if (canGoBack.value) {
+    router.back();
+    return;
+  }
+  if (ownCard.value) {
+    navigateTo(`/platform/${ownCard.value.organization.slug}/cards`);
+  }
+}
+const isLinksOpen = ref(false);
+const startCreatingLink = ref(false);
+
+function openLinkManager(creating = false) {
+  startCreatingLink.value = creating;
+  isLinksOpen.value = true;
+}
 const isFormOpen = ref(false);
 const isSuccess = ref(false);
 const isValid = ref(true);
@@ -136,10 +257,9 @@ const toast = useToast();
 const cardDisplayName = computed(() =>
   [card.value?.firstName, card.value?.lastName].filter(Boolean).join(' ').trim()
 );
-const exchangeButtonLabel = computed(() => {
-  if (isOwnCard.value) return 'This is your card';
-  return isSeamlessExchanging.value ? 'Connecting...' : 'Exchange Contact';
-});
+const exchangeButtonLabel = computed(() =>
+  isSeamlessExchanging.value ? 'Connecting...' : 'Exchange Contact'
+);
 const successTitle = computed(() =>
   successMode.value === 'seamless'
     ? 'Successfully Connected'
@@ -169,7 +289,7 @@ const onExchangeContactClick = async () => {
     isFormOpen.value = !isFormOpen.value;
     return;
   }
-  if (!card.value || isSeamlessExchanging.value || isOwnCard.value) return;
+  if (!card.value || isSeamlessExchanging.value) return;
 
   isMenuOpen.value = false;
   exchangeSeamlessly();
@@ -543,8 +663,18 @@ async function onSaveContact() {
 </script>
 
 <template>
-  <div v-if="card" class="relative z-10 h-dvh w-screen overflow-hidden">
-    <div class="absolute inset-0 w-full h-full">
+  <div
+    v-if="card"
+    class="relative z-10 h-dvh w-screen overflow-hidden bg-[#232323]"
+  >
+    <div
+      class="absolute inset-0 h-full w-full origin-center transition duration-300 ease-out motion-reduce:transition-none"
+      :class="
+        isQrOpen
+          ? 'pointer-events-none scale-95 opacity-0'
+          : 'scale-100 opacity-100'
+      "
+    >
       <div
         v-if="loading"
         class="inline-block size-12 animate-spin rounded-full border border-current border-t-transparent text-ink/20 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
@@ -557,16 +687,69 @@ async function onSaveContact() {
     </div>
 
     <div
+      v-if="ownCard"
+      class="pointer-events-none absolute inset-0 flex items-center justify-center px-6"
+      :aria-hidden="!isQrOpen"
+    >
+      <div
+        class="w-64 origin-center overflow-hidden rounded-[26px] border border-[#3a3a3a] bg-[#2f2f2f] px-2 pt-2 text-center transition-opacity duration-200 ease-out motion-reduce:transition-none sm:w-96"
+        :class="isQrOpen ? 'opacity-100' : 'opacity-0'"
+        :style="{ transform: `scale(${qrScale})` }"
+      >
+        <div class="rounded-[17px] bg-[#1c1c1c] p-2.25">
+          <div class="overflow-hidden rounded-lg bg-white p-4">
+            <img
+              v-if="dottedQrUrl"
+              :src="dottedQrUrl"
+              :alt="`QR code for ${cardFullName || 'this card'}`"
+              class="block aspect-square w-full"
+            />
+          </div>
+        </div>
+        <div class="flex flex-col items-center gap-1 px-3 pt-2 pb-3">
+          <p v-if="cardFullName" class="text-sm text-ink">
+            {{ cardFullName }}
+          </p>
+          <p v-if="qrDetailLine" class="text-xs text-ink/50">
+            {{ qrDetailLine }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="canGoBack || ownCard"
+      class="absolute top-8 left-0 right-0 flex w-full px-5 sm:mx-auto sm:max-w-96"
+    >
+      <button
+        type="button"
+        aria-label="Back"
+        class="grid aspect-square w-9 place-items-center rounded-lg border border-line-heavy bg-line-strong transition duration-300 hover:bg-ink/10"
+        @click="goBack"
+      >
+        <UIcon name="i-lucide-chevron-left" class="size-5" />
+      </button>
+    </div>
+
+    <div
       class="absolute bottom-8 left-0 right-0 flex w-full gap-3 px-5 transition duration-750 sm:mx-auto sm:max-w-96"
       :class="{
         'translate-y-full': isMenuOpen || isFormOpen,
         'translate-y-0': !isMenuOpen || !isFormOpen,
       }"
     >
+      <NuxtLink
+        v-if="ownCard"
+        :to="cardEditorPath(ownCard)"
+        class="grid flex-1 place-items-center rounded-full border border-line-heavy bg-line-strong text-sm font-bold transition duration-300 hover:bg-ink/10"
+      >
+        Manage Card
+      </NuxtLink>
       <button
-        :disabled="isSeamlessExchanging || isOwnCard"
+        v-else
+        :disabled="isSeamlessExchanging"
         @click="onExchangeContactClick"
-        class="grid flex-1 place-items-center rounded-full border border-line-heavy bg-line-strong text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
+        class="grid flex-1 place-items-center rounded-full border border-line-heavy bg-line-strong text-sm font-bold transition duration-300 hover:bg-ink/10 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-line-strong"
       >
         {{ exchangeButtonLabel }}
       </button>
@@ -574,11 +757,28 @@ async function onSaveContact() {
         <button
           type="button"
           aria-label="Explore"
-          @click="isMenuOpen = !isMenuOpen"
-          class="grid aspect-square w-13 shrink-0 place-items-center rounded-full border border-line-heavy bg-line-strong"
+          @click="toggleExplore"
+          class="grid aspect-square w-13 shrink-0 place-items-center rounded-full border border-line-heavy bg-line-strong transition duration-300 hover:bg-ink/10"
         >
           <div class="aspect-square w-6">
             <IconMenu />
+          </div>
+        </button>
+      </UTooltip>
+      <UTooltip v-if="ownCard" :text="isQrOpen ? 'Close' : 'QR code'">
+        <button
+          type="button"
+          :aria-label="isQrOpen ? 'Close QR code' : 'Show QR code'"
+          :aria-pressed="isQrOpen"
+          class="grid aspect-square w-13 shrink-0 place-items-center rounded-full border border-line-heavy bg-line-strong transition duration-300 hover:bg-ink/10"
+          @click="toggleCardQr"
+        >
+          <div
+            class="grid place-items-center"
+            :class="isQrOpen ? 'size-6.5' : 'size-5.5'"
+          >
+            <IconCloseRounded v-if="isQrOpen" />
+            <IconQrCode v-else />
           </div>
         </button>
       </UTooltip>
@@ -847,66 +1047,87 @@ async function onSaveContact() {
           Explore
         </div>
         <div
-          class="hide-scrollbar mt-8 flex justify-start gap-3 overflow-x-scroll px-5"
+          class="hide-scrollbar mt-8 flex gap-3 overflow-x-scroll px-5"
+          :class="
+            ownCard && !card.socials?.length
+              ? 'justify-center'
+              : 'justify-start'
+          "
         >
-          <template
-            v-if="card.socials"
+          <a
             v-for="(link, index) in card.socials"
-            :key="index"
+            :key="`${link.label}-${link.value}-${index}`"
+            :href="normalizeCardLinkValue(link.value, link.label)"
+            target="_blank"
+            class="flex shrink-0 flex-col items-center gap-4 transition duration-750"
+            :class="isMenuOpen ? 'opacity-100' : 'opacity-0'"
+            :style="{ transitionDelay: `${(index + 1) * 100}ms` }"
+            @click="trackLinkClick(link)"
           >
-            <a
-              :href="normalizeCardLinkValue(link.value, link.label)"
-              target="_blank"
-              class="flex shrink-0 flex-col items-center gap-4 transition duration-750"
-              :class="isMenuOpen ? 'opacity-100' : 'opacity-0'"
-              :style="{ transitionDelay: `${(index + 1) * 100}ms` }"
-              @click="trackLinkClick(link)"
+            <div
+              class="grid aspect-square w-[4.56rem] overflow-hidden rounded-full"
             >
+              <UiSkeletonImage
+                v-if="getLinkIcon(link.label).includes('.')"
+                :src="getLinkIcon(link.label)"
+                :alt="link.label"
+                width="73"
+                height="73"
+                class="aspect-square h-full w-full object-cover"
+              />
               <div
-                class="grid aspect-square w-[4.56rem] overflow-hidden rounded-full"
-              >
-                <UiSkeletonImage
-                  v-if="getLinkIcon(link.label).includes('.')"
-                  :src="getLinkIcon(link.label)"
-                  :alt="link.label"
-                  width="73"
-                  height="73"
-                  class="aspect-square h-full w-full object-cover"
-                />
-                <div
-                  v-else
-                  class="grid aspect-square h-full w-full place-items-center rounded-full bg-line-strong"
-                >
-                  <div class="aspect-square w-8">
-                    <component :is="iconMap[getLinkIcon(link.label)]" />
-                  </div>
-                </div>
-              </div>
-              <div class="max-w-16 text-center text-xs leading-[1.1]">
-                {{ link.label }}
-              </div>
-            </a>
-
-            <!-- <a
-              v-else
-              :href="link.href"
-              target="_blank"
-              class="flex shrink-0 flex-col items-center gap-4 transition duration- 750"
-              :class="isMenuOpen ? 'opacity-100' : 'opacity-0'"
-              :style="{ transitionDelay: `${(index + 1) * 100}ms` }"
-            >
-              <div
-                class="grid aspect-square w-[4.56rem] place-items-center rounded-full bg-line-strong"
+                v-else
+                class="grid aspect-square h-full w-full place-items-center rounded-full bg-line-strong"
               >
                 <div class="aspect-square w-8">
-                  <component :is="iconMap[link.icon]" />
+                  <component :is="iconMap[getLinkIcon(link.label)]" />
                 </div>
               </div>
-              <div class="max-w-16 text-center text-xs leading-[1.1]">
-                {{ link.label }}
-              </div>
-            </a> -->
-          </template>
+            </div>
+            <div class="max-w-16 text-center text-xs leading-[1.1]">
+              {{ link.label }}
+            </div>
+          </a>
+          <button
+            v-if="ownCard"
+            type="button"
+            class="group flex shrink-0 cursor-pointer flex-col items-center gap-4 transition duration-750"
+            :class="isMenuOpen ? 'opacity-100' : 'opacity-0'"
+            :style="{
+              transitionDelay: `${((card.socials?.length ?? 0) + 1) * 100}ms`,
+            }"
+            @click="openLinkManager(!card.socials?.length)"
+          >
+            <div
+              class="relative grid aspect-square w-[4.56rem] place-items-center text-ink/45 transition-colors duration-300 group-hover:text-ink"
+            >
+              <svg
+                viewBox="0 0 80 80"
+                class="absolute inset-0 size-full"
+                aria-hidden="true"
+              >
+                <circle
+                  cx="40"
+                  cy="40"
+                  r="37"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-dasharray="0.15 6.6"
+                />
+              </svg>
+              <UIcon
+                name="i-lucide-plus"
+                class="size-6 text-ink/75 transition duration-300 group-hover:text-ink"
+              />
+            </div>
+            <div
+              class="text-center text-xs leading-[1.1] whitespace-nowrap text-ink/70 transition duration-300 group-hover:text-ink"
+            >
+              {{ card.socials?.length ? 'Add\u00a0More' : 'Add\u00a0Links' }}
+            </div>
+          </button>
         </div>
         <div
           v-if="shouldShowPoweredByLaPersona"
@@ -916,13 +1137,22 @@ async function onSaveContact() {
             'opacity-0': !isMenuOpen,
           }"
           :style="{
-            transitionDelay: `${((card?.socials?.length ?? 0) + 1) * 100}ms`,
+            transitionDelay: `${((card?.socials?.length ?? 0) + (ownCard && card.socials?.length ? 2 : 1)) * 100}ms`,
           }"
         >
           <UiPoweredByLaPersona />
         </div>
       </div>
     </div>
+
+    <CardLinksSlideover
+      v-if="ownCard"
+      v-model:open="isLinksOpen"
+      :slug="ownCard.slug"
+      :socials="card.socials ?? []"
+      :start-creating="startCreatingLink"
+      @saved="refreshPublicCard()"
+    />
   </div>
 
   <main

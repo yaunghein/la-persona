@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { CardDetail } from '~~/shared/contracts/card';
+import { communityCardPath } from '~~/shared/utils/routes';
 import {
   cardBadgeColor,
   cardBadgeLabel,
@@ -111,8 +112,7 @@ function onBadgeClick() {
             color="primary"
             size="sm"
             class="bg-ink/5 text-ink hover:bg-ink/15 active:hover:bg-ink/20"
-            target="_blank"
-            :href="`/c/${card.slug}`"
+            :to="communityCardPath(card.slug)"
             aria-label="Preview card"
           />
         </UTooltip>

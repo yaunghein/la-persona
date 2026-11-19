@@ -180,6 +180,15 @@ async function createStyledQrCanvas(
   return qrCanvas;
 }
 
+export async function renderDottedQrDataUrl(
+  cardUrl: string,
+  size = 640,
+  color = '#000000'
+) {
+  const canvas = await createStyledQrCanvas(cardUrl, size, color);
+  return canvas.toDataURL('image/png');
+}
+
 export async function renderWallpaperCanvas(options: WallpaperImageOptions) {
   if (!options.wallpaperProxyUrl || !options.cardUrl) {
     throw new Error('Wallpaper preview is incomplete');
