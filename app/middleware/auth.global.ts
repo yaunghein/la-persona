@@ -1,6 +1,7 @@
 import {
   isProtectedInvitePath,
   parsePlatformEventDetailPath,
+  signedInGuestRedirect,
 } from '~~/shared/utils/routes';
 import { canRunCommunityCheckIn } from '~/features/organization/utils/organization-roles';
 
@@ -11,6 +12,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const isThakhinRoute = to.path.startsWith(ROUTES.THAKHIN.ROOT);
   const isInviteRoute = isProtectedInvitePath(to.path);
   const isProtected = isPlatformRoute || isThakhinRoute || isInviteRoute;
+
+  if (session?.value) {
+    const guestRedirect = signedInGuestRedirect(to.path, to.query.redirectTo);
+    if (guestRedirect) return navigateTo(guestRedirect, { replace: true });
+  }
 
   const sharedEvent = parsePlatformEventDetailPath(to.path);
 

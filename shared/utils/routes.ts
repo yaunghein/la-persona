@@ -1,4 +1,5 @@
 import { env } from '~~/env';
+import { getSafeInternalPath } from '~~/shared/utils/safe-redirect';
 const PLATFORM_ROOT = '/platform';
 const THAKHIN_ROOT = '/thakhin';
 const INVITE_ROOT = '/invite';
@@ -102,4 +103,16 @@ export function publicWalkInAbsoluteUrl(eventId: string) {
 
 export function communityCardPath(cardSlug: string) {
   return `/c/${cardSlug}`;
+}
+
+/** Signed-in visits to the marketing home and sign-in page go to the workspace. */
+export function signedInGuestRedirect(path: string, redirectTo?: unknown) {
+  const pathname = (path.split('?')[0] || '/').replace(/\/+$/, '') || '/';
+  if (pathname !== ROUTES.HOME && pathname !== ROUTES.SIGN_IN) return null;
+
+  const safe = getSafeInternalPath(redirectTo);
+  if (safe && safe !== ROUTES.HOME && !safe.startsWith(ROUTES.SIGN_IN)) {
+    return `${ROUTES.PLATFORM.ROOT}?redirectTo=${encodeURIComponent(safe)}`;
+  }
+  return ROUTES.PLATFORM.ROOT;
 }

@@ -23,7 +23,6 @@ import {
 
 const route = useRoute();
 const slug = computed(() => String(route.params.slug || ''));
-const orgSlug = computed(() => String(route.params.orgSlug || ''));
 const toast = useToast();
 const {
   normalizeUrlWithHttps,
@@ -240,9 +239,6 @@ async function saveCardInfo(form: CardInfoForm) {
       description: 'Your card details were updated successfully.',
       color: 'success',
     });
-    if (orgSlug.value) {
-      await navigateTo(`/platform/${orgSlug.value}/cards`);
-    }
   } catch (err: any) {
     toast.add({
       title: 'Unable to update card',
@@ -696,30 +692,37 @@ watch(isSocialSlideoverOpen, (open) => {
       </div>
 
       <div class="space-y-4 pt-3 sm:pt-6">
-        <div class="flex items-center justify-between">
-          <h3 class="text-sm font-medium text-ink">
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="min-w-0 truncate text-sm font-medium text-ink">
             Social / Professional Links
           </h3>
-          <div class="flex items-center gap-2">
-            <UButton
-              v-if="importableCards.length"
-              type="button"
-              label="Import"
-              icon="i-lucide-download"
-              variant="soft"
-              size="sm"
-              class="rounded-full bg-raised text-xs px-3 text-ink hover:bg-line"
-              @click="openImportModal"
-            />
-            <UButton
-              type="button"
-              label="Add Link"
-              icon="i-lucide-plus"
-              variant="soft"
-              size="sm"
-              class="rounded-full bg-raised text-xs px-3 text-ink hover:bg-line"
-              @click="openCreateLinkSlideover"
-            />
+          <div class="flex shrink-0 items-center gap-1.5">
+            <UTooltip v-if="importableCards.length" text="Import">
+              <UButton
+                type="button"
+                icon="i-lucide-download"
+                variant="soft"
+                size="sm"
+                aria-label="Import"
+                class="size-8 justify-center rounded-full bg-raised p-0 text-ink hover:bg-line sm:h-8 sm:w-auto sm:gap-1.5 sm:px-3"
+                @click="openImportModal"
+              >
+                <span class="hidden text-xs sm:inline">Import</span>
+              </UButton>
+            </UTooltip>
+            <UTooltip text="Add link">
+              <UButton
+                type="button"
+                icon="i-lucide-plus"
+                variant="soft"
+                size="sm"
+                aria-label="Add link"
+                class="size-8 justify-center rounded-full bg-raised p-0 text-ink hover:bg-line sm:h-8 sm:w-auto sm:gap-1.5 sm:px-3"
+                @click="openCreateLinkSlideover"
+              >
+                <span class="hidden text-xs sm:inline">Add Link</span>
+              </UButton>
+            </UTooltip>
           </div>
         </div>
         <div ref="socialsListEl" class="relative flex flex-col gap-3">
@@ -788,7 +791,7 @@ watch(isSocialSlideoverOpen, (open) => {
         <UButton
           type="submit"
           class="h-10 text-sm rounded-full bg-raised px-6 text-ink hover:bg-line disabled:bg-ink/20 active:bg-line cursor-pointer"
-          icon="i-lucide-square-pen"
+          icon="i-lucide-save"
           :loading="isSaving"
         >
           Save
@@ -925,10 +928,10 @@ watch(isSocialSlideoverOpen, (open) => {
     title="Import Links"
     description="Copy the social links from another of your&nbsp;cards."
     :ui="{
-      content: 'bg-surface max-w-md',
+      content: 'w-[calc(100%-2rem)] max-w-md overflow-hidden bg-surface',
       title: 'text-ink',
       description: 'text-subtle',
-      body: 'pt-4',
+      body: 'overflow-x-hidden pt-2',
       footer: 'justify-end gap-2',
     }"
   >
@@ -939,23 +942,28 @@ watch(isSocialSlideoverOpen, (open) => {
         value-key="value"
         color="neutral"
         variant="table"
-        class="w-full"
+        class="w-full min-w-0"
         :ui="{
-          fieldset: 'space-y-0',
-          item: 'border-line bg-surface px-4 py-3 -mb-px last:mb-0 rounded-none first:rounded-t-[4px] last:rounded-b-[4px]',
+          root: 'min-w-0',
+          fieldset: 'min-w-0 space-y-2',
+          item: 'min-w-0 overflow-hidden rounded-lg border border-line bg-surface px-3 py-3 has-data-[state=checked]:border-ink/25 has-data-[state=checked]:bg-raised',
           container: 'items-center',
-          label: 'text-sm text-ink',
+          wrapper: 'min-w-0 flex-1',
+          label: 'block min-w-0 text-sm text-ink',
         }"
       >
         <template #label="{ item }">
-          <span class="flex items-center justify-between gap-3">
-            <span class="truncate">{{ item.label }}</span>
+          <span class="flex w-full min-w-0 items-center gap-3">
+            <span class="min-w-0 flex-1 truncate font-medium">{{
+              item.label
+            }}</span>
             <UBadge
               :label="item.badge"
               color="neutral"
               variant="soft"
               size="sm"
-              class="shrink-0"
+              class="max-w-[46%] min-w-0 overflow-hidden"
+              :ui="{ label: 'block truncate' }"
             />
           </span>
         </template>
