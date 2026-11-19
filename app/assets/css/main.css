@@ -119,6 +119,53 @@ input[type='reset'] {
   cursor: pointer;
 }
 
+/* Press keeps the current color. The scale springs back on release. */
+button,
+[role='button'],
+.btn-press,
+a.inline-flex.font-medium,
+summary,
+input[type='button'],
+input[type='submit'],
+input[type='reset'] {
+  transform-origin: center;
+  transition-property:
+    color, background-color, border-color, outline-color, box-shadow, opacity,
+    scale;
+  transition-duration: 180ms, 180ms, 180ms, 180ms, 180ms, 180ms, 420ms;
+  transition-timing-function:
+    ease, ease, ease, ease, ease, ease, cubic-bezier(0.22, 1.35, 0.36, 1);
+}
+
+button:not(:disabled):not([aria-disabled='true']):not([role='switch']):not(
+    [role='checkbox']
+  ):not([role='radio']):active,
+[role='button']:not([aria-disabled='true']):active,
+.btn-press:not(:disabled):not([aria-disabled='true']):active,
+a.inline-flex.font-medium:not([aria-disabled='true']):active,
+summary:active,
+input[type='button']:not(:disabled):active,
+input[type='submit']:not(:disabled):active,
+input[type='reset']:not(:disabled):active {
+  scale: 0.97;
+  transition-duration: 999s, 999s, 180ms, 180ms, 180ms, 180ms, 90ms;
+  transition-timing-function: linear, linear, ease, ease, ease, ease, ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:active,
+  [role='button']:active,
+  .btn-press:active,
+  a.inline-flex.font-medium:active,
+  summary:active,
+  input[type='button']:active,
+  input[type='submit']:active,
+  input[type='reset']:active {
+    scale: none;
+    transition-duration: 999s, 999s, 0s, 0s, 0s, 0s, 0s;
+  }
+}
+
 @layer utilities {
   .mask-dots {
     -webkit-mask-image: url('/images/masks/dots.svg');

@@ -897,7 +897,7 @@ async function copyEventLink() {
               <UButton
                 label="Remove Limit"
                 color="neutral"
-                class="h-10 cursor-pointer rounded-full bg-transparent px-5 text-sm font-medium text-ink hover:bg-ink/10! active:hover:bg-ink/20!"
+                class="h-10 cursor-pointer rounded-full bg-transparent px-5 text-sm font-medium text-ink hover:bg-ink/10!"
                 @click="removeCapacityLimit"
               />
               <UButton

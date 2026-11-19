@@ -808,7 +808,7 @@ const premiumPlanFeatures = [
           <NuxtLink
             to="https://m.me/61571393589144"
             target="_blank"
-            class="inline-flex h-10 sm:h-12 items-center justify-center rounded-full border border-ink/10 px-10 text-xs font-light uppercase tracking-[0.1rem] hover:bg-ink hover:text-ink-inverse sm:text-sm sm:tracking-[0.0875rem]"
+            class="btn-press inline-flex h-10 sm:h-12 items-center justify-center rounded-full border border-ink/10 px-10 text-xs font-light uppercase tracking-[0.1rem] hover:bg-ink hover:text-ink-inverse sm:text-sm sm:tracking-[0.0875rem]"
           >
             Talk to Us
           </NuxtLink>
@@ -864,7 +864,7 @@ const premiumPlanFeatures = [
             </ul>
             <NuxtLink
               to="/sign-in"
-              class="mt-5 inline-flex h-10 sm:h-12 w-fit items-center justify-center rounded-full border border-ink/10 px-8 text-xs font-light uppercase tracking-[0.1rem] hover:bg-ink hover:text-ink-inverse sm:text-sm sm:tracking-[0.0875rem]"
+              class="btn-press mt-5 inline-flex h-10 sm:h-12 w-fit items-center justify-center rounded-full border border-ink/10 px-8 text-xs font-light uppercase tracking-[0.1rem] hover:bg-ink hover:text-ink-inverse sm:text-sm sm:tracking-[0.0875rem]"
             >
               Try Free
             </NuxtLink>

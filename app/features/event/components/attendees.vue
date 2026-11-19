@@ -312,7 +312,7 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
               icon="i-lucide-rows-3"
               label="Group"
               color="neutral"
-              class="h-9 shrink-0 cursor-pointer gap-1.5 rounded-full px-3.5 text-sm font-medium text-ink hover:bg-ink/15 active:hover:bg-ink/20"
+              class="h-9 shrink-0 cursor-pointer gap-1.5 rounded-full px-3.5 text-sm font-medium text-ink hover:bg-ink/15"
               :ui="{ leadingIcon: 'size-4' }"
               :class="isGrouped ? 'bg-ink/15' : 'bg-ink/5'"
               :aria-pressed="isGrouped"
@@ -324,7 +324,7 @@ function getActionItems(attendee: EventAttendee): DropdownMenuItem[][] {
             <UButton
               icon="i-lucide-download"
               color="neutral"
-              class="flex h-9 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-ink/5 p-0 text-ink hover:bg-ink/15 active:hover:bg-ink/20"
+              class="flex h-9 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-ink/5 p-0 text-ink hover:bg-ink/15"
               :ui="{ leadingIcon: 'size-4' }"
               aria-label="Export registered attendees"
               @click="emit('export')"

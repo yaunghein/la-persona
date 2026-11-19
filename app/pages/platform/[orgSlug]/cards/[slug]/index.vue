@@ -144,7 +144,7 @@ const activeTab = computed({
             <UButton
               icon="i-lucide-chevron-left"
               color="primary"
-              class="h-10 bg-transparent mr-1 sm:mr-2 text-ink hover:bg-ink/10 active:hover:bg-ink/20"
+              class="h-10 bg-transparent mr-1 sm:mr-2 text-ink hover:bg-ink/10"
               aria-label="Back to cards"
               :to="`/platform/${orgSlug}/cards`"
             />

@@ -181,7 +181,7 @@ const onMagicLink = async () => {
               block
               color="neutral"
               :loading="isGoogleSigningIn"
-              class="h-10 text-sm justify-center rounded-full bg-ink font-medium text-ink-inverse hover:bg-ink/90 active:hover:bg-ink/80"
+              class="h-10 text-sm justify-center rounded-full bg-ink font-medium text-ink-inverse hover:bg-ink/90"
               @click="onGoogle"
             >
               <template #leading>
@@ -194,7 +194,7 @@ const onMagicLink = async () => {
               block
               color="neutral"
               :loading="isLinkedInSigningIn"
-              class="h-10 text-sm justify-center rounded-full bg-ink font-medium text-ink-inverse hover:bg-ink/90 active:hover:bg-ink/80"
+              class="h-10 text-sm justify-center rounded-full bg-ink font-medium text-ink-inverse hover:bg-ink/90"
               @click="onLinkedIn"
             >
               <template #leading>
@@ -214,7 +214,7 @@ const onMagicLink = async () => {
             <UFormField
               label="Email"
               name="email"
-              class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
+              class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
             >
               <UInput
                 v-model="email"
@@ -232,7 +232,7 @@ const onMagicLink = async () => {
               color="neutral"
               type="submit"
               :loading="isMagicLinkSending"
-              class="h-10 text-sm justify-center rounded-full bg-ink font-medium text-ink-inverse hover:bg-ink/90 active:hover:bg-ink/80"
+              class="h-10 text-sm justify-center rounded-full bg-ink font-medium text-ink-inverse hover:bg-ink/90"
             >
               <template #leading>
                 <UIcon name="i-lucide-sparkles" class="size-4" />

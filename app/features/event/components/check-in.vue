@@ -287,7 +287,7 @@ async function checkIn(attendee: EventAttendee) {
               icon="i-lucide-scan-eye"
               color="primary"
               size="lg"
-              class="bg-ink/5 text-ink hover:bg-ink/15 active:hover:bg-ink/20"
+              class="bg-ink/5 text-ink hover:bg-ink/15"
               @click="emit('select', attendee)"
             />
           </UTooltip>

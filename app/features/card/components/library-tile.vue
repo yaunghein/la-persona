@@ -14,6 +14,7 @@ const props = defineProps<{ card: CardDetail }>();
 const emit = defineEmits<{
   delete: [card: CardDetail];
   showPendingInfo: [cardName: string];
+  showQr: [card: CardDetail];
 }>();
 
 const isCommunity = computed(() => isCommunityCard(props.card));
@@ -105,17 +106,17 @@ function onBadgeClick() {
 
     <template #footer>
       <div>{{ cardHolderName(card) }}</div>
-      <div class="mt-4 flex items-center justify-start gap-2" @click.stop>
-        <UTooltip v-if="hasSplinePreview" text="Preview card">
-          <UButton
-            icon="i-lucide-scan-eye"
-            color="primary"
-            size="sm"
-            class="bg-ink/5 text-ink hover:bg-ink/15 active:hover:bg-ink/20"
-            :to="communityCardPath(card.slug)"
-            aria-label="Preview card"
-          />
-        </UTooltip>
+      <div class="mt-4 flex items-center justify-start gap-1.5" @click.stop>
+        <UButton
+          v-if="hasSplinePreview"
+          label="View"
+          icon="i-lucide-scan-eye"
+          color="primary"
+          size="sm"
+          class="h-7 rounded-full bg-ink/5 px-2.5 text-ink hover:bg-ink/15"
+          :ui="{ leadingIcon: 'size-3.5' }"
+          :to="communityCardPath(card.slug)"
+        />
         <UPopover
           v-else
           :ui="{
@@ -123,27 +124,36 @@ function onBadgeClick() {
               'max-w-[240px] rounded-md border border-line bg-surface p-3 text-sm text-ink leading-relaxed',
           }"
         >
-          <UTooltip text="Preview card">
-            <UButton
-              icon="i-lucide-scan-eye"
-              color="primary"
-              size="sm"
-              class="bg-ink/5 text-ink hover:bg-ink/15 active:hover:bg-ink/20"
-              aria-label="Preview card"
-            />
-          </UTooltip>
-          <template #content>3D card is still cooking.</template>
-        </UPopover>
-        <UTooltip text="Edit card">
           <UButton
-            icon="i-lucide-square-pen"
+            label="View"
+            icon="i-lucide-scan-eye"
             color="primary"
             size="sm"
-            class="bg-ink/5 text-ink hover:bg-ink/15 active:hover:bg-ink/20"
-            :href="cardEditorPath(card)"
-            aria-label="Edit card"
+            class="h-7 rounded-full bg-ink/5 px-2.5 text-ink hover:bg-ink/15"
+            :ui="{ leadingIcon: 'size-3.5' }"
           />
-        </UTooltip>
+          <template #content>3D card is still cooking.</template>
+        </UPopover>
+        <UButton
+          label="Edit"
+          icon="i-lucide-square-pen"
+          color="primary"
+          size="sm"
+          class="h-7 rounded-full bg-ink/5 px-2.5 text-ink hover:bg-ink/15"
+          :ui="{ leadingIcon: 'size-3.5' }"
+          :href="cardEditorPath(card)"
+        />
+        <UButton
+          label="QR"
+          color="primary"
+          size="sm"
+          class="h-7 rounded-full bg-ink/5 px-2.5 text-ink hover:bg-ink/15"
+          @click="emit('showQr', card)"
+        >
+          <template #leading>
+            <IconQrCode class="size-3.5" />
+          </template>
+        </UButton>
         <div class="ml-auto flex items-center gap-3">
           <UTooltip v-if="!isCommunity" text="Delete card">
             <UButton

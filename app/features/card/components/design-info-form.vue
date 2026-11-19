@@ -177,7 +177,7 @@ function onSubmit(event: FormSubmitEvent<UpdateCardRequest>) {
         </UButton>
         <UButton
           type="submit"
-          class="h-10 text-sm rounded-full bg-raised px-4 text-ink hover:bg-line disabled:bg-ink/20 active:bg-line cursor-pointer"
+          class="h-10 text-sm rounded-full bg-raised px-4 text-ink hover:bg-line disabled:bg-ink/20 cursor-pointer"
           icon="i-lucide-square-pen"
           :loading="isSubmitting"
         >

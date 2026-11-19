@@ -71,7 +71,7 @@ const selectedTab = computed({
             <UButton
               icon="i-lucide-chevron-left"
               color="primary"
-              class="size-7! bg-ink/5 mt-1 mr-1 sm:mr-2 text-ink hover:bg-ink/10 active:hover:bg-ink/20 flex items-center justify-center"
+              class="size-7! bg-ink/5 mt-1 mr-1 sm:mr-2 text-ink hover:bg-ink/10 flex items-center justify-center"
               aria-label="Back to events"
               @click="emit('back')"
             />
@@ -106,7 +106,7 @@ const selectedTab = computed({
               color="neutral"
               aria-label="Copy event link"
               :ui="{ leadingIcon: 'size-4' }"
-              class="h-10! w-20! cursor-pointer rounded-full p-0 text-ink flex items-center justify-center bg-ink/5 hover:bg-ink/15 active:hover:bg-ink/20"
+              class="h-10! w-20! cursor-pointer rounded-full p-0 text-ink flex items-center justify-center bg-ink/5 hover:bg-ink/15"
               @click="emit('share')"
             />
           </UTooltip>
@@ -121,7 +121,7 @@ const selectedTab = computed({
                 color="neutral"
                 aria-label="Event actions"
                 :ui="{ leadingIcon: 'size-4' }"
-                class="h-10! w-20! cursor-pointer rounded-full p-0 text-ink flex items-center justify-center bg-ink/5 hover:bg-ink/15 active:hover:bg-ink/20"
+                class="h-10! w-20! cursor-pointer rounded-full p-0 text-ink flex items-center justify-center bg-ink/5 hover:bg-ink/15"
               />
             </UTooltip>
           </UDropdownMenu>

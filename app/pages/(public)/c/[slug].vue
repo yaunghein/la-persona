@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import type { PublicCard } from '~~/shared/contracts/card';
 import type { CreateContactExchangeRequest } from '~~/shared/contracts/contact';
-import { env } from '~~/env';
 import { Application } from '@splinetool/runtime';
-import { renderDottedQrDataUrl } from '~/features/card/utils/wallpaper-image';
 import type { ConcreteComponent } from 'vue';
 import { SOCIAL_MEDIA_LINK_LABELS } from '~~/shared/constants/card-link-options';
 import { downloadFile } from '~/utils/share-or-download';
@@ -147,27 +145,6 @@ onMounted(async () => {
 
 const isMenuOpen = ref(false);
 const isQrOpen = ref(false);
-
-const publicCardUrl = computed(() => {
-  const cardSlug = card.value?.slug;
-  if (!cardSlug) return '';
-  return `${env.BASE_URL.replace(/\/$/, '')}/c/${cardSlug}`;
-});
-const dottedQrUrl = ref('');
-
-watch(
-  publicCardUrl,
-  (url) => {
-    if (!url || !import.meta.client) {
-      dottedQrUrl.value = '';
-      return;
-    }
-    renderDottedQrDataUrl(url).then((dataUrl) => {
-      if (publicCardUrl.value === url) dottedQrUrl.value = dataUrl;
-    });
-  },
-  { immediate: true }
-);
 
 const qrScale = ref(0.84);
 let qrVelocity = 0;
@@ -692,28 +669,16 @@ async function onSaveContact() {
       :aria-hidden="!isQrOpen"
     >
       <div
-        class="w-64 origin-center overflow-hidden rounded-[26px] border border-[#3a3a3a] bg-[#2f2f2f] px-2 pt-2 text-center transition-opacity duration-200 ease-out motion-reduce:transition-none sm:w-96"
+        class="origin-center transition-opacity duration-200 ease-out motion-reduce:transition-none"
         :class="isQrOpen ? 'opacity-100' : 'opacity-0'"
         :style="{ transform: `scale(${qrScale})` }"
       >
-        <div class="rounded-[17px] bg-[#1c1c1c] p-2.25">
-          <div class="overflow-hidden rounded-lg bg-white p-4">
-            <img
-              v-if="dottedQrUrl"
-              :src="dottedQrUrl"
-              :alt="`QR code for ${cardFullName || 'this card'}`"
-              class="block aspect-square w-full"
-            />
-          </div>
-        </div>
-        <div class="flex flex-col items-center gap-1 px-3 pt-2 pb-3">
-          <p v-if="cardFullName" class="text-sm text-ink">
-            {{ cardFullName }}
-          </p>
-          <p v-if="qrDetailLine" class="text-xs text-ink/50">
-            {{ qrDetailLine }}
-          </p>
-        </div>
+        <CardQrPanel
+          v-if="card"
+          :slug="card.slug"
+          :name="cardFullName"
+          :detail="qrDetailLine"
+        />
       </div>
     </div>
 
@@ -741,7 +706,7 @@ async function onSaveContact() {
       <NuxtLink
         v-if="ownCard"
         :to="cardEditorPath(ownCard)"
-        class="grid flex-1 place-items-center rounded-full border border-line-heavy bg-line-strong text-sm font-bold transition duration-300 hover:bg-ink/10"
+        class="btn-press grid flex-1 place-items-center rounded-full border border-line-heavy bg-line-strong text-sm font-bold hover:bg-ink/10"
       >
         Manage Card
       </NuxtLink>

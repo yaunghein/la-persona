@@ -697,32 +697,27 @@ watch(isSocialSlideoverOpen, (open) => {
             Social / Professional Links
           </h3>
           <div class="flex shrink-0 items-center gap-1.5">
-            <UTooltip v-if="importableCards.length" text="Import">
-              <UButton
-                type="button"
-                icon="i-lucide-download"
-                variant="soft"
-                size="sm"
-                aria-label="Import"
-                class="size-8 justify-center rounded-full bg-raised p-0 text-ink hover:bg-line sm:h-8 sm:w-auto sm:gap-1.5 sm:px-3"
-                @click="openImportModal"
-              >
-                <span class="hidden text-xs sm:inline">Import</span>
-              </UButton>
-            </UTooltip>
-            <UTooltip text="Add link">
-              <UButton
-                type="button"
-                icon="i-lucide-plus"
-                variant="soft"
-                size="sm"
-                aria-label="Add link"
-                class="size-8 justify-center rounded-full bg-raised p-0 text-ink hover:bg-line sm:h-8 sm:w-auto sm:gap-1.5 sm:px-3"
-                @click="openCreateLinkSlideover"
-              >
-                <span class="hidden text-xs sm:inline">Add Link</span>
-              </UButton>
-            </UTooltip>
+            <UButton
+              v-if="importableCards.length"
+              type="button"
+              label="Import"
+              icon="i-lucide-download"
+              color="primary"
+              size="sm"
+              class="h-7 rounded-full bg-ink/5 px-2.5 text-ink hover:bg-ink/15"
+              :ui="{ leadingIcon: 'size-3.5' }"
+              @click="openImportModal"
+            />
+            <UButton
+              type="button"
+              label="Add"
+              icon="i-lucide-plus"
+              color="primary"
+              size="sm"
+              class="h-7 rounded-full bg-ink/5 px-2.5 text-ink hover:bg-ink/15"
+              :ui="{ leadingIcon: 'size-3.5' }"
+              @click="openCreateLinkSlideover"
+            />
           </div>
         </div>
         <div ref="socialsListEl" class="relative flex flex-col gap-3">
@@ -790,7 +785,7 @@ watch(isSocialSlideoverOpen, (open) => {
         </UButton>
         <UButton
           type="submit"
-          class="h-10 text-sm rounded-full bg-raised px-6 text-ink hover:bg-line disabled:bg-ink/20 active:bg-line cursor-pointer"
+          class="h-10 text-sm rounded-full bg-raised px-6 text-ink hover:bg-line disabled:bg-ink/20 cursor-pointer"
           icon="i-lucide-save"
           :loading="isSaving"
         >

@@ -370,7 +370,7 @@ watch(total, (count) => {
           label="Create New Contact"
           leading-icon="i-lucide-plus"
           color="neutral"
-          class="fixed bottom-6 left-1/2 z-10 -translate-x-1/2 shadow-lg sm:static sm:translate-x-0 sm:shadow-none flex h-10 text-sm cursor-pointer items-center justify-center rounded-full border-2 border-raised bg-ink px-5 font-medium text-ink-inverse hover:bg-ink/90 active:hover:bg-ink/80"
+          class="fixed bottom-6 left-1/2 z-10 -translate-x-1/2 shadow-lg sm:static sm:translate-x-0 sm:shadow-none flex h-10 text-sm cursor-pointer items-center justify-center rounded-full border-2 border-raised bg-ink px-5 font-medium text-ink-inverse hover:bg-ink/90"
           @click="openCreateContact"
         />
         <UTooltip text="Export contacts" class="hidden sm:flex">
@@ -442,7 +442,7 @@ watch(total, (count) => {
           icon="i-lucide-rows-3"
           label="Group"
           color="neutral"
-          class="h-9 shrink-0 cursor-pointer gap-1.5 rounded-full px-3.5 text-sm font-medium text-ink hover:bg-ink/15 active:hover:bg-ink/20"
+          class="h-9 shrink-0 cursor-pointer gap-1.5 rounded-full px-3.5 text-sm font-medium text-ink hover:bg-ink/15"
           :ui="{ leadingIcon: 'size-4' }"
           :class="isGrouped ? 'bg-ink/15' : 'bg-ink/5'"
           :aria-pressed="isGrouped"
