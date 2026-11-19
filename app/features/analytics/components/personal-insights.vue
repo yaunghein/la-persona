@@ -18,6 +18,7 @@ import {
 } from '~~/shared/constants/card-link-options';
 import {
   ANALYTICS_PERIOD_OPTIONS,
+  analyticsPeriodDays,
   type AnalyticsPeriod,
 } from '~~/shared/utils/analytics-period';
 import { format, parseISO } from 'date-fns';
@@ -149,11 +150,19 @@ const otherLabelSet = new Set(
   OTHER_LINK_LABELS.map((label) => label.toLowerCase())
 );
 
-const exchangeCount = computed(
-  () =>
-    stats.value?.saveActions.find((a) => a.action === 'contact_exchange')
-      ?.count || 0
-);
+const exchangeCount = computed(() => {
+  const actions = stats.value?.saveActions ?? [];
+  // Form fills and signed-in seamless exchanges are both contact exchanges.
+  return (
+    Number(
+      actions.find((action) => action.action === 'contact_exchange')?.count || 0
+    ) +
+    Number(
+      actions.find((action) => action.action === 'seamless_exchange')?.count ||
+        0
+    )
+  );
+});
 const vcfCount = computed(
   () =>
     stats.value?.saveActions.find((a) => a.action === 'vcf_download')?.count ||
@@ -386,7 +395,7 @@ function openInfo() {
         Views Over Time
       </h2>
       <p class="mt-1 text-sm text-subtle">
-        Daily card opens for the past 7 days
+        Daily card opens for the past {{ analyticsPeriodDays(selectedPeriod) }}&nbsp;days
       </p>
       <div class="mt-4 h-60">
         <Line :data="chartData" :options="chartOptions as any" />
