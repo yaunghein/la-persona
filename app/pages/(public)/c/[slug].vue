@@ -3,7 +3,10 @@ import type { PublicCard } from '~~/shared/contracts/card';
 import type { CreateContactExchangeRequest } from '~~/shared/contracts/contact';
 import { Application } from '@splinetool/runtime';
 import type { ConcreteComponent } from 'vue';
-import { SOCIAL_MEDIA_LINK_LABELS } from '~~/shared/constants/card-link-options';
+import {
+  CARD_LINK_IMAGES,
+  SOCIAL_MEDIA_LINK_LABELS,
+} from '~~/shared/constants/card-link-options';
 import { downloadFile } from '~/utils/share-or-download';
 import { cardEditorPath } from '~/features/card/utils/card-badge';
 import { applyCombinedCardToSpline } from '~/features/card/utils/spline-card';
@@ -213,12 +216,11 @@ function goBack() {
   }
 }
 const isLinksOpen = ref(false);
-const startCreatingLink = ref(false);
 
-function openLinkManager(creating = false) {
-  startCreatingLink.value = creating;
+function openLinkManager() {
   isLinksOpen.value = true;
 }
+
 const isFormOpen = ref(false);
 const isSuccess = ref(false);
 const isValid = ref(true);
@@ -396,12 +398,16 @@ const linkAssetMap: Record<string, string> = {
   tiktok: '/images/card/tiktok.png',
   viber: '/images/card/viber.png',
   whatsapp: '/images/card/whatsapp.png',
+  address: CARD_LINK_IMAGES.Address ?? 'world',
   website: 'world',
   phone: 'phone',
-  'direct message': 'world',
+  'direct message': 'directMessage',
+  'download resume': 'arrowDown',
+  'buy me coffee': 'buyMeCoffee',
   portfolio: 'world',
   'case studies': 'world',
-  booking: 'world',
+  'make appointment': CARD_LINK_IMAGES['Make Appointment'] ?? 'world',
+  booking: CARD_LINK_IMAGES['Make Appointment'] ?? 'world',
 };
 
 function getLinkIcon(label: string) {
@@ -1061,7 +1067,7 @@ async function onSaveContact() {
             :style="{
               transitionDelay: `${((card.socials?.length ?? 0) + 1) * 100}ms`,
             }"
-            @click="openLinkManager(!card.socials?.length)"
+            @click="openLinkManager"
           >
             <div
               class="relative grid aspect-square w-[4.56rem] place-items-center text-ink/45 transition-colors duration-300 group-hover:text-ink"
@@ -1115,7 +1121,6 @@ async function onSaveContact() {
       v-model:open="isLinksOpen"
       :slug="ownCard.slug"
       :socials="card.socials ?? []"
-      :start-creating="startCreatingLink"
       @saved="refreshPublicCard()"
     />
   </div>

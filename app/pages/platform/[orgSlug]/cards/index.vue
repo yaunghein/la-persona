@@ -290,9 +290,14 @@ async function confirmDelete() {
       role="dialog"
       aria-modal="true"
       :aria-label="`QR code for ${cardHolderName(qrCard)}`"
+      @click="closeQr"
     >
       <div class="flex flex-col items-center gap-8">
-        <div class="origin-center" :style="{ transform: `scale(${qrScale})` }">
+        <div
+          class="origin-center"
+          :style="{ transform: `scale(${qrScale})` }"
+          @click.stop
+        >
           <CardQrPanel
             :slug="qrCard.slug"
             :name="cardHolderName(qrCard)"

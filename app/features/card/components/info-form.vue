@@ -5,6 +5,8 @@ import {
   CARD_LINK_LABELS,
   CARD_LINK_SELECT_ITEMS,
   createEmptyCardLink,
+  defaultNewLinkLabel,
+  toCardLinkMenuItems,
 } from '~~/shared/constants/card-link-options';
 import {
   CUSTOM_SOCIAL_LABEL,
@@ -69,15 +71,17 @@ const socialsSortable = computed({
   },
 });
 // Each built-in link type appears once per card; Custom can repeat.
-const linkTypeItems = computed<string[][]>(() => {
+const linkTypeItems = computed(() => {
   const usedLabels = new Set(
     state.socials
       .filter((_, index) => index !== editingSocialIndex.value)
       .map((link) => link.label)
   );
   usedLabels.delete(CUSTOM_SOCIAL_LABEL);
-  return createLinkTypeItemsWithCustom(CARD_LINK_SELECT_ITEMS).map((group) =>
-    group.filter((label) => !usedLabels.has(label))
+  return toCardLinkMenuItems(
+    createLinkTypeItemsWithCustom(CARD_LINK_SELECT_ITEMS).map((group) =>
+      group.filter((label) => !usedLabels.has(label))
+    )
   );
 });
 
@@ -295,7 +299,9 @@ function openCreateLinkSlideover() {
   socialEditorMode.value = 'create';
   editingSocialIndex.value = null;
   resetSocialDraft();
-  socialDraft.label = linkTypeItems.value.flat()[0] ?? CUSTOM_SOCIAL_LABEL;
+  socialDraft.label = defaultNewLinkLabel(
+    linkTypeItems.value.flat().map((item) => item.label)
+  );
   isSocialSlideoverOpen.value = true;
 }
 
@@ -509,7 +515,6 @@ watch(isSocialSlideoverOpen, (open) => {
     resetSocialDraft();
   }
 });
-
 </script>
 
 <template>
@@ -820,15 +825,9 @@ watch(isSocialSlideoverOpen, (open) => {
           name="socialDraft.label"
           class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
-          <USelectMenu
+          <CardLinkTypeSelect
             v-model="socialDraft.label"
             :items="linkTypeItems"
-            :search-input="false"
-            class="w-full"
-            placeholder="Select Link Type"
-            :ui="{
-              base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink',
-            }"
           />
         </UFormField>
 
@@ -993,7 +992,6 @@ watch(isSocialSlideoverOpen, (open) => {
   >
     Your profile photo will be removed from this card when you&nbsp;save.
   </UiConfirmDeleteModal>
-
 </template>
 
 <style scoped>

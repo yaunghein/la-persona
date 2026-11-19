@@ -4,6 +4,8 @@ import { useSortable } from '@vueuse/integrations/useSortable';
 import {
   CARD_LINK_SELECT_ITEMS,
   createEmptyCardLink,
+  defaultNewLinkLabel,
+  toCardLinkMenuItems,
 } from '~~/shared/constants/card-link-options';
 import {
   buildContactSocialLinks,
@@ -25,8 +27,8 @@ const toast = useToast();
 const slug = computed(() => route.params.slug as string);
 const { normalizeLinkValuesWithHttps, isValidCardLinkValue } =
   useUrlNormalization();
-const linkTypeItems = computed<string[][]>(() =>
-  createLinkTypeItemsWithCustom(CARD_LINK_SELECT_ITEMS)
+const linkTypeItems = computed(() =>
+  toCardLinkMenuItems(createLinkTypeItemsWithCustom(CARD_LINK_SELECT_ITEMS))
 );
 
 const { data: card, isPending: isCardPending } = useCardQuery(slug);
@@ -138,7 +140,10 @@ function onFormError(event: FormErrorEvent) {
 }
 
 function resetSocialDraft() {
-  socialDraft.label = createEmptyCardLink().label;
+  socialDraft.label = defaultNewLinkLabel(
+    linkTypeItems.value.flat().map((item) => item.label),
+    state.socials.map((link) => link.label)
+  );
   socialDraft.value = '';
   socialDraft.customLabel = '';
 }
@@ -424,17 +429,9 @@ watch(isSocialSlideoverOpen, (open) => {
           name="socialDraft.label"
           class="[&_label]:mb-2 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
-          <USelectMenu
+          <CardLinkTypeSelect
             v-model="socialDraft.label"
             :items="linkTypeItems"
-            :search-input="false"
-            class="w-full"
-            variant="soft"
-            placeholder="Select Link Type"
-            size="xl"
-            :ui="{
-              content: 'bg-surface border border-line',
-            }"
           />
         </UFormField>
 
@@ -448,8 +445,9 @@ watch(isSocialSlideoverOpen, (open) => {
             v-model="socialDraft.customLabel"
             placeholder="Custom Label"
             class="w-full"
-            variant="soft"
-            size="xl"
+            :ui="{
+              base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
+            }"
           />
         </UFormField>
 
@@ -461,8 +459,9 @@ watch(isSocialSlideoverOpen, (open) => {
           <UInput
             v-model="socialDraft.value"
             class="w-full"
-            variant="soft"
-            size="xl"
+            :ui="{
+              base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
+            }"
           />
         </UFormField>
       </form>

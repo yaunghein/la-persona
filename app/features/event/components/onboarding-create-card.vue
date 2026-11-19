@@ -3,6 +3,8 @@ import type { FormError, FormSubmitEvent } from '@nuxt/ui';
 import {
   CARD_LINK_SELECT_ITEMS,
   createEmptyCardLink,
+  defaultNewLinkLabel,
+  toCardLinkMenuItems,
 } from '~~/shared/constants/card-link-options';
 import { DEFAULT_PHONE_COUNTRY_CODE } from '~~/shared/utils/phone';
 import {
@@ -93,7 +95,7 @@ const socialDraftErrors = reactive({
 });
 
 const linkTypeItems = computed(() =>
-  createLinkTypeItemsWithCustom(CARD_LINK_SELECT_ITEMS)
+  toCardLinkMenuItems(createLinkTypeItemsWithCustom(CARD_LINK_SELECT_ITEMS))
 );
 
 const formFieldClass =
@@ -191,7 +193,10 @@ function onValidSubmit(_event: FormSubmitEvent<typeof state>) {
 }
 
 function resetSocialDraft() {
-  socialDraft.label = createEmptyCardLink().label;
+  socialDraft.label = defaultNewLinkLabel(
+    linkTypeItems.value.flat().map((item) => item.label),
+    state.socials.map((link) => link.label)
+  );
   socialDraft.value = '';
   socialDraft.customLabel = '';
   socialDraftErrors.label = '';
@@ -494,15 +499,9 @@ watch(
           :error="socialDraftErrors.label || false"
           class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
-          <USelectMenu
+          <CardLinkTypeSelect
             v-model="socialDraft.label"
             :items="linkTypeItems"
-            :search-input="false"
-            class="w-full"
-            placeholder="Select Link Type"
-            :ui="{
-              base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink',
-            }"
           />
         </UFormField>
 

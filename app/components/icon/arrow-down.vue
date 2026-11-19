@@ -2,25 +2,14 @@
   <svg
     width="100%"
     height="100%"
-    viewBox="0 0 32 32"
-    fill="none"
+    viewBox="0 0 24 24"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <mask
-      id="mask0_640_127"
-      style="mask-type: alpha"
-      maskUnits="userSpaceOnUse"
-      x="0"
-      y="0"
-      width="32"
-      height="32"
-    >
-      <rect width="32" height="32" fill="#D9D9D9" />
-    </mask>
-    <g mask="url(#mask0_640_127)">
+    <!-- Inset to the same optical size as the phone glyph (about 18 of 24). -->
+    <g transform="translate(3 3.12) scale(0.8322)">
       <path
-        d="M15.1481 5.33334V21.5667L7.57777 14.1L5.68518 16L16.5 26.6667L27.3148 16L25.4222 14.1L17.8518 21.5667V5.33334H15.1481Z"
         fill="currentColor"
+        d="M9.46296 0V16.2333L1.89259 8.76667L0 10.6667L10.8148 21.3333L21.6296 10.6667L19.737 8.76667L12.1667 16.2333V0H9.46296Z"
       />
     </g>
   </svg>

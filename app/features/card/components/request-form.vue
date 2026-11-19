@@ -4,15 +4,24 @@ import { useSortable } from '@vueuse/integrations/useSortable';
 import { derivePlanCodeFromSource } from '~~/shared/utils/subscription';
 import { RequestedCardDetails } from '~~/shared/contracts/card';
 import {
+  CARD_LINK_LABELS,
   CARD_LINK_SELECT_ITEMS,
   createEmptyCardLink,
+  defaultNewLinkLabel,
+  toCardLinkMenuItems,
 } from '~~/shared/constants/card-link-options';
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 import {
   createLinkTypeItemsWithCustom,
   getCustomSocialLabelMissingIndexes,
+  normalizeSocialLinksForForm,
   resolveSocialLinksForSubmission,
   type SocialFormLink,
 } from '~~/shared/utils/social-links';
+import {
+  cardBadgeLabel,
+  cardHolderName,
+} from '~/features/card/utils/card-badge';
 import type { PrefilledContactLinks } from '~/features/card/composables/use-contact-link-prefill';
 
 type RequestCardFormState = {
@@ -79,6 +88,23 @@ const receiptPreviewUrl = ref<string | null>(null);
 const success = ref(false);
 
 const { data: cards } = useOrganizationCardsQuery(organizationSlug);
+const { data: workspaceCards } = useWorkspaceCardsQuery();
+const importableCards = computed(() => workspaceCards.value ?? []);
+const defaultImportCard = computed(
+  () =>
+    importableCards.value.find(
+      (item) => item.organization.type === ORGANIZATION_TYPES.PERSONAL
+    ) ?? importableCards.value[0]
+);
+const importCardItems = computed(() =>
+  importableCards.value.map((item) => ({
+    value: item.id,
+    label: cardHolderName(item),
+    badge: cardBadgeLabel(item),
+  }))
+);
+const isImportModalOpen = ref(false);
+const importSourceCardId = ref<string>();
 const { data: plans } = useSubscriptionPlansQuery();
 const { mutate: submitCardRequest, isPending: isLoading } =
   useSubmitCardRequestMutation(organizationSlug);
@@ -152,8 +178,8 @@ const requestPaymentCurrency = computed(() => {
   return 'MMK';
 });
 
-const linkTypeItems = computed<string[][]>(() =>
-  createLinkTypeItemsWithCustom(CARD_LINK_SELECT_ITEMS)
+const linkTypeItems = computed(() =>
+  toCardLinkMenuItems(createLinkTypeItemsWithCustom(CARD_LINK_SELECT_ITEMS))
 );
 
 function formatMinorAmount(amountMinor: number, currency: string) {
@@ -176,7 +202,10 @@ function billingDurationLabel(cycle?: string | null) {
 }
 
 function resetSocialDraft() {
-  socialDraft.label = createEmptyCardLink().label;
+  socialDraft.label = defaultNewLinkLabel(
+    linkTypeItems.value.flat().map((item) => item.label),
+    state.socials.map((link) => link.label)
+  );
   socialDraft.value = '';
   socialDraft.customLabel = '';
 }
@@ -187,6 +216,82 @@ function openCreateLinkSlideover() {
   resetSocialDraft();
   isSocialSlideoverOpen.value = true;
 }
+
+function applyCardInfo(
+  source: (typeof importableCards.value)[number],
+  mode: 'fill-blanks' | 'replace'
+) {
+  const keep = (current: string, next: string | null | undefined) =>
+    mode === 'replace' || !current.trim() ? String(next || '').trim() : current;
+
+  state.name = keep(state.name, cardHolderName(source));
+  state.position = keep(state.position, source.position);
+  state.company = keep(state.company, source.company);
+  if (mode === 'replace' || !state.phone.trim()) {
+    state.phone = source.phone || '';
+    if (source.phoneCountryCode)
+      state.phoneCountryCode = source.phoneCountryCode;
+  }
+  state.email = keep(state.email, source.email);
+  state.website = keep(state.website, source.website);
+
+  const builtInLabels = new Set<string>(CARD_LINK_LABELS);
+  const linkKey = (link: { label: string; value: string }) =>
+    builtInLabels.has(link.label) ? link.label : `${link.label}|${link.value}`;
+  const existingKeys = new Set(state.socials.map(linkKey));
+  const imported = normalizeSocialLinksForForm(
+    source.socials.filter((link) => {
+      const key = linkKey(link);
+      if (existingKeys.has(key)) return false;
+      existingKeys.add(key);
+      return true;
+    })
+  );
+  state.socials = [...state.socials, ...imported];
+  return imported.length;
+}
+
+function openImportModal() {
+  importSourceCardId.value = defaultImportCard.value?.id;
+  isImportModalOpen.value = true;
+}
+
+function closeImportModal() {
+  isImportModalOpen.value = false;
+}
+
+function importChosenCard() {
+  const source = importableCards.value.find(
+    (item) => item.id === importSourceCardId.value
+  );
+  if (!source) return;
+  const added = applyCardInfo(source, 'replace');
+  isImportModalOpen.value = false;
+  toast.add({
+    title: 'Card info imported',
+    description: added
+      ? `Details copied from ${cardHolderName(source)}.`
+      : `${cardHolderName(source)} is already on this request.`,
+    color: 'success',
+  });
+}
+
+const didAutoImport = ref(false);
+watch(
+  defaultImportCard,
+  (source) => {
+    if (didAutoImport.value || !workspaceCards.value || !source) return;
+    // A saved draft can already have a name from an earlier open. Still
+    // bring the card's links across when this request has none yet.
+    if (state.socials.length) {
+      didAutoImport.value = true;
+      return;
+    }
+    didAutoImport.value = true;
+    applyCardInfo(source, 'fill-blanks');
+  },
+  { immediate: true }
+);
 
 function openEditLinkSlideover(index: number) {
   const link = state.socials[index];
@@ -745,19 +850,33 @@ function onFormError(event: FormErrorEvent) {
     </div>
 
     <div class="space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 class="text-sm font-medium text-ink">
+      <div class="flex items-center justify-between gap-2">
+        <h3 class="min-w-0 truncate text-sm font-medium text-ink">
           Social / Professional Links
         </h3>
-        <UButton
-          type="button"
-          icon="i-lucide-plus"
-          size="sm"
-          variant="soft"
-          label="Add Link"
-          class="rounded-full bg-raised text-ink hover:bg-line"
-          @click="openCreateLinkSlideover"
-        />
+        <div class="flex shrink-0 items-center gap-1.5">
+          <UButton
+            v-if="importableCards.length"
+            type="button"
+            label="Import"
+            icon="i-lucide-download"
+            color="primary"
+            size="sm"
+            class="h-7 rounded-full bg-ink/5 px-2.5 text-ink hover:bg-ink/15"
+            :ui="{ leadingIcon: 'size-3.5' }"
+            @click="openImportModal"
+          />
+          <UButton
+            type="button"
+            label="Add"
+            icon="i-lucide-plus"
+            color="primary"
+            size="sm"
+            class="h-7 rounded-full bg-ink/5 px-2.5 text-ink hover:bg-ink/15"
+            :ui="{ leadingIcon: 'size-3.5' }"
+            @click="openCreateLinkSlideover"
+          />
+        </div>
       </div>
 
       <div ref="socialsListEl" class="relative flex flex-col gap-3">
@@ -933,15 +1052,9 @@ function onFormError(event: FormErrorEvent) {
           name="socialDraft.label"
           class="[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         >
-          <USelectMenu
+          <CardLinkTypeSelect
             v-model="socialDraft.label"
             :items="linkTypeItems"
-            :search-input="false"
-            class="w-full"
-            placeholder="Select Link Type"
-            :ui="{
-              base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink',
-            }"
           />
         </UFormField>
 
@@ -1027,6 +1140,72 @@ function onFormError(event: FormErrorEvent) {
         color="error"
         class="h-10 text-sm rounded-full px-6 font-medium"
         @click="confirmRemoveLink"
+      />
+    </template>
+  </UModal>
+
+  <UModal
+    v-model:open="isImportModalOpen"
+    title="Import Links"
+    description="Copy the social links from another of your&nbsp;cards."
+    :ui="{
+      content: 'w-[calc(100%-2rem)] max-w-md overflow-hidden bg-surface',
+      title: 'text-ink',
+      description: 'text-subtle',
+      body: 'overflow-x-hidden pt-2',
+      footer: 'justify-end gap-2',
+    }"
+  >
+    <template #body>
+      <URadioGroup
+        v-model="importSourceCardId"
+        :items="importCardItems"
+        value-key="value"
+        color="neutral"
+        variant="table"
+        class="w-full min-w-0"
+        :ui="{
+          root: 'min-w-0',
+          fieldset: 'min-w-0 space-y-2',
+          item: 'min-w-0 overflow-hidden rounded-lg border border-line bg-surface px-3 py-3 has-data-[state=checked]:border-ink/25 has-data-[state=checked]:bg-raised',
+          container: 'items-center',
+          wrapper: 'min-w-0 flex-1',
+          label: 'block min-w-0 text-sm text-ink',
+        }"
+      >
+        <template #label="{ item }">
+          <span class="flex w-full min-w-0 items-center gap-3">
+            <span class="min-w-0 flex-1 truncate font-medium">{{
+              item.label
+            }}</span>
+            <UBadge
+              :label="item.badge"
+              color="neutral"
+              variant="soft"
+              size="sm"
+              class="max-w-[46%] min-w-0 overflow-hidden"
+              :ui="{ label: 'block truncate' }"
+            />
+          </span>
+        </template>
+      </URadioGroup>
+    </template>
+    <template #footer>
+      <UButton
+        type="button"
+        label="Cancel"
+        color="neutral"
+        variant="ghost"
+        class="h-10 text-sm rounded-full px-5"
+        @click="closeImportModal"
+      />
+      <UButton
+        type="button"
+        label="Import"
+        color="neutral"
+        class="h-10 text-sm rounded-full bg-ink px-6 font-medium text-ink-inverse hover:bg-ink/90"
+        :disabled="!importSourceCardId"
+        @click="importChosenCard"
       />
     </template>
   </UModal>
