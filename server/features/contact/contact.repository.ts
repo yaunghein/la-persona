@@ -104,6 +104,8 @@ function selectContactRows() {
         lastName: card.lastName,
       },
       organizationSlug: organization.slug,
+      organizationName: organization.name,
+      organizationType: organization.type,
       event: { id: event.id, title: event.title, startsAt: event.startsAt },
       personaCard: {
         id: personaCard.id,

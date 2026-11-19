@@ -62,6 +62,8 @@ export function toContactSummary(
           slug: row.card.slug,
           name: fullName(row.card.firstName, row.card.lastName),
           organizationSlug: row.organizationSlug,
+          organizationName: row.organizationName,
+          organizationType: row.organizationType,
         }
       : null,
     personaCardSlug: isLiveCard ? (personaCard?.slug ?? null) : null,

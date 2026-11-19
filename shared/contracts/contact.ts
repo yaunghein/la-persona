@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { PaginationQuery } from '~~/shared/contracts/collection';
 import { LabelIds, type Label } from '~~/shared/contracts/label';
+import type { OrganizationType } from '~~/shared/utils/constants';
 
 const optionalText = z
   .string()
@@ -169,6 +170,8 @@ export type ContactSummary = {
     slug: string;
     name: string;
     organizationSlug: string;
+    organizationName: string;
+    organizationType: OrganizationType;
   } | null;
   /** Set when the contact is another La Persona member (seamless exchange). */
   personaCardSlug: string | null;
