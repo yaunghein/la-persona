@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, inArray, or } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { db } from '~~/server/db';
 import { card, communitySetting } from '~~/server/db/schema';
@@ -12,6 +12,21 @@ function communityBrandDefaults() {
     wallpaperUrl: env.DEFAULT_WALLPAPER_URL,
     cardBackUrl: env.DEFAULT_CARD_BACK_URL,
   };
+}
+
+export async function communityUsesCardImageKeys(keys: string[]) {
+  if (!keys.length) return false;
+  const [row] = await db
+    .select({ id: communitySetting.id })
+    .from(communitySetting)
+    .where(
+      or(
+        inArray(communitySetting.wallpaperUrl, keys),
+        inArray(communitySetting.cardBackUrl, keys)
+      )
+    )
+    .limit(1);
+  return Boolean(row);
 }
 
 export const findCommunitySettingByOrganizationId = async (

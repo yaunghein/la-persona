@@ -87,3 +87,35 @@ export type BrandAsset = {
   url: string;
   exists: boolean;
 };
+
+/** Wallpaper and card back for one premium card, named from the person's name. */
+export const CARD_IMAGE_KINDS = ['wallpaper', 'back'] as const;
+
+export type CardImageKind = (typeof CARD_IMAGE_KINDS)[number];
+
+export const CardImageNameQuery = z.object({
+  name: z.string().trim().min(1, 'Enter a name.').max(160),
+});
+
+export type CardImageNameQuery = z.infer<typeof CardImageNameQuery>;
+
+export const CreateCardImageUploadRequest = CreateUploadRequest.extend({
+  name: z.string().trim().min(1, 'Enter a name.').max(160),
+  kind: z.enum(CARD_IMAGE_KINDS),
+});
+
+export type CreateCardImageUploadRequest = z.infer<
+  typeof CreateCardImageUploadRequest
+>;
+
+export const CardImageRouteParams = z.object({
+  kind: z.enum(CARD_IMAGE_KINDS),
+});
+
+export type CardImage = {
+  kind: CardImageKind;
+  fileName: string;
+  key: string;
+  url: string;
+  exists: boolean;
+};

@@ -32,7 +32,10 @@ import type { Collection } from '~~/shared/contracts/collection';
 import type {
   BrandAsset,
   BrandAssetKind,
+  CardImage,
+  CardImageKind,
   CreateBrandAssetUploadRequest,
+  CreateCardImageUploadRequest,
   UploadTicket,
 } from '~~/shared/contracts/media';
 import type {
@@ -65,6 +68,8 @@ export const adminQueryKeys = {
   organizations: () => [...adminQueryKeys.all, 'organizations'] as const,
   brandAssets: (organizationId: string) =>
     [...adminQueryKeys.all, 'brand-assets', organizationId] as const,
+  cardImages: (name: string) =>
+    [...adminQueryKeys.all, 'card-images', name] as const,
   users: () => [...adminQueryKeys.all, 'users'] as const,
   cards: (claimed?: boolean) =>
     [...adminQueryKeys.all, 'cards', claimed ?? 'any'] as const,
@@ -143,6 +148,18 @@ export function useAdminOrganizationsQuery() {
     queryFn: () =>
       $fetch<Collection<AdminOrganizationSummary>>(url('organizations')),
     select: (collection) => collection.items,
+  });
+}
+
+export function useAdminCardImagesQuery(name: MaybeRefOrGetter<string>) {
+  return useQuery({
+    queryKey: computed(() => adminQueryKeys.cardImages(toValue(name).trim())),
+    queryFn: () =>
+      $fetch<Collection<CardImage>>(url('card-images'), {
+        query: { name: toValue(name).trim() },
+      }),
+    select: (collection) => collection.items,
+    enabled: () => toValue(name).trim().length > 0,
   });
 }
 
@@ -238,6 +255,13 @@ export const adminApi = {
   deleteBrandAsset: (organizationId: string, kind: BrandAssetKind) =>
     $fetch<void>(url(`organizations/${organizationId}/brand-assets/${kind}`), {
       method: 'DELETE',
+    }),
+  createCardImageUpload: (request: CreateCardImageUploadRequest) =>
+    $fetch<UploadTicket>(url('card-images'), { method: 'POST', body: request }),
+  deleteCardImage: (kind: CardImageKind, name: string) =>
+    $fetch<void>(url(`card-images/${kind}`), {
+      method: 'DELETE',
+      query: { name },
     }),
   inviteOrganizer: (
     organizationId: string,

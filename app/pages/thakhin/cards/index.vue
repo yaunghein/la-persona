@@ -4,10 +4,8 @@ definePageMeta({
 });
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
-import {
-  THAKHIN_CARD_PLAN_ASSET_DEFAULTS,
-  getThakhinCardPlanAssetDefaults,
-} from '~~/shared/constants/thakhin-card-plan-assets';
+import { getThakhinCardPlanAssetDefaults } from '~~/shared/constants/thakhin-card-plan-assets';
+import { isCardImageKeyFor } from '~~/shared/utils/card-image';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
 import {
   matchesBillingFilter,
@@ -66,6 +64,12 @@ const form = reactive({
 });
 
 function applyPlanAssetPrefills(planCode: string) {
+  if (planCode === 'premium') {
+    form.splineUrl = '';
+    form.wallpaperUrl = '';
+    form.cardBackUrl = '';
+    return;
+  }
   const d = getThakhinCardPlanAssetDefaults(planCode);
   if (!d) return;
   form.splineUrl = d.splineUrl;
@@ -222,25 +226,35 @@ watch([claimFilter, orgFilter, subscriptionFilter, billingFilter], resetPage);
 const orgSelectItems = computed(() =>
   (orgOptions.value || []).map((o) => ({ label: o.name, value: o.id }))
 );
+const CREATE_PLANS = [
+  { code: 'friend-family', label: 'Friends & Family' },
+  { code: 'standard', label: 'Standard' },
+  { code: 'premium', label: 'Premium' },
+] as const;
+
+const createPlanItems = computed(() =>
+  CREATE_PLANS.map((plan) => ({
+    label:
+      plans.value?.find((item) => item.code === plan.code)?.name ?? plan.label,
+    value: plan.code,
+  }))
+);
+
 const planSelectItems = computed(() =>
   (plans.value ?? [])
     .filter((plan) => plan.isActive)
-    .filter((p) => p.code in THAKHIN_CARD_PLAN_ASSET_DEFAULTS)
-    .map((p) => ({
-      label: p.name,
-      value: p.code,
-    }))
+    .map((plan) => ({ label: plan.name, value: plan.code }))
 );
 
 /** Subscription plan for create flow — prefills Spline + S3 keys (placeholders). */
 const createPlanCode = ref('friend-family');
 
 watch(
-  planSelectItems,
+  createPlanItems,
   (items) => {
     const first = items[0];
     if (!first) return;
-    if (!items.some((i) => i.value === createPlanCode.value)) {
+    if (!items.some((item) => item.value === createPlanCode.value)) {
       createPlanCode.value = first.value;
     }
   },
@@ -252,10 +266,27 @@ watch(createPlanCode, (code) => {
   applyPlanAssetPrefills(code);
 });
 
+const customImages = ref(false);
+const lockedImageName = ref('');
+
+const cardImageName = computed(() =>
+  editingId.value && customImages.value
+    ? lockedImageName.value
+    : `${form.firstName} ${form.lastName}`.trim()
+);
+
+const showCardImageUpload = computed(
+  () =>
+    (!editingId.value && createPlanCode.value === 'premium') ||
+    (Boolean(editingId.value) && customImages.value)
+);
+
 function openCreate() {
   editingId.value = null;
+  customImages.value = false;
+  lockedImageName.value = '';
   resetForm();
-  const items = planSelectItems.value;
+  const items = createPlanItems.value;
   const firstPlan = items[0];
   if (firstPlan && !items.some((i) => i.value === createPlanCode.value)) {
     createPlanCode.value = firstPlan.value;
@@ -267,6 +298,11 @@ function openCreate() {
 function openEdit(row: CardRow) {
   editingId.value = row.id;
   editingRow = row;
+  const name = `${row.firstName} ${row.lastName || ''}`.trim();
+  lockedImageName.value = name;
+  customImages.value =
+    isCardImageKeyFor(row.wallpaperUrl || '', 'wallpaper', name) &&
+    isCardImageKeyFor(row.cardBackUrl || '', 'back', name);
   fillForm(row);
   isFormOpen.value = true;
 }
@@ -308,6 +344,21 @@ function blockEnterWhileEditing(event: KeyboardEvent) {
 }
 
 async function onSubmitForm() {
+  if (
+    !editingId.value &&
+    createPlanCode.value === 'premium' &&
+    (!isCardImageKeyFor(form.wallpaperUrl, 'wallpaper', cardImageName.value) ||
+      !isCardImageKeyFor(form.cardBackUrl, 'back', cardImageName.value))
+  ) {
+    toast.add({
+      title: 'Upload both images',
+      description:
+        'A premium card needs a wallpaper and a card back for this name.',
+      color: 'warning',
+    });
+    return;
+  }
+
   isSaving.value = true;
   try {
     const body: UpdateAdminCardRequest = {
@@ -727,13 +778,13 @@ const selectUi = {
             </UFormField>
 
             <UFormField
-              v-if="!editingId && planSelectItems.length"
-              label="Plan (prefill assets)"
+              v-if="!editingId && createPlanItems.length"
+              label="Plan"
               :class="formFieldClass"
             >
               <USelect
                 v-model="createPlanCode"
-                :items="planSelectItems"
+                :items="createPlanItems"
                 placeholder="Select plan"
                 size="xl"
                 class="w-full"
@@ -824,24 +875,46 @@ const selectUi = {
                 :ui="inputUi"
               />
             </UFormField>
-            <UFormField label="Wallpaper (S3 key)" :class="formFieldClass">
-              <UInput
+            <template v-if="showCardImageUpload">
+              <p class="text-xs leading-relaxed text-subtle">
+                Stored in uploads/, named from the card name. Delete an image
+                before replacing&nbsp;it.
+              </p>
+              <AdminCardImageField
                 v-model="form.wallpaperUrl"
-                placeholder="path/in/bucket.webp — not a full URL"
-                class="w-full"
-                size="xl"
-                :ui="inputUi"
+                kind="wallpaper"
+                label="Wallpaper"
+                :name="cardImageName"
+                delete-note="The file is removed from storage. Upload a new wallpaper before saving the&nbsp;card."
               />
-            </UFormField>
-            <UFormField label="Card back (S3 key)" :class="formFieldClass">
-              <UInput
+              <AdminCardImageField
                 v-model="form.cardBackUrl"
-                placeholder="path/in/bucket.webp — not a full URL"
-                class="w-full"
-                size="xl"
-                :ui="inputUi"
+                kind="back"
+                label="Card back"
+                :name="cardImageName"
+                delete-note="The file is removed from storage. Upload a new card back before saving the&nbsp;card."
               />
-            </UFormField>
+            </template>
+            <template v-else>
+              <UFormField label="Wallpaper (S3 key)" :class="formFieldClass">
+                <UInput
+                  v-model="form.wallpaperUrl"
+                  placeholder="path/in/bucket.webp — not a full URL"
+                  class="w-full"
+                  size="xl"
+                  :ui="inputUi"
+                />
+              </UFormField>
+              <UFormField label="Card back (S3 key)" :class="formFieldClass">
+                <UInput
+                  v-model="form.cardBackUrl"
+                  placeholder="path/in/bucket.webp — not a full URL"
+                  class="w-full"
+                  size="xl"
+                  :ui="inputUi"
+                />
+              </UFormField>
+            </template>
           </div>
 
           <p v-if="!editingId" class="mt-1 text-xs text-subtle">
