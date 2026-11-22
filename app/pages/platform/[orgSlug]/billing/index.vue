@@ -7,7 +7,8 @@ definePageMeta({
 
 type BillingTableRow = {
   id: string;
-  dueDate: string;
+  cardName: string;
+  period: string;
   description: string;
   status: string;
   total: string;
@@ -66,9 +67,10 @@ const pagedRows = computed(() => {
 const tableRows = computed<BillingTableRow[]>(() =>
   pagedRows.value.map((row) => ({
     id: row.id,
-    dueDate: formatDate(row.dueDate),
+    cardName: row.cardName,
+    period: `${formatDate(row.startAt)} – ${formatDate(row.endAt)}`,
     description: row.description,
-    status: getStatusLabel(row.status),
+    status: getStatusLabel(row.status, row.amountMinor),
     total: formatMoney(row.amountMinor, row.currency),
     action: 'download',
   }))
@@ -76,8 +78,18 @@ const tableRows = computed<BillingTableRow[]>(() =>
 
 const columns: TableColumn<BillingTableRow>[] = [
   {
-    accessorKey: 'dueDate',
-    header: 'DUE DATE',
+    accessorKey: 'cardName',
+    header: 'CARD',
+    meta: {
+      class: {
+        th: 'text-sm font-medium uppercase tracking-widest text-ink',
+        td: 'text-sm font-medium text-muted',
+      },
+    },
+  },
+  {
+    accessorKey: 'period',
+    header: 'PERIOD',
     meta: {
       class: {
         th: 'text-sm font-medium uppercase tracking-widest text-ink',
@@ -227,8 +239,10 @@ function formatMoney(amountMinor: number, currency: string) {
   return `${amountMinor.toLocaleString()} ${currency || 'MMK'}`;
 }
 
-function getStatusLabel(status: string) {
-  if (status === 'approved') return 'Paid';
+function getStatusLabel(status: string, amountMinor: number) {
+  if (status === 'approved' || status === 'trial') {
+    return amountMinor > 0 ? 'Paid' : 'Free';
+  }
   if (status === 'rejected') return 'Rejected';
   return 'Pending';
 }
@@ -367,8 +381,11 @@ function getStatusLabel(status: string) {
             }"
           >
             <div class="p-5">
-              <p class="text-sm font-medium text-muted">
-                {{ formatDate(row.dueDate) }}
+              <p class="text-sm font-medium text-ink">
+                {{ row.cardName }}
+              </p>
+              <p class="mt-1 text-sm font-medium text-muted">
+                {{ formatDate(row.startAt) }} – {{ formatDate(row.endAt) }}
               </p>
               <p class="mt-1 text-xl font-medium leading-tight text-ink">
                 {{ row.description }}
@@ -379,7 +396,7 @@ function getStatusLabel(status: string) {
               <div class="flex items-center justify-between">
                 <div>
                   <p class="text-xs text-muted">
-                    {{ getStatusLabel(row.status) }}
+                    {{ getStatusLabel(row.status, row.amountMinor) }}
                   </p>
                   <p class="mt-1 text-sm text-ink">
                     {{ formatMoney(row.amountMinor, row.currency) }}

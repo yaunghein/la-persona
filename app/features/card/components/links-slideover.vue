@@ -213,7 +213,11 @@ watch(open, (isOpen) => {
         color="neutral"
         variant="ghost"
         class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-subtle hover:bg-raised hover:text-ink"
-        @click="open = false"
+        @click="
+          () => {
+            open = false;
+          }
+        "
       />
       <UButton
         type="submit"

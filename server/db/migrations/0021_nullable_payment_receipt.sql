@@ -1,0 +1,1 @@
+ALTER TABLE "subscription_payment" ALTER COLUMN "receipt_url" DROP NOT NULL;

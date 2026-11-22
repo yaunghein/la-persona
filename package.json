@@ -20,6 +20,7 @@
     "db:reset": "bun server/scripts/reset.ts",
     "db:seed": "bun server/scripts/seed.ts",
     "db:backfill-subscriptions": "bun server/scripts/backfill-subscriptions.ts",
+    "db:backfill-subscription-history": "bun server/scripts/backfill-subscription-history.ts",
     "db:backfill-media-keys": "bun server/scripts/backfill-media-keys.ts"
   },
   "dependencies": {

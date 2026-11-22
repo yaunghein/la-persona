@@ -9,37 +9,35 @@ const emit = defineEmits<{
   'update:page': [page: number];
 }>();
 
-const pageCount = computed(() =>
-  Math.max(1, Math.ceil(props.total / Math.max(props.itemsPerPage, 1)))
-);
-const { siblingCount } = usePaginationWindow();
+const { siblingCount, showEdges } = usePaginationWindow(0);
 </script>
 
 <template>
-  <section class="overflow-hidden rounded-xl border border-ink/10 bg-canvas">
-    <div
-      v-if="$slots.toolbar"
-      class="flex flex-wrap items-center gap-2 border-b border-ink/10 px-4 py-3"
-    >
+  <section class="flex flex-col gap-5">
+    <div v-if="$slots.toolbar" class="flex flex-wrap items-center gap-2">
       <slot name="toolbar" />
     </div>
-    <div class="overflow-x-auto">
+    <div class="hide-scrollbar overflow-x-auto">
       <slot />
     </div>
-    <footer
-      class="flex flex-wrap items-center justify-between gap-3 border-t border-ink/10 px-4 py-3"
-    >
-      <p class="text-sm text-ink/45">Page {{ page }} of {{ pageCount }}</p>
+    <div class="flex items-center justify-center pt-4 sm:justify-end sm:pt-0">
       <UPagination
         :page="page"
-        :total="total"
+        :total="props.total"
         :items-per-page="itemsPerPage"
         :sibling-count="siblingCount"
-        size="sm"
+        :show-edges="showEdges"
+        show-controls
         color="neutral"
-        variant="ghost"
+        variant="outline"
+        active-color="neutral"
+        active-variant="solid"
+        first-icon="i-lucide-chevrons-left"
+        prev-icon="i-lucide-chevron-left"
+        next-icon="i-lucide-chevron-right"
+        last-icon="i-lucide-chevrons-right"
         @update:page="emit('update:page', $event)"
       />
-    </footer>
+    </div>
   </section>
 </template>

@@ -12,7 +12,6 @@ import {
   deleteCardWithPendingRequests,
   updateCardById,
 } from '~~/server/features/card/card.repository';
-import { ensureCardTrialSubscription } from '~~/server/features/billing/subscription.repository';
 import type {
   AdminCardDetail,
   AdminCardSummary,
@@ -20,10 +19,35 @@ import type {
   UpdateAdminCardRequest,
 } from '~~/shared/contracts/card';
 import type { Collection } from '~~/shared/contracts/collection';
-import type { OrganizationType } from '~~/shared/utils/constants';
+import {
+  ORGANIZATION_TYPES,
+  type OrganizationType,
+} from '~~/shared/utils/constants';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
 import { slugify } from '~~/shared/utils/slugify';
 import { effectiveSubscriptionStatus } from '~~/shared/utils/subscription';
+
+function subscriptionEndOf(
+  subscription: AdminCardRow['subscription']
+): string | null {
+  if (!subscription) return null;
+  const end =
+    subscription.isTrial || subscription.status === 'trial'
+      ? subscription.trialEndAt
+      : subscription.currentPeriodEndAt;
+  return end?.toISOString() ?? null;
+}
+
+function subscriptionStartOf(
+  subscription: AdminCardRow['subscription']
+): string | null {
+  if (!subscription) return null;
+  const start =
+    subscription.isTrial || subscription.status === 'trial'
+      ? subscription.trialStartAt
+      : subscription.currentPeriodStartAt;
+  return start?.toISOString() ?? null;
+}
 
 function toAdminCardSummary(row: AdminCardRow): AdminCardSummary {
   const { card, subscription } = row;
@@ -58,12 +82,19 @@ function toAdminCardSummary(row: AdminCardRow): AdminCardSummary {
         )
       : null,
     subscriptionPlanCode: subscription?.planCode ?? null,
-    subscriptionEndAt:
-      (subscription?.isTrial
-        ? subscription.trialEndAt
-        : subscription?.currentPeriodEndAt
-      )?.toISOString() ?? null,
+    subscriptionStartAt: subscriptionStartOf(subscription),
+    subscriptionEndAt: subscriptionEndOf(subscription),
+    subscriptionBilling: billingOf(row),
   };
+}
+
+function billingOf(row: AdminCardRow): AdminCardSummary['subscriptionBilling'] {
+  if (!row.subscription?.status) return null;
+  if (row.organizationType === ORGANIZATION_TYPES.COMMUNITY) return null;
+  const payment = row.currentPayment;
+  return payment?.status === 'approved' && (payment.amountMinor ?? 0) > 0
+    ? 'paid'
+    : 'free';
 }
 
 export async function listCardsForAdmin(filter: {
@@ -118,7 +149,6 @@ export async function createCardForAdmin(request: CreateAdminCardRequest) {
     userId: null,
   });
   if (!created) throw new Error('Card insert returned no row.');
-  await ensureCardTrialSubscription(created.id, created.createdAt);
   return describeCardForAdmin(created.id);
 }
 

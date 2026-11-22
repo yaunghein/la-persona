@@ -5,6 +5,8 @@ import {
   cardSubscription,
   onboardingInvitation,
   organization,
+  subscriptionPayment,
+  subscriptionPaymentItem,
   user,
 } from '~~/server/db/schema';
 
@@ -20,14 +22,28 @@ function selectAdminCards() {
         status: cardSubscription.status,
         planCode: cardSubscription.planCode,
         isTrial: cardSubscription.isTrial,
+        trialStartAt: cardSubscription.trialStartAt,
         trialEndAt: cardSubscription.trialEndAt,
+        currentPeriodStartAt: cardSubscription.currentPeriodStartAt,
         currentPeriodEndAt: cardSubscription.currentPeriodEndAt,
+      },
+      currentPayment: {
+        status: subscriptionPayment.status,
+        amountMinor: subscriptionPaymentItem.amountMinor,
       },
     })
     .from(card)
     .innerJoin(organization, eq(organization.id, card.organizationId))
     .leftJoin(user, eq(user.id, card.userId))
-    .leftJoin(cardSubscription, eq(cardSubscription.cardId, card.id));
+    .leftJoin(cardSubscription, eq(cardSubscription.cardId, card.id))
+    .leftJoin(
+      subscriptionPaymentItem,
+      eq(subscriptionPaymentItem.id, cardSubscription.lastPaymentItemId)
+    )
+    .leftJoin(
+      subscriptionPayment,
+      eq(subscriptionPayment.id, subscriptionPaymentItem.paymentId)
+    );
 }
 
 export function listAdminCards(filter: { claimed?: boolean }) {

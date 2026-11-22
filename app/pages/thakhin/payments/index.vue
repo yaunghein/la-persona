@@ -1,11 +1,20 @@
 <script setup lang="ts">
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import type { PaymentForReview } from '~~/shared/contracts/billing';
+import { useQueryClient } from '@tanstack/vue-query';
+import { billingQueryKeys } from '~/features/billing/composables/use-billing-queries';
 import {
   ADMIN_ACTIONS_COLUMN,
   ADMIN_TABLE_UI,
   sortableHeader,
 } from '~/features/admin/utils/admin-table';
+import {
+  ADMIN_FILTER_UI,
+  ADMIN_PAGE_CLASS,
+  ADMIN_SEARCH_UI,
+  ADMIN_SLIDEOVER_BUTTON_CLASS,
+  ADMIN_SLIDEOVER_UI,
+} from '~/features/admin/utils/admin-ui';
 
 definePageMeta({
   layout: 'thakhin',
@@ -14,6 +23,7 @@ definePageMeta({
 type PaymentRow = PaymentForReview;
 
 const toast = useToast();
+const queryClient = useQueryClient();
 const { data, isLoading: pending } = usePaymentReviewQueueQuery();
 const rows = computed(() => data.value?.items ?? []);
 const { mutateAsync: reviewPayment } = useReviewPaymentMutation();
@@ -28,6 +38,38 @@ const filterLink = useQueryState<'all' | 'linked' | 'standalone'>(
 );
 const selectedPayment = ref<PaymentRow | null>(null);
 const paymentOpen = ref(false);
+const amountDrafts = ref<Record<string, number>>({});
+const savingItemId = ref<string | null>(null);
+
+function openPayment(row: PaymentRow) {
+  selectedPayment.value = row;
+  amountDrafts.value = Object.fromEntries(
+    row.items.map((item) => [item.id, item.amountMinor])
+  );
+  paymentOpen.value = true;
+}
+
+async function saveAmount(itemId: string) {
+  savingItemId.value = itemId;
+  try {
+    await adminApi.updatePaymentItem(itemId, {
+      amountMinor: amountDrafts.value[itemId] ?? 0,
+    });
+    await queryClient.invalidateQueries({ queryKey: billingQueryKeys.all });
+    toast.add({ title: 'Amount updated', color: 'success' });
+  } catch (error: any) {
+    toast.add({
+      title: 'Could not update the amount',
+      description:
+        error?.data?.statusMessage ||
+        error?.statusMessage ||
+        'Please try again.',
+      color: 'error',
+    });
+  } finally {
+    savingItemId.value = null;
+  }
+}
 
 const filteredRows = computed(() => {
   return rows.value.filter((row) => {
@@ -69,12 +111,6 @@ function formatDate(value: string) {
 function formatMoney(amountMinor: number, currency?: string | null) {
   const suffix = currency || 'MMK';
   return `${amountMinor.toLocaleString()} ${suffix}`;
-}
-
-function statusColor(status: string) {
-  if (status === 'approved') return 'success';
-  if (status === 'rejected') return 'error';
-  return 'warning';
 }
 
 async function approvePayment(row: PaymentRow) {
@@ -130,12 +166,9 @@ function cannotActOnLinkedPayment() {
 
 function getActionItems(row: PaymentRow): DropdownMenuItem[][] {
   const view = {
-    label: 'View',
-    icon: 'i-lucide-eye',
-    onSelect: () => {
-      selectedPayment.value = row;
-      paymentOpen.value = true;
-    },
+    label: 'Review',
+    icon: 'i-lucide-pencil',
+    onSelect: () => openPayment(row),
   };
 
   if (row.status !== 'submitted') {
@@ -184,6 +217,10 @@ const columns: TableColumn<PaymentRow>[] = [
     accessorKey: 'linkedRequestId',
     header: sortableHeader('LINKED REQUEST'),
   },
+  {
+    accessorKey: 'linkedRequestStatus',
+    header: sortableHeader('REQUEST STATUS'),
+  },
   { accessorKey: 'status', header: sortableHeader('STATUS') },
   { accessorKey: 'createdAt', header: sortableHeader('CREATED AT') },
   ADMIN_ACTIONS_COLUMN,
@@ -191,10 +228,11 @@ const columns: TableColumn<PaymentRow>[] = [
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <div :class="ADMIN_PAGE_CLASS">
     <AdminPageHeader
       title="Payments"
-      description="Approve or reject standalone subscription payments. Payments tied to a design request are decided on Requests."
+      description-class="max-w-104"
+      description="Approve or reject payments that were submitted without a request. Request payments are decided on&nbsp;Requests."
     />
 
     <AdminTableFrame
@@ -208,19 +246,23 @@ const columns: TableColumn<PaymentRow>[] = [
           v-model="globalFilter"
           placeholder="Search payments"
           icon="i-lucide-search"
-          size="sm"
-          class="w-56"
+          color="neutral"
+          variant="soft"
+          class="w-full sm:w-64"
+          :ui="ADMIN_SEARCH_UI"
         />
         <UInput
           v-model="filterPayer"
           placeholder="Payer"
-          size="sm"
-          class="w-44"
+          color="neutral"
+          variant="soft"
+          class="w-full sm:w-44"
+          :ui="ADMIN_SEARCH_UI"
         />
         <USelect
           v-model="filterStatus"
-          size="sm"
-          class="w-36"
+          class="w-full sm:w-40"
+          :ui="ADMIN_FILTER_UI"
           :items="[
             { label: 'Submitted', value: 'submitted' },
             { label: 'Approved', value: 'approved' },
@@ -230,8 +272,8 @@ const columns: TableColumn<PaymentRow>[] = [
         />
         <USelect
           v-model="filterLink"
-          size="sm"
-          class="w-44"
+          class="w-full sm:w-44"
+          :ui="ADMIN_FILTER_UI"
           :items="[
             { label: 'All payments', value: 'all' },
             { label: 'Linked', value: 'linked' },
@@ -252,13 +294,14 @@ const columns: TableColumn<PaymentRow>[] = [
         :get-row-id="(row) => row.id"
         :ui="ADMIN_TABLE_UI"
         class="w-full min-w-[48rem]"
-        @select="
-          (_event, row) => {
-            selectedPayment = row.original;
-            paymentOpen = true;
-          }
-        "
+        @select="(_event, row) => openPayment(row.original)"
       >
+        <template #id-cell="{ row }">
+          <span class="font-mono text-xs text-muted">{{
+            row.original.id
+          }}</span>
+        </template>
+
         <template #payerName-cell="{ row }">
           <span class="font-medium text-ink">
             {{ row.original.payerName || '-' }}
@@ -278,36 +321,42 @@ const columns: TableColumn<PaymentRow>[] = [
         <template #receiptUrl-cell="{ row }">
           <UButton
             v-if="row.original.receiptUrl"
-            size="sm"
             label="Receipt"
-            icon="i-lucide-external-link"
+            leading-icon="i-lucide-external-link"
             color="neutral"
-            variant="link"
-            class="px-0"
+            variant="ghost"
+            class="h-9 cursor-pointer rounded-full px-3.5 text-sm font-medium text-ink hover:bg-ink/15"
+            :ui="{ leadingIcon: 'size-4' }"
             :to="resolveObjectStorageUrl(row.original.receiptUrl)"
             target="_blank"
           />
-          <span v-else class="text-ink/35">—</span>
+          <span v-else class="text-muted">—</span>
         </template>
 
         <template #linkedRequestId-cell="{ row }">
-          <span v-if="row.original.linkedRequestId" class="text-ink/80">
+          <span
+            v-if="row.original.linkedRequestId"
+            class="font-mono text-xs text-muted"
+          >
             {{ row.original.linkedRequestId }}
-            <span v-if="row.original.linkedRequestStatus" class="text-ink/40">
-              • {{ row.original.linkedRequestStatus }}
-            </span>
           </span>
-          <span v-else class="text-ink/35">—</span>
+          <span v-else class="text-subtle">—</span>
+        </template>
+
+        <template #linkedRequestStatus-cell="{ row }">
+          <AdminStatusPill
+            v-if="row.original.linkedRequestStatus"
+            v-bind="reviewStatusPill(row.original.linkedRequestStatus)"
+          />
+          <span v-else class="text-subtle">—</span>
         </template>
 
         <template #status-cell="{ row }">
-          <UBadge :color="statusColor(row.original.status)" variant="subtle">
-            {{ row.original.status }}
-          </UBadge>
+          <AdminStatusPill v-bind="reviewStatusPill(row.original.status)" />
         </template>
 
         <template #createdAt-cell="{ row }">
-          <span class="text-ink/55">{{
+          <span class="text-muted">{{
             formatDate(row.original.createdAt)
           }}</span>
         </template>
@@ -321,44 +370,70 @@ const columns: TableColumn<PaymentRow>[] = [
     <USlideover
       v-model:open="paymentOpen"
       title="Payment"
-      :ui="{ content: 'bg-surface' }"
+      side="right"
+      inset
+      :ui="ADMIN_SLIDEOVER_UI"
     >
       <template #body>
-        <div v-if="selectedPayment" class="space-y-3 text-sm text-ink/80">
-          <p class="text-ink">
-            {{ selectedPayment.payerName }} • {{ selectedPayment.payerEmail }}
-          </p>
-          <p>
-            {{
-              formatMoney(
-                selectedPayment.totalAmountMinor,
-                selectedPayment.currency
-              )
-            }}
-          </p>
-          <p>Status: {{ selectedPayment.status }}</p>
-          <p v-if="selectedPayment.note">{{ selectedPayment.note }}</p>
-          <NuxtLink
-            v-if="selectedPayment.linkedRequestId"
-            :to="ROUTES.THAKHIN.REQUESTS"
-            class="text-[#d6b25e]"
-          >
-            Linked request {{ selectedPayment.linkedRequestId }}
-          </NuxtLink>
-          <div
-            v-for="item in selectedPayment.items"
-            :key="item.cardId"
-            class="border-t border-line pt-2"
-          >
-            <p>
-              {{ item.planCode }} •
-              {{ formatMoney(item.amountMinor, item.currency) }}
+        <div v-if="selectedPayment" class="flex flex-col gap-6 py-2">
+          <div class="space-y-1 text-sm">
+            <p class="font-medium text-ink">
+              {{ selectedPayment.payerName }} · {{ selectedPayment.payerEmail }}
             </p>
-            <p>
+            <p class="text-muted">
+              {{
+                formatMoney(
+                  selectedPayment.totalAmountMinor,
+                  selectedPayment.currency
+                )
+              }}
+              · {{ selectedPayment.status }}
+            </p>
+            <p v-if="selectedPayment.note" class="text-muted">
+              {{ selectedPayment.note }}
+            </p>
+            <NuxtLink
+              v-if="selectedPayment.linkedRequestId"
+              :to="ROUTES.THAKHIN.REQUESTS"
+              class="text-sm font-medium text-ink underline-offset-4 hover:underline"
+            >
+              Linked request
+            </NuxtLink>
+          </div>
+          <form
+            v-for="item in selectedPayment.items"
+            :key="item.id"
+            class="space-y-3 border-t-2 border-raised pt-6"
+            @submit.prevent="saveAmount(item.id)"
+          >
+            <p class="text-sm font-medium text-ink">
+              {{ item.planCode }} ·
               {{ new Date(item.startAt).toLocaleDateString() }} –
               {{ new Date(item.endAt).toLocaleDateString() }}
             </p>
-          </div>
+            <UFormField
+              label="Amount"
+              class="[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
+            >
+              <UInput
+                v-model.number="amountDrafts[item.id]"
+                type="number"
+                min="0"
+                class="w-full"
+                size="xl"
+                :ui="{
+                  base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink',
+                }"
+              />
+            </UFormField>
+            <UButton
+              label="Save amount"
+              type="submit"
+              color="neutral"
+              :loading="savingItemId === item.id"
+              :class="ADMIN_SLIDEOVER_BUTTON_CLASS"
+            />
+          </form>
         </div>
       </template>
     </USlideover>

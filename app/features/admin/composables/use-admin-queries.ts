@@ -1,4 +1,8 @@
-import { useQuery, useQueryClient } from '@tanstack/vue-query';
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/vue-query';
 import type {
   AdminUserDetail,
   AdminUserSummary,
@@ -6,7 +10,11 @@ import type {
   UpdateUserRequest,
 } from '~~/shared/contracts/account';
 import type {
+  AdminChartRange,
+  AdminCharts,
   AdminOverview,
+  AdminRevenue,
+  AdminRevenueRange,
   BackOfficeSearchResult,
 } from '~~/shared/contracts/admin';
 import type {
@@ -15,6 +23,11 @@ import type {
   CreateAdminCardRequest,
   UpdateAdminCardRequest,
 } from '~~/shared/contracts/card';
+import type {
+  AddCardPeriodRequest,
+  CardPeriod,
+  UpdatePaymentItemRequest,
+} from '~~/shared/contracts/billing';
 import type { Collection } from '~~/shared/contracts/collection';
 import type {
   BrandAsset,
@@ -42,6 +55,10 @@ import type {
 export const adminQueryKeys = {
   all: ['admin'] as const,
   overview: () => [...adminQueryKeys.all, 'overview'] as const,
+  charts: (range: AdminChartRange) =>
+    [...adminQueryKeys.all, 'overview', 'charts', range] as const,
+  revenue: (range: AdminRevenueRange) =>
+    [...adminQueryKeys.all, 'overview', 'revenue', range] as const,
   search: (term: string) => [...adminQueryKeys.all, 'search', term] as const,
   feedback: (kind: FeedbackKind | 'all') =>
     [...adminQueryKeys.all, 'feedback', kind] as const,
@@ -67,6 +84,30 @@ export function useAdminOverviewQuery() {
   return useQuery({
     queryKey: adminQueryKeys.overview(),
     queryFn: () => $fetch<AdminOverview>(url('overview')),
+  });
+}
+
+export function useAdminChartsQuery(range: MaybeRefOrGetter<AdminChartRange>) {
+  return useQuery({
+    queryKey: computed(() => adminQueryKeys.charts(toValue(range))),
+    queryFn: () =>
+      $fetch<AdminCharts>(url('overview/charts'), {
+        query: { range: toValue(range) },
+      }),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useAdminRevenueQuery(
+  range: MaybeRefOrGetter<AdminRevenueRange>
+) {
+  return useQuery({
+    queryKey: computed(() => adminQueryKeys.revenue(toValue(range))),
+    queryFn: () =>
+      $fetch<AdminRevenue>(url('overview/revenue'), {
+        query: { range: toValue(range) },
+      }),
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -219,6 +260,17 @@ export const adminApi = {
     $fetch<void>(url(`users/${userId}`), { method: 'DELETE' }),
 
   getCard: (cardId: string) => $fetch<AdminCardDetail>(url(`cards/${cardId}`)),
+  listCardPeriods: (cardId: string) =>
+    $fetch<Collection<CardPeriod>>(url(`cards/${cardId}/periods`)),
+  addCardPeriod: (cardId: string, request: AddCardPeriodRequest) =>
+    $fetch<{ id: string }>(url(`cards/${cardId}/periods`), {
+      method: 'POST',
+      body: request,
+    }),
+  listUserPeriods: (userId: string) =>
+    $fetch<Collection<CardPeriod>>(url(`users/${userId}/periods`)),
+  updatePaymentItem: (itemId: string, request: UpdatePaymentItemRequest) =>
+    $fetch(url(`payment-items/${itemId}`), { method: 'PATCH', body: request }),
   createCard: (request: CreateAdminCardRequest) =>
     $fetch<AdminCardDetail>(url('cards'), { method: 'POST', body: request }),
   updateCard: (cardId: string, changes: UpdateAdminCardRequest) =>

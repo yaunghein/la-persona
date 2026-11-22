@@ -72,6 +72,7 @@ export type SubscriptionPlanSummary = {
 export type BillingHistoryEntry = {
   id: string;
   paymentId: string;
+  cardName: string;
   description: string;
   status: string;
   amountMinor: number;
@@ -116,7 +117,7 @@ export type PaymentForReview = {
   paidByUserId: string;
   payerName: string | null;
   payerEmail: string | null;
-  receiptUrl: string;
+  receiptUrl: string | null;
   status: string;
   note: string | null;
   createdAt: string;
@@ -127,6 +128,7 @@ export type PaymentForReview = {
   totalAmountMinor: number;
   currency: string | null;
   items: {
+    id: string;
     cardId: string;
     planCode: string;
     amountMinor: number;
@@ -134,4 +136,54 @@ export type PaymentForReview = {
     startAt: string;
     endAt: string;
   }[];
+};
+
+export const AddCardPeriodRequest = z.union([
+  z
+    .object({
+      kind: z.literal('trial'),
+      months: z.number().int().min(1).max(36),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal('trial'),
+      endAt: z.string().trim().min(1),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal('paid'),
+      planCode: z.string().trim().min(1),
+      amountMinor: z.number().int().min(0),
+    })
+    .strict(),
+]);
+
+export type AddCardPeriodRequest = z.infer<typeof AddCardPeriodRequest>;
+
+export const UpdatePaymentItemRequest = z
+  .object({
+    amountMinor: z.number().int().min(0),
+  })
+  .strict();
+
+export type UpdatePaymentItemRequest = z.infer<typeof UpdatePaymentItemRequest>;
+
+export const PaymentItemRouteParams = z.object({
+  itemId: z.string().trim().min(1),
+});
+
+export type CardPeriod = {
+  id: string;
+  paymentId: string;
+  cardId: string;
+  cardName: string;
+  planCode: string;
+  planName: string | null;
+  amountMinor: number;
+  currency: string;
+  status: string;
+  startAt: string;
+  endAt: string;
 };

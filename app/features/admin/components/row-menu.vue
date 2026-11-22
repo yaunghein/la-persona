@@ -14,9 +14,8 @@ defineProps<{
           icon="i-lucide-ellipsis"
           color="neutral"
           variant="ghost"
-          size="sm"
           aria-label="Open menu"
-          class="text-ink/45"
+          class="cursor-pointer p-0 text-muted hover:bg-transparent hover:text-ink"
         />
       </UTooltip>
     </UDropdownMenu>

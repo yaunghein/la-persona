@@ -148,6 +148,13 @@
       "when": 1794400010796,
       "tag": "0020_registration_source",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1795254402400,
+      "tag": "0021_nullable_payment_receipt",
+      "breakpoints": true
     }
   ]
 }

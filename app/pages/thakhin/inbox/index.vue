@@ -6,6 +6,14 @@ import {
   sortableHeader,
 } from '~/features/admin/utils/admin-table';
 import {
+  ADMIN_DANGER_BUTTON_CLASS,
+  ADMIN_PAGE_CLASS,
+  ADMIN_SEARCH_UI,
+  ADMIN_SLIDEOVER_UI,
+  ADMIN_TABS_UI,
+  type AdminPillTone,
+} from '~/features/admin/utils/admin-ui';
+import {
   FEEDBACK_KIND_LABELS,
   type FeedbackForReview,
   type FeedbackKind,
@@ -69,6 +77,12 @@ const messageToDelete = ref<FeedbackRow | null>(null);
 const isDeleteOpen = ref(false);
 const isDeleting = ref(false);
 
+const KIND_TONES: Record<FeedbackKind, AdminPillTone> = {
+  feedback: 'info',
+  bug_report: 'error',
+  feature_request: 'gold',
+};
+
 function kindLabel(kind: string) {
   return FEEDBACK_KIND_LABELS[kind as FeedbackKind] || kind;
 }
@@ -112,8 +126,8 @@ function rowMenu(row: FeedbackRow): DropdownMenuItem[][] {
   return [
     [
       {
-        label: 'View',
-        icon: 'i-lucide-eye',
+        label: 'Open',
+        icon: 'i-lucide-mail-open',
         onSelect: () => {
           selected.value = row;
         },
@@ -140,10 +154,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <div :class="ADMIN_PAGE_CLASS">
     <AdminPageHeader
       title="Inbox"
-      description="Feedback, bug reports, and feature requests. Open the person or organization, or delete the message."
+      description-class="max-w-115"
+      description="Feedback, bug reports, and feature requests from people on the platform. Open the person or organization, or delete the&nbsp;message."
     />
 
     <AdminTableFrame
@@ -157,20 +172,20 @@ onMounted(() => {
           v-model="globalFilter"
           icon="i-lucide-search"
           placeholder="Search message, name, or email"
-          class="w-72"
-          size="sm"
+          color="neutral"
+          variant="soft"
+          class="w-full sm:w-72"
+          :ui="ADMIN_SEARCH_UI"
         />
-        <div class="flex flex-wrap gap-1">
-          <UButton
-            v-for="tab in tabs"
-            :key="tab.value"
-            size="sm"
-            :label="tab.label"
-            :color="kind === tab.value ? 'primary' : 'neutral'"
-            :variant="kind === tab.value ? 'soft' : 'ghost'"
-            @click="selectKind(tab.value)"
-          />
-        </div>
+        <UTabs
+          :model-value="kind"
+          :items="[...tabs]"
+          :content="false"
+          color="neutral"
+          variant="pill"
+          :ui="ADMIN_TABS_UI"
+          @update:model-value="selectKind($event as FeedbackKind | 'all')"
+        />
       </template>
 
       <UTable
@@ -188,20 +203,21 @@ onMounted(() => {
         @select="onSelect"
       >
         <template #kind-cell="{ row }">
-          <UBadge color="neutral" variant="subtle">
-            {{ kindLabel(row.original.kind) }}
-          </UBadge>
+          <AdminStatusPill
+            :label="kindLabel(row.original.kind)"
+            :tone="KIND_TONES[row.original.kind]"
+          />
         </template>
         <template #userName-cell="{ row }">
           <span class="font-medium text-ink">{{ row.original.userName }}</span>
         </template>
         <template #message-cell="{ row }">
-          <span class="line-clamp-2 max-w-md text-ink/70">{{
+          <span class="line-clamp-2 max-w-md text-soft">{{
             row.original.message
           }}</span>
         </template>
         <template #createdAt-cell="{ row }">
-          <span class="text-ink/55">{{
+          <span class="text-muted">{{
             new Date(row.original.createdAt).toLocaleString()
           }}</span>
         </template>
@@ -214,10 +230,12 @@ onMounted(() => {
     <USlideover
       v-model:open="detailOpen"
       :title="selected ? kindLabel(selected.kind) : 'Message'"
-      :ui="{ content: 'bg-surface' }"
+      side="right"
+      inset
+      :ui="ADMIN_SLIDEOVER_UI"
     >
       <template #body>
-        <div v-if="selected" class="space-y-4 text-sm text-ink/80">
+        <div v-if="selected" class="space-y-4 text-sm text-soft">
           <p class="whitespace-pre-wrap text-ink">{{ selected.message }}</p>
           <p>{{ selected.userName }} • {{ selected.userEmail }}</p>
           <p>{{ selected.organizationName }}</p>
@@ -231,7 +249,7 @@ onMounted(() => {
             leading-icon="i-lucide-trash-2"
             color="error"
             variant="soft"
-            class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium"
+            :class="ADMIN_DANGER_BUTTON_CLASS"
             @click="askDeleteSelected"
           />
           <UButton
@@ -258,7 +276,7 @@ onMounted(() => {
       title="Delete message?"
     >
       <template #body>
-        <p class="text-sm text-ink/70">
+        <p class="text-sm text-soft">
           This removes the message from
           <span class="text-ink">{{ messageToDelete?.userEmail }}</span
           >. The person and organization stay.
@@ -269,12 +287,14 @@ onMounted(() => {
           label="Cancel"
           color="neutral"
           variant="ghost"
+          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium"
           :disabled="isDeleting"
           @click="closeDelete"
         />
         <UButton
           label="Delete"
           color="error"
+          class="h-10 cursor-pointer rounded-full px-6 text-sm font-medium"
           :loading="isDeleting"
           @click="onConfirmDelete"
         />

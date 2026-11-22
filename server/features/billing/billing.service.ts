@@ -16,6 +16,7 @@ import {
 import {
   resolveCardSubscriptionState,
   toSubscriptionOverview,
+  type CardSubscriptionState,
 } from '~~/server/features/billing/card-subscription-state';
 import {
   isPremiumUpgrade,
@@ -78,17 +79,26 @@ function assertPersonalCard(target: CardWithContext) {
 }
 
 async function cardSubscriptionState(target: CardWithContext) {
-  return resolveCardSubscriptionState(
-    await findCardSubscription(target.card.id),
-    target.card.createdAt
-  );
+  const stored = await findCardSubscription(target.card.id);
+  return resolveCardSubscriptionState(stored);
 }
+
+const NO_PERIOD: CardSubscriptionState = {
+  status: 'expired',
+  planCode: null,
+  isTrial: false,
+  trialEndAt: null,
+  currentPeriodStartAt: null,
+  currentPeriodEndAt: null,
+};
 
 export async function describeCardSubscription(
   target: CardWithContext
 ): Promise<CardSubscriptionOverview | null> {
   if (target.organization.type === ORGANIZATION_TYPES.COMMUNITY) return null;
-  return toSubscriptionOverview(await cardSubscriptionState(target));
+  const state = await cardSubscriptionState(target);
+  if (!state) return null;
+  return toSubscriptionOverview(state);
 }
 
 export async function quoteCardPaymentFor(
@@ -96,7 +106,7 @@ export async function quoteCardPaymentFor(
   kind: CardPaymentKind
 ): Promise<CardPaymentQuote> {
   assertPersonalCard(target);
-  const state = await cardSubscriptionState(target);
+  const state = (await cardSubscriptionState(target)) ?? NO_PERIOD;
   return quoteCardPayment(
     kind,
     resolveCardPaymentScenario(kind, state),
@@ -123,7 +133,7 @@ export async function submitCardPayment(params: {
   const { target, kind, payer } = params;
   assertPersonalCard(target);
 
-  const state = await cardSubscriptionState(target);
+  const state = (await cardSubscriptionState(target)) ?? NO_PERIOD;
   const scenario = resolveCardPaymentScenario(kind, state);
   const quote = quoteCardPayment(kind, scenario, await loadCardPricing());
   const term = resolvePaidTerm(scenario, state);
@@ -196,6 +206,7 @@ export async function listBillingHistory(
     items: rows.map((row) => ({
       id: row.itemId,
       paymentId: row.paymentId,
+      cardName: [row.cardFirstName, row.cardLastName].filter(Boolean).join(' '),
       description: row.planName || row.planCode,
       status: row.paymentStatus,
       amountMinor: row.amountMinor,
@@ -325,6 +336,7 @@ export async function listPaymentsAwaitingReview(
         ),
         currency: lines[0]?.currency ?? null,
         items: lines.map((item) => ({
+          id: item.id,
           cardId: item.cardId,
           planCode: item.planCode,
           amountMinor: item.amountMinor,

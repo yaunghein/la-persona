@@ -86,7 +86,7 @@ const personalLinks = computed(
         ? [
             {
               label: 'Admin',
-              icon: 'i-lucide-shield',
+              icon: 'i-material-symbols:admin-panel-settings-outline-sharp',
               to: ROUTES.THAKHIN.ROOT,
               onSelect: closeSidebar,
             },

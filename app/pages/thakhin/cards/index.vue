@@ -10,26 +10,33 @@ import {
 } from '~~/shared/constants/thakhin-card-plan-assets';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
 import {
+  matchesBillingFilter,
+  matchesSubscriptionFilter,
+  type AdminCardBillingFilter,
+  type AdminCardSubscriptionFilter,
+} from '~~/shared/utils/admin-card-filter';
+import {
   ADMIN_ACTIONS_COLUMN,
   ADMIN_TABLE_UI,
   sortableHeader,
 } from '~/features/admin/utils/admin-table';
+import {
+  ADMIN_FILTER_UI,
+  ADMIN_GHOST_BUTTON_CLASS,
+  ADMIN_PAGE_CLASS,
+  ADMIN_PRIMARY_BUTTON_CLASS,
+  ADMIN_SEARCH_UI,
+  ADMIN_SLIDEOVER_BUTTON_CLASS,
+  ADMIN_SLIDEOVER_UI,
+  type AdminPillTone,
+} from '~/features/admin/utils/admin-ui';
 import type {
-  AdminCardDetail,
   AdminCardSummary,
   CreateAdminCardRequest,
   UpdateAdminCardRequest,
 } from '~~/shared/contracts/card';
 
 type CardRow = AdminCardSummary;
-
-type SubscriptionFilter =
-  | 'all'
-  | 'trial'
-  | 'active'
-  | 'pending_approval'
-  | 'expired'
-  | 'community';
 
 const toast = useToast();
 const invalidateAdmin = useInvalidateAdmin();
@@ -109,10 +116,11 @@ const claimFilter = useQueryState<'all' | 'linked' | 'unclaimed'>(
 );
 const orgFilter = useQueryState('organization', 'all');
 
-const subscriptionFilter = useQueryState<SubscriptionFilter>(
+const subscriptionFilter = useQueryState<AdminCardSubscriptionFilter>(
   'subscription',
   'all'
 );
+const billingFilter = useQueryState<AdminCardBillingFilter>('billing', 'all');
 
 const claimFilterItems = [
   { label: 'All cards', value: 'all' },
@@ -120,40 +128,56 @@ const claimFilterItems = [
   { label: 'Unclaimed', value: 'unclaimed' },
 ];
 
-const subscriptionFilterItems: { label: string; value: SubscriptionFilter }[] =
-  [
-    { label: 'All subscriptions', value: 'all' },
-    { label: 'Trial', value: 'trial' },
-    { label: 'Active', value: 'active' },
-    { label: 'Pending', value: 'pending_approval' },
-    { label: 'Expired', value: 'expired' },
-    { label: 'Community', value: 'community' },
-  ];
+const subscriptionFilterItems: {
+  label: string;
+  value: AdminCardSubscriptionFilter;
+}[] = [
+  { label: 'All subscriptions', value: 'all' },
+  { label: 'Live', value: 'live' },
+  { label: 'Trial', value: 'trial' },
+  { label: 'Active', value: 'active' },
+  { label: 'Pending', value: 'pending_approval' },
+  { label: 'Expiring in 30 days', value: 'expiring' },
+  { label: 'Expired', value: 'expired' },
+  { label: 'No end date', value: 'no_end' },
+  { label: 'Community', value: 'community' },
+];
 
-const SUBSCRIPTION_BADGES: Record<
+const billingFilterItems: { label: string; value: AdminCardBillingFilter }[] = [
+  { label: 'All billing', value: 'all' },
+  { label: 'Paid', value: 'paid' },
+  { label: 'Free', value: 'free' },
+];
+
+const SUBSCRIPTION_PILLS: Record<
   string,
-  { label: string; color: 'success' | 'warning' | 'error' | 'info' | 'neutral' }
+  { label: string; tone: AdminPillTone }
 > = {
-  trial: { label: 'Trial', color: 'info' },
-  active: { label: 'Active', color: 'success' },
-  grace: { label: 'Grace', color: 'warning' },
-  pending_approval: { label: 'Pending', color: 'warning' },
-  expired: { label: 'Expired', color: 'error' },
+  trial: { label: 'Trial', tone: 'info' },
+  active: { label: 'Active', tone: 'success' },
+  grace: { label: 'Grace', tone: 'warning' },
+  pending_approval: { label: 'Pending', tone: 'warning' },
+  expired: { label: 'Expired', tone: 'error' },
 };
 
-function subscriptionBadge(row: CardRow) {
+function subscriptionPill(row: CardRow): {
+  label: string;
+  tone: AdminPillTone;
+} {
   if (row.organizationType === 'community') {
-    return { label: 'Community', color: 'neutral' as const };
+    return { label: 'Community', tone: 'gold' };
   }
-  if (!row.subscriptionStatus) {
-    return { label: 'None', color: 'neutral' as const };
-  }
+  if (!row.subscriptionStatus) return { label: 'None', tone: 'neutral' };
   return (
-    SUBSCRIPTION_BADGES[row.subscriptionStatus] ?? {
+    SUBSCRIPTION_PILLS[row.subscriptionStatus] ?? {
       label: row.subscriptionStatus,
-      color: 'neutral' as const,
+      tone: 'neutral',
     }
   );
+}
+
+function planLabel(planCode: string) {
+  return plans.value?.find((plan) => plan.code === planCode)?.name ?? planCode;
 }
 
 const orgFilterItems = computed(() => {
@@ -175,13 +199,12 @@ const filteredRows = computed(() => {
       (claimFilter.value === 'unclaimed' && !row.userId);
     const matchesOrg =
       orgFilter.value === 'all' || row.organizationName === orgFilter.value;
-    const isCommunity = row.organizationType === 'community';
-    const matchesSubscription =
-      subscriptionFilter.value === 'all' ||
-      (subscriptionFilter.value === 'community'
-        ? isCommunity
-        : !isCommunity && row.subscriptionStatus === subscriptionFilter.value);
-    return matchesClaim && matchesOrg && matchesSubscription;
+    return (
+      matchesClaim &&
+      matchesOrg &&
+      matchesSubscriptionFilter(row, subscriptionFilter.value) &&
+      matchesBillingFilter(row, billingFilter.value)
+    );
   });
 });
 
@@ -195,7 +218,7 @@ const {
   onPageChange,
 } = useAdminTable(() => filteredRows.value.length);
 
-watch([claimFilter, orgFilter, subscriptionFilter], resetPage);
+watch([claimFilter, orgFilter, subscriptionFilter, billingFilter], resetPage);
 const orgSelectItems = computed(() =>
   (orgOptions.value || []).map((o) => ({ label: o.name, value: o.id }))
 );
@@ -370,9 +393,15 @@ function getActionItems(row: CardRow): DropdownMenuItem[][] {
   return [
     [
       {
-        label: 'View',
-        icon: 'i-lucide-eye',
-        onSelect: () => openCard(row),
+        label: 'History',
+        icon: 'i-lucide-history',
+        onSelect: () => openHistory(row),
+      },
+      {
+        label: 'Extend',
+        icon: 'i-lucide-calendar-plus',
+        disabled: !row.userId || row.subscriptionStatus === 'pending_approval',
+        onSelect: () => openExtend(row),
       },
       {
         label: 'Edit',
@@ -389,12 +418,74 @@ function getActionItems(row: CardRow): DropdownMenuItem[][] {
   ];
 }
 
-const cardDetail = ref<AdminCardDetail | null>(null);
-const cardOpen = ref(false);
+const historyOpen = ref(false);
+const historyCardId = ref<string | null>(null);
+const extendOpen = ref(false);
+const extendCard = ref<CardRow | null>(null);
+const extendKind = ref<'trial' | 'paid'>('trial');
+const extendMonths = ref(3);
+const extendEndDate = ref('');
+const extendPlanCode = ref('standard');
+const extendAmount = ref(0);
+const isExtending = ref(false);
 
-async function openCard(row: CardRow) {
-  cardOpen.value = true;
-  cardDetail.value = await adminApi.getCard(row.id);
+function openHistory(row: CardRow) {
+  historyCardId.value = row.id;
+  historyOpen.value = true;
+}
+
+function openExtend(row: CardRow) {
+  extendCard.value = row;
+  extendKind.value = 'trial';
+  extendMonths.value = 3;
+  extendEndDate.value = '';
+  const planCode =
+    row.subscriptionPlanCode || planSelectItems.value[0]?.value || 'standard';
+  extendPlanCode.value = planCode;
+  extendAmount.value =
+    plans.value?.find((plan) => plan.code === planCode)?.priceMinor ?? 0;
+  extendOpen.value = true;
+}
+
+watch(extendPlanCode, (code) => {
+  const plan = plans.value?.find((item) => item.code === code);
+  if (plan) extendAmount.value = plan.priceMinor;
+});
+
+async function onExtend() {
+  const card = extendCard.value;
+  if (!card) return;
+  isExtending.value = true;
+  try {
+    const body =
+      extendKind.value === 'paid'
+        ? {
+            kind: 'paid' as const,
+            planCode: extendPlanCode.value,
+            amountMinor: extendAmount.value,
+          }
+        : card.subscriptionEndAt
+          ? { kind: 'trial' as const, months: extendMonths.value }
+          : {
+              kind: 'trial' as const,
+              endAt: new Date(`${extendEndDate.value}T23:59:59`).toISOString(),
+            };
+    await adminApi.addCardPeriod(card.id, body);
+    await invalidateAdmin();
+    extendOpen.value = false;
+    toast.add({ title: 'Period added', color: 'success' });
+  } catch (error: any) {
+    toast.add({
+      title: 'Could not add the period',
+      description:
+        error?.data?.statusMessage ||
+        error?.statusMessage ||
+        'Please try again.',
+      color: 'error',
+    });
+  } finally {
+    isExtending.value = false;
+  }
 }
 
 const columns: TableColumn<CardRow>[] = [
@@ -411,14 +502,28 @@ const columns: TableColumn<CardRow>[] = [
   { accessorKey: 'position', header: sortableHeader('ROLE') },
   {
     id: 'claimStatus',
-    header: sortableHeader('USER'),
-    accessorFn: (row) =>
-      row.userId ? `Linked ${row.linkedUserEmail || ''}`.trim() : 'Unclaimed',
+    header: sortableHeader('CLAIM'),
+    accessorFn: (row) => (row.userId ? 'Linked' : 'Unclaimed'),
   },
+  { accessorKey: 'linkedUserEmail', header: sortableHeader('OWNER') },
   {
     id: 'subscription',
-    header: sortableHeader('SUBSCRIPTION'),
-    accessorFn: (row) => subscriptionBadge(row).label,
+    header: sortableHeader('STATUS'),
+    accessorFn: (row) => subscriptionPill(row).label,
+  },
+  {
+    id: 'plan',
+    header: sortableHeader('PLAN'),
+    accessorFn: (row) =>
+      row.subscriptionPlanCode ? planLabel(row.subscriptionPlanCode) : '',
+  },
+  {
+    accessorKey: 'subscriptionBilling',
+    header: sortableHeader('BILLING'),
+  },
+  {
+    accessorKey: 'subscriptionStartAt',
+    header: sortableHeader('STARTS'),
   },
   {
     accessorKey: 'subscriptionEndAt',
@@ -446,17 +551,17 @@ const selectUi = {
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <div :class="ADMIN_PAGE_CLASS">
     <AdminPageHeader
       title="Cards"
-      description="Issue and correct cards. Deleting a card also removes its subscription, contact exchanges, and analytics."
+      description-class="max-w-99"
+      description="Issue cards, correct them, and extend their subscription periods. Deleting a card removes its contacts and&nbsp;analytics."
     >
       <UButton
-        size="sm"
         label="Create"
-        icon="i-lucide-plus"
+        leading-icon="i-lucide-plus"
         color="neutral"
-        variant="outline"
+        :class="ADMIN_PRIMARY_BUTTON_CLASS"
         @click="openCreate"
       />
     </AdminPageHeader>
@@ -472,26 +577,34 @@ const selectUi = {
           v-model="globalFilter"
           icon="i-lucide-search"
           placeholder="Search name, email, or slug"
-          class="w-64"
-          size="sm"
+          color="neutral"
+          variant="soft"
+          class="w-full sm:w-64"
+          :ui="ADMIN_SEARCH_UI"
         />
         <USelect
           v-model="claimFilter"
           :items="claimFilterItems"
-          class="w-36"
-          size="sm"
+          class="w-full sm:w-40"
+          :ui="ADMIN_FILTER_UI"
         />
         <USelect
           v-model="orgFilter"
           :items="orgFilterItems"
-          class="w-48"
-          size="sm"
+          class="w-full sm:w-52"
+          :ui="ADMIN_FILTER_UI"
         />
         <USelect
           v-model="subscriptionFilter"
           :items="subscriptionFilterItems"
-          class="w-40"
-          size="sm"
+          class="w-full sm:w-52"
+          :ui="ADMIN_FILTER_UI"
+        />
+        <USelect
+          v-model="billingFilter"
+          :items="billingFilterItems"
+          class="w-full sm:w-36"
+          :ui="ADMIN_FILTER_UI"
         />
       </template>
 
@@ -507,7 +620,7 @@ const selectUi = {
         :get-row-id="(row) => row.id"
         :ui="ADMIN_TABLE_UI"
         class="w-full min-w-5xl"
-        @select="(_event, row) => openCard(row.original)"
+        @select="(_event, row) => openEdit(row.original)"
       >
         <template #displayName-cell="{ row }">
           <span class="font-medium text-ink">
@@ -515,32 +628,39 @@ const selectUi = {
           </span>
         </template>
         <template #claimStatus-cell="{ row }">
-          <UBadge
-            :color="row.original.userId ? 'success' : 'warning'"
-            variant="subtle"
-          >
-            {{ row.original.userId ? 'Linked' : 'Unclaimed' }}
-          </UBadge>
-          <p
-            v-if="row.original.linkedUserEmail"
-            class="mt-1 max-w-48 truncate text-xs text-ink/45"
-          >
+          <AdminStatusPill
+            :label="row.original.userId ? 'Linked' : 'Unclaimed'"
+            :tone="row.original.userId ? 'success' : 'warning'"
+          />
+        </template>
+        <template #linkedUserEmail-cell="{ row }">
+          <span v-if="row.original.linkedUserEmail">
             {{ row.original.linkedUserEmail }}
-          </p>
+          </span>
+          <span v-else class="text-subtle">—</span>
         </template>
         <template #subscription-cell="{ row }">
-          <UBadge
-            :color="subscriptionBadge(row.original).color"
-            variant="subtle"
-          >
-            {{ subscriptionBadge(row.original).label }}
-          </UBadge>
-          <p
+          <AdminStatusPill v-bind="subscriptionPill(row.original)" />
+        </template>
+        <template #plan-cell="{ row }">
+          <AdminStatusPill
             v-if="row.original.subscriptionPlanCode"
-            class="mt-1 text-xs text-ink/45"
-          >
-            {{ row.original.subscriptionPlanCode }}
-          </p>
+            :label="planLabel(row.original.subscriptionPlanCode)"
+            :tone="planTone(row.original.subscriptionPlanCode)"
+          />
+          <span v-else class="text-subtle">—</span>
+        </template>
+        <template #subscriptionBilling-cell="{ row }">
+          <AdminStatusPill
+            v-if="row.original.subscriptionBilling"
+            :label="
+              row.original.subscriptionBilling === 'paid' ? 'Paid' : 'Free'
+            "
+            :tone="
+              row.original.subscriptionBilling === 'paid' ? 'gold' : 'neutral'
+            "
+          />
+          <span v-else class="text-subtle">—</span>
         </template>
         <template #subscriptionEndAt-cell="{ row }">
           <span
@@ -548,15 +668,23 @@ const selectUi = {
             :class="
               row.original.subscriptionStatus === 'expired'
                 ? 'text-error'
-                : 'text-ink/55'
+                : 'text-muted'
             "
           >
             {{ new Date(row.original.subscriptionEndAt).toLocaleDateString() }}
           </span>
-          <span v-else class="text-ink/30">—</span>
+          <span v-else class="text-subtle">—</span>
+        </template>
+        <template #subscriptionStartAt-cell="{ row }">
+          <span v-if="row.original.subscriptionStartAt" class="text-muted">
+            {{
+              new Date(row.original.subscriptionStartAt).toLocaleDateString()
+            }}
+          </span>
+          <span v-else class="text-subtle">—</span>
         </template>
         <template #createdAt-cell="{ row }">
-          <span class="text-ink/55">{{
+          <span class="text-muted">{{
             formatDate(row.original.createdAt)
           }}</span>
         </template>
@@ -571,11 +699,7 @@ const selectUi = {
       side="right"
       inset
       :title="slideTitle"
-      :ui="{
-        header: 'border-b-2 border-raised px-6 py-6',
-        title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
-        body: 'px-6',
-      }"
+      :ui="ADMIN_SLIDEOVER_UI"
     >
       <template #body>
         <form
@@ -733,7 +857,7 @@ const selectUi = {
           label="Cancel"
           color="neutral"
           variant="ghost"
-          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-subtle hover:bg-raised hover:text-ink"
+          :class="ADMIN_GHOST_BUTTON_CLASS"
           @click="
             () => {
               isFormOpen = false;
@@ -745,7 +869,7 @@ const selectUi = {
           :label="editingId ? 'Save changes' : 'Create card'"
           color="neutral"
           :loading="isSaving"
-          class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
+          :class="ADMIN_SLIDEOVER_BUTTON_CLASS"
           type="submit"
           form="card-form"
         />
@@ -779,7 +903,7 @@ const selectUi = {
           label="Cancel"
           color="neutral"
           variant="ghost"
-          class="h-10 text-sm rounded-full px-5 text-ink hover:bg-raised"
+          :class="ADMIN_GHOST_BUTTON_CLASS"
           :disabled="isDeleting"
           @click="closeDelete"
         />
@@ -787,43 +911,117 @@ const selectUi = {
           label="Delete"
           color="error"
           :loading="isDeleting"
-          class="h-10 text-sm rounded-full px-6 font-medium"
+          class="h-10 cursor-pointer rounded-full px-6 text-sm font-medium"
           @click="onConfirmDelete"
         />
       </template>
     </UModal>
 
+    <AdminPeriodHistorySlideover
+      v-model:open="historyOpen"
+      :card-id="historyCardId"
+    />
+
     <USlideover
-      v-model:open="cardOpen"
-      title="Card"
-      :ui="{ content: 'bg-surface' }"
+      v-model:open="extendOpen"
+      title="Extend"
+      side="right"
+      inset
+      :ui="ADMIN_SLIDEOVER_UI"
     >
       <template #body>
-        <div v-if="cardDetail" class="space-y-2 text-sm text-ink/80">
-          <p class="text-ink">
-            {{ cardDetail.firstName }} {{ cardDetail.lastName }}
+        <form id="extend-form" class="space-y-4" @submit.prevent="onExtend">
+          <p v-if="extendCard" class="text-sm text-ink">
+            {{ displayName(extendCard) }}
           </p>
-          <p>{{ cardDetail.organizationName }}</p>
-          <p>{{ cardDetail.linkedUserEmail || 'Unclaimed' }}</p>
-          <p>
-            Subscription {{ cardDetail.subscriptionStatus || 'none' }}
-            {{ cardDetail.subscriptionPlanCode || '' }}
-          </p>
-          <p v-if="cardDetail.pendingInvitation">
-            Pending invitation to {{ cardDetail.pendingInvitation.email }}
-          </p>
-        </div>
+          <UFormField label="Kind" :class="formFieldClass">
+            <USelect
+              v-model="extendKind"
+              :items="[
+                { label: 'Free', value: 'trial' },
+                { label: 'Paid', value: 'paid' },
+              ]"
+              class="w-full"
+              size="xl"
+              :ui="selectUi"
+            />
+          </UFormField>
+          <UFormField
+            v-if="extendKind === 'trial' && !extendCard?.subscriptionEndAt"
+            label="End date"
+            required
+            :class="formFieldClass"
+          >
+            <UInput
+              v-model="extendEndDate"
+              type="date"
+              required
+              class="w-full"
+              size="xl"
+              :ui="inputUi"
+            />
+          </UFormField>
+          <UFormField
+            v-else-if="extendKind === 'trial'"
+            label="Months"
+            required
+            :class="formFieldClass"
+          >
+            <UInput
+              v-model.number="extendMonths"
+              type="number"
+              min="1"
+              max="36"
+              required
+              class="w-full"
+              size="xl"
+              :ui="inputUi"
+            />
+          </UFormField>
+          <template v-else>
+            <p class="text-sm text-soft">The paid term is one year.</p>
+            <UFormField label="Plan" required :class="formFieldClass">
+              <USelect
+                v-model="extendPlanCode"
+                :items="planSelectItems"
+                class="w-full"
+                size="xl"
+                :ui="selectUi"
+              />
+            </UFormField>
+            <UFormField label="Amount" required :class="formFieldClass">
+              <UInput
+                v-model.number="extendAmount"
+                type="number"
+                min="0"
+                required
+                class="w-full"
+                size="xl"
+                :ui="inputUi"
+              />
+            </UFormField>
+          </template>
+        </form>
       </template>
-
       <template #footer>
         <UButton
-          v-if="cardDetail"
-          label="Public card"
-          leading-icon="i-lucide-external-link"
+          label="Cancel"
           color="neutral"
-          :to="`/c/${cardDetail.slug}`"
-          target="_blank"
-          class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
+          variant="ghost"
+          :class="ADMIN_GHOST_BUTTON_CLASS"
+          @click="
+            () => {
+              extendOpen = false;
+            }
+          "
+        />
+        <UButton
+          label="Add period"
+          color="neutral"
+          :loading="isExtending"
+          :class="ADMIN_SLIDEOVER_BUTTON_CLASS"
+          type="submit"
+          form="extend-form"
         />
       </template>
     </USlideover>

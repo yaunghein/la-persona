@@ -4,7 +4,6 @@ import {
   analytics,
   card,
   cardRequest,
-  cardSubscription,
   cardUpdateRequest,
   contactExchange,
   event,
@@ -12,10 +11,19 @@ import {
   organization,
   subscriptionPayment,
   subscriptionPaymentItem,
+  subscriptionPlan,
   user,
   userDailyActivity,
 } from '~~/server/db/schema';
-import type { AdminOverview } from '~~/shared/contracts/admin';
+import type {
+  AdminChartBucket,
+  AdminChartRange,
+  AdminCharts,
+  AdminEngagementTotals,
+  AdminOverview,
+  AdminRevenue,
+  AdminRevenueRange,
+} from '~~/shared/contracts/admin';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 import {
   addYangonDays,
@@ -34,23 +42,26 @@ async function countWhere(table: any, where?: any) {
   return asNumber(row?.value);
 }
 
-export async function getAdminOverview(): Promise<AdminOverview> {
+export async function getAdminOverview(): Promise<
+  Omit<AdminOverview, 'subscriptions'>
+> {
   const today = yangonDay();
   const yesterday = addYangonDays(today, -1);
-  const tomorrow = addYangonDays(today, 1);
-  const todayStart = yangonDayStart(today);
-  const tomorrowStart = yangonDayStart(tomorrow);
+  const tomorrowStart = yangonDayStart(addYangonDays(today, 1));
   const monthStartDay = `${today.slice(0, 7)}-01`;
   const monthStart = yangonDayStart(monthStartDay);
   const nextMonthStart = yangonDayStart(addYangonMonths(monthStartDay, 1));
   const previousMonthStart = yangonDayStart(addYangonMonths(monthStartDay, -1));
-  const seriesStart = addYangonDays(today, -29);
-  const weekStartDay = addYangonDays(today, -7 * 11);
+  const windowStartDay = addYangonDays(today, -29);
+  const windowStart = yangonDayStart(windowStartDay);
+  const previousWindowStart = yangonDayStart(
+    addYangonDays(windowStartDay, -30)
+  );
   const expiringBefore = new Date(Date.now() + 48 * 60 * 60 * 1000);
   const now = new Date();
 
-  const yangonDate = (column: any) =>
-    sql<string>`to_char((${column} AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Yangon', 'YYYY-MM-DD')`;
+  const between = (column: any, start: Date, end: Date) =>
+    and(gte(column, start), lt(column, end));
 
   const [
     users,
@@ -58,33 +69,25 @@ export async function getAdminOverview(): Promise<AdminOverview> {
     cardsClaimed,
     orgsTotal,
     orgsCommunity,
-    analyticsTotal,
-    analyticsToday,
-    analyticsByType,
-    analyticsTodayByType,
-    contactExchanges,
     events,
-    liveSubscriptions,
-    graceOrExpired,
     dailyActiveToday,
     dailyActiveYesterday,
     designQueue,
     standalonePayments,
     updateRequests,
     expiringInvitations,
-    revenueCurrent,
-    revenuePrevious,
     newUsersCurrent,
     newUsersPrevious,
     cardsCurrent,
     cardsPrevious,
     invitesSent,
-    invitesAccepted,
     invitesSentPrevious,
+    invitesAccepted,
     invitesAcceptedPrevious,
-    dailyActiveSeries,
-    analyticsSeries,
-    revenueSeries,
+    analyticsCurrent,
+    analyticsPrevious,
+    exchangesCurrent,
+    exchangesPrevious,
   ] = await Promise.all([
     countWhere(user),
     countWhere(card),
@@ -94,44 +97,7 @@ export async function getAdminOverview(): Promise<AdminOverview> {
       organization,
       eq(organization.type, ORGANIZATION_TYPES.COMMUNITY)
     ),
-    countWhere(analytics),
-    countWhere(
-      analytics,
-      and(
-        gte(analytics.createdAt, todayStart),
-        lt(analytics.createdAt, tomorrowStart)
-      )
-    ),
-    db
-      .select({
-        type: analytics.type,
-        value: count(),
-      })
-      .from(analytics)
-      .groupBy(analytics.type),
-    db
-      .select({
-        type: analytics.type,
-        value: count(),
-      })
-      .from(analytics)
-      .where(
-        and(
-          gte(analytics.createdAt, todayStart),
-          lt(analytics.createdAt, tomorrowStart)
-        )
-      )
-      .groupBy(analytics.type),
-    countWhere(contactExchange),
     countWhere(event),
-    countWhere(
-      cardSubscription,
-      sql`${cardSubscription.status} in ('trial', 'active')`
-    ),
-    countWhere(
-      cardSubscription,
-      sql`${cardSubscription.status} in ('grace', 'expired')`
-    ),
     countWhere(userDailyActivity, eq(userDailyActivity.day, today)),
     countWhere(userDailyActivity, eq(userDailyActivity.day, yesterday)),
     db
@@ -160,109 +126,37 @@ export async function getAdminOverview(): Promise<AdminOverview> {
         lt(onboardingInvitation.expiresAt, expiringBefore)
       )
     ),
-    sumApprovedRevenue(monthStart, nextMonthStart),
-    sumApprovedRevenue(previousMonthStart, monthStart),
+    countWhere(user, between(user.createdAt, monthStart, nextMonthStart)),
+    countWhere(user, between(user.createdAt, previousMonthStart, monthStart)),
+    countWhere(card, between(card.createdAt, monthStart, nextMonthStart)),
+    countWhere(card, between(card.createdAt, previousMonthStart, monthStart)),
     countWhere(
-      user,
-      and(gte(user.createdAt, monthStart), lt(user.createdAt, nextMonthStart))
-    ),
-    countWhere(
-      user,
-      and(
-        gte(user.createdAt, previousMonthStart),
-        lt(user.createdAt, monthStart)
-      )
-    ),
-    countWhere(
-      card,
-      and(gte(card.createdAt, monthStart), lt(card.createdAt, nextMonthStart))
-    ),
-    countWhere(
-      card,
-      and(
-        gte(card.createdAt, previousMonthStart),
-        lt(card.createdAt, monthStart)
-      )
+      onboardingInvitation,
+      between(onboardingInvitation.createdAt, monthStart, nextMonthStart)
     ),
     countWhere(
       onboardingInvitation,
-      and(
-        gte(onboardingInvitation.createdAt, monthStart),
-        lt(onboardingInvitation.createdAt, nextMonthStart)
-      )
+      between(onboardingInvitation.createdAt, previousMonthStart, monthStart)
     ),
     countWhere(
       onboardingInvitation,
-      and(
-        isNotNull(onboardingInvitation.acceptedAt),
-        gte(onboardingInvitation.acceptedAt, monthStart),
-        lt(onboardingInvitation.acceptedAt, nextMonthStart)
-      )
+      between(onboardingInvitation.acceptedAt, monthStart, nextMonthStart)
     ),
     countWhere(
       onboardingInvitation,
-      and(
-        gte(onboardingInvitation.createdAt, previousMonthStart),
-        lt(onboardingInvitation.createdAt, monthStart)
-      )
+      between(onboardingInvitation.acceptedAt, previousMonthStart, monthStart)
+    ),
+    countAnalyticsByType(windowStart, tomorrowStart),
+    countAnalyticsByType(previousWindowStart, windowStart),
+    countWhere(
+      contactExchange,
+      between(contactExchange.createdAt, windowStart, tomorrowStart)
     ),
     countWhere(
-      onboardingInvitation,
-      and(
-        isNotNull(onboardingInvitation.acceptedAt),
-        gte(onboardingInvitation.acceptedAt, previousMonthStart),
-        lt(onboardingInvitation.acceptedAt, monthStart)
-      )
+      contactExchange,
+      between(contactExchange.createdAt, previousWindowStart, windowStart)
     ),
-    db
-      .select({
-        day: userDailyActivity.day,
-        value: count(),
-      })
-      .from(userDailyActivity)
-      .where(gte(userDailyActivity.day, seriesStart))
-      .groupBy(userDailyActivity.day),
-    db
-      .select({
-        day: yangonDate(analytics.createdAt),
-        type: analytics.type,
-        value: count(),
-      })
-      .from(analytics)
-      .where(gte(analytics.createdAt, yangonDayStart(seriesStart)))
-      .groupBy(yangonDate(analytics.createdAt), analytics.type),
-    db
-      .select({
-        week: sql<string>`to_char(date_trunc('week', (${subscriptionPayment.updatedAt} AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Yangon'), 'YYYY-MM-DD')`,
-        value: sql<number>`coalesce(sum(${subscriptionPaymentItem.amountMinor}), 0)::int`,
-      })
-      .from(subscriptionPaymentItem)
-      .innerJoin(
-        subscriptionPayment,
-        eq(subscriptionPaymentItem.paymentId, subscriptionPayment.id)
-      )
-      .where(
-        and(
-          eq(subscriptionPayment.status, 'approved'),
-          gte(subscriptionPayment.updatedAt, yangonDayStart(weekStartDay))
-        )
-      )
-      .groupBy(
-        sql`date_trunc('week', (${subscriptionPayment.updatedAt} AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Yangon')`
-      ),
   ]);
-
-  const byType = emptyAnalyticsTypes();
-  for (const row of analyticsByType) {
-    if (row.type in byType)
-      byType[row.type as keyof typeof byType] = asNumber(row.value);
-  }
-  const todayByType = emptyAnalyticsTypes();
-  for (const row of analyticsTodayByType) {
-    if (row.type in todayByType) {
-      todayByType[row.type as keyof typeof todayByType] = asNumber(row.value);
-    }
-  }
 
   const oldest = designQueue[0]?.oldest
     ? new Date(designQueue[0].oldest)
@@ -271,35 +165,9 @@ export async function getAdminOverview(): Promise<AdminOverview> {
     ? Math.max(0, Math.round((Date.now() - oldest.getTime()) / 36e5))
     : null;
 
-  const days = Array.from({ length: 30 }, (_, index) =>
-    addYangonDays(seriesStart, index)
-  );
-  const activeByDay = new Map(
-    dailyActiveSeries.map((row) => [String(row.day), asNumber(row.value)])
-  );
-  const analyticsByDay = new Map<string, { views: number; other: number }>();
-  for (const row of analyticsSeries) {
-    const current = analyticsByDay.get(row.day) || { views: 0, other: 0 };
-    if (row.type === 'view') current.views += asNumber(row.value);
-    else current.other += asNumber(row.value);
-    analyticsByDay.set(row.day, current);
-  }
-
-  const thisMonday = mondayOnOrBefore(today);
-  const uniqueWeeks = Array.from({ length: 12 }, (_, index) =>
-    addYangonDays(thisMonday, (index - 11) * 7)
-  );
-  const revenueByWeek = new Map(
-    revenueSeries.map((row) => [row.week, asNumber(row.value)])
-  );
-
   return {
     census: {
       users,
-      dailyActive: {
-        today: dailyActiveToday,
-        yesterday: dailyActiveYesterday,
-      },
       cards: {
         total: cardsTotal,
         claimed: cardsClaimed,
@@ -310,15 +178,7 @@ export async function getAdminOverview(): Promise<AdminOverview> {
         personal: orgsTotal - orgsCommunity,
         community: orgsCommunity,
       },
-      communities: orgsCommunity,
-      analytics: {
-        total: analyticsTotal,
-        today: analyticsToday,
-        byType,
-      },
-      contactExchanges,
       events,
-      liveSubscriptions,
     },
     queues: {
       designRequests: {
@@ -330,37 +190,146 @@ export async function getAdminOverview(): Promise<AdminOverview> {
       expiringInvitations: { count: expiringInvitations },
     },
     month: {
-      revenue: {
-        current: revenueCurrent,
-        previous: revenuePrevious,
-        currency: 'MMK',
-      },
       newUsers: { current: newUsersCurrent, previous: newUsersPrevious },
       cardsCreated: { current: cardsCurrent, previous: cardsPrevious },
-      liveSubscriptions,
-      graceOrExpired,
-      invitations: {
-        sent: invitesSent,
-        accepted: invitesAccepted,
-        previousSent: invitesSentPrevious,
-        previousAccepted: invitesAcceptedPrevious,
+      invitationsSent: { current: invitesSent, previous: invitesSentPrevious },
+      invitationsAccepted: {
+        current: invitesAccepted,
+        previous: invitesAcceptedPrevious,
       },
     },
-    series: {
-      dailyActive: days.map((day) => ({
-        day,
-        count: activeByDay.get(day) || 0,
-      })),
-      analytics: days.map((day) => ({
-        day,
-        views: analyticsByDay.get(day)?.views || 0,
-        other: analyticsByDay.get(day)?.other || 0,
-      })),
-      revenue: uniqueWeeks.map((week) => ({
-        week,
-        amountMinor: revenueByWeek.get(week) || 0,
-      })),
+    engagement: {
+      dailyActive: {
+        today: dailyActiveToday,
+        yesterday: dailyActiveYesterday,
+      },
+      current: { ...analyticsCurrent, contactExchanges: exchangesCurrent },
+      previous: { ...analyticsPrevious, contactExchanges: exchangesPrevious },
     },
+  };
+}
+
+const CHART_RANGES: Record<
+  AdminChartRange,
+  { bucket: AdminChartBucket; count: number }
+> = {
+  '1w': { bucket: 'day', count: 7 },
+  '1m': { bucket: 'day', count: 30 },
+  '3m': { bucket: 'week', count: 13 },
+  '6m': { bucket: 'week', count: 26 },
+  '1y': { bucket: 'month', count: 12 },
+};
+
+function chartWindow(range: AdminChartRange) {
+  const { bucket, count: bucketCount } = CHART_RANGES[range];
+  const today = yangonDay();
+  const lastStart =
+    bucket === 'day'
+      ? today
+      : bucket === 'week'
+        ? mondayOnOrBefore(today)
+        : `${today.slice(0, 7)}-01`;
+  const starts = Array.from({ length: bucketCount }, (_, index) => {
+    const offset = index - (bucketCount - 1);
+    if (bucket === 'day') return addYangonDays(lastStart, offset);
+    if (bucket === 'week') return addYangonDays(lastStart, offset * 7);
+    return addYangonMonths(lastStart, offset);
+  });
+  const firstDay = starts[0]!;
+  const previousFirst =
+    bucket === 'month'
+      ? addYangonMonths(firstDay, -bucketCount)
+      : addYangonDays(
+          firstDay,
+          bucket === 'week' ? -bucketCount * 7 : -bucketCount
+        );
+  return {
+    bucket,
+    starts,
+    rangeStart: yangonDayStart(firstDay),
+    previousStart: yangonDayStart(previousFirst),
+  };
+}
+
+export async function getAdminCharts(
+  range: AdminChartRange
+): Promise<AdminCharts> {
+  const { bucket, starts, rangeStart } = chartWindow(range);
+  const firstDay = starts[0]!;
+
+  // A literal unit keeps the select and group-by expressions identical for Postgres.
+  const unit = sql.raw(`'${bucket}'`);
+  const yangonBucket = (column: any) =>
+    sql<string>`to_char(date_trunc(${unit}, (${column} AT TIME ZONE 'UTC') AT TIME ZONE 'Asia/Yangon'), 'YYYY-MM-DD')`;
+  const dayBucket = sql<string>`to_char(date_trunc(${unit}, ${userDailyActivity.day}::timestamp), 'YYYY-MM-DD')`;
+
+  const [activeRows, analyticsRows, revenueRows] = await Promise.all([
+    db
+      .select({
+        start: dayBucket,
+        value: sql<number>`count(distinct ${userDailyActivity.userId})::int`,
+      })
+      .from(userDailyActivity)
+      .where(gte(userDailyActivity.day, firstDay))
+      .groupBy(dayBucket),
+    db
+      .select({
+        start: yangonBucket(analytics.createdAt),
+        type: analytics.type,
+        value: count(),
+      })
+      .from(analytics)
+      .where(gte(analytics.createdAt, rangeStart))
+      .groupBy(yangonBucket(analytics.createdAt), analytics.type),
+    db
+      .select({
+        start: yangonBucket(subscriptionPayment.updatedAt),
+        value: sql<number>`coalesce(sum(${subscriptionPaymentItem.amountMinor}), 0)::int`,
+      })
+      .from(subscriptionPaymentItem)
+      .innerJoin(
+        subscriptionPayment,
+        eq(subscriptionPaymentItem.paymentId, subscriptionPayment.id)
+      )
+      .where(
+        and(
+          eq(subscriptionPayment.status, 'approved'),
+          gte(subscriptionPayment.updatedAt, rangeStart)
+        )
+      )
+      .groupBy(yangonBucket(subscriptionPayment.updatedAt)),
+  ]);
+
+  const activeByStart = new Map(
+    activeRows.map((row) => [row.start, asNumber(row.value)])
+  );
+  const revenueByStart = new Map(
+    revenueRows.map((row) => [row.start, asNumber(row.value)])
+  );
+  const analyticsByStart = new Map<
+    string,
+    { views: number; interactions: number }
+  >();
+  for (const row of analyticsRows) {
+    const totals = analyticsByStart.get(row.start) || {
+      views: 0,
+      interactions: 0,
+    };
+    if (row.type === 'view') totals.views += asNumber(row.value);
+    else totals.interactions += asNumber(row.value);
+    analyticsByStart.set(row.start, totals);
+  }
+
+  return {
+    range,
+    bucket,
+    points: starts.map((start) => ({
+      start,
+      activePeople: activeByStart.get(start) ?? 0,
+      views: analyticsByStart.get(start)?.views ?? 0,
+      interactions: analyticsByStart.get(start)?.interactions ?? 0,
+      revenueMinor: revenueByStart.get(start) ?? 0,
+    })),
   };
 }
 
@@ -374,16 +343,25 @@ function mondayOnOrBefore(day: string) {
   return addYangonDays(day, -shift);
 }
 
-function emptyAnalyticsTypes() {
+async function countAnalyticsByType(
+  start: Date,
+  end: Date
+): Promise<Omit<AdminEngagementTotals, 'contactExchanges'>> {
+  const rows = await db
+    .select({ type: analytics.type, value: count() })
+    .from(analytics)
+    .where(and(gte(analytics.createdAt, start), lt(analytics.createdAt, end)))
+    .groupBy(analytics.type);
+  const byType = new Map(rows.map((row) => [row.type, asNumber(row.value)]));
   return {
-    view: 0,
-    social_click: 0,
-    link_click: 0,
-    save_action: 0,
+    views: byType.get('view') ?? 0,
+    linkClicks: byType.get('link_click') ?? 0,
+    socialClicks: byType.get('social_click') ?? 0,
+    saves: byType.get('save_action') ?? 0,
   };
 }
 
-async function sumApprovedRevenue(start: Date, end: Date) {
+async function sumApprovedRevenue(start: Date | null, end: Date | null) {
   const [row] = await db
     .select({
       value: sql<number>`coalesce(sum(${subscriptionPaymentItem.amountMinor}), 0)::int`,
@@ -393,12 +371,58 @@ async function sumApprovedRevenue(start: Date, end: Date) {
       subscriptionPayment,
       eq(subscriptionPaymentItem.paymentId, subscriptionPayment.id)
     )
-    .where(
-      and(
-        eq(subscriptionPayment.status, 'approved'),
-        gte(subscriptionPayment.updatedAt, start),
-        lt(subscriptionPayment.updatedAt, end)
-      )
-    );
+    .where(approvedBetween(start, end));
   return asNumber(row?.value);
+}
+
+function approvedBetween(start: Date | null, end: Date | null) {
+  return and(
+    eq(subscriptionPayment.status, 'approved'),
+    start ? gte(subscriptionPayment.updatedAt, start) : undefined,
+    end ? lt(subscriptionPayment.updatedAt, end) : undefined
+  );
+}
+
+async function listRevenueByPlan(start: Date | null, end: Date | null) {
+  const rows = await db
+    .select({
+      planCode: subscriptionPaymentItem.planCode,
+      planName: subscriptionPlan.name,
+      amountMinor: sql<number>`coalesce(sum(${subscriptionPaymentItem.amountMinor}), 0)::int`,
+      periods: count(),
+    })
+    .from(subscriptionPaymentItem)
+    .innerJoin(
+      subscriptionPayment,
+      eq(subscriptionPaymentItem.paymentId, subscriptionPayment.id)
+    )
+    .innerJoin(
+      subscriptionPlan,
+      eq(subscriptionPlan.code, subscriptionPaymentItem.planCode)
+    )
+    .where(approvedBetween(start, end))
+    .groupBy(subscriptionPaymentItem.planCode, subscriptionPlan.name);
+  return rows
+    .map((row) => ({
+      planCode: row.planCode,
+      planName: row.planName,
+      amountMinor: asNumber(row.amountMinor),
+      periods: asNumber(row.periods),
+    }))
+    .sort((a, b) => b.amountMinor - a.amountMinor);
+}
+
+export async function getAdminRevenue(
+  range: AdminRevenueRange
+): Promise<AdminRevenue> {
+  const window = range === 'all' ? null : chartWindow(range);
+  const start = window?.rangeStart ?? null;
+  const [total, previous, byPlan] = await Promise.all([
+    sumApprovedRevenue(start, null),
+    window
+      ? sumApprovedRevenue(window.previousStart, window.rangeStart)
+      : Promise.resolve(null),
+    listRevenueByPlan(start, null),
+  ]);
+  return { range, currency: 'MMK', total, previous, byPlan };
 }

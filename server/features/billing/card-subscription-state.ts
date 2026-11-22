@@ -4,7 +4,6 @@ import {
   type SubscriptionStatus,
 } from '~~/shared/utils/subscription';
 
-export const TRIAL_LENGTH_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export type StoredCardSubscription = {
@@ -16,7 +15,7 @@ export type StoredCardSubscription = {
   currentPeriodEndAt: Date | null;
 };
 
-/** The card's subscription as of now, with a stored-or-implied trial. */
+/** The card's subscription as of now. No row means the card has no period. */
 export type CardSubscriptionState = {
   status: SubscriptionStatus;
   planCode: string | null;
@@ -26,29 +25,11 @@ export type CardSubscriptionState = {
   currentPeriodEndAt: Date | null;
 };
 
-/**
- * Personal cards start on a 30-day trial. Cards created before subscriptions
- * existed have no row yet, so the trial is implied from the card's creation
- * date instead of being written during a read.
- */
 export function resolveCardSubscriptionState(
   stored: StoredCardSubscription | null,
-  cardCreatedAt: Date,
   now = new Date()
-): CardSubscriptionState {
-  if (!stored) {
-    const trialEndAt = new Date(
-      cardCreatedAt.getTime() + TRIAL_LENGTH_DAYS * DAY_MS
-    );
-    return {
-      status: trialEndAt > now ? 'trial' : 'expired',
-      planCode: null,
-      isTrial: true,
-      trialEndAt,
-      currentPeriodStartAt: null,
-      currentPeriodEndAt: null,
-    };
-  }
+): CardSubscriptionState | null {
+  if (!stored) return null;
   return {
     ...stored,
     status: effectiveSubscriptionStatus(

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ADMIN_SLIDEOVER_UI } from '~/features/admin/utils/admin-ui';
+
 defineProps<{
   organization: { id: string; name: string } | null;
 }>();
@@ -13,12 +15,7 @@ const open = defineModel<boolean>('open', { required: true });
     inset
     title="UPLOAD ASSETS"
     :description="organization?.name"
-    :ui="{
-      header: 'border-b-2 border-raised px-6 py-6',
-      title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
-      description: 'text-sm text-subtle',
-      body: 'px-6',
-    }"
+    :ui="ADMIN_SLIDEOVER_UI"
   >
     <template #body>
       <div v-if="organization" class="flex flex-col gap-6 py-2">

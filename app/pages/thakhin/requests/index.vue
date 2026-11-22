@@ -9,6 +9,14 @@ import {
   ADMIN_TABLE_UI,
   sortableHeader,
 } from '~/features/admin/utils/admin-table';
+import {
+  ADMIN_FILTER_UI,
+  ADMIN_PAGE_CLASS,
+  ADMIN_SEARCH_UI,
+  ADMIN_SLIDEOVER_BUTTON_CLASS,
+  ADMIN_SLIDEOVER_UI,
+  ADMIN_TABS_UI,
+} from '~/features/admin/utils/admin-ui';
 
 definePageMeta({
   layout: 'thakhin',
@@ -166,12 +174,6 @@ function formatDate(value: string) {
   return new Date(value).toLocaleString();
 }
 
-function statusColor(status: string) {
-  if (status === 'approved') return 'success';
-  if (status === 'declined') return 'error';
-  return 'warning';
-}
-
 async function approveRequest(row: CardRequestRow) {
   try {
     await reviewCardRequest({ requestId: row.id, status: 'approved' });
@@ -264,28 +266,24 @@ const columns: TableColumn<CardRequestRow>[] = [
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <div :class="ADMIN_PAGE_CLASS">
     <AdminPageHeader
       title="Requests"
-      description="Approve or decline design requests and card updates. Declining a design request also rejects its submitted payment."
+      description-class="max-w-96"
+      description="Approve or decline design requests and card update requests. Declining a design also rejects its&nbsp;payment."
     />
 
-    <div class="flex gap-2">
-      <UButton
-        label="Design"
-        size="sm"
-        :color="tab === 'design' ? 'primary' : 'neutral'"
-        :variant="tab === 'design' ? 'solid' : 'ghost'"
-        @click="showTab('design')"
-      />
-      <UButton
-        label="Updates"
-        size="sm"
-        :color="tab === 'updates' ? 'primary' : 'neutral'"
-        :variant="tab === 'updates' ? 'solid' : 'ghost'"
-        @click="showTab('updates')"
-      />
-    </div>
+    <UTabs
+      v-model="tab"
+      :items="[
+        { label: 'Design', value: 'design' },
+        { label: 'Updates', value: 'updates' },
+      ]"
+      :content="false"
+      color="neutral"
+      variant="pill"
+      :ui="ADMIN_TABS_UI"
+    />
 
     <template v-if="tab === 'design'">
       <AdminTableFrame
@@ -299,25 +297,31 @@ const columns: TableColumn<CardRequestRow>[] = [
             v-model="globalFilter"
             placeholder="Search requests"
             icon="i-lucide-search"
-            size="sm"
-            class="w-52"
+            color="neutral"
+            variant="soft"
+            class="w-full sm:w-56"
+            :ui="ADMIN_SEARCH_UI"
           />
           <UInput
             v-model="filterName"
             placeholder="Requester"
-            size="sm"
-            class="w-40"
+            color="neutral"
+            variant="soft"
+            class="w-full sm:w-40"
+            :ui="ADMIN_SEARCH_UI"
           />
           <UInput
             v-model="filterEmail"
             placeholder="Email"
-            size="sm"
-            class="w-44"
+            color="neutral"
+            variant="soft"
+            class="w-full sm:w-44"
+            :ui="ADMIN_SEARCH_UI"
           />
           <USelect
             v-model="filterType"
-            size="sm"
-            class="w-40"
+            class="w-full sm:w-44"
+            :ui="ADMIN_FILTER_UI"
             :items="[
               { label: 'All types', value: 'all' },
               { label: 'New design', value: 'new_design' },
@@ -326,8 +330,8 @@ const columns: TableColumn<CardRequestRow>[] = [
           />
           <USelect
             v-model="filterStatus"
-            size="sm"
-            class="w-36"
+            class="w-full sm:w-40"
+            :ui="ADMIN_FILTER_UI"
             :items="[
               { label: 'Pending', value: 'pending' },
               { label: 'Approved', value: 'approved' },
@@ -356,13 +360,21 @@ const columns: TableColumn<CardRequestRow>[] = [
             }
           "
         >
+          <template #id-cell="{ row }">
+            <span class="font-mono text-xs text-muted">{{
+              row.original.id
+            }}</span>
+          </template>
           <template #requesterName-cell="{ row }">
             <span class="font-medium text-ink">
               {{ row.original.requesterName || '—' }}
             </span>
           </template>
           <template #type-cell="{ row }">
-            {{ typeLabel(row.original.type) }}
+            <AdminStatusPill
+              :label="typeLabel(row.original.type)"
+              :tone="row.original.type === 'new_design' ? 'gold' : 'ink'"
+            />
           </template>
           <template #cardName-cell="{ row }">
             {{ row.original.cardData?.name || '—' }}
@@ -370,24 +382,22 @@ const columns: TableColumn<CardRequestRow>[] = [
           <template #paymentReceiptUrl-cell="{ row }">
             <UButton
               v-if="row.original.paymentReceiptUrl"
-              size="sm"
               label="Receipt"
-              icon="i-lucide-external-link"
+              leading-icon="i-lucide-external-link"
               color="neutral"
-              variant="link"
-              class="px-0"
+              variant="ghost"
+              class="h-9 cursor-pointer rounded-full px-3.5 text-sm font-medium text-ink hover:bg-ink/15"
+              :ui="{ leadingIcon: 'size-4' }"
               :to="resolveObjectStorageUrl(row.original.paymentReceiptUrl)"
               target="_blank"
             />
-            <span v-else class="text-ink/35">—</span>
+            <span v-else class="text-subtle">—</span>
           </template>
           <template #status-cell="{ row }">
-            <UBadge :color="statusColor(row.original.status)" variant="subtle">
-              {{ row.original.status }}
-            </UBadge>
+            <AdminStatusPill v-bind="reviewStatusPill(row.original.status)" />
           </template>
           <template #createdAt-cell="{ row }">
-            <span class="text-ink/55">{{
+            <span class="text-muted">{{
               formatDate(row.original.createdAt)
             }}</span>
           </template>
@@ -408,8 +418,8 @@ const columns: TableColumn<CardRequestRow>[] = [
       <template #toolbar>
         <USelect
           v-model="updateStatus"
-          class="w-40"
-          size="sm"
+          class="w-full sm:w-40"
+          :ui="ADMIN_FILTER_UI"
           :items="[
             { label: 'Pending', value: 'pending' },
             { label: 'Approved', value: 'approved' },
@@ -436,8 +446,21 @@ const columns: TableColumn<CardRequestRow>[] = [
           }
         "
       >
+        <template #requesterEmail-cell="{ row }">
+          <span class="font-medium text-ink">{{
+            row.original.requesterEmail
+          }}</span>
+        </template>
+        <template #cardSlug-cell="{ row }">
+          <span class="font-mono text-xs text-muted">{{
+            row.original.card.slug
+          }}</span>
+        </template>
+        <template #status-cell="{ row }">
+          <AdminStatusPill v-bind="reviewStatusPill(row.original.status)" />
+        </template>
         <template #createdAt-cell="{ row }">
-          <span class="text-ink/55">{{
+          <span class="text-muted">{{
             formatDate(row.original.createdAt)
           }}</span>
         </template>
@@ -450,10 +473,12 @@ const columns: TableColumn<CardRequestRow>[] = [
     <USlideover
       v-model:open="requestOpen"
       title="Design request"
-      :ui="{ content: 'bg-surface' }"
+      side="right"
+      inset
+      :ui="ADMIN_SLIDEOVER_UI"
     >
       <template #body>
-        <div v-if="selectedRequest" class="space-y-2 text-sm text-ink/80">
+        <div v-if="selectedRequest" class="space-y-2 text-sm text-soft">
           <p class="text-ink">
             {{ selectedRequest.cardData?.name || 'Untitled' }}
           </p>
@@ -485,7 +510,7 @@ const columns: TableColumn<CardRequestRow>[] = [
           color="neutral"
           :to="resolveObjectStorageUrl(selectedRequest.paymentReceiptUrl)"
           target="_blank"
-          class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
+          :class="ADMIN_SLIDEOVER_BUTTON_CLASS"
         />
       </template>
     </USlideover>
@@ -493,10 +518,12 @@ const columns: TableColumn<CardRequestRow>[] = [
     <USlideover
       v-model:open="updateOpen"
       title="Card update"
-      :ui="{ content: 'bg-surface' }"
+      side="right"
+      inset
+      :ui="ADMIN_SLIDEOVER_UI"
     >
       <template #body>
-        <div v-if="selectedUpdate" class="space-y-2 text-sm text-ink/80">
+        <div v-if="selectedUpdate" class="space-y-2 text-sm text-soft">
           <p class="text-ink">
             {{ selectedUpdate.card.firstName }}
             {{ selectedUpdate.card.lastName }}

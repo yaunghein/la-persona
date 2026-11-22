@@ -2,16 +2,26 @@
 defineProps<{
   title: string;
   description: string;
+  descriptionClass: string;
 }>();
 </script>
 
 <template>
-  <div class="flex flex-wrap items-end justify-between gap-3">
+  <div
+    class="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+  >
     <div class="min-w-0">
-      <h1 class="text-2xl font-semibold tracking-tight text-ink">
+      <h1
+        class="text-2xl font-medium uppercase leading-tight tracking-widest text-ink"
+      >
         {{ title }}
       </h1>
-      <p class="mt-1 max-w-2xl text-sm text-ink/50">{{ description }}</p>
+      <p
+        class="mt-2 text-sm leading-relaxed text-muted"
+        :class="descriptionClass"
+      >
+        {{ description }}
+      </p>
     </div>
     <div class="flex flex-wrap items-center gap-2">
       <slot />

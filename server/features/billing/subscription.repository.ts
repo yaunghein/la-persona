@@ -6,33 +6,7 @@ import {
   subscriptionPaymentItem,
 } from '~~/server/db/schema';
 import type { Transaction } from '~~/server/features/billing/billing.repository';
-import { TRIAL_LENGTH_DAYS } from '~~/server/features/billing/card-subscription-state';
 import type { SubscriptionStatus } from '~~/shared/utils/subscription';
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-/** Starts the card's 30-day trial (no-op if it already has a subscription). */
-export async function ensureCardTrialSubscription(
-  cardId: string,
-  cardCreatedAt: Date
-) {
-  const now = new Date();
-  const trialEndAt = new Date(
-    cardCreatedAt.getTime() + TRIAL_LENGTH_DAYS * DAY_MS
-  );
-  const status: SubscriptionStatus = trialEndAt > now ? 'trial' : 'expired';
-  await db
-    .insert(cardSubscription)
-    .values({
-      cardId,
-      status,
-      isTrial: true,
-      trialStartAt: cardCreatedAt,
-      trialEndAt,
-      expiredAt: status === 'expired' ? now : null,
-    })
-    .onConflictDoNothing({ target: cardSubscription.cardId });
-}
 
 /** What a subscription falls back to once a pending payment is rejected. */
 function statusWithoutPendingPayment(

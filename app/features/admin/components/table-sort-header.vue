@@ -9,16 +9,6 @@ const props = defineProps<{
   label: string;
 }>();
 
-const prettyLabel = computed(() =>
-  props.label
-    .toLowerCase()
-    .split(/\s+/)
-    .map((word) =>
-      word === 'id' ? 'ID' : word.charAt(0).toUpperCase() + word.slice(1)
-    )
-    .join(' ')
-);
-
 const isSorted = computed(() => props.column.getIsSorted());
 const icon = computed(() => {
   if (isSorted.value === 'asc') return 'i-lucide-arrow-up-narrow-wide';
@@ -35,10 +25,10 @@ function onToggle() {
   <UButton
     color="neutral"
     variant="ghost"
-    :label="prettyLabel"
+    :label="label"
     :icon="icon"
-    size="sm"
-    class="-ml-2 h-8 px-2 text-xs font-medium text-ink/45 hover:bg-ink/5 hover:text-ink"
+    class="h-auto cursor-pointer gap-1.5 p-0 text-sm font-medium uppercase tracking-widest text-ink hover:bg-transparent"
+    :ui="{ leadingIcon: 'size-3.5 text-muted' }"
     @click="onToggle"
   />
 </template>

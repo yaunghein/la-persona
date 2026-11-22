@@ -9,20 +9,24 @@ import {
   ORGANIZATION_TYPE_LABELS,
   type OrganizationType,
 } from '~~/shared/utils/constants';
-import { communityCardPath } from '~~/shared/utils/routes';
-import { formatCommunityRole } from '~~/shared/permissions/organization';
 import {
   ADMIN_ACTIONS_COLUMN,
   ADMIN_TABLE_UI,
   sortableHeader,
 } from '~/features/admin/utils/admin-table';
-import type {
-  AdminOrganizationDetail,
-  AdminOrganizationSummary,
-} from '~~/shared/contracts/organization';
+import {
+  ADMIN_FILTER_UI,
+  ADMIN_GHOST_BUTTON_CLASS,
+  ADMIN_PAGE_CLASS,
+  ADMIN_PRIMARY_BUTTON_CLASS,
+  ADMIN_SEARCH_UI,
+  ADMIN_SLIDEOVER_BUTTON_CLASS,
+  ADMIN_SLIDEOVER_UI,
+  type AdminPillTone,
+} from '~/features/admin/utils/admin-ui';
+import type { AdminOrganizationSummary } from '~~/shared/contracts/organization';
 
 type OrgRow = AdminOrganizationSummary;
-type OrgDetail = AdminOrganizationDetail;
 
 const toast = useToast();
 const invalidateAdmin = useInvalidateAdmin();
@@ -206,11 +210,7 @@ async function onSaveEdit() {
         : undefined,
       color: 'success',
     });
-    const editedId = editingRow.value.id;
     closeEdit();
-    if (orgOpen.value && orgDetail.value?.id === editedId) {
-      orgDetail.value = await adminApi.getOrganization(editedId);
-    }
   } catch (error: any) {
     toast.add({
       title: 'Update failed',
@@ -269,11 +269,6 @@ function getActionItems(row: OrgRow): DropdownMenuItem[][] {
   return [
     [
       {
-        label: 'View',
-        icon: 'i-lucide-eye',
-        onSelect: () => openOrg(row),
-      },
-      {
         label: 'Edit',
         icon: 'i-lucide-pencil',
         onSelect: () => openEdit(row),
@@ -302,157 +297,13 @@ function openAssets(row: OrgRow) {
   isAssetsOpen.value = true;
 }
 
-const orgDetail = ref<OrgDetail | null>(null);
-const orgOpen = ref(false);
-const orgLoading = ref(false);
-
-async function openOrg(row: OrgRow) {
-  orgOpen.value = true;
-  orgLoading.value = true;
-  orgDetail.value = null;
-  organizerEmail.value = '';
-  try {
-    orgDetail.value = await adminApi.getOrganization(row.id);
-  } catch (error: any) {
-    orgOpen.value = false;
-    toast.add({
-      title: 'Could not open organization',
-      description: error?.data?.statusMessage || 'Please try again.',
-      color: 'error',
-    });
-  } finally {
-    orgLoading.value = false;
-  }
-}
-
-const creatingCardFor = ref<string | null>(null);
-
-function needsCommunityCard(userId: string) {
-  const detail = orgDetail.value;
-  return (
-    detail?.type === ORGANIZATION_TYPES.COMMUNITY &&
-    !detail.cards.some((item) => item.userId === userId)
-  );
-}
-
-async function createMemberCard(userId: string) {
-  const detail = orgDetail.value;
-  if (!detail) return;
-  creatingCardFor.value = userId;
-  try {
-    await adminApi.createMemberCard(detail.id, userId);
-    orgDetail.value = await adminApi.getOrganization(detail.id);
-    await invalidateAdmin();
-    toast.add({ title: 'Community card created', color: 'success' });
-  } catch (error) {
-    toast.add({
-      title: 'Could not create card',
-      description: apiErrorMessage(error),
-      color: 'error',
-    });
-  } finally {
-    creatingCardFor.value = null;
-  }
-}
-
-const organizerEmail = ref('');
-const isInvitingOrganizer = ref(false);
-
-async function inviteOrganizer() {
-  const detail = orgDetail.value;
-  const email = organizerEmail.value.trim();
-  if (!detail || !email) return;
-  isInvitingOrganizer.value = true;
-  try {
-    await adminApi.inviteOrganizer(detail.id, { email });
-    organizerEmail.value = '';
-    toast.add({
-      title: `Organizer invitation sent to ${email}.`,
-      color: 'success',
-    });
-  } catch (error) {
-    toast.add({
-      title: 'Could not invite organizer',
-      description: apiErrorMessage(error),
-      color: 'error',
-    });
-  } finally {
-    isInvitingOrganizer.value = false;
-  }
-}
-
-function detailAsRow(): OrgRow | null {
-  const detail = orgDetail.value;
-  if (!detail) return null;
-  return (
-    rows.value.find((item) => item.id === detail.id) ?? {
-      id: detail.id,
-      name: detail.name,
-      slug: detail.slug,
-      logo: detail.community?.logoUrl || null,
-      type: detail.type,
-      createdAt: detail.createdAt,
-      memberCount: detail.members.length,
-      cardCount: detail.cards.length,
-    }
-  );
-}
-
-function openEditFromDetail() {
-  const row = detailAsRow();
-  if (!row) return;
-  orgOpen.value = false;
-  openEdit(row);
-}
-
-function openDeleteFromDetail() {
-  const row = detailAsRow();
-  if (row) openDelete(row);
-}
-
-function plainText(value: string) {
-  return value
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-const brandRows = computed(() => {
-  const community = orgDetail.value?.community;
-  if (!community) return [];
-  return [
-    { label: 'Spline', value: community.splineUrl },
-    { label: 'Wallpaper', value: community.wallpaperUrl },
-    { label: 'Card back', value: community.cardBackUrl },
-    { label: 'Logo', value: community.logoUrl },
-    { label: 'Cover', value: community.coverImageUrl },
-    { label: 'Email QR background', value: community.emailQrBackgroundUrl },
-    {
-      label: 'Email contact exchange',
-      value: community.emailContactExchangeUrl,
-    },
-    { label: 'Email after event', value: community.emailAfterEventUrl },
-  ];
-});
-
-const copyRows = computed(() => {
-  const community = orgDetail.value?.community;
-  if (!community) return [];
-  return [
-    { label: 'Description', value: plainText(community.description) },
-    { label: 'Guidelines', value: plainText(community.guidelines) },
-    { label: 'Why join', value: plainText(community.whyJoin) },
-  ].filter((row) => row.value);
-});
-
 watch(
   () => [route.query.focus, (orgsData.value || []).length] as const,
   () => {
     const id = String(route.query.focus || '');
     if (!id) return;
     const row = (orgsData.value || []).find((item) => item.id === id);
-    if (row) openOrg(row);
+    if (row) openEdit(row);
   }
 );
 
@@ -479,7 +330,6 @@ async function onConfirmDelete() {
       color: 'success',
     });
     isDeleteOpen.value = false;
-    orgOpen.value = false;
     orgToDelete.value = null;
   } catch (error: any) {
     toast.add({
@@ -492,8 +342,8 @@ async function onConfirmDelete() {
   }
 }
 
-function typeBadgeColor(type: OrganizationType) {
-  return type === ORGANIZATION_TYPES.PERSONAL ? 'neutral' : 'primary';
+function typeTone(type: OrganizationType): AdminPillTone {
+  return type === ORGANIZATION_TYPES.COMMUNITY ? 'gold' : 'ink';
 }
 
 const columns: TableColumn<OrgRow>[] = [
@@ -531,17 +381,17 @@ const selectMenuUi = {
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <div :class="ADMIN_PAGE_CLASS">
     <AdminPageHeader
       title="Organizations"
-      description="Create a personal or community organization, correct its name, slug, and community settings, or delete one that has no cards and no payments."
+      description-class="max-w-107"
+      description="Create a personal or community space, correct its name and settings, or delete one with no cards and no&nbsp;payments."
     >
       <UButton
-        size="sm"
         label="Create"
-        icon="i-lucide-plus"
+        leading-icon="i-lucide-plus"
         color="neutral"
-        variant="outline"
+        :class="ADMIN_PRIMARY_BUTTON_CLASS"
         @click="openCreate"
       />
     </AdminPageHeader>
@@ -557,14 +407,16 @@ const selectMenuUi = {
           v-model="globalFilter"
           icon="i-lucide-search"
           placeholder="Search name or slug"
-          class="w-64"
-          size="sm"
+          color="neutral"
+          variant="soft"
+          class="w-full sm:w-64"
+          :ui="ADMIN_SEARCH_UI"
         />
         <USelect
           v-model="typeFilter"
           :items="typeFilterItems"
-          class="w-40"
-          size="sm"
+          :ui="ADMIN_FILTER_UI"
+          class="w-full sm:w-44"
         />
       </template>
 
@@ -580,13 +432,13 @@ const selectMenuUi = {
         :get-row-id="(row) => row.id"
         :ui="ADMIN_TABLE_UI"
         class="w-full"
-        @select="(_event, row) => openOrg(row.original)"
+        @select="(_event, row) => openEdit(row.original)"
       >
         <template #name-cell="{ row }">
           <span class="font-medium text-ink">{{ row.original.name }}</span>
         </template>
         <template #slug-cell="{ row }">
-          <span class="font-mono text-xs text-ink/55">{{
+          <span class="font-mono text-xs text-muted">{{
             row.original.slug
           }}</span>
         </template>
@@ -597,12 +449,13 @@ const selectMenuUi = {
           {{ row.original.cardCount }}
         </template>
         <template #type-cell="{ row }">
-          <UBadge :color="typeBadgeColor(row.original.type)" variant="subtle">
-            {{ ORGANIZATION_TYPE_LABELS[row.original.type] }}
-          </UBadge>
+          <AdminStatusPill
+            :label="ORGANIZATION_TYPE_LABELS[row.original.type]"
+            :tone="typeTone(row.original.type)"
+          />
         </template>
         <template #createdAt-cell="{ row }">
-          <span class="text-ink/55">{{
+          <span class="text-muted">{{
             formatDate(row.original.createdAt)
           }}</span>
         </template>
@@ -617,11 +470,7 @@ const selectMenuUi = {
       side="right"
       inset
       title="CREATE ORGANIZATION"
-      :ui="{
-        header: 'border-b-2 border-raised px-6 py-6',
-        title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
-        body: 'px-6',
-      }"
+      :ui="ADMIN_SLIDEOVER_UI"
     >
       <template #body>
         <form
@@ -699,14 +548,14 @@ const selectMenuUi = {
           label="Cancel"
           color="neutral"
           variant="ghost"
-          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-subtle hover:bg-raised hover:text-ink"
+          :class="ADMIN_GHOST_BUTTON_CLASS"
           @click="closeCreate"
         />
         <UButton
           label="Create"
           color="neutral"
           :loading="isCreating"
-          class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
+          :class="ADMIN_SLIDEOVER_BUTTON_CLASS"
           type="submit"
           form="create-organization-form"
         />
@@ -718,17 +567,13 @@ const selectMenuUi = {
       side="right"
       inset
       title="EDIT ORGANIZATION"
-      :ui="{
-        header: 'border-b-2 border-raised px-6 py-6',
-        title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
-        body: 'px-6',
-      }"
+      :ui="ADMIN_SLIDEOVER_UI"
     >
       <template #body>
         <div class="py-2">
           <p class="mb-4 text-sm leading-relaxed text-subtle">
             Changing the slug updates platform URLs that use
-            <span class="font-mono text-ink/80"
+            <span class="font-mono text-soft"
               >/platform/{{ editForm.slug || '…' }}/…</span
             >. Bookmarks and shared links with the old slug will stop working
             until updated.
@@ -779,7 +624,7 @@ const selectMenuUi = {
                   :ui="inputUi"
                 />
               </UFormField>
-              <div class="rounded-lg border border-ink/10 bg-ink/[0.03] p-4">
+              <div class="rounded-lg border border-raised bg-ink/[0.03] p-4">
                 <UCheckbox
                   v-model="editForm.applyToMemberCards"
                   label="Update existing member cards"
@@ -819,14 +664,14 @@ const selectMenuUi = {
           label="Cancel"
           color="neutral"
           variant="ghost"
-          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-subtle hover:bg-raised hover:text-ink"
+          :class="ADMIN_GHOST_BUTTON_CLASS"
           @click="closeEdit"
         />
         <UButton
           label="Save"
           color="neutral"
           :loading="isSaving"
-          class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
+          :class="ADMIN_SLIDEOVER_BUTTON_CLASS"
           @click="onSaveEdit"
         />
       </template>
@@ -837,224 +682,6 @@ const selectMenuUi = {
       :organization="assetsOrg"
     />
 
-    <USlideover
-      v-model:open="orgOpen"
-      side="right"
-      inset
-      :title="orgDetail?.name || 'Organization'"
-      :ui="{
-        content: 'bg-canvas',
-        header: 'border-b-2 border-raised px-6 py-6',
-        title: 'truncate text-lg font-medium text-ink',
-        body: 'px-6',
-      }"
-    >
-      <template #body>
-        <div v-if="orgLoading" class="py-10 text-sm text-ink/45">
-          Loading organization…
-        </div>
-        <div v-else-if="orgDetail" class="space-y-8 py-2">
-          <div class="flex items-start justify-between gap-4">
-            <div class="min-w-0">
-              <p class="truncate font-mono text-xs text-ink/45">
-                /{{ orgDetail.slug }}
-              </p>
-              <p class="mt-1 text-xs text-ink/40">
-                Created {{ formatDate(orgDetail.createdAt) }}
-              </p>
-            </div>
-            <UBadge
-              :color="typeBadgeColor(orgDetail.type)"
-              variant="subtle"
-              class="shrink-0"
-            >
-              {{ ORGANIZATION_TYPE_LABELS[orgDetail.type] }}
-            </UBadge>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div class="rounded-lg border border-ink/10 px-4 py-3">
-              <p class="text-xs text-ink/45">Members</p>
-              <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">
-                {{ orgDetail.members.length }}
-              </p>
-            </div>
-            <div class="rounded-lg border border-ink/10 px-4 py-3">
-              <p class="text-xs text-ink/45">Cards</p>
-              <p class="mt-1 text-2xl font-semibold tabular-nums text-ink">
-                {{ orgDetail.cards.length }}
-              </p>
-            </div>
-          </div>
-
-          <section v-if="orgDetail.community" class="space-y-3">
-            <h3 class="text-xs font-medium tracking-wide text-ink/45 uppercase">
-              Brand
-            </h3>
-            <dl
-              class="divide-y divide-ink/10 overflow-hidden rounded-lg border border-ink/10"
-            >
-              <div v-for="row in brandRows" :key="row.label" class="px-4 py-3">
-                <dt class="text-xs text-ink/45">{{ row.label }}</dt>
-                <dd
-                  class="mt-1 break-all font-mono text-xs leading-relaxed text-ink/85"
-                >
-                  {{ row.value || '—' }}
-                </dd>
-              </div>
-            </dl>
-          </section>
-
-          <section v-if="copyRows.length" class="space-y-4">
-            <div v-for="row in copyRows" :key="row.label">
-              <h3
-                class="text-xs font-medium tracking-wide text-ink/45 uppercase"
-              >
-                {{ row.label }}
-              </h3>
-              <p class="mt-2 line-clamp-4 text-sm leading-relaxed text-ink/75">
-                {{ row.value }}
-              </p>
-            </div>
-          </section>
-
-          <section class="space-y-3">
-            <h3 class="text-xs font-medium tracking-wide text-ink/45 uppercase">
-              Members
-            </h3>
-            <form
-              v-if="orgDetail.type === ORGANIZATION_TYPES.COMMUNITY"
-              class="flex gap-2"
-              @submit.prevent="inviteOrganizer"
-            >
-              <UInput
-                v-model="organizerEmail"
-                type="email"
-                placeholder="Organizer email"
-                aria-label="Organizer email"
-                class="min-w-0 flex-1"
-                required
-              />
-              <UButton
-                type="submit"
-                label="Invite organizer"
-                color="neutral"
-                variant="soft"
-                icon="i-lucide-mail-plus"
-                :loading="isInvitingOrganizer"
-              />
-            </form>
-            <p
-              v-if="orgDetail.members.length === 0"
-              class="text-sm text-ink/45"
-            >
-              No members.
-            </p>
-            <ul
-              v-else
-              class="divide-y divide-ink/10 overflow-hidden rounded-lg border border-ink/10"
-            >
-              <li
-                v-for="member in orgDetail.members"
-                :key="member.id"
-                class="flex items-center justify-between gap-3 px-4 py-3"
-              >
-                <div class="min-w-0">
-                  <p class="truncate text-sm text-ink">
-                    {{ member.userName }}
-                  </p>
-                  <p class="truncate text-xs text-ink/45">
-                    {{ member.userEmail }}
-                  </p>
-                </div>
-                <div class="flex shrink-0 items-center gap-2">
-                  <UButton
-                    v-if="needsCommunityCard(member.userId)"
-                    label="Create card"
-                    size="xs"
-                    color="neutral"
-                    variant="soft"
-                    icon="i-lucide-id-card"
-                    :loading="creatingCardFor === member.userId"
-                    :disabled="!!creatingCardFor"
-                    @click="createMemberCard(member.userId)"
-                  />
-                  <UBadge color="neutral" variant="subtle">
-                    {{ formatCommunityRole(member.role) }}
-                  </UBadge>
-                </div>
-              </li>
-            </ul>
-          </section>
-
-          <section class="space-y-3">
-            <h3 class="text-xs font-medium tracking-wide text-ink/45 uppercase">
-              Cards
-            </h3>
-            <p v-if="orgDetail.cards.length === 0" class="text-sm text-ink/45">
-              No cards.
-            </p>
-            <ul
-              v-else
-              class="divide-y divide-ink/10 overflow-hidden rounded-lg border border-ink/10"
-            >
-              <li
-                v-for="item in orgDetail.cards"
-                :key="item.id"
-                class="flex items-center justify-between gap-3 px-4 py-3"
-              >
-                <div class="min-w-0">
-                  <p class="truncate text-sm text-ink">
-                    {{
-                      [item.firstName, item.lastName]
-                        .filter(Boolean)
-                        .join(' ') || item.slug
-                    }}
-                  </p>
-                  <p class="truncate font-mono text-xs text-ink/45">
-                    /c/{{ item.slug }}
-                  </p>
-                </div>
-                <div class="flex shrink-0 items-center gap-2">
-                  <UBadge v-if="!item.userId" color="warning" variant="subtle">
-                    Unclaimed
-                  </UBadge>
-                  <UTooltip text="Open card">
-                    <UButton
-                      :to="communityCardPath(item.slug)"
-                      target="_blank"
-                      size="xs"
-                      color="neutral"
-                      variant="ghost"
-                      icon="i-lucide-external-link"
-                      aria-label="Open card"
-                    />
-                  </UTooltip>
-                </div>
-              </li>
-            </ul>
-          </section>
-        </div>
-      </template>
-      <template v-if="orgDetail" #footer>
-        <UButton
-          label="Delete"
-          leading-icon="i-lucide-trash-2"
-          color="error"
-          variant="soft"
-          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium"
-          @click="openDeleteFromDetail"
-        />
-        <UButton
-          label="Edit"
-          leading-icon="i-lucide-pencil"
-          color="neutral"
-          class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
-          @click="openEditFromDetail"
-        />
-      </template>
-    </USlideover>
-
     <UModal
       v-model:open="isDeleteOpen"
       :close="false"
@@ -1063,7 +690,7 @@ const selectMenuUi = {
       title="Delete organization?"
     >
       <template #body>
-        <div class="space-y-3 text-sm leading-relaxed text-ink/70">
+        <div class="space-y-3 text-sm leading-relaxed text-soft">
           <p v-if="(orgToDelete?.cardCount || 0) > 0">
             <span class="font-medium text-ink">{{ orgToDelete?.name }}</span>
             still has {{ orgToDelete?.cardCount }}
@@ -1092,6 +719,7 @@ const selectMenuUi = {
           label="Cancel"
           color="neutral"
           variant="ghost"
+          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium"
           :disabled="isDeleting"
           @click="closeDelete"
         />
@@ -1099,6 +727,7 @@ const selectMenuUi = {
           v-if="orgToDelete && orgToDelete.cardCount === 0"
           label="Delete"
           color="error"
+          class="h-10 cursor-pointer rounded-full px-6 text-sm font-medium"
           :loading="isDeleting"
           @click="onConfirmDelete"
         />

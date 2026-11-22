@@ -28,7 +28,7 @@ export const subscriptionPayment = pgTable(
     requestId: text().references(() => cardRequest.id, {
       onDelete: 'set null',
     }),
-    receiptUrl: text().notNull(),
+    receiptUrl: text(),
     paymentReference: text(),
     paymentMethod: text(),
     status: text().default('submitted').notNull(),

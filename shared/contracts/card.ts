@@ -398,7 +398,10 @@ export type AdminCardSummary = {
   updatedAt: string;
   subscriptionStatus: SubscriptionStatus | null;
   subscriptionPlanCode: string | null;
+  subscriptionStartAt: string | null;
   subscriptionEndAt: string | null;
+  /** Paid when the current period came from an approved payment above 0. */
+  subscriptionBilling: 'paid' | 'free' | null;
 };
 
 export type AdminCardDetail = AdminCardSummary & {

@@ -9,6 +9,15 @@ import {
   ADMIN_TABLE_UI,
   sortableHeader,
 } from '~/features/admin/utils/admin-table';
+import {
+  ADMIN_FILTER_UI,
+  ADMIN_GHOST_BUTTON_CLASS,
+  ADMIN_PAGE_CLASS,
+  ADMIN_PRIMARY_BUTTON_CLASS,
+  ADMIN_SEARCH_UI,
+  ADMIN_SLIDEOVER_BUTTON_CLASS,
+  ADMIN_SLIDEOVER_UI,
+} from '~/features/admin/utils/admin-ui';
 import type { OnboardingInvitationSummary } from '~~/shared/contracts/onboarding';
 
 type InvitationRow = OnboardingInvitationSummary;
@@ -37,12 +46,13 @@ const { data: plans } = useSubscriptionPlansQuery();
 
 const rows = computed(() => invitationsData.value || []);
 const statusFilter = useQueryState<
-  'all' | 'pending' | 'accepted' | 'cancelled' | 'expired'
+  'all' | 'pending' | 'expiring' | 'accepted' | 'cancelled' | 'expired'
 >('status', 'pending');
 
 const statusFilterItems = [
   { label: 'All statuses', value: 'all' },
   { label: 'Pending', value: 'pending' },
+  { label: 'Expiring in 48 hours', value: 'expiring' },
   { label: 'Accepted', value: 'accepted' },
   { label: 'Cancelled', value: 'cancelled' },
   { label: 'Expired', value: 'expired' },
@@ -58,8 +68,19 @@ function displayStatus(row: InvitationRow) {
   return row.status;
 }
 
+/** Same window as the dashboard's "Invites expiring" count. */
+const EXPIRING_WINDOW_MS = 48 * 60 * 60 * 1000;
+
 const filteredRows = computed(() => {
   if (statusFilter.value === 'all') return rows.value;
+  if (statusFilter.value === 'expiring') {
+    const expiringBefore = Date.now() + EXPIRING_WINDOW_MS;
+    return rows.value.filter(
+      (row) =>
+        displayStatus(row) === 'pending' &&
+        new Date(row.expiresAt).getTime() < expiringBefore
+    );
+  }
   return rows.value.filter((row) => displayStatus(row) === statusFilter.value);
 });
 
@@ -92,13 +113,6 @@ const planItems = computed(() =>
 function formatDate(value?: string | null) {
   if (!value) return '-';
   return new Date(value).toLocaleString();
-}
-
-function getStatusColor(status: string) {
-  if (status === 'accepted') return 'success';
-  if (status === 'cancelled') return 'neutral';
-  if (status === 'expired') return 'error';
-  return 'warning';
 }
 
 function openCreate() {
@@ -251,17 +265,17 @@ const selectUi = {
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <div :class="ADMIN_PAGE_CLASS">
     <AdminPageHeader
       title="Invitations"
-      description="Create, send, and cancel card onboarding invitations. Cancelling a pending invite returns the card and removes the empty organization."
+      description-class="max-w-105"
+      description="Create, send, and cancel card invitations. Cancelling a pending invite returns the card and removes the empty&nbsp;organization."
     >
       <UButton
-        size="sm"
         label="Create"
-        icon="i-lucide-plus"
+        leading-icon="i-lucide-plus"
         color="neutral"
-        variant="outline"
+        :class="ADMIN_PRIMARY_BUTTON_CLASS"
         @click="openCreate"
       />
     </AdminPageHeader>
@@ -277,14 +291,16 @@ const selectUi = {
           v-model="globalFilter"
           icon="i-lucide-search"
           placeholder="Search email, org, or card"
-          class="w-64"
-          size="sm"
+          color="neutral"
+          variant="soft"
+          class="w-full sm:w-72"
+          :ui="ADMIN_SEARCH_UI"
         />
         <USelect
           v-model="statusFilter"
           :items="statusFilterItems"
-          class="w-40"
-          size="sm"
+          class="w-full sm:w-40"
+          :ui="ADMIN_FILTER_UI"
         />
       </template>
 
@@ -309,28 +325,31 @@ const selectUi = {
             `${row.original.cardFirstName} ${row.original.cardLastName || ''}`.trim()
           }}
         </template>
+        <template #planName-cell="{ row }">
+          <AdminStatusPill
+            :label="row.original.planName"
+            :tone="planTone(row.original.planCode)"
+          />
+        </template>
         <template #createdAt-cell="{ row }">
-          <span class="text-ink/55">{{
+          <span class="text-muted">{{
             formatDate(row.original.createdAt)
           }}</span>
         </template>
         <template #expiresAt-cell="{ row }">
-          <span class="text-ink/55">{{
+          <span class="text-muted">{{
             formatDate(row.original.expiresAt)
           }}</span>
         </template>
         <template #lastSentAt-cell="{ row }">
-          <span class="text-ink/55">{{
+          <span class="text-muted">{{
             formatDate(row.original.lastSentAt)
           }}</span>
         </template>
         <template #status-cell="{ row }">
-          <UBadge
-            :color="getStatusColor(displayStatus(row.original))"
-            variant="subtle"
-          >
-            {{ displayStatus(row.original) }}
-          </UBadge>
+          <AdminStatusPill
+            v-bind="reviewStatusPill(displayStatus(row.original))"
+          />
         </template>
         <template #actions-cell="{ row }">
           <AdminRowMenu :items="getActionItems(row.original)" />
@@ -343,11 +362,7 @@ const selectUi = {
       side="right"
       inset
       title="CREATE ONBOARDING INVITATION"
-      :ui="{
-        header: 'border-b-2 border-raised px-6 py-6',
-        title: 'text-sm font-medium tracking-[1.4px] text-ink uppercase',
-        body: 'px-6',
-      }"
+      :ui="ADMIN_SLIDEOVER_UI"
     >
       <template #body>
         <form
@@ -446,7 +461,7 @@ const selectUi = {
           label="Cancel"
           color="neutral"
           variant="ghost"
-          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-subtle hover:bg-raised hover:text-ink"
+          :class="ADMIN_GHOST_BUTTON_CLASS"
           @click="
             () => {
               isCreateOpen = false;
@@ -457,7 +472,7 @@ const selectUi = {
           label="Create Invitation"
           color="neutral"
           :loading="isCreating"
-          class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
+          :class="ADMIN_SLIDEOVER_BUTTON_CLASS"
           type="submit"
           form="create-invitation-form"
         />

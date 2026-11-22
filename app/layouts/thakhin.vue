@@ -28,53 +28,53 @@ const links = computed(() => {
   return [
     {
       label: 'Dashboard',
-      icon: 'i-lucide-layout-dashboard',
+      icon: 'i-material-symbols:space-dashboard-outline-sharp',
       to: ROUTES.THAKHIN.ROOT,
       exact: true,
       onSelect: close,
     },
     {
       label: 'Requests',
-      icon: 'i-lucide-file-clock',
+      icon: 'i-material-symbols:assignment-outline-sharp',
       to: ROUTES.THAKHIN.REQUESTS,
       badge: badge(requestCount),
       onSelect: close,
     },
     {
       label: 'Payments',
-      icon: 'i-lucide-wallet-cards',
+      icon: 'i-material-symbols:payments-outline-sharp',
       to: ROUTES.THAKHIN.PAYMENTS,
       badge: badge(queues?.standalonePayments.count),
       onSelect: close,
     },
     {
       label: 'People',
-      icon: 'i-lucide-users',
+      icon: 'i-material-symbols:group-outline-sharp',
       to: ROUTES.THAKHIN.USERS,
       onSelect: close,
     },
     {
       label: 'Organizations',
-      icon: 'i-lucide-building',
+      icon: 'i-material-symbols:corporate-fare-sharp',
       to: ROUTES.THAKHIN.ORGANIZATIONS,
       onSelect: close,
     },
     {
       label: 'Cards',
-      icon: 'i-lucide-credit-card',
+      icon: 'i-material-symbols:cards-stack-outline-sharp',
       to: ROUTES.THAKHIN.CARDS,
       onSelect: close,
     },
     {
       label: 'Invitations',
-      icon: 'i-lucide-user-plus',
+      icon: 'i-material-symbols:forward-to-inbox-outline-sharp',
       to: ROUTES.THAKHIN.INVITATIONS,
       badge: badge(queues?.expiringInvitations.count),
       onSelect: close,
     },
     {
       label: 'Inbox',
-      icon: 'i-lucide-inbox',
+      icon: 'i-material-symbols:inbox-outline-sharp',
       to: ROUTES.THAKHIN.INBOX,
       onSelect: close,
     },
@@ -123,7 +123,7 @@ const searchGroups = computed(() => {
       label: 'People',
       items: (results?.users || []).map((item) => ({
         label: item.label,
-        icon: 'i-lucide-user',
+        icon: 'i-material-symbols:person-outline-sharp',
         to: item.href,
         onSelect: close,
       })),
@@ -133,7 +133,7 @@ const searchGroups = computed(() => {
       label: 'Organizations',
       items: (results?.organizations || []).map((item) => ({
         label: item.label,
-        icon: 'i-lucide-building',
+        icon: 'i-material-symbols:corporate-fare-sharp',
         to: item.href,
         onSelect: close,
       })),
@@ -143,7 +143,7 @@ const searchGroups = computed(() => {
       label: 'Cards',
       items: (results?.cards || []).map((item) => ({
         label: item.label,
-        icon: 'i-lucide-credit-card',
+        icon: 'i-material-symbols:cards-stack-outline-sharp',
         to: item.href,
         onSelect: close,
       })),
@@ -184,21 +184,29 @@ const searchGroups = computed(() => {
           orientation="vertical"
           tooltip
           popover
-          class="[&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1 py-4 [&_a]:py-2 [&_a]:font-semibold"
+          :class="
+            collapsed
+              ? 'py-4 [&_ul]:flex [&_ul]:flex-col [&_ul]:items-center [&_ul]:gap-2 [&_a]:size-9 [&_a]:justify-center [&_a]:px-0 [&_a]:py-0 [&_a]:font-medium [&_a]:before:inset-0'
+              : 'py-4 [&_ul]:flex [&_ul]:flex-col [&_ul]:gap-2 [&_a]:px-2.5 [&_a]:py-1.5 [&_a]:font-medium'
+          "
         />
         <UNavigationMenu
           :collapsed="collapsed"
           :items="[
             {
               label: 'Back to Platform',
-              icon: 'i-lucide-arrow-left',
+              icon: 'i-material-symbols:arrow-back-sharp',
               to: ROUTES.PLATFORM.ROOT,
               onSelect: close,
             },
           ]"
           orientation="vertical"
           tooltip
-          class="mt-auto [&_a]:py-2 [&_a]:font-semibold"
+          :class="
+            collapsed
+              ? 'mt-auto [&_a]:size-9 [&_a]:justify-center [&_a]:px-0 [&_a]:py-0 [&_a]:font-medium'
+              : 'mt-auto [&_a]:px-2.5 [&_a]:py-1.5 [&_a]:font-medium'
+          "
         />
       </template>
 
@@ -219,13 +227,13 @@ const searchGroups = computed(() => {
       <template #header>
         <UDashboardNavbar
           :title="currentPageLabel"
-          class="uppercase text-sm tracking-[1.4px]"
+          :ui="{ right: 'gap-3' }"
+          class="border-b border-raised bg-surface text-sm uppercase tracking-[1.4px]"
         >
           <template #leading>
-            <UDashboardSidebarCollapse />
-          </template>
-          <template #right>
-            <UDashboardSearchButton />
+            <UTooltip text="Toggle sidebar">
+              <UDashboardSidebarCollapse />
+            </UTooltip>
           </template>
         </UDashboardNavbar>
       </template>

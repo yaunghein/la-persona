@@ -9,6 +9,16 @@ import {
   ADMIN_TABLE_UI,
   sortableHeader,
 } from '~/features/admin/utils/admin-table';
+import {
+  ADMIN_FILTER_UI,
+  ADMIN_DANGER_BUTTON_CLASS,
+  ADMIN_GHOST_BUTTON_CLASS,
+  ADMIN_PAGE_CLASS,
+  ADMIN_PRIMARY_BUTTON_CLASS,
+  ADMIN_SEARCH_UI,
+  ADMIN_SLIDEOVER_BUTTON_CLASS,
+  ADMIN_SLIDEOVER_UI,
+} from '~/features/admin/utils/admin-ui';
 import type {
   AdminUserDetail,
   AdminUserSummary,
@@ -36,6 +46,14 @@ watch(
     if (row) openDetail(row);
   }
 );
+
+const historyOpen = ref(false);
+const historyUserId = ref<string | null>(null);
+
+function openHistory(row: UserRow) {
+  historyUserId.value = row.id;
+  historyOpen.value = true;
+}
 
 const isDeleteOpen = ref(false);
 const isDeleting = ref(false);
@@ -146,9 +164,14 @@ function getActionItems(row: UserRow): DropdownMenuItem[][] {
   return [
     [
       {
-        label: 'View',
-        icon: 'i-lucide-eye',
+        label: 'Edit',
+        icon: 'i-lucide-pencil',
         onSelect: () => openDetail(row),
+      },
+      {
+        label: 'History',
+        icon: 'i-lucide-history',
+        onSelect: () => openHistory(row),
       },
       {
         label: row.role === 'admin' ? 'Make user' : 'Make admin',
@@ -266,32 +289,50 @@ async function onCreate() {
   }
 }
 
+const formFieldClass =
+  '[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink';
+
+const inputUi = {
+  base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
+};
+
+const selectUi = {
+  base: 'h-[47px] w-full rounded-[4px] border-line bg-raised px-3 text-sm text-ink',
+  content: 'border border-line bg-raised',
+  item: 'text-ink data-[highlighted]:bg-raised',
+  value: 'text-ink',
+};
+
 const columns: TableColumn<UserRow>[] = [
   { accessorKey: 'name', header: sortableHeader('NAME') },
   { accessorKey: 'email', header: sortableHeader('EMAIL') },
   {
     accessorKey: 'role',
     header: sortableHeader('ROLE'),
-    accessorFn: (row) => row.role || 'user',
+    accessorFn: (row) => (row.role === 'admin' ? 'Admin' : 'User'),
   },
-  { accessorKey: 'banned', header: sortableHeader('BANNED') },
+  {
+    accessorKey: 'banned',
+    header: sortableHeader('STATUS'),
+    accessorFn: (row) => (row.banned ? 'Banned' : 'Active'),
+  },
   { accessorKey: 'createdAt', header: sortableHeader('CREATED') },
   ADMIN_ACTIONS_COLUMN,
 ];
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <div :class="ADMIN_PAGE_CLASS">
     <AdminPageHeader
       title="People"
-      description="Create an account, correct a name or role, ban, or delete. Deleting a person also removes their personal organization."
+      description-class="max-w-88"
+      description="Create an account, correct a name or role, ban, or delete. Deleting also removes their personal&nbsp;organization."
     >
       <UButton
-        size="sm"
         label="Create"
-        icon="i-lucide-plus"
+        leading-icon="i-lucide-plus"
         color="neutral"
-        variant="outline"
+        :class="ADMIN_PRIMARY_BUTTON_CLASS"
         @click="openCreate"
       />
     </AdminPageHeader>
@@ -307,14 +348,16 @@ const columns: TableColumn<UserRow>[] = [
           v-model="globalFilter"
           icon="i-lucide-search"
           placeholder="Search name or email"
-          class="w-64"
-          size="sm"
+          color="neutral"
+          variant="soft"
+          class="w-full sm:w-64"
+          :ui="ADMIN_SEARCH_UI"
         />
         <USelect
           v-model="roleFilter"
           :items="roleFilterItems"
-          class="w-36"
-          size="sm"
+          class="w-full sm:w-40"
+          :ui="ADMIN_FILTER_UI"
         />
       </template>
 
@@ -336,26 +379,22 @@ const columns: TableColumn<UserRow>[] = [
           <span class="font-medium text-ink">{{ row.original.name }}</span>
         </template>
         <template #email-cell="{ row }">
-          <span class="text-ink/70">{{ row.original.email }}</span>
+          <span class="text-soft">{{ row.original.email }}</span>
         </template>
         <template #role-cell="{ row }">
-          <UBadge
-            :color="row.original.role === 'admin' ? 'primary' : 'neutral'"
-            variant="subtle"
-          >
-            {{ row.original.role || 'user' }}
-          </UBadge>
+          <AdminStatusPill
+            :label="row.original.role === 'admin' ? 'Admin' : 'User'"
+            :tone="row.original.role === 'admin' ? 'gold' : 'ink'"
+          />
         </template>
         <template #banned-cell="{ row }">
-          <UBadge
-            :color="row.original.banned ? 'error' : 'success'"
-            variant="subtle"
-          >
-            {{ row.original.banned ? 'Banned' : 'Active' }}
-          </UBadge>
+          <AdminStatusPill
+            :label="row.original.banned ? 'Banned' : 'Active'"
+            :tone="row.original.banned ? 'error' : 'success'"
+          />
         </template>
         <template #createdAt-cell="{ row }">
-          <span class="text-ink/55">{{
+          <span class="text-muted">{{
             formatDate(row.original.createdAt)
           }}</span>
         </template>
@@ -417,14 +456,14 @@ const columns: TableColumn<UserRow>[] = [
           label="Cancel"
           color="neutral"
           variant="ghost"
-          class="h-10 text-sm rounded-full px-5 text-ink hover:bg-raised"
+          :class="ADMIN_GHOST_BUTTON_CLASS"
           :disabled="isDeleting"
           @click="closeDelete"
         />
         <UButton
           label="Delete"
           color="error"
-          class="h-10 text-sm rounded-full px-6 font-medium"
+          class="h-10 cursor-pointer rounded-full px-6 text-sm font-medium"
           :loading="isDeleting"
           @click="onConfirmDelete"
         />
@@ -433,16 +472,29 @@ const columns: TableColumn<UserRow>[] = [
 
     <USlideover
       v-model:open="detailOpen"
-      title="Person"
-      :ui="{ content: 'bg-surface' }"
+      title="Edit person"
+      :description="detail?.email"
+      side="right"
+      inset
+      :ui="ADMIN_SLIDEOVER_UI"
     >
       <template #body>
-        <div v-if="detail" class="space-y-4 text-sm text-ink/80">
-          <UFormField label="Name">
-            <UInput v-model="editName" class="w-full" />
+        <form
+          v-if="detail"
+          id="edit-person-form"
+          class="flex flex-col gap-4"
+          @submit.prevent="saveDetail"
+        >
+          <UFormField label="Name" required :class="formFieldClass">
+            <UInput
+              v-model="editName"
+              required
+              class="w-full"
+              size="xl"
+              :ui="inputUi"
+            />
           </UFormField>
-          <p>{{ detail.email }}</p>
-          <UFormField label="Role">
+          <UFormField label="Role" :class="formFieldClass">
             <USelect
               v-model="editRole"
               :disabled="isSelfDetail"
@@ -451,25 +503,11 @@ const columns: TableColumn<UserRow>[] = [
                 { label: 'Admin', value: 'admin' },
               ]"
               class="w-full"
+              size="xl"
+              :ui="selectUi"
             />
           </UFormField>
-          <p>{{ detail.banned ? 'Banned' : 'Active' }}</p>
-          <div>
-            <p class="text-ink">Organizations</p>
-            <p v-if="detail.memberships.length === 0">None.</p>
-            <p v-for="org in detail.memberships" :key="org.id">
-              {{ org.organizationName }} • {{ org.organizationType }} •
-              {{ org.role }}
-            </p>
-          </div>
-          <div>
-            <p class="text-ink">Cards</p>
-            <p v-if="detail.cards.length === 0">None.</p>
-            <p v-for="card in detail.cards" :key="card.id">
-              {{ card.firstName }} {{ card.lastName }} • {{ card.slug }}
-            </p>
-          </div>
-        </div>
+        </form>
       </template>
 
       <template #footer>
@@ -480,22 +518,25 @@ const columns: TableColumn<UserRow>[] = [
             color="error"
             variant="soft"
             :disabled="isSelfDetail"
-            class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium"
+            :class="ADMIN_DANGER_BUTTON_CLASS"
             @click="openDelete(detail)"
           />
           <UButton
             :label="detail.banned ? 'Unban' : 'Ban'"
-            color="neutral"
+            leading-icon="i-lucide-ban"
+            color="error"
+            variant="soft"
             :disabled="isSelfDetail"
-            class="h-10 cursor-pointer rounded-full bg-raised px-5 text-sm font-medium text-ink hover:bg-line"
+            :class="ADMIN_DANGER_BUTTON_CLASS"
             @click="patchUser(detail, { banned: !detail.banned })"
           />
           <UButton
             label="Save"
+            type="submit"
+            form="edit-person-form"
             color="neutral"
             :loading="isSaving"
-            class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
-            @click="saveDetail"
+            :class="ADMIN_SLIDEOVER_BUTTON_CLASS"
           />
         </template>
       </template>
@@ -504,34 +545,49 @@ const columns: TableColumn<UserRow>[] = [
     <USlideover
       v-model:open="isCreateOpen"
       title="Create person"
-      :ui="{ content: 'bg-surface' }"
+      side="right"
+      inset
+      :ui="ADMIN_SLIDEOVER_UI"
     >
       <template #body>
         <form
           id="create-person-form"
           novalidate
           @submit.prevent="onCreate"
-          class="space-y-4"
+          class="flex flex-col gap-4"
         >
-          <UFormField label="Name" required>
+          <UFormField label="Name" required :class="formFieldClass">
             <UInput
               v-model="createForm.name"
+              required
               class="w-full"
+              size="xl"
               placeholder="Full name"
+              :ui="inputUi"
             />
           </UFormField>
-          <UFormField label="Email" required>
-            <UInput v-model="createForm.email" type="email" class="w-full" />
+          <UFormField label="Email" required :class="formFieldClass">
+            <UInput
+              v-model="createForm.email"
+              type="email"
+              required
+              class="w-full"
+              size="xl"
+              :ui="inputUi"
+            />
           </UFormField>
-          <UFormField label="Password" required>
+          <UFormField label="Password" required :class="formFieldClass">
             <UInput
               v-model="createForm.password"
               type="password"
+              required
               class="w-full"
+              size="xl"
               placeholder="At least 8 characters"
+              :ui="inputUi"
             />
           </UFormField>
-          <UFormField label="Role">
+          <UFormField label="Role" :class="formFieldClass">
             <USelect
               v-model="createForm.role"
               :items="[
@@ -539,6 +595,8 @@ const columns: TableColumn<UserRow>[] = [
                 { label: 'Admin', value: 'admin' },
               ]"
               class="w-full"
+              size="xl"
+              :ui="selectUi"
             />
           </UFormField>
         </form>
@@ -549,18 +607,23 @@ const columns: TableColumn<UserRow>[] = [
           label="Cancel"
           color="neutral"
           variant="ghost"
-          class="h-10 cursor-pointer rounded-full px-5 text-sm font-medium text-subtle hover:bg-raised hover:text-ink"
+          :class="ADMIN_GHOST_BUTTON_CLASS"
           @click="closeCreate"
         />
         <UButton
           label="Create"
           color="neutral"
           :loading="isCreating"
-          class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
+          :class="ADMIN_SLIDEOVER_BUTTON_CLASS"
           type="submit"
           form="create-person-form"
         />
       </template>
     </USlideover>
+
+    <AdminPeriodHistorySlideover
+      v-model:open="historyOpen"
+      :user-id="historyUserId"
+    />
   </div>
 </template>

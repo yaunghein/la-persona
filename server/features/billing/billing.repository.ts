@@ -1,6 +1,7 @@
-import { and, asc, count, desc, eq, inArray, lte, or } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, lte, ne, or } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import {
+  card,
   cardRequest,
   cardSubscription,
   subscriptionPayment,
@@ -140,12 +141,15 @@ export function listOrganizationBillingHistory(organizationId: string) {
       startAt: subscriptionPaymentItem.startAt,
       endAt: subscriptionPaymentItem.endAt,
       planName: subscriptionPlan.name,
+      cardFirstName: card.firstName,
+      cardLastName: card.lastName,
     })
     .from(subscriptionPaymentItem)
     .innerJoin(
       subscriptionPayment,
       eq(subscriptionPayment.id, subscriptionPaymentItem.paymentId)
     )
+    .innerJoin(card, eq(card.id, subscriptionPaymentItem.cardId))
     .leftJoin(
       subscriptionPlan,
       eq(subscriptionPlan.code, subscriptionPaymentItem.planCode)
@@ -263,9 +267,10 @@ export async function listPaymentsForReview(filter: {
   limit: number;
   offset: number;
 }) {
-  const where = filter.status
-    ? eq(subscriptionPayment.status, filter.status)
-    : undefined;
+  const where = and(
+    ne(subscriptionPayment.status, 'trial'),
+    filter.status ? eq(subscriptionPayment.status, filter.status) : undefined
+  );
   const [payments, [totals]] = await Promise.all([
     db
       .select({
@@ -303,4 +308,204 @@ export async function listPaymentsForReview(filter: {
   ]);
 
   return { payments, items, requests, total: totals?.total ?? 0 };
+}
+
+function periodRows() {
+  return db
+    .select({
+      id: subscriptionPaymentItem.id,
+      paymentId: subscriptionPaymentItem.paymentId,
+      cardId: subscriptionPaymentItem.cardId,
+      cardFirstName: card.firstName,
+      cardLastName: card.lastName,
+      planCode: subscriptionPaymentItem.planCode,
+      planName: subscriptionPlan.name,
+      amountMinor: subscriptionPaymentItem.amountMinor,
+      currency: subscriptionPaymentItem.currency,
+      status: subscriptionPayment.status,
+      startAt: subscriptionPaymentItem.startAt,
+      endAt: subscriptionPaymentItem.endAt,
+    })
+    .from(subscriptionPaymentItem)
+    .innerJoin(
+      subscriptionPayment,
+      eq(subscriptionPayment.id, subscriptionPaymentItem.paymentId)
+    )
+    .innerJoin(card, eq(card.id, subscriptionPaymentItem.cardId))
+    .leftJoin(
+      subscriptionPlan,
+      eq(subscriptionPlan.code, subscriptionPaymentItem.planCode)
+    );
+}
+
+export function listCardPeriodRows(cardId: string) {
+  return periodRows()
+    .where(eq(subscriptionPaymentItem.cardId, cardId))
+    .orderBy(desc(subscriptionPaymentItem.startAt));
+}
+
+export function listUserPeriodRows(userId: string) {
+  return periodRows()
+    .where(eq(card.userId, userId))
+    .orderBy(desc(subscriptionPaymentItem.startAt));
+}
+
+export async function findCardForPeriod(tx: Transaction, cardId: string) {
+  const [row] = await tx
+    .select({
+      id: card.id,
+      organizationId: card.organizationId,
+      userId: card.userId,
+    })
+    .from(card)
+    .where(eq(card.id, cardId))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function findSubscriptionForPeriod(
+  tx: Transaction,
+  cardId: string
+) {
+  const [row] = await tx
+    .select()
+    .from(cardSubscription)
+    .where(eq(cardSubscription.cardId, cardId))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function cardHasSubmittedPayment(tx: Transaction, cardId: string) {
+  const [row] = await tx
+    .select({ id: subscriptionPayment.id })
+    .from(subscriptionPaymentItem)
+    .innerJoin(
+      subscriptionPayment,
+      eq(subscriptionPayment.id, subscriptionPaymentItem.paymentId)
+    )
+    .where(
+      and(
+        eq(subscriptionPaymentItem.cardId, cardId),
+        eq(subscriptionPayment.status, 'submitted')
+      )
+    )
+    .limit(1);
+  return Boolean(row);
+}
+
+export async function findPlan(tx: Transaction, code: string) {
+  const [row] = await tx
+    .select({
+      code: subscriptionPlan.code,
+      currency: subscriptionPlan.currency,
+      isActive: subscriptionPlan.isActive,
+    })
+    .from(subscriptionPlan)
+    .where(eq(subscriptionPlan.code, code))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function findActivePlan(tx: Transaction, code: string) {
+  const plan = await findPlan(tx, code);
+  return plan?.isActive ? plan : null;
+}
+
+export async function insertStaffPeriod(
+  tx: Transaction,
+  input: {
+    organizationId: string;
+    paidByUserId: string;
+    status: 'trial' | 'approved';
+    cardId: string;
+    planCode: string;
+    startAt: Date;
+    endAt: Date;
+    amountMinor: number;
+    currency: string;
+    now: Date;
+  }
+) {
+  const [payment] = await tx
+    .insert(subscriptionPayment)
+    .values({
+      organizationId: input.organizationId,
+      paidByUserId: input.paidByUserId,
+      receiptUrl: null,
+      paymentMethod: 'system',
+      status: input.status,
+      createdAt: input.now,
+      updatedAt: input.now,
+    })
+    .returning({ id: subscriptionPayment.id });
+  if (!payment) throw new Error('Period payment insert returned no row.');
+
+  const [item] = await tx
+    .insert(subscriptionPaymentItem)
+    .values({
+      paymentId: payment.id,
+      cardId: input.cardId,
+      planCode: input.planCode,
+      termYears: 1,
+      startAt: input.startAt,
+      endAt: input.endAt,
+      amountMinor: input.amountMinor,
+      currency: input.currency,
+      createdAt: input.now,
+      updatedAt: input.now,
+    })
+    .returning({ id: subscriptionPaymentItem.id });
+  if (!item) throw new Error('Period item insert returned no row.');
+  return { paymentId: payment.id, itemId: item.id };
+}
+
+export async function saveCurrentPeriod(
+  tx: Transaction,
+  input: {
+    cardId: string;
+    planCode: string;
+    startAt: Date;
+    endAt: Date;
+    itemId: string;
+    now: Date;
+  }
+) {
+  const values = {
+    planCode: input.planCode,
+    status: 'active',
+    isTrial: false,
+    currentPeriodStartAt: input.startAt,
+    currentPeriodEndAt: input.endAt,
+    lastPaymentItemId: input.itemId,
+    activatedAt: input.now,
+    expiredAt: null,
+    updatedAt: input.now,
+  };
+  await tx
+    .insert(cardSubscription)
+    .values({ cardId: input.cardId, ...values })
+    .onConflictDoUpdate({
+      target: cardSubscription.cardId,
+      set: values,
+    });
+}
+
+export async function findPaymentItemForEdit(tx: Transaction, itemId: string) {
+  const [row] = await tx
+    .select()
+    .from(subscriptionPaymentItem)
+    .where(eq(subscriptionPaymentItem.id, itemId))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function updatePaymentItemAmount(
+  tx: Transaction,
+  itemId: string,
+  values: { amountMinor: number; now: Date }
+) {
+  await tx
+    .update(subscriptionPaymentItem)
+    .set({ amountMinor: values.amountMinor, updatedAt: values.now })
+    .where(eq(subscriptionPaymentItem.id, itemId));
 }
