@@ -2,6 +2,7 @@ import { communityUsesCardImageKeys } from '~~/server/features/organization/comm
 import {
   createUploadTicket,
   deleteObject,
+  listObjectKeys,
   objectExists,
 } from '~~/server/lib/object-storage';
 import { FILE_EXTENSIONS } from '~~/server/features/media/media.service';
@@ -12,6 +13,7 @@ import {
   type CardImage,
   type CardImageKind,
   type CreateCardImageUploadRequest,
+  type StoredUpload,
   type UploadContentType,
 } from '~~/shared/contracts/media';
 import { cardImageSlug } from '~~/shared/utils/card-image';
@@ -120,4 +122,19 @@ export async function deleteCardImage(kind: CardImageKind, name: string) {
   const image = await findCardImage(kind, slug);
   if (image.exists) await deleteObject(image.key);
   return image;
+}
+
+const STORED_UPLOAD_KEY = /^uploads\/[^/]+\.(?:webp|jpe?g|png)$/i;
+
+/** Images already in uploads/, so a new card can reuse one. */
+export async function listStoredUploads(): Promise<StoredUpload[]> {
+  const keys = await listObjectKeys('uploads/');
+  return keys
+    .filter((key) => STORED_UPLOAD_KEY.test(key))
+    .map((key) => ({
+      key,
+      fileName: key.slice('uploads/'.length),
+      url: resolveObjectStorageUrl(key),
+    }))
+    .sort((a, b) => a.fileName.localeCompare(b.fileName));
 }

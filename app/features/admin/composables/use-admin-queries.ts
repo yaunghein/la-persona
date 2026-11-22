@@ -36,6 +36,7 @@ import type {
   CardImageKind,
   CreateBrandAssetUploadRequest,
   CreateCardImageUploadRequest,
+  StoredUpload,
   UploadTicket,
 } from '~~/shared/contracts/media';
 import type {
@@ -70,6 +71,7 @@ export const adminQueryKeys = {
     [...adminQueryKeys.all, 'brand-assets', organizationId] as const,
   cardImages: (name: string) =>
     [...adminQueryKeys.all, 'card-images', name] as const,
+  uploads: () => [...adminQueryKeys.all, 'uploads'] as const,
   users: () => [...adminQueryKeys.all, 'users'] as const,
   cards: (claimed?: boolean) =>
     [...adminQueryKeys.all, 'cards', claimed ?? 'any'] as const,
@@ -160,6 +162,15 @@ export function useAdminCardImagesQuery(name: MaybeRefOrGetter<string>) {
       }),
     select: (collection) => collection.items,
     enabled: () => toValue(name).trim().length > 0,
+  });
+}
+
+export function useAdminUploadsQuery(enabled: MaybeRefOrGetter<boolean>) {
+  return useQuery({
+    queryKey: adminQueryKeys.uploads(),
+    queryFn: () => $fetch<Collection<StoredUpload>>(url('uploads')),
+    select: (collection) => collection.items,
+    enabled: () => toValue(enabled),
   });
 }
 

@@ -2,6 +2,7 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
   NotFound,
   PutObjectCommand,
   S3Client,
@@ -58,6 +59,27 @@ export async function createUploadTicket(input: {
       Date.now() + UPLOAD_TICKET_TTL_SECONDS * 1000
     ).toISOString(),
   };
+}
+
+/** Keys directly inside `prefix` (no nested folders). */
+export async function listObjectKeys(prefix: string) {
+  const keys: string[] = [];
+  let token: string | undefined;
+  do {
+    const page = await objectStorageClient().send(
+      new ListObjectsV2Command({
+        Bucket: env.AWS_BUCKET_NAME,
+        Prefix: prefix,
+        Delimiter: '/',
+        ContinuationToken: token,
+      })
+    );
+    for (const item of page.Contents ?? []) {
+      if (item.Key && item.Key !== prefix) keys.push(item.Key);
+    }
+    token = page.IsTruncated ? page.NextContinuationToken : undefined;
+  } while (token);
+  return keys;
 }
 
 export async function objectExists(key: string) {

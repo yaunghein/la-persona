@@ -5,7 +5,11 @@ definePageMeta({
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import { getThakhinCardPlanAssetDefaults } from '~~/shared/constants/thakhin-card-plan-assets';
-import { isCardImageKeyFor } from '~~/shared/utils/card-image';
+import {
+  MAX_UPLOAD_BYTES,
+  UPLOAD_CONTENT_TYPES,
+} from '~~/shared/contracts/media';
+import { cardImageSlug, isCardImageKeyFor } from '~~/shared/utils/card-image';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
 import {
   matchesBillingFilter,
@@ -247,9 +251,8 @@ const planSelectItems = computed(() =>
 );
 
 /** Subscription plan for create flow — prefills Spline + S3 keys (placeholders). */
-const createPlanCode = ref<(typeof CREATE_PLANS)[number]['code']>(
-  'friend-family'
-);
+const createPlanCode =
+  ref<(typeof CREATE_PLANS)[number]['code']>('friend-family');
 
 watch(
   createPlanItems,
@@ -265,6 +268,7 @@ watch(
 
 watch(createPlanCode, (code) => {
   if (editingId.value || !isFormOpen.value) return;
+  clearPremiumImageChoices();
   applyPlanAssetPrefills(code);
 });
 
@@ -277,17 +281,40 @@ const cardImageName = computed(() =>
     : `${form.firstName} ${form.lastName}`.trim()
 );
 
-const showCardImageUpload = computed(
-  () =>
-    (!editingId.value && createPlanCode.value === 'premium') ||
-    (Boolean(editingId.value) && customImages.value)
+const choosingPremiumImages = computed(
+  () => !editingId.value && createPlanCode.value === 'premium'
 );
+const showCardImageUpload = computed(
+  () => Boolean(editingId.value) && customImages.value
+);
+
+const wallpaperFile = ref<File | null>(null);
+const backFile = ref<File | null>(null);
+const wallpaperExistingKey = ref('');
+const backExistingKey = ref('');
+const {
+  data: storedUploads,
+  isLoading: uploadsLoading,
+  error: uploadsError,
+} = useAdminUploadsQuery(choosingPremiumImages);
+const storedUploadItems = computed(() => storedUploads.value ?? []);
+const uploadsErrorMessage = computed(() =>
+  uploadsError.value ? apiErrorMessage(uploadsError.value) : ''
+);
+
+function clearPremiumImageChoices() {
+  wallpaperFile.value = null;
+  backFile.value = null;
+  wallpaperExistingKey.value = '';
+  backExistingKey.value = '';
+}
 
 function openCreate() {
   editingId.value = null;
   customImages.value = false;
   lockedImageName.value = '';
   resetForm();
+  clearPremiumImageChoices();
   const items = createPlanItems.value;
   const firstPlan = items[0];
   if (firstPlan && !items.some((i) => i.value === createPlanCode.value)) {
@@ -345,17 +372,59 @@ function blockEnterWhileEditing(event: KeyboardEvent) {
   }
 }
 
+async function storeChosenCardImage(
+  kind: 'wallpaper' | 'back',
+  chosenFile: File | null,
+  existingKey: string
+) {
+  if (!chosenFile) return existingKey;
+  const contentType = UPLOAD_CONTENT_TYPES.find(
+    (type) => type === chosenFile.type
+  );
+  if (!contentType || chosenFile.size > MAX_UPLOAD_BYTES) {
+    throw new Error(
+      contentType
+        ? 'Images must be 5 MB or smaller.'
+        : 'Upload a JPG, PNG or WebP image.'
+    );
+  }
+  const ticket = await adminApi.createCardImageUpload({
+    name: cardImageName.value,
+    kind,
+    contentType,
+    contentLength: chosenFile.size,
+  });
+  const response = await fetch(ticket.uploadUrl, {
+    method: 'PUT',
+    body: chosenFile,
+    headers: ticket.headers,
+  });
+  if (!response.ok) throw new Error('Upload failed. Please try again.');
+  return ticket.key;
+}
+
 async function onSubmitForm() {
+  const creatingPremium = choosingPremiumImages.value;
   if (
-    !editingId.value &&
-    createPlanCode.value === 'premium' &&
-    (!isCardImageKeyFor(form.wallpaperUrl, 'wallpaper', cardImageName.value) ||
-      !isCardImageKeyFor(form.cardBackUrl, 'back', cardImageName.value))
+    creatingPremium &&
+    (!(wallpaperFile.value || wallpaperExistingKey.value) ||
+      !(backFile.value || backExistingKey.value))
   ) {
     toast.add({
-      title: 'Upload both images',
-      description:
-        'A premium card needs a wallpaper and a card back for this name.',
+      title: 'Choose both images',
+      description: 'A premium card needs a wallpaper and a card back.',
+      color: 'warning',
+    });
+    return;
+  }
+  if (
+    creatingPremium &&
+    (wallpaperFile.value || backFile.value) &&
+    !cardImageSlug(cardImageName.value)
+  ) {
+    toast.add({
+      title: 'Enter a name',
+      description: 'New images are named from the first and last name.',
       color: 'warning',
     });
     return;
@@ -363,6 +432,25 @@ async function onSubmitForm() {
 
   isSaving.value = true;
   try {
+    if (creatingPremium) {
+      const wallpaperKey = await storeChosenCardImage(
+        'wallpaper',
+        wallpaperFile.value,
+        wallpaperExistingKey.value
+      );
+      wallpaperExistingKey.value = wallpaperKey;
+      wallpaperFile.value = null;
+      const backKey = await storeChosenCardImage(
+        'back',
+        backFile.value,
+        backExistingKey.value
+      );
+      backExistingKey.value = backKey;
+      backFile.value = null;
+      form.wallpaperUrl = wallpaperKey;
+      form.cardBackUrl = backKey;
+    }
+
     const body: UpdateAdminCardRequest = {
       firstName: form.firstName.trim(),
       lastName: form.lastName.trim() || null,
@@ -402,13 +490,14 @@ async function onSubmitForm() {
     isFormOpen.value = false;
     editingId.value = null;
     resetForm();
+    clearPremiumImageChoices();
   } catch (error: any) {
     toast.add({
       title: editingId.value ? 'Update failed' : 'Create failed',
-      description:
-        error?.data?.statusMessage ||
-        error?.statusMessage ||
-        'Please try again.',
+      description: apiErrorMessage(
+        error,
+        error instanceof Error ? error.message : 'Please try again.'
+      ),
       color: 'error',
     });
   } finally {
@@ -877,7 +966,29 @@ const selectUi = {
                 :ui="inputUi"
               />
             </UFormField>
-            <template v-if="showCardImageUpload">
+            <template v-if="choosingPremiumImages">
+              <p class="text-xs leading-relaxed text-subtle">
+                Both images are required. A new file uploads when you create the
+                card, named from the person's&nbsp;name.
+              </p>
+              <AdminCardImageChoice
+                v-model:file="wallpaperFile"
+                v-model:existing-key="wallpaperExistingKey"
+                label="Wallpaper"
+                :images="storedUploadItems"
+                :loading="uploadsLoading"
+                :error="uploadsErrorMessage"
+              />
+              <AdminCardImageChoice
+                v-model:file="backFile"
+                v-model:existing-key="backExistingKey"
+                label="Card back"
+                :images="storedUploadItems"
+                :loading="uploadsLoading"
+                error=""
+              />
+            </template>
+            <template v-else-if="showCardImageUpload">
               <p class="text-xs leading-relaxed text-subtle">
                 Stored in uploads/, named from the card name. Delete an image
                 before replacing&nbsp;it.

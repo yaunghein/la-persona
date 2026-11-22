@@ -148,7 +148,7 @@ async function save(row: CardPeriod) {
             </div>
           </div>
           <UButton
-            label="Save period"
+            label="Save"
             type="submit"
             color="neutral"
             :loading="savingId === row.id"

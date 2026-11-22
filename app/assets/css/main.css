@@ -139,8 +139,10 @@ input[type='reset'] {
 
 button:not(:disabled):not([aria-disabled='true']):not([role='switch']):not(
     [role='checkbox']
-  ):not([role='radio']):active,
-[role='button']:not([aria-disabled='true']):active,
+  ):not([role='radio']):not([role='combobox']):not(
+    [aria-haspopup='listbox']
+  ):active,
+[role='button']:not(tr):not([aria-disabled='true']):active,
 .btn-press:not(:disabled):not([aria-disabled='true']):active,
 a.inline-flex.font-medium:not([aria-disabled='true']):active,
 summary:active,

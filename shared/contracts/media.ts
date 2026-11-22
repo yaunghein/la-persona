@@ -119,3 +119,10 @@ export type CardImage = {
   url: string;
   exists: boolean;
 };
+
+/** An image already stored in the uploads/ folder. */
+export type StoredUpload = {
+  key: string;
+  fileName: string;
+  url: string;
+};
