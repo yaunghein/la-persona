@@ -10,6 +10,7 @@ export const CreateOnboardingInvitationRequest = z.object({
   organizationName: z.string().trim().min(2).max(120),
   cardId: z.string().trim().min(1),
   subscriptionPlanCode: z.string().trim().min(1),
+  amountMinor: z.coerce.number().int().min(0),
   freeMonths: z.coerce.number().int().min(0).max(120),
   expirationMinutes: z.coerce
     .number()
@@ -54,6 +55,8 @@ export type OnboardingInvitationSummary = {
   cardLastName: string | null;
   planCode: string;
   planName: string;
+  amountMinor: number;
+  currency: string;
   link: string;
 };
 

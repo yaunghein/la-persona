@@ -33,6 +33,7 @@ const createState = reactive({
   organizationName: '',
   cardId: '',
   subscriptionPlanCode: '',
+  amountMinor: 0,
   freeMonths: 6,
   expirationMinutes: 60 * 24,
   sendNow: false,
@@ -110,6 +111,18 @@ const planItems = computed(() =>
     .map((plan) => ({ label: plan.name, value: plan.code }))
 );
 
+watch(
+  () => createState.subscriptionPlanCode,
+  (code) => {
+    const plan = plans.value?.find((item) => item.code === code);
+    createState.amountMinor = plan?.priceMinor ?? 0;
+  }
+);
+
+function formatAmount(amountMinor: number, currency: string) {
+  return `${amountMinor.toLocaleString()} ${currency}`;
+}
+
 function formatDate(value?: string | null) {
   if (!value) return '-';
   return new Date(value).toLocaleString();
@@ -129,6 +142,7 @@ async function onCreateInvitation() {
     createState.organizationName = '';
     createState.cardId = '';
     createState.subscriptionPlanCode = '';
+    createState.amountMinor = 0;
     createState.freeMonths = 6;
     createState.expirationMinutes = 60 * 24;
     createState.sendNow = false;
@@ -240,6 +254,7 @@ const columns: TableColumn<InvitationRow>[] = [
       `${row.cardFirstName} ${row.cardLastName || ''}`.trim(),
   },
   { accessorKey: 'planName', header: sortableHeader('PLAN') },
+  { accessorKey: 'amountMinor', header: sortableHeader('AMOUNT') },
   { accessorKey: 'freeMonths', header: sortableHeader('FREE MONTHS') },
   { accessorKey: 'createdAt', header: sortableHeader('CREATED') },
   { accessorKey: 'expiresAt', header: sortableHeader('EXPIRES AT') },
@@ -331,6 +346,9 @@ const selectUi = {
             :tone="planTone(row.original.planCode)"
           />
         </template>
+        <template #amountMinor-cell="{ row }">
+          {{ formatAmount(row.original.amountMinor, row.original.currency) }}
+        </template>
         <template #createdAt-cell="{ row }">
           <span class="text-muted">{{
             formatDate(row.original.createdAt)
@@ -416,6 +434,22 @@ const selectUi = {
                 class="w-full"
                 size="xl"
                 :ui="selectUi"
+              />
+            </UFormField>
+            <UFormField
+              v-if="createState.subscriptionPlanCode"
+              label="Amount"
+              required
+              :class="formFieldClass"
+            >
+              <UInput
+                v-model.number="createState.amountMinor"
+                type="number"
+                min="0"
+                required
+                class="w-full"
+                size="xl"
+                :ui="inputUi"
               />
             </UFormField>
             <UFormField label="Free Months" required :class="formFieldClass">

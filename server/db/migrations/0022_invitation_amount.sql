@@ -1,0 +1,1 @@
+ALTER TABLE "onboarding_invitation" ADD COLUMN "amount_minor" integer DEFAULT 0 NOT NULL;

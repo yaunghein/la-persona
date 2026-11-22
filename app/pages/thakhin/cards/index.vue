@@ -247,7 +247,9 @@ const planSelectItems = computed(() =>
 );
 
 /** Subscription plan for create flow — prefills Spline + S3 keys (placeholders). */
-const createPlanCode = ref('friend-family');
+const createPlanCode = ref<(typeof CREATE_PLANS)[number]['code']>(
+  'friend-family'
+);
 
 watch(
   createPlanItems,

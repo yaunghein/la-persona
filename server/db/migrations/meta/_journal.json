@@ -155,6 +155,13 @@
       "when": 1795254402400,
       "tag": "0021_nullable_payment_receipt",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1795363609917,
+      "tag": "0022_invitation_amount",
+      "breakpoints": true
     }
   ]
 }

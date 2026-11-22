@@ -17,6 +17,7 @@ function selectInvitations() {
       cardFirstName: card.firstName,
       cardLastName: card.lastName,
       planName: subscriptionPlan.name,
+      currency: subscriptionPlan.currency,
     })
     .from(onboardingInvitation)
     .innerJoin(

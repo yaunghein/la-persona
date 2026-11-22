@@ -25,6 +25,7 @@ export default defineEventHandler(async (event) => {
       email: created.email,
       card_id: request.cardId,
       plan_code: request.subscriptionPlanCode,
+      amount_minor: request.amountMinor,
     },
     ...(sendNow
       ? {

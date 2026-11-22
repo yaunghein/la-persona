@@ -86,6 +86,7 @@ export async function createOnboardingInvitation(params: {
   organizationName: string;
   cardId: string;
   subscriptionPlanCode: string;
+  amountMinor: number;
   freeMonths: number;
   expirationMinutes: number;
   createdByUserId: string;
@@ -164,6 +165,7 @@ export async function createOnboardingInvitation(params: {
         organizationId: createdOrganization.id,
         cardId: params.cardId,
         subscriptionPlanCode: params.subscriptionPlanCode,
+        amountMinor: params.amountMinor,
         freeMonths: params.freeMonths,
         expirationMinutes: params.expirationMinutes,
         expiresAt,
@@ -295,6 +297,12 @@ export async function acceptOnboardingInvitation(params: {
     const endAt = new Date(startAt);
     endAt.setMonth(endAt.getMonth() + Math.max(0, invite.freeMonths));
 
+    const plan = await tx.query.subscriptionPlan.findFirst({
+      where: eq(subscriptionPlan.code, invite.subscriptionPlanCode),
+      columns: { currency: true },
+    });
+    if (!plan) throw conflict('Selected subscription plan is invalid');
+
     const [payment] = await tx
       .insert(subscriptionPayment)
       .values({
@@ -319,8 +327,8 @@ export async function acceptOnboardingInvitation(params: {
         termYears: 1,
         startAt,
         endAt,
-        amountMinor: 0,
-        currency: 'MMK',
+        amountMinor: invite.amountMinor,
+        currency: plan.currency,
       })
       .returning();
     if (!paymentItem) {
@@ -484,6 +492,8 @@ function toInvitationSummary(
     cardLastName: row.cardLastName,
     planCode: invitation.subscriptionPlanCode,
     planName: row.planName,
+    amountMinor: invitation.amountMinor,
+    currency: row.currency,
     link: buildOnboardingInvitationLink(invitation.id),
   };
 }

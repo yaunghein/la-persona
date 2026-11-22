@@ -21,6 +21,8 @@ export const onboardingInvitation = pgTable(
     subscriptionPlanCode: text()
       .notNull()
       .references(() => subscriptionPlan.code, { onDelete: 'restrict' }),
+    /** Recorded payment amount for this invite. 0 is a complimentary period. */
+    amountMinor: integer().notNull().default(0),
     freeMonths: integer().notNull().default(0),
     expirationMinutes: integer().notNull(),
     expiresAt: timestamp().notNull(),
