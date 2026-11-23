@@ -1,0 +1,1 @@
+ALTER TABLE "company_setting" ADD COLUMN "cover_url" text;

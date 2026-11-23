@@ -29,6 +29,8 @@ export type ContactListParams = {
   limit: number;
   offset: number;
   q?: string;
+  cardId?: string;
+  departmentId?: string;
   eventId?: string;
   labelIds?: string[];
 };
@@ -185,7 +187,13 @@ export function useDeleteContactLabelMutation() {
 /** Every contact in scope as CSV (server-generated, formula-safe). */
 export function downloadContactsCsv(
   scope: ContactListScope,
-  query: { eventId?: string; labelIds?: string[] } = {}
+  query: {
+    q?: string;
+    eventId?: string;
+    labelIds?: string[];
+    cardId?: string;
+    departmentId?: string;
+  } = {}
 ): Promise<Blob> {
   return $fetch<Blob>(contactsUrl(scope), {
     query,

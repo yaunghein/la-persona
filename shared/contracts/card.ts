@@ -97,6 +97,7 @@ export const UpdateCardRequest = z
         'Card URL slugs can only include lowercase letters, numbers, and hyphens.'
       ),
     visibility: CardVisibility,
+    departmentId: z.string().trim().min(1).nullable(),
   })
   .partial();
 

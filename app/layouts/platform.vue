@@ -20,6 +20,13 @@ const communityOrgs = computed(() =>
   )
 );
 
+const companyOrgs = computed(() =>
+  (userOrgs.value || []).filter(
+    (org) =>
+      org.type === ORGANIZATION_TYPES.COMPANY && org.role === 'admin'
+  )
+);
+
 const routeOrg = computed(() =>
   (userOrgs.value || []).find((org) => org.slug === orgSlug.value)
 );
@@ -34,6 +41,16 @@ const personalBasePath = computed(() =>
 
 function closeSidebar() {
   open.value = false;
+}
+
+function companyLinksFor(org: (typeof companyOrgs.value)[number]) {
+  const base = `${ROUTES.PLATFORM.ROOT}/${org.slug}`;
+  return [
+    { label: 'Insights', to: base },
+    { label: 'Members', to: `${base}/members` },
+    { label: 'Contacts', to: `${base}/contacts` },
+    { label: 'Settings', to: `${base}/settings` },
+  ];
 }
 
 function communityLinksFor(org: (typeof communityOrgs.value)[number]) {
@@ -101,6 +118,13 @@ const groups = computed(() => [
     label: 'Go to',
     items: [
       ...personalLinks.value,
+      ...companyOrgs.value.flatMap((org) =>
+        companyLinksFor(org).map((item) => ({
+          label: `${org.name} • ${item.label}`,
+          to: item.to,
+          onSelect: closeSidebar,
+        }))
+      ),
       ...communityOrgs.value.flatMap((org) =>
         communityLinksFor(org).map((item) => ({
           label: `${org.name} • ${item.label}`,
@@ -184,9 +208,8 @@ const currentPageLabel = computed(() => {
 
   const basePath = `${ROUTES.PLATFORM.ROOT}/${slug}`;
   if (path === basePath) {
-    return routeOrg.value?.type === ORGANIZATION_TYPES.COMMUNITY
-      ? 'Insights'
-      : 'Dashboard';
+    if (routeOrg.value?.type === ORGANIZATION_TYPES.PERSONAL) return 'Dashboard';
+    return 'Insights';
   }
   if (path.startsWith(`${basePath}/cards`)) return 'Cards';
   if (path.startsWith(`${basePath}/contacts`)) return 'Contacts';
@@ -239,6 +262,11 @@ const currentPageLabel = computed(() => {
             "
           />
 
+          <LayoutCompanyNav
+            :orgs="companyOrgs"
+            :collapsed="collapsed"
+            @select="closeSidebar"
+          />
           <LayoutCommunityNav
             :orgs="communityOrgs"
             :collapsed="collapsed"

@@ -5,7 +5,7 @@ import { MemberRouteParams } from '~~/shared/contracts/organization';
 /** Removes the member, their community card and their registrations. */
 export default defineEventHandler(async (event) => {
   const { memberId } = await parseRouteParams(event, MemberRouteParams);
-  const { organization, membership } = await authorizeMemberAccess(
+  const { organization, membership, principal } = await authorizeMemberAccess(
     event,
     memberId,
     'member:delete'
@@ -14,6 +14,7 @@ export default defineEventHandler(async (event) => {
     memberId,
     organizationId: organization.id,
     actorRole: membership.role,
+    actorUserId: principal.user.id,
   });
   return respondNoContent(event);
 });

@@ -42,7 +42,9 @@ export async function restoreSubscriptionsAfterRejection(
     .select({ cardId: subscriptionPaymentItem.cardId })
     .from(subscriptionPaymentItem)
     .where(inArray(subscriptionPaymentItem.paymentId, paymentIds));
-  const cardIds = [...new Set(items.map((item) => item.cardId))];
+  const cardIds = [
+    ...new Set(items.flatMap((item) => (item.cardId ? [item.cardId] : []))),
+  ];
   if (!cardIds.length) return;
 
   const stillPending = await tx

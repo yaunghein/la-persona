@@ -8,6 +8,7 @@ import {
 import { nanoid } from 'nanoid';
 import { user } from './auth';
 import { card } from './card';
+import { cardAssignment } from './card-assignment';
 import { event } from './event';
 
 export const contactExchange = pgTable(
@@ -24,6 +25,9 @@ export const contactExchange = pgTable(
     company: text(),
     position: text(),
     cardId: text().references(() => card.id, { onDelete: 'cascade' }),
+    cardAssignmentId: text().references(() => cardAssignment.id, {
+      onDelete: 'set null',
+    }),
     source: text().default('public_form').notNull(),
     laPersonaUserId: text().references(() => user.id, { onDelete: 'set null' }),
     laPersonaCardId: text().references(() => card.id, { onDelete: 'set null' }),
@@ -39,6 +43,7 @@ export const contactExchange = pgTable(
   },
   (table) => [
     index('contact_exchange_card_idx').on(table.cardId),
+    index('contact_exchange_assignment_idx').on(table.cardAssignmentId),
     index('contact_exchange_la_persona_user_idx').on(table.laPersonaUserId),
     index('contact_exchange_event_idx').on(table.eventId),
     uniqueIndex('contact_exchange_card_la_persona_user_uidx').on(

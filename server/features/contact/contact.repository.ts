@@ -5,6 +5,7 @@ import {
   eq,
   ilike,
   inArray,
+  isNull,
   or,
   type SQL,
 } from 'drizzle-orm';
@@ -12,7 +13,9 @@ import { alias } from 'drizzle-orm/pg-core';
 import { db } from '~~/server/db';
 import {
   card,
+  cardAssignment,
   contactExchange,
+  department,
   contactExchangeBeforePlatform,
   contactLabel,
   contactLabelAssignment,
@@ -30,17 +33,35 @@ export type ContactScope =
 
 export type ContactFilter = {
   cardId?: string;
+  departmentId?: string;
   eventId?: string;
   /** Contacts carrying any of these labels; only `labelOwnerUserId`'s labels count. */
   labelIds?: string[];
   labelOwnerUserId: string;
   q?: string;
+  /** When set, company-card contacts from other holders stay hidden. */
+  assignmentUserId?: string;
   limit: number;
   offset: number;
 };
 
 function escapeLikePattern(value: string) {
   return value.replace(/[\\%_]/g, (character) => `\\${character}`);
+}
+
+function holderAssignmentCondition(userId: string) {
+  return or(
+    isNull(contactExchange.cardAssignmentId),
+    inArray(
+      contactExchange.cardAssignmentId,
+      db
+        .select({ id: cardAssignment.id })
+        .from(cardAssignment)
+        .where(
+          and(eq(cardAssignment.userId, userId), isNull(cardAssignment.endedAt))
+        )
+    )
+  );
 }
 
 function scopeCondition(scope: ContactScope): SQL | undefined {
@@ -106,6 +127,8 @@ function selectContactRows() {
       organizationSlug: organization.slug,
       organizationName: organization.name,
       organizationType: organization.type,
+      holderName: cardAssignment.holderName,
+      departmentName: department.name,
       event: { id: event.id, title: event.title, startsAt: event.startsAt },
       personaCard: {
         id: personaCard.id,
@@ -124,7 +147,12 @@ function selectContactRows() {
     .innerJoin(card, eq(contactExchange.cardId, card.id))
     .innerJoin(organization, eq(card.organizationId, organization.id))
     .leftJoin(personaCard, eq(contactExchange.laPersonaCardId, personaCard.id))
-    .leftJoin(event, eq(contactExchange.eventId, event.id));
+    .leftJoin(event, eq(contactExchange.eventId, event.id))
+    .leftJoin(
+      cardAssignment,
+      eq(cardAssignment.id, contactExchange.cardAssignmentId)
+    )
+    .leftJoin(department, eq(department.id, card.departmentId));
 }
 
 export async function listContacts(scope: ContactScope, filter: ContactFilter) {
@@ -134,9 +162,13 @@ export async function listContacts(scope: ContactScope, filter: ContactFilter) {
   const where = and(
     scoped,
     filter.cardId ? eq(contactExchange.cardId, filter.cardId) : undefined,
+    filter.departmentId ? eq(card.departmentId, filter.departmentId) : undefined,
     filter.eventId ? eq(contactExchange.eventId, filter.eventId) : undefined,
     labelCondition(filter),
-    searchCondition(filter.q)
+    searchCondition(filter.q),
+    filter.assignmentUserId
+      ? holderAssignmentCondition(filter.assignmentUserId)
+      : undefined
   );
 
   const [rows, [totals]] = await Promise.all([
@@ -231,12 +263,24 @@ export async function deleteContact(contactId: string) {
   await db.delete(contactExchange).where(eq(contactExchange.id, contactId));
 }
 
+async function assignmentFor(cardId: string | null | undefined) {
+  if (!cardId) return null;
+  const { openAssignmentId } = await import(
+    '~~/server/features/organization/company.service'
+  );
+  return openAssignmentId(cardId);
+}
+
 export async function insertContact(
   values: typeof contactExchange.$inferInsert
 ) {
   const [inserted] = await db
     .insert(contactExchange)
-    .values(values)
+    .values({
+      ...values,
+      cardAssignmentId:
+        values.cardAssignmentId ?? (await assignmentFor(values.cardId)),
+    })
     .returning();
   if (!inserted) throw new Error('Contact insert returned no row.');
   return inserted;
@@ -265,7 +309,11 @@ export async function upsertSeamlessExchange(
 ) {
   return db.transaction(async (tx) => {
     const upsert = async (values: SeamlessContactValues) => {
-      const row = { ...values, source: 'seamless_exchange' as const };
+      const row = {
+        ...values,
+        source: 'seamless_exchange' as const,
+        cardAssignmentId: await assignmentFor(values.cardId),
+      };
       // A re-exchange away from an event keeps where they first met.
       const { eventId, ...withoutEvent } = row;
       const [saved] = await tx

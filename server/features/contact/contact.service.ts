@@ -100,6 +100,8 @@ export async function listContactPage(
   const { rows, total } = await listContacts(scope, {
     ...query,
     labelOwnerUserId: viewerUserId,
+    assignmentUserId:
+      'cardIds' in scope || scope.cardOwnerUserId ? viewerUserId : undefined,
   });
   const labels = await listContactLabelsByContactIds(
     rows.map((row) => row.contact.id),
@@ -236,6 +238,8 @@ export async function exportContactsCsv(
     'Event',
     'Labels',
     'Note',
+    'Holder',
+    'Department',
   ];
   return toCsv([
     options.includeOrigin ? [...header, 'Origin'] : header,
@@ -249,6 +253,8 @@ export async function exportContactsCsv(
         contact.event?.title ?? null,
         contact.labels.map((label) => label.name).join(', ') || null,
         contact.note,
+        contact.card?.holderName ?? null,
+        contact.card?.departmentName ?? null,
       ];
       return options.includeOrigin
         ? [...row, contactOriginLabel(contact)]

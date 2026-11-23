@@ -1,5 +1,8 @@
 import type { H3Event } from 'h3';
 import { auth } from '~~/server/auth';
+import { findPersonalOrganization } from '~~/server/features/auth/account.repository';
+import { claimCompanyInvitation } from '~~/server/features/organization/company.service';
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 import {
   findInvitationById,
   findMembership,
@@ -215,6 +218,25 @@ async function acceptAsInvitee(
       body: { invitationId: invitation.id },
       headers: event.headers,
     });
+  }
+
+  if (organization.type === ORGANIZATION_TYPES.COMPANY) {
+    const invite = await findInvitationById(invitation.id);
+    if (!invite?.cardId) {
+      throw conflict('This invitation has no card.', 'invitation_card');
+    }
+    const claimed = await claimCompanyInvitation({
+      invitationId: invitation.id,
+      userId,
+      userEmail: invitation.email,
+      userName: '',
+    });
+    const personal = await findPersonalOrganization(userId);
+    return {
+      status: 'accepted',
+      organizationSlug: personal?.slug ?? organization.slug,
+      redirectTo: `/platform/${organization.slug}/cards/${claimed.cardSlug}`,
+    };
   }
 
   const card = await ensureCommunityCard(userId, organization.id);

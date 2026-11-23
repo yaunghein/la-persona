@@ -12,7 +12,15 @@ definePageMeta({
 
 const toast = useToast();
 const { organizationSlug } = useOrganizationSlug();
-const { data: members } = useCommunityMembersQuery(organizationSlug);
+const { data: userOrgs } = useUserOrganizations();
+const isCompany = computed(
+  () =>
+    userOrgs.value?.find((org) => org.slug === organizationSlug.value)?.type ===
+    'company'
+);
+const { data: members } = useCommunityMembersQuery(organizationSlug, {
+  enabled: () => !isCompany.value,
+});
 const { mutate: removeMember, isPending: isRemoving } =
   useRemoveMemberMutation(organizationSlug);
 const { mutate: updateMemberRole } =
@@ -161,7 +169,12 @@ async function exportMembers() {
 </script>
 
 <template>
+  <OrganizationCompanyMembers
+    v-if="isCompany"
+    :organization-slug="organizationSlug"
+  />
   <OrganizationMembersList
+    v-else
     :data="membersData"
     @invite="openInvite"
     @export="exportMembers"

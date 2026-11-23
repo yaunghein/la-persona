@@ -34,9 +34,29 @@ export async function listCardsInWorkspace(
 
 export async function updateCard(
   target: CardWithContext,
-  changes: UpdateCardRequest
+  changes: UpdateCardRequest,
+  options?: { isCompanyManager?: boolean }
 ): Promise<CardDetail> {
   const values = { ...changes };
+  if (target.organization.type === ORGANIZATION_TYPES.COMPANY) {
+    delete values.slug;
+    if (!options?.isCompanyManager) {
+      delete values.company;
+      delete values.website;
+      delete values.departmentId;
+    }
+  } else {
+    delete values.departmentId;
+  }
+  if (values.departmentId) {
+    const { listDepartments } = await import(
+      '~~/server/features/organization/company.service'
+    );
+    const departments = await listDepartments(target.card.organizationId);
+    if (!departments.items.some((item) => item.id === values.departmentId)) {
+      throw badRequest('Choose a department from this company.');
+    }
+  }
 
   if ('phone' in changes || 'phoneCountryCode' in changes) {
     const resolved = resolvedPhoneFields(
@@ -66,7 +86,10 @@ export async function updateCard(
 
 /** Card holders delete their own personal cards; community cards follow membership. */
 export async function deleteCard(target: CardWithContext, actorUserId: string) {
-  if (target.organization.type === ORGANIZATION_TYPES.COMMUNITY) {
+  if (
+    target.organization.type === ORGANIZATION_TYPES.COMMUNITY ||
+    target.organization.type === ORGANIZATION_TYPES.COMPANY
+  ) {
     throw forbidden(
       'Community cards are removed when you leave the community.',
       'community_card'

@@ -149,6 +149,7 @@ const subscriptionFilterItems: {
   { label: 'Expired', value: 'expired' },
   { label: 'No end date', value: 'no_end' },
   { label: 'Community', value: 'community' },
+  { label: 'Company', value: 'company' },
 ];
 
 const billingFilterItems: { label: string; value: AdminCardBillingFilter }[] = [
@@ -542,7 +543,10 @@ function getActionItems(row: CardRow): DropdownMenuItem[][] {
       {
         label: 'Extend',
         icon: 'i-lucide-calendar-plus',
-        disabled: !row.userId || row.subscriptionStatus === 'pending_approval',
+        disabled:
+          !row.userId ||
+          row.subscriptionStatus === 'pending_approval' ||
+          row.organizationType !== 'personal',
         onSelect: () => openExtend(row),
       },
       {

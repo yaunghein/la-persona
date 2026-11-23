@@ -22,9 +22,7 @@ export const subscriptionPayment = pgTable(
     organizationId: text()
       .notNull()
       .references(() => organization.id, { onDelete: 'cascade' }),
-    paidByUserId: text()
-      .notNull()
-      .references(() => user.id, { onDelete: 'cascade' }),
+    paidByUserId: text().references(() => user.id, { onDelete: 'set null' }),
     requestId: text().references(() => cardRequest.id, {
       onDelete: 'set null',
     }),
@@ -56,9 +54,7 @@ export const subscriptionPaymentItem = pgTable(
     paymentId: text()
       .notNull()
       .references(() => subscriptionPayment.id, { onDelete: 'cascade' }),
-    cardId: text()
-      .notNull()
-      .references(() => card.id, { onDelete: 'cascade' }),
+    cardId: text().references(() => card.id, { onDelete: 'set null' }),
     planCode: text()
       .notNull()
       .references(() => subscriptionPlan.code, { onDelete: 'restrict' }),

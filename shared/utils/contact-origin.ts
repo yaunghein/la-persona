@@ -11,7 +11,21 @@ export function contactOriginLabel(
     if (contact.card?.organizationType === ORGANIZATION_TYPES.COMMUNITY) {
       return contact.card.organizationName;
     }
+    if (contact.card?.organizationType === ORGANIZATION_TYPES.COMPANY) {
+      return [contact.card.holderName, contact.card.departmentName]
+        .filter(Boolean)
+        .join(' · ');
+    }
     return 'Personal card';
+  }
+  if (contact.card?.organizationType === ORGANIZATION_TYPES.COMPANY) {
+    const who = [
+      contact.card.holderName ?? contact.card.name,
+      contact.card.departmentName,
+    ]
+      .filter(Boolean)
+      .join(' · ');
+    return who ? `From ${who}` : contact.card.organizationName;
   }
   return contact.card?.name
     ? `From ${contact.card.name}`

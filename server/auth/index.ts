@@ -105,6 +105,15 @@ export const auth = betterAuth({
             },
           },
         },
+        invitation: {
+          additionalFields: {
+            cardId: {
+              type: 'string',
+              required: false,
+              input: false,
+            },
+          },
+        },
       },
       sendInvitationEmail: async ({
         email,

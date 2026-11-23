@@ -10,7 +10,8 @@ export type AdminCardSubscriptionFilter =
   | 'expiring'
   | 'expired'
   | 'no_end'
-  | 'community';
+  | 'community'
+  | 'company';
 
 export type AdminCardBillingFilter = 'all' | 'paid' | 'free';
 
@@ -38,6 +39,9 @@ export function matchesSubscriptionFilter(
   if (filter === 'all') return true;
   const isCommunity = card.organizationType === ORGANIZATION_TYPES.COMMUNITY;
   if (filter === 'community') return isCommunity;
+  if (filter === 'company') {
+    return card.organizationType === ORGANIZATION_TYPES.COMPANY;
+  }
   if (isCommunity) return false;
   if (filter === 'no_end')
     return Boolean(card.userId) && !card.subscriptionEndAt;

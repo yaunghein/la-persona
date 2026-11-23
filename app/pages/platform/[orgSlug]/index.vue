@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { AnalyticsPeriod } from '~~/shared/utils/analytics-period';
+import { timezoneOffsetQuery } from '~~/shared/utils/datetime';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
 definePageMeta({
@@ -19,6 +20,16 @@ const currentOrg = computed(() =>
 const showCommunityInsights = computed(() =>
   isCommunityManager(currentOrg.value)
 );
+const showCompanyAnalytics = computed(
+  () =>
+    currentOrg.value?.type === ORGANIZATION_TYPES.COMPANY &&
+    currentOrg.value.role === 'admin'
+);
+const isCompanyMember = computed(
+  () =>
+    currentOrg.value?.type === ORGANIZATION_TYPES.COMPANY &&
+    currentOrg.value.role !== 'admin'
+);
 const isCommunityMember = computed(
   () =>
     currentOrg.value?.type === ORGANIZATION_TYPES.COMMUNITY &&
@@ -26,6 +37,17 @@ const isCommunityMember = computed(
 );
 const isPersonalDashboard = computed(
   () => currentOrg.value?.type === ORGANIZATION_TYPES.PERSONAL
+);
+
+watch(
+  isCompanyMember,
+  (isMember) => {
+    if (!isMember) return;
+    navigateTo(`${ROUTES.PLATFORM.ROOT}/${orgSlug.value}/cards`, {
+      replace: true,
+    });
+  },
+  { immediate: true }
 );
 
 watch(
@@ -40,6 +62,48 @@ watch(
 );
 
 const communityPeriod = ref<AnalyticsPeriod>('7d');
+const companyPeriod = ref<AnalyticsPeriod>('30d');
+const companyDepartmentId = ref('all');
+const { data: companyDepartments, refresh: refreshCompanyDepartments } =
+  useFetch<{ items: { id: string; name: string }[] }>(
+    () => `/api/organizations/${orgSlug.value}/departments` as string,
+    { immediate: false, watch: false }
+  );
+const { data: companyInsights, refresh: refreshCompanyInsights } = useFetch<{
+  views: number;
+  saves: number;
+  clicks: number;
+  contacts: number;
+  dailyViews: { date: string; count: number }[];
+  dailyContacts: { date: string; count: number }[];
+  members: {
+    id: string;
+    name: string;
+    departmentName: string | null;
+    views: number;
+    contacts: number;
+  }[];
+}>(
+  () => {
+    const department =
+      companyDepartmentId.value === 'all'
+        ? ''
+        : `&departmentId=${companyDepartmentId.value}`;
+    const { tzOffset } = timezoneOffsetQuery();
+    return `/api/organizations/${orgSlug.value}/company-insights?period=${companyPeriod.value}&tzOffset=${tzOffset}${department}` as string;
+  },
+  { immediate: false, watch: false }
+);
+watch(
+  [showCompanyAnalytics, companyPeriod, companyDepartmentId],
+  ([show]) => {
+    if (show) refreshCompanyInsights();
+  },
+  { immediate: true }
+);
+watch(showCompanyAnalytics, (show) => {
+  if (show) refreshCompanyDepartments();
+});
 
 watch(orgSlug, () => {
   communityPeriod.value = '7d';
@@ -62,6 +126,19 @@ const {
     </div>
     <USkeleton class="h-80 w-full rounded-lg" />
   </div>
+
+  <AnalyticsCompanyInsights
+    v-else-if="showCompanyAnalytics"
+    v-model:period="companyPeriod"
+    v-model:department-id="companyDepartmentId"
+    :views="companyInsights?.views ?? 0"
+    :clicks="companyInsights?.clicks ?? 0"
+    :contacts="companyInsights?.contacts ?? 0"
+    :daily-views="companyInsights?.dailyViews ?? []"
+    :daily-contacts="companyInsights?.dailyContacts ?? []"
+    :members="companyInsights?.members ?? []"
+    :departments="companyDepartments?.items ?? []"
+  />
 
   <div v-else-if="showCommunityInsights">
     <div v-if="isCommunityInsightsPending" class="flex flex-col gap-4">

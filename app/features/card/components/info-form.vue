@@ -17,6 +17,7 @@ import {
   type SocialFormLink,
 } from '~~/shared/utils/social-links';
 import { communityCardPath } from '~~/shared/utils/routes';
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
 import {
   cardBadgeLabel,
@@ -37,6 +38,9 @@ const selectedFile = ref<File | null>(null);
 const localPreviewUrl = ref<string | null>(null);
 
 const { data: card, isLoading } = useCardQuery(slug);
+const companyFieldsLocked = computed(
+  () => card.value?.organization.type === ORGANIZATION_TYPES.COMPANY
+);
 
 const {
   state,
@@ -648,11 +652,15 @@ watch(isSocialSlideoverOpen, (open) => {
         >
           <UInput
             v-model="state.company"
+            :disabled="companyFieldsLocked"
             class="w-full"
             :ui="{
               base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
             }"
           />
+          <p v-if="companyFieldsLocked" class="mt-1 text-xs text-muted">
+            Set by the company.
+          </p>
         </UFormField>
         <UFormField
           label="Phone Number"
@@ -688,11 +696,15 @@ watch(isSocialSlideoverOpen, (open) => {
         >
           <UInput
             v-model="state.website"
+            :disabled="companyFieldsLocked"
             class="w-full"
             :ui="{
               base: 'h-[47px] rounded-[4px] border-line bg-raised text-sm text-ink placeholder:text-ink/50',
             }"
           />
+          <p v-if="companyFieldsLocked" class="mt-1 text-xs text-muted">
+            Set by the company.
+          </p>
         </UFormField>
       </div>
 

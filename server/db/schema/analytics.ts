@@ -1,6 +1,7 @@
 import { pgTable, text, timestamp, index, jsonb } from 'drizzle-orm/pg-core';
 import { nanoid } from 'nanoid';
 import { card, user, organization } from '../schema';
+import { cardAssignment } from './card-assignment';
 
 export const analytics = pgTable(
   'analytics',
@@ -23,12 +24,16 @@ export const analytics = pgTable(
     cardId: text()
       .notNull()
       .references(() => card.id, { onDelete: 'cascade' }),
+    cardAssignmentId: text().references(() => cardAssignment.id, {
+      onDelete: 'set null',
+    }),
     userId: text().references(() => user.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => [
     index('analytics_org_idx').on(table.organizationId),
     index('analytics_card_idx').on(table.cardId),
+    index('analytics_assignment_idx').on(table.cardAssignmentId),
     index('analytics_type_date_idx').on(table.type, table.createdAt),
     index('analytics_org_created_idx').on(
       table.organizationId,

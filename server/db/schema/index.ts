@@ -14,6 +14,10 @@ export * from './onboarding-invitation';
 export * from './event';
 export * from './event-registration';
 export * from './community-setting';
+export * from './company-setting';
+export * from './department';
+export * from './card-assignment';
+export * from './retired-card-slug';
 export * from './contact-label';
 export * from './attendee-label';
 

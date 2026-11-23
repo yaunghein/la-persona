@@ -1,6 +1,7 @@
 export const ORGANIZATION_TYPES = {
   PERSONAL: 'personal',
   COMMUNITY: 'community',
+  COMPANY: 'company',
 } as const;
 export type OrganizationType =
   (typeof ORGANIZATION_TYPES)[keyof typeof ORGANIZATION_TYPES];
@@ -8,4 +9,5 @@ export type OrganizationType =
 export const ORGANIZATION_TYPE_LABELS: Record<OrganizationType, string> = {
   [ORGANIZATION_TYPES.PERSONAL]: 'Personal',
   [ORGANIZATION_TYPES.COMMUNITY]: 'Community',
+  [ORGANIZATION_TYPES.COMPANY]: 'Company',
 };

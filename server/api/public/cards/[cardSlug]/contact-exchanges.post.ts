@@ -19,6 +19,10 @@ export default defineEventHandler(async (event) => {
 
   const ownerCard = await findCardBySlug(cardSlug);
   if (!ownerCard) throw notFound('Card');
+  const { assertCompanyCardLive } = await import(
+    '~~/server/features/organization/company.service'
+  );
+  await assertCompanyCardLive(ownerCard.id);
   enrichLog(event, {
     contact_exchange: {
       card_id: ownerCard.id,

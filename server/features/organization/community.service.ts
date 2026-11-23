@@ -162,6 +162,7 @@ export async function removeMember(params: {
   memberId: string;
   organizationId: string;
   actorRole: string;
+  actorUserId: string;
 }) {
   const target = await findMemberInOrganization(
     params.memberId,
@@ -182,6 +183,19 @@ export async function removeMember(params: {
         'last_owner'
       );
     }
+  }
+
+  const organization = await findOrganizationById(params.organizationId);
+  if (organization?.type === ORGANIZATION_TYPES.COMPANY) {
+    const { offboardCompanyMember } = await import(
+      '~~/server/features/organization/company.service'
+    );
+    await offboardCompanyMember({
+      memberId: target.id,
+      organizationId: params.organizationId,
+      actorUserId: params.actorUserId,
+    });
+    return target;
   }
 
   await deleteRegistrationsForUserInOrganization(

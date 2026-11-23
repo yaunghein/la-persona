@@ -32,6 +32,7 @@ export const LegacyCardRouteParams = z.object({
  */
 export const ListContactsQuery = PaginationQuery.extend({
   cardId: z.string().trim().min(1).optional(),
+  departmentId: z.string().trim().min(1).optional(),
   eventId: z.string().trim().min(1).optional(),
   // A single `?labelIds=` arrives as a string, repeated ones as an array.
   labelIds: z.preprocess(
@@ -172,6 +173,8 @@ export type ContactSummary = {
     organizationSlug: string;
     organizationName: string;
     organizationType: OrganizationType;
+    holderName: string | null;
+    departmentName: string | null;
   } | null;
   /** Set when the contact is another La Persona member (seamless exchange). */
   personaCardSlug: string | null;

@@ -96,7 +96,7 @@ export const organization = pgTable(
     createdAt: timestamp('created_at').notNull(),
     metadata: text('metadata'),
     type: text('type')
-      .$type<'personal' | 'community'>()
+      .$type<'personal' | 'community' | 'company'>()
       .default('personal')
       .notNull(),
   },
@@ -137,10 +137,13 @@ export const invitation = pgTable(
     inviterId: text('inviter_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
+    // Set when the invite claims a company card. The card table is created later.
+    cardId: text('card_id'),
   },
   (table) => [
     index('invitation_organizationId_idx').on(table.organizationId),
     index('invitation_email_idx').on(table.email),
+    index('invitation_cardId_idx').on(table.cardId),
   ]
 );
 

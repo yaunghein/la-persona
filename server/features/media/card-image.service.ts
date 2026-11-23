@@ -1,4 +1,5 @@
 import { communityUsesCardImageKeys } from '~~/server/features/organization/community-setting.repository';
+import { companyUsesCardImageKeys } from '~~/server/features/organization/company.service';
 import {
   createUploadTicket,
   deleteObject,
@@ -49,7 +50,8 @@ async function requireCardImageSlug(name: string) {
   }
   if (
     reservedSlugs().has(slug) ||
-    (await communityUsesCardImageKeys(keysForSlug(slug)))
+    (await communityUsesCardImageKeys(keysForSlug(slug))) ||
+    (await companyUsesCardImageKeys(keysForSlug(slug)))
   ) {
     throw conflict(
       `${slug} is a shared design. Use a different name.`,

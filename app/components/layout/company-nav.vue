@@ -1,0 +1,191 @@
+<script setup lang="ts">
+import type { UserOrganization } from '~~/shared/contracts/organization';
+
+const props = defineProps<{
+  orgs: UserOrganization[];
+  collapsed?: boolean;
+}>();
+
+const emit = defineEmits<{
+  select: [];
+}>();
+
+type CompanyNavPreference = {
+  ready: boolean;
+  slugs: string[];
+};
+
+const route = useRoute();
+const { data: session } = await authClient.useSession(useFetch);
+const storageKey = `lp-company-nav:${session.value?.user?.id || 'anonymous'}`;
+const preference = useLocalStorage<CompanyNavPreference>(storageKey, {
+  ready: false,
+  slugs: [],
+});
+const hoveredSlug = ref<string | null>(null);
+
+type CompanyLink = {
+  label: string;
+  to: string;
+  exact?: boolean;
+};
+
+function linksFor(org: UserOrganization): CompanyLink[] {
+  const base = `${ROUTES.PLATFORM.ROOT}/${org.slug}`;
+  return [
+    { label: 'Insights', to: base, exact: true },
+    { label: 'Members', to: `${base}/members` },
+    { label: 'Contacts', to: `${base}/contacts` },
+    { label: 'Settings', to: `${base}/settings` },
+  ];
+}
+
+function expandedSlugs() {
+  const slugs = preference.value.slugs;
+  return Array.isArray(slugs) ? slugs : [];
+}
+
+function isExpanded(slug: string) {
+  return expandedSlugs().includes(slug);
+}
+
+function toggle(slug: string) {
+  const current = expandedSlugs();
+  preference.value = {
+    ready: true,
+    slugs: current.includes(slug)
+      ? current.filter((item) => item !== slug)
+      : [...current, slug],
+  };
+}
+
+function isActive(link: CompanyLink) {
+  if (link.exact) return route.path === link.to;
+  return route.path === link.to || route.path.startsWith(`${link.to}/`);
+}
+
+function onSelect() {
+  emit('select');
+}
+
+watch(
+  () => props.orgs,
+  (orgs) => {
+    if (!orgs.length || preference.value.ready) return;
+    const firstCompany = orgs[0];
+    if (!firstCompany) return;
+    preference.value = { ready: true, slugs: [firstCompany.slug] };
+  },
+  { immediate: true }
+);
+</script>
+
+<template>
+  <div v-if="orgs.length" class="flex flex-col gap-4">
+    <p
+      v-if="!collapsed"
+      class="px-2 text-sm font-medium uppercase tracking-[1.4px] text-ink"
+    >
+      Companies
+    </p>
+
+    <div v-if="collapsed" class="flex flex-col items-center gap-2">
+      <UPopover
+        v-for="org in orgs"
+        :key="org.slug"
+        :content="{ align: 'start', side: 'right', sideOffset: 8 }"
+        :ui="{ content: 'border border-line bg-surface p-2' }"
+      >
+        <UButton
+          color="neutral"
+          variant="ghost"
+          square
+          class="size-9 justify-center rounded-full p-0"
+          :aria-label="org.name"
+        >
+          <UiSkeletonImage
+            :src="communityLogoSrc(org.logo, org.name)"
+            :alt="org.name"
+            width="20"
+            height="20"
+            class="size-5 rounded-full object-cover"
+          />
+        </UButton>
+        <template #content>
+          <div class="flex min-w-44 flex-col gap-1">
+            <p class="px-2.5 py-1 text-sm font-medium text-ink">
+              {{ org.name }}
+            </p>
+            <NuxtLink
+              v-for="link in linksFor(org)"
+              :key="link.to"
+              :to="link.to"
+              class="rounded px-2.5 py-1.5 text-sm font-medium"
+              :class="
+                isActive(link)
+                  ? 'bg-raised text-ink'
+                  : 'text-subtle hover:text-ink'
+              "
+              @click="onSelect"
+            >
+              {{ link.label }}
+            </NuxtLink>
+          </div>
+        </template>
+      </UPopover>
+    </div>
+
+    <div v-else class="flex flex-col gap-2">
+      <div v-for="org in orgs" :key="org.slug" class="flex flex-col gap-2">
+        <button
+          type="button"
+          class="flex w-full items-center gap-2.5 rounded px-2.5 py-1.5 text-left"
+          :aria-expanded="isExpanded(org.slug)"
+          @click="toggle(org.slug)"
+          @mouseenter="hoveredSlug = org.slug"
+          @mouseleave="hoveredSlug = null"
+        >
+          <UiSkeletonImage
+            :src="communityLogoSrc(org.logo, org.name)"
+            :alt="org.name"
+            width="20"
+            height="20"
+            class="size-5 shrink-0 rounded-full object-cover"
+          />
+          <UiOverflowMarquee
+            class="min-w-0 flex-1 text-sm font-medium text-ink"
+            :text="org.name"
+            :play="hoveredSlug === org.slug"
+          />
+          <UIcon
+            name="i-lucide-chevron-down"
+            class="size-5 shrink-0 text-ink transition-transform duration-200"
+            :class="isExpanded(org.slug) ? 'rotate-180' : ''"
+          />
+        </button>
+
+        <div v-if="isExpanded(org.slug)" class="flex items-stretch">
+          <div class="ml-2.5 flex w-5 shrink-0 justify-center">
+            <div class="h-full w-px bg-line" />
+          </div>
+          <div class="flex min-w-0 flex-1 flex-col gap-2">
+            <NuxtLink
+              v-for="link in linksFor(org)"
+              :key="link.to"
+              :to="link.to"
+              class="flex h-8 items-center rounded px-2.5 text-sm font-medium"
+              :class="
+                isActive(link)
+                  ? 'bg-raised text-ink'
+                  : 'text-subtle hover:text-ink'
+              "
+              @click="onSelect"
+            >
+              {{ link.label }}
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

@@ -114,7 +114,7 @@ export type ListPaymentsQuery = z.infer<typeof ListPaymentsQuery>;
 export type PaymentForReview = {
   id: string;
   organizationId: string;
-  paidByUserId: string;
+  paidByUserId: string | null;
   payerName: string | null;
   payerEmail: string | null;
   receiptUrl: string | null;
@@ -129,7 +129,7 @@ export type PaymentForReview = {
   currency: string | null;
   items: {
     id: string;
-    cardId: string;
+    cardId: string | null;
     planCode: string;
     amountMinor: number;
     currency: string;

@@ -31,7 +31,15 @@ export async function authorizeMemberAccess(
     target.organizationId,
     permission
   );
-  assertCommunityOrganization(access.organization);
+  if (
+    access.organization.type !== 'community' &&
+    access.organization.type !== 'company'
+  ) {
+    throw forbidden(
+      'This is only available for community organizations.',
+      'community_only'
+    );
+  }
   enrichLog(event, { member: { id: target.id, role: target.role } });
   return { target, ...access };
 }

@@ -79,6 +79,11 @@ const createForm = reactive({
 const isCreatingCommunity = computed(
   () => createForm.type === ORGANIZATION_TYPES.COMMUNITY
 );
+const isCreatingPersonal = computed(
+  () => createForm.type === ORGANIZATION_TYPES.PERSONAL
+);
+const isCardsOpen = ref(false);
+const cardsOrganizationId = ref<string | null>(null);
 
 const typeItems = [
   {
@@ -88,6 +93,10 @@ const typeItems = [
   {
     label: ORGANIZATION_TYPE_LABELS[ORGANIZATION_TYPES.COMMUNITY],
     value: ORGANIZATION_TYPES.COMMUNITY,
+  },
+  {
+    label: ORGANIZATION_TYPE_LABELS[ORGANIZATION_TYPES.COMPANY],
+    value: ORGANIZATION_TYPES.COMPANY,
   },
 ];
 
@@ -242,7 +251,9 @@ async function onCreate() {
       slug: createForm.slug.trim() || undefined,
       ...(isCreatingCommunity.value
         ? { ownerEmail: ownerEmail || undefined }
-        : { ownerUserId: createForm.ownerUserId || undefined }),
+        : isCreatingPersonal.value
+          ? { ownerUserId: createForm.ownerUserId || undefined }
+          : {}),
     });
     await invalidateAdmin();
     toast.add({
@@ -273,13 +284,26 @@ function getActionItems(row: OrgRow): DropdownMenuItem[][] {
         icon: 'i-lucide-pencil',
         onSelect: () => openEdit(row),
       },
-      ...(row.type === ORGANIZATION_TYPES.COMMUNITY
+      ...(row.type === ORGANIZATION_TYPES.COMMUNITY ||
+      row.type === ORGANIZATION_TYPES.COMPANY
         ? [
             {
               label: 'Upload assets',
               icon: 'i-lucide-image-up',
               onSelect: () => openAssets(row),
             },
+            ...(row.type === ORGANIZATION_TYPES.COMPANY
+              ? [
+                  {
+                    label: 'Cards',
+                    icon: 'i-lucide-id-card',
+                    onSelect: () => {
+                      cardsOrganizationId.value = row.id;
+                      isCardsOpen.value = true;
+                    },
+                  },
+                ]
+              : []),
           ]
         : []),
       {
@@ -343,7 +367,9 @@ async function onConfirmDelete() {
 }
 
 function typeTone(type: OrganizationType): AdminPillTone {
-  return type === ORGANIZATION_TYPES.COMMUNITY ? 'gold' : 'ink';
+  if (type === ORGANIZATION_TYPES.COMMUNITY) return 'gold';
+  if (type === ORGANIZATION_TYPES.COMPANY) return 'info';
+  return 'ink';
 }
 
 const columns: TableColumn<OrgRow>[] = [
@@ -521,7 +547,11 @@ const selectMenuUi = {
                 :ui="inputUi"
               />
             </UFormField>
-            <UFormField v-else label="Owner" :class="formFieldClass">
+            <UFormField
+              v-else-if="isCreatingPersonal"
+              label="Owner"
+              :class="formFieldClass"
+            >
               <USelectMenu
                 v-model="createForm.ownerUserId"
                 value-key="id"
@@ -733,5 +763,9 @@ const selectMenuUi = {
         />
       </template>
     </UModal>
+    <AdminCompanyCardsSlideover
+      v-model:open="isCardsOpen"
+      :organization-id="cardsOrganizationId"
+    />
   </div>
 </template>

@@ -1,3 +1,5 @@
+import { eq } from 'drizzle-orm';
+import { organization } from '~~/server/db/schema';
 import {
   cardHasSubmittedPayment,
   findActivePlan,
@@ -19,15 +21,15 @@ import type {
 } from '~~/shared/contracts/billing';
 import type { Collection } from '~~/shared/contracts/collection';
 
-function cardName(firstName: string, lastName: string | null) {
+function cardName(firstName: string | null, lastName: string | null) {
   return [firstName, lastName].filter(Boolean).join(' ');
 }
 
 function toPeriod(row: {
   id: string;
   paymentId: string;
-  cardId: string;
-  cardFirstName: string;
+  cardId: string | null;
+  cardFirstName: string | null;
   cardLastName: string | null;
   planCode: string;
   planName: string | null;
@@ -40,8 +42,9 @@ function toPeriod(row: {
   return {
     id: row.id,
     paymentId: row.paymentId,
-    cardId: row.cardId,
-    cardName: cardName(row.cardFirstName, row.cardLastName),
+    cardId: row.cardId ?? '',
+    cardName:
+      cardName(row.cardFirstName, row.cardLastName) || 'Deleted card',
     planCode: row.planCode,
     planName: row.planName,
     amountMinor: row.amountMinor,
@@ -124,6 +127,17 @@ export async function addCardPeriod(
   return runInTransaction(async (tx) => {
     const card = await findCardForPeriod(tx, cardId);
     if (!card) throw notFound('Card');
+    const [org] = await tx
+      .select({ type: organization.type })
+      .from(organization)
+      .where(eq(organization.id, card.organizationId))
+      .limit(1);
+    if (org?.type !== 'personal') {
+      throw conflict(
+        'Only personal cards can be extended here.',
+        'not_personal_card'
+      );
+    }
     if (!card.userId) {
       throw conflict(
         'Claim the card before adding a period.',

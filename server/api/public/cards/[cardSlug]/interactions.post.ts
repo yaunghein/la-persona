@@ -13,6 +13,11 @@ export default defineEventHandler(async (event) => {
 
   const card = await findCardBySlug(cardSlug);
   if (!card) throw notFound('Card');
+  const { companyCardActivity, openAssignmentId } = await import(
+    '~~/server/features/organization/company.service'
+  );
+  const activity = await companyCardActivity(card.id);
+  if (activity === 'paused' || activity === 'vacant') return respondNoContent(event);
 
   const metadata = request.metadata ? { ...request.metadata } : undefined;
   if (metadata?.action === 'vcf_download' && metadata.photoHost) {
@@ -43,6 +48,7 @@ export default defineEventHandler(async (event) => {
     cardId: card.id,
     organizationId: card.organizationId,
     userId: card.userId,
+    cardAssignmentId: await openAssignmentId(card.id),
     type: request.type,
     metadata,
   });

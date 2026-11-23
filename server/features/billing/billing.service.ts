@@ -70,7 +70,10 @@ export async function loadCardPricing(): Promise<CardPricingTable> {
 }
 
 function assertPersonalCard(target: CardWithContext) {
-  if (target.organization.type === ORGANIZATION_TYPES.COMMUNITY) {
+  if (
+    target.organization.type === ORGANIZATION_TYPES.COMMUNITY ||
+    target.organization.type === ORGANIZATION_TYPES.COMPANY
+  ) {
     throw forbidden(
       'Community cards are covered by the community.',
       'community_card'
@@ -95,7 +98,12 @@ const NO_PERIOD: CardSubscriptionState = {
 export async function describeCardSubscription(
   target: CardWithContext
 ): Promise<CardSubscriptionOverview | null> {
-  if (target.organization.type === ORGANIZATION_TYPES.COMMUNITY) return null;
+  if (
+    target.organization.type === ORGANIZATION_TYPES.COMMUNITY ||
+    target.organization.type === ORGANIZATION_TYPES.COMPANY
+  ) {
+    return null;
+  }
   const state = await cardSubscriptionState(target);
   if (!state) return null;
   return toSubscriptionOverview(state);
@@ -206,7 +214,9 @@ export async function listBillingHistory(
     items: rows.map((row) => ({
       id: row.itemId,
       paymentId: row.paymentId,
-      cardName: [row.cardFirstName, row.cardLastName].filter(Boolean).join(' '),
+      cardName:
+        [row.cardFirstName, row.cardLastName].filter(Boolean).join(' ') ||
+        'Deleted card',
       description: row.planName || row.planCode,
       status: row.paymentStatus,
       amountMinor: row.amountMinor,

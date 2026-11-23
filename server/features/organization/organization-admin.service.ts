@@ -21,6 +21,7 @@ import {
   updateCommunityCardsBrand,
 } from '~~/server/features/organization/community.repository';
 import { ensureCommunityCard } from '~~/server/features/organization/community.service';
+import { ensureCompanySetting } from '~~/server/features/organization/company.service';
 import { sendOrganizerInvitationEmail } from '~~/server/features/organization/invitation.notifications';
 import { sanitizeRichText } from '~~/server/lib/html-sanitizer';
 import type { Collection } from '~~/shared/contracts/collection';
@@ -97,6 +98,9 @@ export async function createOrganization(
     type: request.type,
     ownerUserId,
   });
+  if (request.type === ORGANIZATION_TYPES.COMPANY) {
+    await ensureCompanySetting(created.id);
+  }
 
   const invited =
     !isPersonal && request.ownerEmail

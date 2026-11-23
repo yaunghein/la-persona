@@ -17,7 +17,12 @@ const SPECIAL_PLAN_LABELS: Record<string, string> = {
 
 /** Community name for community cards, otherwise the plan (or approval state). */
 export function cardBadgeLabel(card: CardDetail): string {
-  if (isCommunityCard(card)) return card.organization.name || 'Community';
+  if (
+    card.organization.type === ORGANIZATION_TYPES.COMMUNITY ||
+    card.organization.type === ORGANIZATION_TYPES.COMPANY
+  ) {
+    return card.organization.name || 'Company';
+  }
   if (isCardPendingApproval(card)) return 'Pending';
 
   const planCode = card.subscription?.planCode;

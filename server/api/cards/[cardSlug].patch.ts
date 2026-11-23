@@ -4,12 +4,15 @@ import { CardRouteParams, UpdateCardRequest } from '~~/shared/contracts/card';
 
 export default defineEventHandler(async (event) => {
   const { cardSlug } = await parseRouteParams(event, CardRouteParams);
-  const { card } = await authorizeCardAccess(event, cardSlug, 'card:update');
+  const access = await authorizeCardAccess(event, cardSlug, 'card:update');
   const changes = await parseRequestBody(event, UpdateCardRequest);
 
-  const updated = await updateCard(card, changes);
+  const updated = await updateCard(access.card, changes, {
+    isCompanyManager: canAccessOrganization(access, 'card:readAll'),
+  });
   if (changes.visibility)
     enrichLog(event, { card: { visibility: changes.visibility } });
+  const card = access.card;
   if (updated.slug !== cardSlug)
     enrichLog(event, { card: { new_slug: updated.slug } });
   return updated;

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { format } from 'date-fns';
+import { refDebounced } from '@vueuse/core';
 import type { FeatureGuideItem } from '~/components/ui/feature-guide-modal.vue';
 import type { ContactSummary } from '~~/shared/contracts/contact';
 import type { ContactListScope } from '~/features/contact/composables/use-contact-queries';
@@ -66,6 +67,11 @@ const canSeeOrigin = computed(
     isPersonalWorkspace.value ||
     roleHasPermission(currentOrg.value?.role, 'contactExchange:readAll')
 );
+const isCompanyAdmin = computed(
+  () =>
+    currentOrg.value?.type === ORGANIZATION_TYPES.COMPANY &&
+    currentOrg.value.role === 'admin'
+);
 
 const parseViewMode = (value: unknown): ViewMode =>
   value === 'grid' ? 'grid' : 'list';
@@ -78,18 +84,28 @@ const parseEventId = (value: unknown) =>
   typeof value === 'string' && value ? value : undefined;
 const parseLabelIds = (value: unknown) =>
   typeof value === 'string' && value ? value.split(',') : [];
+const parseCompanyGroup = (value: unknown): 'none' | 'member' | 'department' =>
+  value === 'member' || value === 'department' ? value : 'none';
 
 const viewMode = ref<ViewMode>(parseViewMode(route.query.view));
 const page = ref(parsePage(route.query.page));
 const { siblingCount, showEdges } = usePaginationWindow(0);
 const eventId = ref(parseEventId(route.query.event));
+const cardId = ref(parseEventId(route.query.card));
+const departmentId = ref(parseEventId(route.query.department));
+const companyGroup = ref(parseCompanyGroup(route.query.group));
 const labelIds = ref(parseLabelIds(route.query.labels));
 const labelIdsQuery = computed(() =>
   labelIds.value.length ? labelIds.value : undefined
 );
+const searchQuery = ref('');
+const debouncedSearch = refDebounced(searchQuery, 250);
+const search = computed(() => debouncedSearch.value.trim() || undefined);
 const isGrouped = ref(route.query.group === 'label');
 const pageSize = computed(() =>
-  isGrouped.value ? GROUPED_PAGE_SIZE : PAGE_SIZE[viewMode.value]
+  isGrouped.value || companyGroup.value !== 'none'
+    ? GROUPED_PAGE_SIZE
+    : PAGE_SIZE[viewMode.value]
 );
 
 const listScope = computed<ContactListScope>(() =>
@@ -103,7 +119,10 @@ const { data: contactPage, isLoading } = useContactsQuery(
     scope: listScope.value,
     limit: pageSize.value,
     offset: (page.value - 1) * pageSize.value,
+    q: search.value,
     eventId: eventId.value,
+    cardId: cardId.value,
+    departmentId: departmentId.value,
     labelIds: labelIdsQuery.value,
   }),
   { enabled: () => !isOrgsLoading.value }
@@ -124,23 +143,9 @@ const eventFilterItems = computed(() => [
     value: item.id,
   })),
 ]);
-const eventFilter = computed({
-  get: () => eventId.value ?? ALL_EVENTS,
-  set: (value: string) => {
-    eventId.value = value === ALL_EVENTS ? undefined : value;
-    page.value = 1;
-  },
-});
 
 const { data: contactLabels } = useContactLabelsQuery();
 const isLabelsOpen = ref(false);
-const labelFilter = computed({
-  get: () => labelIds.value,
-  set: (value: string[]) => {
-    labelIds.value = value;
-    page.value = 1;
-  },
-});
 
 const groupLabels = computed(() =>
   isGrouped.value
@@ -150,17 +155,174 @@ const groupLabels = computed(() =>
     : undefined
 );
 
-function toggleGrouping() {
-  isGrouped.value = !isGrouped.value;
+type ContactGroup = 'none' | 'label' | 'member' | 'department';
+
+const isFiltersOpen = ref(false);
+const draft = reactive({
+  event: ALL_EVENTS,
+  card: 'all',
+  department: 'all',
+  labels: [] as string[],
+  group: 'none' as ContactGroup,
+});
+
+const groupItems = computed(() => {
+  const items: { label: string; value: ContactGroup }[] = [
+    { label: 'No grouping', value: 'none' },
+    { label: 'Group by label', value: 'label' },
+  ];
+  if (isCompanyAdmin.value) {
+    items.push(
+      { label: 'Group by member', value: 'member' },
+      { label: 'Group by department', value: 'department' }
+    );
+  }
+  return items;
+});
+
+function currentGroup(): ContactGroup {
+  if (isGrouped.value) return 'label';
+  return companyGroup.value;
+}
+
+function openFilters() {
+  draft.event = eventId.value ?? ALL_EVENTS;
+  draft.card = cardId.value ?? 'all';
+  draft.department = departmentId.value ?? 'all';
+  draft.labels = [...labelIds.value];
+  draft.group = currentGroup();
+  isFiltersOpen.value = true;
+}
+
+function closeFilters() {
+  isFiltersOpen.value = false;
+}
+
+function applyFilters() {
+  eventId.value = draft.event === ALL_EVENTS ? undefined : draft.event;
+  cardId.value = draft.card === 'all' ? undefined : draft.card;
+  departmentId.value =
+    draft.department === 'all' ? undefined : draft.department;
+  labelIds.value = [...draft.labels];
+  isGrouped.value = draft.group === 'label';
+  companyGroup.value =
+    draft.group === 'member' || draft.group === 'department'
+      ? draft.group
+      : 'none';
+  page.value = 1;
+  isFiltersOpen.value = false;
+}
+
+function resetDraft() {
+  draft.event = ALL_EVENTS;
+  draft.card = 'all';
+  draft.department = 'all';
+  draft.labels = [];
+  draft.group = 'none';
+}
+
+const activeFilterCount = computed(() => {
+  let count = 0;
+  if (eventId.value) count += 1;
+  if (cardId.value) count += 1;
+  if (departmentId.value) count += 1;
+  if (labelIds.value.length) count += 1;
+  if (isGrouped.value || companyGroup.value !== 'none') count += 1;
+  return count;
+});
+
+const hasFilters = computed(
+  () => !!search.value || activeFilterCount.value > 0
+);
+
+function clearFilters() {
+  searchQuery.value = '';
+  eventId.value = undefined;
+  labelIds.value = [];
+  cardId.value = undefined;
+  departmentId.value = undefined;
+  isGrouped.value = false;
+  companyGroup.value = 'none';
   page.value = 1;
 }
 
-const hasFilters = computed(() => !!eventId.value || labelIds.value.length > 0);
+const { data: workspaceCards } = useWorkspaceCardsQuery({
+  enabled: () => isPersonalWorkspace.value,
+});
+const { data: companyCards, refresh: refreshCompanyCards } = useFetch<{
+  items: {
+    id: string;
+    holderName: string | null;
+    firstName: string;
+    lastName: string | null;
+  }[];
+}>(() => `/api/organizations/${orgSlug.value}/company-cards` as string, {
+  immediate: false,
+  watch: false,
+});
+const { data: companyDepartments, refresh: refreshCompanyDepartments } =
+  useFetch<{ items: { id: string; name: string }[] }>(
+    () => `/api/organizations/${orgSlug.value}/departments` as string,
+    { immediate: false, watch: false }
+  );
+watch(
+  isCompanyAdmin,
+  (isAdmin) => {
+    if (!isAdmin) return;
+    refreshCompanyCards();
+    refreshCompanyDepartments();
+  },
+  { immediate: true }
+);
 
-function clearFilters() {
-  eventFilter.value = ALL_EVENTS;
-  labelFilter.value = [];
-}
+const personalCardFilterItems = computed(() => [
+  { label: 'All cards', value: 'all' },
+  ...(workspaceCards.value ?? []).map((item) => ({
+    label:
+      item.organization.type === ORGANIZATION_TYPES.PERSONAL
+        ? 'Personal'
+        : item.organization.name,
+    value: item.id,
+  })),
+]);
+const companyCardFilterItems = computed(() => [
+  { label: 'All members', value: 'all' },
+  ...(companyCards.value?.items ?? []).map((item) => ({
+    label:
+      item.holderName ||
+      `${item.firstName} ${item.lastName ?? ''}`.trim() ||
+      'Vacant',
+    value: item.id,
+  })),
+]);
+const departmentFilterItems = computed(() => [
+  { label: 'All departments', value: 'all' },
+  ...(companyDepartments.value?.items ?? []).map((item) => ({
+    label: item.name,
+    value: item.id,
+  })),
+]);
+const formFieldClass =
+  '[&_label]:mb-1 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink';
+const modalSelectUi = {
+  base: 'h-[47px] w-full rounded-[4px] border border-line bg-raised px-4 text-sm text-ink',
+  content: 'border border-line bg-surface',
+  item: 'text-ink data-[highlighted]:bg-raised',
+  value: 'text-ink',
+  placeholder: 'text-ink/50',
+};
+const companyGroups = computed(() => {
+  if (companyGroup.value === 'none') return null;
+  const groups = new Map<string, ContactSummary[]>();
+  for (const contact of contacts.value) {
+    const label =
+      companyGroup.value === 'department'
+        ? contact.card?.departmentName || 'No department'
+        : contact.card?.holderName || contact.card?.name || 'Unassigned';
+    groups.set(label, [...(groups.get(label) ?? []), contact]);
+  }
+  return [...groups.entries()].map(([label, items]) => ({ label, items }));
+});
 
 // Kept after closing so the slideover body doesn't blank out while it animates away.
 const contactToEdit = ref<ContactSummary | null>(null);
@@ -229,8 +391,11 @@ async function exportContacts() {
   }
   try {
     const blob = await downloadContactsCsv(listScope.value, {
+      q: search.value,
       eventId: eventId.value,
       labelIds: labelIdsQuery.value,
+      cardId: cardId.value,
+      departmentId: departmentId.value,
     });
     downloadFile({
       blob,
@@ -271,25 +436,45 @@ watch(
     eventId.value = parseEventId(query.event);
     labelIds.value = parseLabelIds(query.labels);
     isGrouped.value = query.group === 'label';
+    cardId.value = parseEventId(query.card);
+    departmentId.value = parseEventId(query.department);
+    companyGroup.value = parseCompanyGroup(query.group);
   }
 );
 
 watch(
-  [viewMode, page, eventId, labelIds, isGrouped],
+  [
+    viewMode,
+    page,
+    eventId,
+    labelIds,
+    isGrouped,
+    cardId,
+    departmentId,
+    companyGroup,
+  ],
   async ([view, current, event, , grouped]) => {
     const query = {
       view,
       page: String(current),
       event,
       labels: labelIdsQuery.value?.join(','),
-      group: grouped ? 'label' : undefined,
+      card: cardId.value,
+      department: departmentId.value,
+      group: grouped
+        ? 'label'
+        : companyGroup.value === 'none'
+          ? undefined
+          : companyGroup.value,
     };
     if (
       route.query.view === query.view &&
       route.query.page === query.page &&
       parseEventId(route.query.event) === event &&
       parseEventId(route.query.labels) === query.labels &&
-      parseEventId(route.query.group) === query.group
+      parseEventId(route.query.group) === query.group &&
+      parseEventId(route.query.card) === query.card &&
+      parseEventId(route.query.department) === query.department
     ) {
       return;
     }
@@ -298,6 +483,10 @@ watch(
 );
 
 // Stay on a real page after deletes shrink the list.
+watch(search, () => {
+  page.value = 1;
+});
+
 watch(total, (count) => {
   const lastPage = Math.max(1, Math.ceil(count / pageSize.value));
   if (page.value > lastPage) page.value = lastPage;
@@ -409,48 +598,153 @@ watch(total, (count) => {
       </div>
     </div>
 
-    <div class="flex flex-wrap items-center gap-2">
-      <UTooltip
-        v-if="eventFilterItems.length > 1"
-        text="Filter by where you met"
-      >
-        <USelectMenu
-          v-model="eventFilter"
-          :items="eventFilterItems"
-          value-key="value"
-          icon="i-lucide-calendar"
-          :search-input="{ placeholder: 'Search events' }"
-          aria-label="Filter by where you met"
-          class="w-full sm:w-64"
-          :ui="filterSelectUi"
-        />
-      </UTooltip>
-      <UTooltip text="Filter by label">
-        <UiLabelSelect
-          v-model="labelFilter"
-          :labels="contactLabels ?? []"
-          placeholder="All labels"
-          manageable
-          aria-label="Filter by label"
-          class="min-w-0 flex-1 sm:w-52 sm:flex-none"
-          :ui="filterSelectUi"
-          @manage="isLabelsOpen = true"
-        />
-      </UTooltip>
-      <UTooltip text="Group by label">
+    <div class="flex items-center gap-2">
+      <UInput
+        v-model="searchQuery"
+        placeholder="Search contacts"
+        trailing-icon="i-lucide-search"
+        color="neutral"
+        variant="soft"
+        class="min-w-0 flex-1"
+        :ui="{
+          base: 'h-10 rounded-full border-0 bg-raised px-5 text-sm font-medium text-ink ring-0 placeholder:text-subtle focus-visible:ring-0',
+          trailing: 'pe-4',
+          trailingIcon: 'size-4 text-subtle',
+        }"
+      />
+      <div class="relative shrink-0">
         <UButton
-          icon="i-lucide-rows-3"
-          label="Group"
+          icon="i-lucide-sliders-horizontal"
           color="neutral"
-          class="h-9 shrink-0 cursor-pointer gap-1.5 rounded-full px-3.5 text-sm font-medium text-ink hover:bg-ink/15"
-          :ui="{ leadingIcon: 'size-4' }"
-          :class="isGrouped ? 'bg-ink/15' : 'bg-ink/5'"
-          :aria-pressed="isGrouped"
-          aria-label="Group by label"
-          @click="toggleGrouping"
+          class="flex size-10 cursor-pointer items-center justify-center rounded-full p-0 text-ink hover:bg-line"
+          :class="activeFilterCount ? 'bg-ink/15' : 'bg-raised'"
+          aria-label="Filters"
+          @click="openFilters"
         />
-      </UTooltip>
+        <span
+          v-if="activeFilterCount"
+          class="pointer-events-none absolute top-2 right-2 size-1.5 rounded-full bg-gold"
+        />
+      </div>
     </div>
+
+    <UModal
+      v-model:open="isFiltersOpen"
+      title="Filters"
+      :ui="{
+        content: 'sm:max-w-[440px] rounded-lg bg-surface',
+        title: 'text-sm font-medium uppercase tracking-widest text-ink',
+        body: 'px-5 py-4 sm:px-6 sm:py-5',
+        footer: 'flex w-full items-center justify-between',
+      }"
+    >
+      <template #body>
+        <div class="flex flex-col gap-4">
+          <UFormField
+            v-if="eventFilterItems.length > 1"
+            label="Where you met"
+            :class="formFieldClass"
+          >
+            <USelectMenu
+              v-model="draft.event"
+              :items="eventFilterItems"
+              value-key="value"
+              :search-input="{ placeholder: 'Search events' }"
+              class="w-full"
+              :ui="modalSelectUi"
+            />
+          </UFormField>
+          <UFormField
+            v-if="isPersonalWorkspace && personalCardFilterItems.length > 1"
+            label="Card"
+            :class="formFieldClass"
+          >
+            <USelectMenu
+              v-model="draft.card"
+              :items="personalCardFilterItems"
+              value-key="value"
+              :search-input="false"
+              class="w-full"
+              :ui="modalSelectUi"
+            />
+          </UFormField>
+          <UFormField
+            v-if="isCompanyAdmin"
+            label="Member"
+            :class="formFieldClass"
+          >
+            <USelectMenu
+              v-model="draft.card"
+              :items="companyCardFilterItems"
+              value-key="value"
+              :search-input="false"
+              class="w-full"
+              :ui="modalSelectUi"
+            />
+          </UFormField>
+          <UFormField
+            v-if="isCompanyAdmin"
+            label="Department"
+            :class="formFieldClass"
+          >
+            <USelectMenu
+              v-model="draft.department"
+              :items="departmentFilterItems"
+              value-key="value"
+              :search-input="false"
+              class="w-full"
+              :ui="modalSelectUi"
+            />
+          </UFormField>
+          <UFormField label="Labels" :class="formFieldClass">
+            <UiLabelSelect
+              v-model="draft.labels"
+              :labels="contactLabels ?? []"
+              placeholder="All labels"
+              manageable
+              aria-label="Filter by label"
+              class="w-full"
+              :ui="modalSelectUi"
+              @manage="isLabelsOpen = true"
+            />
+          </UFormField>
+          <UFormField label="Group by" :class="formFieldClass">
+            <USelectMenu
+              v-model="draft.group"
+              :items="groupItems"
+              value-key="value"
+              :search-input="false"
+              class="w-full"
+              :ui="modalSelectUi"
+            />
+          </UFormField>
+        </div>
+      </template>
+      <template #footer>
+        <UButton
+          label="Reset"
+          color="neutral"
+          variant="ghost"
+          class="h-10 cursor-pointer rounded-full px-5 text-sm"
+          @click="resetDraft"
+        />
+        <div class="flex items-center gap-2">
+          <UButton
+            label="Cancel"
+            color="neutral"
+            variant="ghost"
+            class="h-10 cursor-pointer rounded-full px-5 text-sm"
+            @click="closeFilters"
+          />
+          <UButton
+            label="Apply"
+            color="neutral"
+            class="h-10 cursor-pointer rounded-full bg-ink px-5 text-sm font-medium text-ink-inverse hover:bg-ink/90"
+            @click="applyFilters"
+          />
+        </div>
+      </template>
+    </UModal>
 
     <ContactLabelsSlideover v-model:open="isLabelsOpen" />
 
@@ -566,6 +860,25 @@ watch(total, (count) => {
           @click="openCreateContact"
         />
       </template>
+    </div>
+
+    <div v-else-if="companyGroups" class="flex flex-col gap-6">
+      <section
+        v-for="group in companyGroups"
+        :key="group.label"
+        class="flex flex-col gap-2"
+      >
+        <h2 class="text-xs font-medium uppercase tracking-widest text-muted">
+          {{ group.label }}
+        </h2>
+        <ContactTable
+          :contacts="group.items"
+          :show-origin="canSeeOrigin"
+          @save="saveContactToPhone"
+          @edit="openEditContact"
+          @delete="contactToDelete = $event"
+        />
+      </section>
     </div>
 
     <div

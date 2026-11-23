@@ -18,14 +18,28 @@ const route = useRoute();
 const { normalizeCardLinkValue } = useUrlNormalization();
 
 const { slug } = route.params;
+type PublicCardResponse =
+  | PublicCard
+  | { availability: 'paused' | 'retired'; companyName: string };
+
 const {
-  data: card,
+  data: cardResponse,
   error: cardError,
   refresh: refreshPublicCard,
-} = await useFetch<PublicCard>(`/api/public/cards/${slug}`);
+} = await useFetch<PublicCardResponse>(`/api/public/cards/${slug}`);
+const unavailable = computed(() =>
+  cardResponse.value && 'availability' in cardResponse.value
+    ? cardResponse.value
+    : null
+);
+const card = computed(() =>
+  cardResponse.value && !('availability' in cardResponse.value)
+    ? cardResponse.value
+    : null
+);
 const isMembersOnly = cardError.value?.statusCode === 401;
 
-if (!card.value && !isMembersOnly) {
+if (!card.value && !unavailable.value && !isMembersOnly) {
   throw createError({
     statusCode: 404,
     statusMessage: 'Page not found',
@@ -647,7 +661,19 @@ async function onSaveContact() {
 
 <template>
   <div
-    v-if="card"
+    v-if="unavailable"
+    class="flex h-dvh items-center justify-center bg-[#232323] px-6 text-center text-white"
+  >
+    <p class="max-w-sm text-lg">
+      {{
+        unavailable.availability === 'retired'
+          ? `This person is no longer with ${unavailable.companyName}.`
+          : 'This card is currently unavailable.'
+      }}
+    </p>
+  </div>
+  <div
+    v-else-if="card"
     class="relative z-10 h-dvh w-screen overflow-hidden bg-[#232323]"
   >
     <div

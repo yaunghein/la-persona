@@ -30,10 +30,15 @@ const SETTINGS = {
   { field: string; fallback: string }
 >;
 
-async function findCommunity(organizationId: string) {
+async function findBrandOrganization(organizationId: string) {
   const organization = await findOrganizationById(organizationId);
   if (!organization) throw notFound('Organization');
-  assertCommunityOrganization(organization);
+  if (
+    organization.type !== 'community' &&
+    organization.type !== 'company'
+  ) {
+    throw forbidden('This organization has no brand assets.', 'brand_assets');
+  }
   return organization;
 }
 
@@ -75,6 +80,19 @@ async function updateBrandSetting(
   field: (typeof SETTINGS)[BrandAssetKind]['field'],
   value: (current: string) => string
 ) {
+  const organization = await findBrandOrganization(organizationId);
+  if (organization.type === 'company') {
+    if (field !== 'wallpaperUrl' && field !== 'cardBackUrl') return;
+    const { ensureCompanySetting, propagateCompanyBrand } = await import(
+      '~~/server/features/organization/company.service'
+    );
+    const setting = await ensureCompanySetting(organizationId);
+    const next = value(setting[field]);
+    if (next !== setting[field]) {
+      await propagateCompanyBrand(organizationId, field, next);
+    }
+    return;
+  }
   const setting = await ensureCommunitySetting(organizationId);
   if (!setting) throw notFound('Community settings');
   const next = value(setting[field]);
@@ -89,10 +107,12 @@ async function updateBrandSetting(
 }
 
 export async function listBrandAssets(organizationId: string) {
-  const { slug } = await findCommunity(organizationId);
-  return Promise.all(
-    BRAND_ASSET_KINDS.map((kind) => findBrandAsset(kind, slug))
-  );
+  const { slug, type } = await findBrandOrganization(organizationId);
+  const kinds =
+    type === 'company'
+      ? BRAND_ASSET_KINDS.filter((kind) => !kind.startsWith('email'))
+      : BRAND_ASSET_KINDS;
+  return Promise.all(kinds.map((kind) => findBrandAsset(kind, slug)));
 }
 
 /** Upload never overwrites: the current file has to be deleted first. */
@@ -100,7 +120,10 @@ export async function issueBrandAssetUploadTicket(
   organizationId: string,
   request: CreateBrandAssetUploadRequest
 ) {
-  const { slug } = await findCommunity(organizationId);
+  const { slug, type } = await findBrandOrganization(organizationId);
+  if (type === 'company' && request.kind.startsWith('email')) {
+    throw badRequest('Companies do not use email artwork.');
+  }
   const existing = await findBrandAsset(request.kind, slug);
   if (existing.exists) {
     throw conflict(
@@ -122,7 +145,10 @@ export async function applyBrandAsset(
   organizationId: string,
   kind: BrandAssetKind
 ) {
-  const { slug } = await findCommunity(organizationId);
+  const { slug, type } = await findBrandOrganization(organizationId);
+  if (type === 'company' && kind.startsWith('email')) {
+    throw badRequest('Companies do not use email artwork.');
+  }
   const asset = await findBrandAsset(kind, slug);
   if (!asset.exists) {
     throw conflict(
@@ -143,7 +169,10 @@ export async function deleteBrandAsset(
   organizationId: string,
   kind: BrandAssetKind
 ) {
-  const { slug } = await findCommunity(organizationId);
+  const { slug, type } = await findBrandOrganization(organizationId);
+  if (type === 'company' && kind.startsWith('email')) {
+    throw badRequest('Companies do not use email artwork.');
+  }
   const asset = await findBrandAsset(kind, slug);
   if (asset.exists) await deleteObject(asset.key);
 

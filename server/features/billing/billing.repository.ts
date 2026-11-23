@@ -149,7 +149,7 @@ export function listOrganizationBillingHistory(organizationId: string) {
       subscriptionPayment,
       eq(subscriptionPayment.id, subscriptionPaymentItem.paymentId)
     )
-    .innerJoin(card, eq(card.id, subscriptionPaymentItem.cardId))
+    .leftJoin(card, eq(card.id, subscriptionPaymentItem.cardId))
     .leftJoin(
       subscriptionPlan,
       eq(subscriptionPlan.code, subscriptionPaymentItem.planCode)
@@ -161,7 +161,8 @@ export function listOrganizationBillingHistory(organizationId: string) {
     );
 }
 
-export async function findPayer(userId: string) {
+export async function findPayer(userId: string | null) {
+  if (!userId) return null;
   const [row] = await db
     .select({ email: user.email, name: user.name })
     .from(user)
@@ -220,6 +221,7 @@ export async function activatePaidSubscription(
     activatedAt: now,
     expiredAt: null,
   };
+  if (!item.cardId) return;
   await tx
     .insert(cardSubscription)
     .values({ cardId: item.cardId, ...values })
@@ -331,7 +333,7 @@ function periodRows() {
       subscriptionPayment,
       eq(subscriptionPayment.id, subscriptionPaymentItem.paymentId)
     )
-    .innerJoin(card, eq(card.id, subscriptionPaymentItem.cardId))
+    .leftJoin(card, eq(card.id, subscriptionPaymentItem.cardId))
     .leftJoin(
       subscriptionPlan,
       eq(subscriptionPlan.code, subscriptionPaymentItem.planCode)

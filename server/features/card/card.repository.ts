@@ -146,7 +146,14 @@ export async function isCardSlugTaken(slug: string, exceptCardId: string) {
     .from(card)
     .where(and(eq(card.slug, slug), ne(card.id, exceptCardId)))
     .limit(1);
-  return !!row;
+  if (row) return true;
+  const { retiredCardSlug } = await import('~~/server/db/schema');
+  const [retired] = await db
+    .select({ slug: retiredCardSlug.slug })
+    .from(retiredCardSlug)
+    .where(eq(retiredCardSlug.slug, slug))
+    .limit(1);
+  return Boolean(retired);
 }
 
 export async function updateCardById(

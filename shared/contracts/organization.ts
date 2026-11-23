@@ -266,14 +266,14 @@ const ORGANIZATION_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export const CreateOrganizationRequest = z
   .object({
     name: z.string().trim().min(1, 'Name is required').max(120),
-    type: z.enum(['personal', 'community']),
+    type: z.enum(['personal', 'community', 'company']),
     slug: z.string().trim().max(200).optional(),
     ownerUserId: z.string().trim().min(1).optional(),
     ownerEmail: z.email('Enter a valid email').trim().toLowerCase().optional(),
   })
   .refine(
     (request) =>
-      request.type === 'community' ? !request.ownerUserId : !request.ownerEmail,
+      request.type === 'personal' ? !request.ownerEmail : !request.ownerUserId,
     {
       message:
         'Communities take an owner email; personal spaces an owner user.',

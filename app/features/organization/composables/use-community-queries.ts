@@ -21,7 +21,8 @@ const organizationUrl = (organizationSlug: string, path: string): string =>
   `/api/organizations/${organizationSlug}/${path}`;
 
 export function useCommunityMembersQuery(
-  organizationSlug: MaybeRefOrGetter<string>
+  organizationSlug: MaybeRefOrGetter<string>,
+  options?: { enabled?: MaybeRefOrGetter<boolean> }
 ) {
   return useQuery({
     queryKey: computed(() =>
@@ -32,7 +33,8 @@ export function useCommunityMembersQuery(
         organizationUrl(toValue(organizationSlug), 'members')
       ),
     select: (collection) => collection.items,
-    enabled: () => !!toValue(organizationSlug),
+    enabled: () =>
+      !!toValue(organizationSlug) && (toValue(options?.enabled) ?? true),
   });
 }
 
@@ -132,7 +134,10 @@ export function useReviewInvitationMutation(
 }
 
 /** Community profile: the settings form fields plus About page counts. */
-export function useCommunityQuery(organizationSlug: MaybeRefOrGetter<string>) {
+export function useCommunityQuery(
+  organizationSlug: MaybeRefOrGetter<string>,
+  options?: { enabled?: MaybeRefOrGetter<boolean> }
+) {
   return useQuery({
     queryKey: computed(() =>
       organizationQueryKeys.detail(toValue(organizationSlug))
@@ -141,7 +146,8 @@ export function useCommunityQuery(organizationSlug: MaybeRefOrGetter<string>) {
       $fetch<CommunityAbout>(
         `/api/organizations/${toValue(organizationSlug)}` as string
       ),
-    enabled: () => !!toValue(organizationSlug),
+    enabled: () =>
+      !!toValue(organizationSlug) && (toValue(options?.enabled) ?? true),
   });
 }
 
