@@ -163,7 +163,7 @@ test.describe('Part 1: Thakhin creates the company', () => {
   });
 
   // Uploads need S3, which the e2e stack doesn't run.
-  test.skip('1.4 upload assets', () => {});
+  // test.skip('1.4 upload assets', () => {});
 });
 
 test.describe('Part 2: Creating cards and sending invites', () => {

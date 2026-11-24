@@ -8,7 +8,10 @@ import {
   updateUserName,
 } from '~~/server/features/auth/user-admin.repository';
 import { deletePersonalOrganizationsForUser } from '~~/server/features/auth/account.service';
-import { countOwners } from '~~/server/features/organization/community.repository';
+import {
+  countOwners,
+  removeCommunityCardsOfUser,
+} from '~~/server/features/organization/community.repository';
 import { vacateCompanyCards } from '~~/server/features/organization/company.service';
 import type {
   AdminUserDetail,
@@ -178,6 +181,8 @@ export async function deleteAccount(
     userId: params.userId,
     actorUserId: params.actorUserId,
   });
+  // Their community cards would otherwise stay public with no holder.
+  await removeCommunityCardsOfUser(params.userId);
   // removeUser also deletes the user's sessions.
   await auth.api.removeUser({
     body: { userId: params.userId },

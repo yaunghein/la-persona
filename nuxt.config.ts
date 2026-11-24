@@ -212,6 +212,10 @@ export default defineNuxtConfig({
     '/api/public/leads': {
       security: { rateLimiter: rateLimit(5) },
     },
+    // Views and link clicks (60 a minute); the view cookie alone doesn't stop a script.
+    '/api/public/cards/*/interactions': {
+      security: { rateLimiter: rateLimit(300) },
+    },
     // Venue Wi-Fi is one public IP, so a walk-in queue shares this budget.
     '/api/auth/sign-in/**': {
       security: { rateLimiter: rateLimit(60) },

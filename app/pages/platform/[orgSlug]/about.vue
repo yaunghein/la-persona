@@ -12,11 +12,24 @@ function retry() {
   refetch();
 }
 
-function onQuit() {
-  toast.add({
-    title: 'Quit community',
-    description: 'Leaving a community is not wired yet.',
-    color: 'warning',
+const { mutate: leaveCommunity, isPending: isLeaving } =
+  useLeaveCommunityMutation();
+const isQuitOpen = ref(false);
+
+function confirmQuit() {
+  const name = data.value?.name ?? 'the community';
+  leaveCommunity(organizationSlug.value, {
+    onSuccess: async () => {
+      isQuitOpen.value = false;
+      toast.add({ title: `You left ${name}`, color: 'success' });
+      await navigateTo(ROUTES.PLATFORM.ROOT);
+    },
+    onError: (error) =>
+      toast.add({
+        title: 'Could not leave',
+        description: apiErrorMessage(error),
+        color: 'error',
+      }),
   });
 }
 </script>
@@ -38,9 +51,15 @@ function onQuit() {
       @click="retry"
     />
   </div>
-  <OrganizationAbout
-    v-else-if="data"
-    :data="data"
-    @quit="onQuit"
-  />
+  <OrganizationAbout v-else-if="data" :data="data" @quit="isQuitOpen = true" />
+  <UiConfirmDeleteModal
+    v-model:open="isQuitOpen"
+    :title="`Leave ${data?.name ?? 'community'}?`"
+    confirm-label="Leave"
+    :pending="isLeaving"
+    @confirm="confirmQuit"
+  >
+    Your community card's link stops working and you leave its events. The
+    contacts you collected on it stay in your&nbsp;Contacts.
+  </UiConfirmDeleteModal>
 </template>

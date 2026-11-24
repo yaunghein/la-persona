@@ -77,10 +77,7 @@ export const CreateInvitationRequest = z.object({
 
 export type CreateInvitationRequest = z.infer<typeof CreateInvitationRequest>;
 
-/**
- * `accepted`: the invitee joins, or a manager adds an invitee who already has
- * an account. `canceled`: a manager withdraws the invitation.
- */
+/** `accepted`: only the invitee, to join. `canceled`: a manager withdraws it. */
 export const ReviewInvitationRequest = z.object({
   status: z.enum(['accepted', 'canceled']),
 });
@@ -91,8 +88,6 @@ export type InvitationInvitee = { email: string };
 
 export type InvitationReviewResult =
   | { status: 'accepted'; organizationSlug: string; redirectTo: string }
-  | { status: 'member_added' }
-  | { status: 'invitation_resent' }
   | { status: 'canceled' };
 
 export type CommunityInviteStats = {

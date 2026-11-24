@@ -37,6 +37,9 @@ export const card = pgTable(
       onDelete: 'set null',
     }),
     userId: text().references(() => user.id, { onDelete: 'set null' }),
+    // Set when the holder deletes the card or leaves its community. The row
+    // stays (slug reserved, user_id kept) so the contacts it collected survive.
+    removedAt: timestamp(),
     createdAt: timestamp().defaultNow().notNull(),
     updatedAt: timestamp()
       .defaultNow()

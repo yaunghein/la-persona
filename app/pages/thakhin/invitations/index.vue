@@ -456,7 +456,7 @@ const selectUi = {
               <UInput
                 v-model.number="createState.freeMonths"
                 type="number"
-                min="0"
+                min="1"
                 class="w-full"
                 size="xl"
                 :ui="inputUi"

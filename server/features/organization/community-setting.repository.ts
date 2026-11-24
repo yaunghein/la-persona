@@ -1,4 +1,4 @@
-import { eq, inArray, or } from 'drizzle-orm';
+import { and, eq, inArray, isNull, or } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { db } from '~~/server/db';
 import { card, communitySetting } from '~~/server/db/schema';
@@ -50,7 +50,7 @@ export const findEmailQrBackgroundByCardSlug = async (cardSlug: string) => {
       communitySetting,
       eq(communitySetting.organizationId, card.organizationId)
     )
-    .where(eq(card.slug, cardSlug))
+    .where(and(eq(card.slug, cardSlug), isNull(card.removedAt)))
     .limit(1);
 
   // null means the card does not exist; '' means it has no background.
@@ -181,12 +181,20 @@ export const ensureCommunitySetting = async (organizationId: string) => {
     return updated ?? existing;
   }
 
-  return insertCommunitySetting({
-    organizationId,
-    inviteToken: nanoid(),
-    description: '',
-    guidelines: '',
-    whyJoin: '',
-    ...defaults,
-  });
+  const [inserted] = await db
+    .insert(communitySetting)
+    .values({
+      organizationId,
+      inviteToken: nanoid(),
+      description: '',
+      guidelines: '',
+      whyJoin: '',
+      ...defaults,
+    })
+    .onConflictDoNothing({ target: communitySetting.organizationId })
+    .returning();
+  // Empty when a concurrent request created the row first.
+  return (
+    inserted ?? (await findCommunitySettingByOrganizationId(organizationId))
+  );
 };

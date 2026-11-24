@@ -119,44 +119,53 @@ function labelCondition(filter: ContactFilter): SQL | undefined {
 }
 
 function selectContactRows() {
-  return db
-    .select({
-      contact: contactExchange,
-      card: {
-        id: card.id,
-        slug: card.slug,
-        firstName: card.firstName,
-        lastName: card.lastName,
-      },
-      organizationSlug: organization.slug,
-      organizationName: organization.name,
-      organizationType: organization.type,
-      holderName: cardAssignment.holderName,
-      departmentName: department.name,
-      event: { id: event.id, title: event.title, startsAt: event.startsAt },
-      personaCard: {
-        id: personaCard.id,
-        slug: personaCard.slug,
-        firstName: personaCard.firstName,
-        lastName: personaCard.lastName,
-        phone: personaCard.phone,
-        phoneCountryCode: personaCard.phoneCountryCode,
-        email: personaCard.email,
-        company: personaCard.company,
-        position: personaCard.position,
-        avatarUrl: personaCard.avatarUrl,
-      },
-    })
-    .from(contactExchange)
-    .innerJoin(card, eq(contactExchange.cardId, card.id))
-    .innerJoin(organization, eq(card.organizationId, organization.id))
-    .leftJoin(personaCard, eq(contactExchange.laPersonaCardId, personaCard.id))
-    .leftJoin(event, eq(contactExchange.eventId, event.id))
-    .leftJoin(
-      cardAssignment,
-      eq(cardAssignment.id, contactExchange.cardAssignmentId)
-    )
-    .leftJoin(department, eq(department.id, card.departmentId));
+  return (
+    db
+      .select({
+        contact: contactExchange,
+        card: {
+          id: card.id,
+          slug: card.slug,
+          firstName: card.firstName,
+          lastName: card.lastName,
+        },
+        organizationSlug: organization.slug,
+        organizationName: organization.name,
+        organizationType: organization.type,
+        holderName: cardAssignment.holderName,
+        departmentName: department.name,
+        event: { id: event.id, title: event.title, startsAt: event.startsAt },
+        personaCard: {
+          id: personaCard.id,
+          slug: personaCard.slug,
+          firstName: personaCard.firstName,
+          lastName: personaCard.lastName,
+          phone: personaCard.phone,
+          phoneCountryCode: personaCard.phoneCountryCode,
+          email: personaCard.email,
+          company: personaCard.company,
+          position: personaCard.position,
+          avatarUrl: personaCard.avatarUrl,
+        },
+      })
+      .from(contactExchange)
+      .innerJoin(card, eq(contactExchange.cardId, card.id))
+      .innerJoin(organization, eq(card.organizationId, organization.id))
+      // A removed card no longer feeds live details; the exchange snapshot shows instead.
+      .leftJoin(
+        personaCard,
+        and(
+          eq(contactExchange.laPersonaCardId, personaCard.id),
+          isNull(personaCard.removedAt)
+        )
+      )
+      .leftJoin(event, eq(contactExchange.eventId, event.id))
+      .leftJoin(
+        cardAssignment,
+        eq(cardAssignment.id, contactExchange.cardAssignmentId)
+      )
+      .leftJoin(department, eq(department.id, card.departmentId))
+  );
 }
 
 export async function listContacts(scope: ContactScope, filter: ContactFilter) {
@@ -217,6 +226,7 @@ export async function findContactOwnership(contactId: string) {
       cardId: card.id,
       cardOrganizationId: card.organizationId,
       cardUserId: card.userId,
+      cardRemovedAt: card.removedAt,
       cardAssignmentId: contactExchange.cardAssignmentId,
       assignmentUserId: cardAssignment.userId,
       assignmentEndedAt: cardAssignment.endedAt,

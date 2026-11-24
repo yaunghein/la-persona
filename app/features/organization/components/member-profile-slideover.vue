@@ -12,7 +12,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   remove: [member: CommunityMember];
-  approve: [member: CommunityMember];
   reject: [member: CommunityMember];
   changeRole: [member: CommunityMember, role: CommunityInviteRole];
 }>();

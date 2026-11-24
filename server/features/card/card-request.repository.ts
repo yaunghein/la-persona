@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray, or } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, isNull, or } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import {
   card,
@@ -45,7 +45,13 @@ export async function findDesignSourceCard(
     })
     .from(card)
     .leftJoin(cardSubscription, eq(cardSubscription.cardId, card.id))
-    .where(and(eq(card.id, cardId), eq(card.organizationId, organizationId)))
+    .where(
+      and(
+        eq(card.id, cardId),
+        eq(card.organizationId, organizationId),
+        isNull(card.removedAt)
+      )
+    )
     .limit(1);
   return row ?? null;
 }

@@ -112,7 +112,23 @@ export function useRemoveMemberMutation(
   });
 }
 
-/** Manager approves (adds/resends) or cancels a pending email invitation. */
+/** The caller leaves a community; their card's contacts stay in their Contacts. */
+export function useLeaveCommunityMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (organizationSlug: string) =>
+      $fetch<void>(`/api/me/organizations/${organizationSlug}` as string, {
+        method: 'DELETE',
+      }),
+    // Not awaited: the community's own queries now 404 and would retry for
+    // seconds, keeping the Leave button spinning.
+    onSuccess: () => {
+      void queryClient.invalidateQueries();
+    },
+  });
+}
+
+/** A manager cancels a pending email invitation. */
 export function useReviewInvitationMutation(
   organizationSlug: MaybeRefOrGetter<string>
 ) {

@@ -1,4 +1,15 @@
-import { and, asc, count, desc, eq, inArray, lte, ne, or } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  inArray,
+  isNull,
+  lte,
+  ne,
+  or,
+} from 'drizzle-orm';
 import { db } from '~~/server/db';
 import {
   card,
@@ -55,7 +66,10 @@ export async function findCardSubscription(cardId: string) {
   return row ?? null;
 }
 
-/** Card payment: one submitted payment, one line, the card marked pending approval. */
+/**
+ * Card payment: one submitted payment, one line, the card marked pending
+ * approval. `null` when the card already has a payment waiting for review.
+ */
 export async function insertCardPayment(input: {
   organizationId: string;
   paidByUserId: string;
@@ -74,6 +88,29 @@ export async function insertCardPayment(input: {
 }) {
   const now = new Date();
   return db.transaction(async (tx) => {
+    // The lock makes overlapping submissions for one card queue up, so the
+    // second one sees the first and is refused.
+    await tx
+      .select({ id: card.id })
+      .from(card)
+      .where(eq(card.id, input.line.cardId))
+      .for('update');
+    const [waiting] = await tx
+      .select({ id: subscriptionPayment.id })
+      .from(subscriptionPaymentItem)
+      .innerJoin(
+        subscriptionPayment,
+        eq(subscriptionPayment.id, subscriptionPaymentItem.paymentId)
+      )
+      .where(
+        and(
+          eq(subscriptionPaymentItem.cardId, input.line.cardId),
+          eq(subscriptionPayment.status, 'submitted')
+        )
+      )
+      .limit(1);
+    if (waiting) return null;
+
     const [payment] = await tx
       .insert(subscriptionPayment)
       .values({
@@ -359,7 +396,7 @@ export async function findCardForPeriod(tx: Transaction, cardId: string) {
       userId: card.userId,
     })
     .from(card)
-    .where(eq(card.id, cardId))
+    .where(and(eq(card.id, cardId), isNull(card.removedAt)))
     .limit(1);
   return row ?? null;
 }

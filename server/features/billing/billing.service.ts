@@ -180,6 +180,12 @@ export async function submitCardPayment(params: {
         }
       : null,
   });
+  if (!receipt) {
+    throw conflict(
+      'A payment for this card is already waiting for review.',
+      'payment_pending'
+    );
+  }
 
   const submissionTitle = upgrade
     ? 'premium upgrade payment'

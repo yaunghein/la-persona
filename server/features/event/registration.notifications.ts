@@ -1,4 +1,4 @@
-import { and, asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, isNull } from 'drizzle-orm';
 import type { H3Event } from 'h3';
 import { db } from '~~/server/db';
 import { countCountedRegistrations } from '~~/server/features/event/registration.repository';
@@ -47,7 +47,8 @@ async function buildEventRegistrationEmail(
       .where(
         and(
           eq(card.userId, params.userId),
-          eq(card.organizationId, params.organization.id)
+          eq(card.organizationId, params.organization.id),
+          isNull(card.removedAt)
         )
       )
       .orderBy(desc(card.createdAt))

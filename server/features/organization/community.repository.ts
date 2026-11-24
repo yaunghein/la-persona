@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { db } from '~~/server/db';
 import type { Transaction } from '~~/server/features/billing/billing.repository';
@@ -172,7 +172,8 @@ export async function findOrganizerCardSlug(organizationId: string) {
       card,
       and(
         eq(card.userId, member.userId),
-        eq(card.organizationId, member.organizationId)
+        eq(card.organizationId, member.organizationId),
+        isNull(card.removedAt)
       )
     )
     .where(
@@ -200,15 +201,6 @@ export async function findUserAccount(userId: string) {
   return row ?? null;
 }
 
-export async function findUserIdByEmail(email: string) {
-  const [row] = await db
-    .select({ id: user.id })
-    .from(user)
-    .where(eq(user.email, email))
-    .limit(1);
-  return row?.id ?? null;
-}
-
 export async function findUserCardInOrganization(
   userId: string,
   organizationId: string
@@ -217,7 +209,11 @@ export async function findUserCardInOrganization(
     .select()
     .from(card)
     .where(
-      and(eq(card.userId, userId), eq(card.organizationId, organizationId))
+      and(
+        eq(card.userId, userId),
+        eq(card.organizationId, organizationId),
+        isNull(card.removedAt)
+      )
     )
     .orderBy(desc(card.createdAt))
     .limit(1);
@@ -232,7 +228,8 @@ export async function findPersonalCardOfUser(userId: string) {
     .where(
       and(
         eq(card.userId, userId),
-        eq(organization.type, ORGANIZATION_TYPES.PERSONAL)
+        eq(organization.type, ORGANIZATION_TYPES.PERSONAL),
+        isNull(card.removedAt)
       )
     )
     .orderBy(desc(card.createdAt))
@@ -240,9 +237,33 @@ export async function findPersonalCardOfUser(userId: string) {
   return row?.card ?? null;
 }
 
-export async function insertCard(values: typeof card.$inferInsert) {
-  const [row] = await db.insert(card).values(values).returning();
-  return row ?? null;
+/**
+ * Inserts a member's community card unless they already hold one. Overlapping
+ * joins (a double click, link and invite at once) wait on a per-member lock,
+ * so the second one finds the first one's card instead of adding another.
+ */
+export async function insertCommunityCard(
+  values: typeof card.$inferInsert & { userId: string; organizationId: string }
+) {
+  return db.transaction(async (tx) => {
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtext(${`community-card:${values.organizationId}:${values.userId}`}))`
+    );
+    const [existing] = await tx
+      .select()
+      .from(card)
+      .where(
+        and(
+          eq(card.userId, values.userId),
+          eq(card.organizationId, values.organizationId),
+          isNull(card.removedAt)
+        )
+      )
+      .limit(1);
+    if (existing) return existing;
+    const [row] = await tx.insert(card).values(values).returning();
+    return row ?? null;
+  });
 }
 
 /** Re-brands every member card when the community changes its card design. */
@@ -276,7 +297,8 @@ export function listCardsOfUsersInOrganization(
     .where(
       and(
         eq(card.organizationId, organizationId),
-        inArray(card.userId, userIds)
+        inArray(card.userId, userIds),
+        isNull(card.removedAt)
       )
     )
     .orderBy(desc(card.createdAt), desc(card.id));
@@ -295,14 +317,32 @@ export function listPendingInvitations(organizationId: string) {
     .orderBy(desc(invitation.createdAt), desc(invitation.id));
 }
 
-/** Admin (Organizer) invitations are sent by platform admins, who are not members, so they bypass better-auth's createInvitation. */
-export async function insertInvitation(values: {
+/**
+ * Admin (Organizer) invitations are sent by platform admins, who are not
+ * members, so they bypass better-auth's createInvitation. A pending invite for
+ * the same email and role is refreshed instead of duplicated.
+ */
+export async function upsertPendingInvitation(values: {
   organizationId: string;
   email: string;
   role: OrganizationMemberRole;
   inviterId: string;
   expiresAt: Date;
 }) {
+  const [refreshed] = await db
+    .update(invitation)
+    .set({ inviterId: values.inviterId, expiresAt: values.expiresAt })
+    .where(
+      and(
+        eq(invitation.organizationId, values.organizationId),
+        eq(invitation.email, values.email),
+        eq(invitation.role, values.role),
+        eq(invitation.status, 'pending')
+      )
+    )
+    .returning();
+  if (refreshed) return refreshed;
+
   const [row] = await db
     .insert(invitation)
     .values({ id: nanoid(), status: 'pending', ...values })
@@ -320,10 +360,30 @@ export async function findInvitationById(invitationId: string) {
   return row ?? null;
 }
 
+/** Soft-removes every community card a user holds, so none stays public without a holder. */
+export async function removeCommunityCardsOfUser(userId: string) {
+  await db
+    .update(card)
+    .set({ removedAt: new Date() })
+    .where(
+      and(
+        eq(card.userId, userId),
+        isNull(card.removedAt),
+        inArray(
+          card.organizationId,
+          db
+            .select({ id: organization.id })
+            .from(organization)
+            .where(eq(organization.type, ORGANIZATION_TYPES.COMMUNITY))
+        )
+      )
+    );
+}
+
 /**
- * Removes a member and what they hold in the community: their community
- * card (with its analytics and contacts), and their sessions stop defaulting
- * to this organization.
+ * Removes a member: their community card is soft-removed (its link stops
+ * working, its contacts stay with the member and the organizers), and their
+ * sessions stop defaulting to this organization.
  */
 export async function deleteMemberWithCommunityData(
   target: {
@@ -335,11 +395,13 @@ export async function deleteMemberWithCommunityData(
 ) {
   await executor.transaction(async (tx) => {
     await tx
-      .delete(card)
+      .update(card)
+      .set({ removedAt: new Date() })
       .where(
         and(
           eq(card.userId, target.userId),
-          eq(card.organizationId, target.organizationId)
+          eq(card.organizationId, target.organizationId),
+          isNull(card.removedAt)
         )
       );
     await tx.delete(member).where(eq(member.id, target.memberId));

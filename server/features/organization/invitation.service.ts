@@ -1,4 +1,5 @@
 import type { H3Event } from 'h3';
+import { APIError } from 'better-auth/api';
 import { auth } from '~~/server/auth';
 import { findPersonalOrganization } from '~~/server/features/auth/account.repository';
 import {
@@ -12,13 +13,11 @@ import {
   findInvitationById,
   findMembership,
   findOrganizationById,
-  findUserIdByEmail,
 } from '~~/server/features/organization/community.repository';
 import {
   communityHomePath,
   communityInviteStats,
   ensureCommunityCard,
-  joinCommunity,
 } from '~~/server/features/organization/community.service';
 import type {
   CommunityInvitationPreview,
@@ -29,20 +28,10 @@ import type {
 import { isUniqueViolation } from '~~/server/lib/db-errors';
 import { isCommunityCardComplete } from '~~/shared/utils/event-flow';
 import { ROUTES } from '~~/shared/utils/routes';
-import {
-  COMMUNITY_INVITE_ROLES,
-  type CommunityInviteRole,
-} from '~~/shared/permissions/organization';
 
 type InvitationRecord = NonNullable<
   Awaited<ReturnType<typeof findInvitationById>>
 >;
-
-function inviteRole(invitation: InvitationRecord): CommunityInviteRole {
-  return COMMUNITY_INVITE_ROLES.includes(invitation.role as CommunityInviteRole)
-    ? (invitation.role as CommunityInviteRole)
-    : 'member';
-}
 
 function isInvitee(invitation: InvitationRecord, email: string) {
   return invitation.email.toLowerCase() === email.toLowerCase();
@@ -64,24 +53,38 @@ function isOpen(invitation: InvitationRecord) {
   );
 }
 
-/** better-auth sends the email; resending replaces the pending invitation. */
-export function sendInvitation(
+/**
+ * better-auth sends the email; resending replaces the pending invitation.
+ * Its refusals ("already a member") become our error shape so the organizer
+ * sees why.
+ */
+export async function sendInvitation(
   event: H3Event,
   organizationId: string,
   request: CreateInvitationRequest
 ) {
-  return auth.api.createInvitation({
-    body: {
-      email: request.email,
-      role: request.role,
-      organizationId,
-      resend: true,
-    },
-    headers: event.headers,
-  });
+  try {
+    return await auth.api.createInvitation({
+      body: {
+        email: request.email,
+        role: request.role,
+        organizationId,
+        resend: true,
+      },
+      headers: event.headers,
+    });
+  } catch (error) {
+    if (error instanceof APIError && error.statusCode === 400) {
+      throw badRequest(error.message, 'invitation_refused');
+    }
+    throw error;
+  }
 }
 
-/** The member unique index turns a second tab's overlapping accept into a 409. */
+/**
+ * Another tab accepting the invite first surfaces here as a unique violation
+ * or a better-auth 400.
+ */
 async function acceptWithBetterAuth(event: H3Event, invitationId: string) {
   try {
     await auth.api.acceptInvitation({
@@ -89,7 +92,10 @@ async function acceptWithBetterAuth(event: H3Event, invitationId: string) {
       headers: event.headers,
     });
   } catch (error) {
-    if (!isUniqueViolation(error)) throw error;
+    const isRace =
+      isUniqueViolation(error) ||
+      (error instanceof APIError && error.statusCode === 400);
+    if (!isRace) throw error;
     throw conflict(
       'This invitation was just accepted. Reload the page.',
       'invitation_closed'
@@ -153,9 +159,8 @@ export async function describeInvitationInvitee(
 }
 
 /**
- * `accepted` by the invitee: join the community.
- * `accepted` by a manager: add the invitee directly if they already have an
- * account, otherwise send the invitation again.
+ * `accepted` by the invitee: join. Nobody else can accept, so nobody is added
+ * to a community without agreeing to it; managers resend instead.
  * `canceled` by a manager: withdraw it.
  */
 export async function reviewInvitation(
@@ -166,16 +171,20 @@ export async function reviewInvitation(
 ): Promise<InvitationReviewResult> {
   const invitation = await loadInvitation(event, invitationId);
 
-  if (status === 'accepted' && isInvitee(invitation, viewer.email)) {
+  if (status === 'accepted') {
+    if (!isInvitee(invitation, viewer.email)) {
+      throw forbidden(
+        'Only the invitee can accept this invitation.',
+        'not_invitee'
+      );
+    }
     return acceptAsInvitee(event, invitation, viewer);
   }
 
-  const permission =
-    status === 'accepted' ? 'member:create' : 'invitation:cancel';
-  const access = await authorizeOrganizationAccessById(
+  await authorizeOrganizationAccessById(
     event,
     invitation.organizationId,
-    permission
+    'invitation:cancel'
   );
   if (invitation.status !== 'pending') {
     throw conflict(
@@ -183,46 +192,11 @@ export async function reviewInvitation(
       'invitation_decided'
     );
   }
-  // Admin invitations come from Thakhin, and company invites claim a card;
-  // only the invitee can accept either.
-  if (
-    status === 'accepted' &&
-    (invitation.role === 'admin' ||
-      access.organization.type === ORGANIZATION_TYPES.COMPANY)
-  ) {
-    throw forbidden(
-      'Only the invited organizer can accept this invitation.',
-      'owner_invitation'
-    );
-  }
-
-  if (status === 'canceled') {
-    await auth.api.cancelInvitation({
-      body: { invitationId },
-      headers: event.headers,
-    });
-    return { status: 'canceled' };
-  }
-
-  const accountId = await findUserIdByEmail(invitation.email);
-  if (accountId) {
-    await joinCommunity(
-      accountId,
-      invitation.organizationId,
-      inviteRole(invitation)
-    );
-    await auth.api.cancelInvitation({
-      body: { invitationId },
-      headers: event.headers,
-    });
-    return { status: 'member_added' };
-  }
-
-  await sendInvitation(event, invitation.organizationId, {
-    email: invitation.email,
-    role: inviteRole(invitation),
+  await auth.api.cancelInvitation({
+    body: { invitationId },
+    headers: event.headers,
   });
-  return { status: 'invitation_resent' };
+  return { status: 'canceled' };
 }
 
 /**

@@ -66,8 +66,11 @@ export type CompanyCard = {
 };
 
 /** Signs in through the magic-link API: same flow as the form, without the UI. */
-async function signUp(browser: Browser, label: string): Promise<Person> {
-  const email = uniqueEmail(label);
+async function signUp(
+  browser: Browser,
+  label: string,
+  email = uniqueEmail(label)
+): Promise<Person> {
   const context = await browser.newContext({
     baseURL: process.env.BASE_URL,
     // The API refuses cross-site writes; a browser sends Origin on its own fetches.
@@ -104,12 +107,15 @@ export function draft(
 export class World {
   readonly people: Person[] = [];
   readonly companyIds: string[] = [];
+  /** Checked against the community invariants in `support/communities.ts`. */
+  readonly communityIds: string[] = [];
   private thakhinPerson?: Person;
 
   constructor(readonly browser: Browser) {}
 
-  async person(label: string) {
-    const person = await signUp(this.browser, label);
+  /** Signs up a new user; pass `email` to sign up an address that was invited first. */
+  async person(label: string, email?: string) {
+    const person = await signUp(this.browser, label, email);
     this.people.push(person);
     return person;
   }

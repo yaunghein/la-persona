@@ -25,7 +25,8 @@ export default defineTask({
         card,
         and(
           eq(card.userId, member.userId),
-          eq(card.organizationId, member.organizationId)
+          eq(card.organizationId, member.organizationId),
+          isNull(card.removedAt)
         )
       )
       .where(

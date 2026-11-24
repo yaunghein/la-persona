@@ -27,6 +27,7 @@ const { mutate: updateMemberRole } =
   useUpdateMemberRoleMutation(organizationSlug);
 const { mutate: reviewInvitation } =
   useReviewInvitationMutation(organizationSlug);
+const { mutate: inviteMember } = useInviteMemberMutation(organizationSlug);
 
 const isInviteOpen = ref(false);
 const memberToRemove = ref<CommunityMember | null>(null);
@@ -86,7 +87,7 @@ function confirmRemove() {
       toast.add({
         title: 'Member removed',
         description:
-          'Their community card, analytics, and event attendance in this community were removed. Their personal account was not.',
+          'Their community card link and event registrations here were removed. Contacts collected on the card were kept.',
         color: 'success',
       });
     },
@@ -109,21 +110,18 @@ function changeMemberRole(member: CommunityMember, role: CommunityInviteRole) {
   );
 }
 
-function approveInvitation(member: CommunityMember) {
-  reviewInvitation(
-    { invitationId: member.id, status: 'accepted' },
+function resendInvitation(member: CommunityMember) {
+  if (member.memberRole === 'admin' || !member.email) return;
+  inviteMember(
+    { email: member.email, role: member.memberRole },
     {
-      onSuccess: (result) => {
-        const added = result.status === 'member_added';
+      onSuccess: () =>
         toast.add({
-          title: added ? 'Member added' : 'Invitation resent',
-          description: added
-            ? 'They now have a community card.'
-            : 'They do not have an account yet, so the invite was sent again.',
+          title: 'Invite sent again',
+          description: `A new invitation email went to ${member.email}.`,
           color: 'success',
-        });
-      },
-      onError: (error) => showError('Could not approve', error),
+        }),
+      onError: (error) => showError('Could not resend', error),
     }
   );
 }
@@ -179,7 +177,7 @@ async function exportMembers() {
     @invite="openInvite"
     @export="exportMembers"
     @remove="askRemove"
-    @approve="approveInvitation"
+    @resend="resendInvitation"
     @reject="cancelInvitation"
     @change-role="changeMemberRole"
   />
@@ -194,10 +192,10 @@ async function exportMembers() {
     :pending="isRemoving"
     @confirm="confirmRemove"
   >
-    This cannot be undone. Removing
+    Removing
     <span class="font-medium text-ink">{{ memberToRemove?.name }}</span>
-    deletes their community card, its analytics and contact exchanges, and their
-    event registrations in this community. Their LA PERSONA account and personal
-    card stay.
+    retires their community card's link and deletes their event registrations in
+    this community. The contacts collected on that card stay with you and with
+    them. Their LA PERSONA account and personal card&nbsp;stay.
   </UiConfirmDeleteModal>
 </template>

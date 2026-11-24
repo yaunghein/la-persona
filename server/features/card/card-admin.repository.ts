@@ -49,11 +49,14 @@ function selectAdminCards() {
 export function listAdminCards(filter: { claimed?: boolean }) {
   return selectAdminCards()
     .where(
-      filter.claimed === undefined
-        ? undefined
-        : filter.claimed
-          ? isNotNull(card.userId)
-          : isNull(card.userId)
+      and(
+        isNull(card.removedAt),
+        filter.claimed === undefined
+          ? undefined
+          : filter.claimed
+            ? isNotNull(card.userId)
+            : isNull(card.userId)
+      )
     )
     .orderBy(desc(card.createdAt), desc(card.id));
 }

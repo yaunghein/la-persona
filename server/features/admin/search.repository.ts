@@ -1,4 +1,4 @@
-import { desc, ilike, or } from 'drizzle-orm';
+import { and, desc, ilike, isNull, or } from 'drizzle-orm';
 import { db } from '~~/server/db';
 import { card, organization, user } from '~~/server/db/schema';
 
@@ -38,11 +38,14 @@ export async function searchBackOffice(term: string) {
       })
       .from(card)
       .where(
-        or(
-          ilike(card.slug, pattern),
-          ilike(card.firstName, pattern),
-          ilike(card.lastName, pattern),
-          ilike(card.email, pattern)
+        and(
+          isNull(card.removedAt),
+          or(
+            ilike(card.slug, pattern),
+            ilike(card.firstName, pattern),
+            ilike(card.lastName, pattern),
+            ilike(card.email, pattern)
+          )
         )
       )
       .orderBy(desc(card.createdAt), desc(card.id))

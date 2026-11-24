@@ -159,7 +159,7 @@ async function confirmDelete() {
     await deleteCard(cardToDelete.value.slug);
     toast.add({
       title: 'Card deleted',
-      description: 'The card has been removed successfully.',
+      description: 'Its contacts stay in your Contacts.',
       color: 'success',
     });
     cardToDelete.value = null;
@@ -279,7 +279,8 @@ async function confirmDelete() {
     <span class="font-medium text-ink">
       "{{ cardToDelete ? cardHolderName(cardToDelete) : '' }}"
     </span>
-    and related subscription records will be removed.
+    and its link stop working, and a payment waiting for review is withdrawn.
+    The contacts you collected on it stay in your&nbsp;Contacts.
   </UiConfirmDeleteModal>
 
   <Teleport to="body">

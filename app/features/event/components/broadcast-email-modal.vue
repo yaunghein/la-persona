@@ -54,8 +54,8 @@ const lastSentLabel = computed(() =>
           color="warning"
           variant="subtle"
           icon="i-lucide-history"
-          :title="`Last sent ${lastSentLabel}`"
-          description="Sending again emails everyone on the list again."
+          :title="`Sent ${lastSentLabel}`"
+          description="Each of these emails goes out once per&nbsp;event."
         />
         <p
           v-if="recipientCount === 0"
@@ -76,11 +76,11 @@ const lastSentLabel = computed(() =>
             "
           />
           <UButton
-            :label="lastSentAt ? 'Send Again' : 'Send'"
+            label="Send"
             leading-icon="i-lucide-send"
             color="neutral"
             :loading="sending"
-            :disabled="recipientCount === 0"
+            :disabled="recipientCount === 0 || !!lastSentAt"
             class="h-10 text-sm cursor-pointer rounded-full bg-ink px-6 font-medium text-ink-inverse hover:bg-ink/90"
             @click="emit('confirm')"
           />

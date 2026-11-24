@@ -192,20 +192,20 @@ export async function deleteEventRegistration(eventId: string, userId: string) {
   return deleted ?? null;
 }
 
-export async function updateEventRegistrationStatus(
+/** Checks the registration in; `null` when it was already checked in, so only one scan wins. */
+export async function checkInRegistration(
   registrationId: string,
-  status: EventRegistrationStatus,
-  extra: { checkedInAt?: Date | null } = {}
+  checkedInAt: Date
 ) {
   const [updated] = await db
     .update(eventRegistration)
-    .set({
-      status,
-      ...(extra.checkedInAt !== undefined
-        ? { checkedInAt: extra.checkedInAt }
-        : {}),
-    })
-    .where(eq(eventRegistration.id, registrationId))
+    .set({ status: 'checked_in', checkedInAt })
+    .where(
+      and(
+        eq(eventRegistration.id, registrationId),
+        ne(eventRegistration.status, 'checked_in')
+      )
+    )
     .returning();
 
   return updated ?? null;
@@ -489,11 +489,15 @@ export async function insertRegistrationWithinCapacity(values: {
       if ((taken?.value ?? 0) >= locked.capacity) return 'full' as const;
     }
 
+    // A double submit by the same person lands here; the caller returns their existing row.
     const [inserted] = await tx
       .insert(eventRegistration)
       .values(values)
+      .onConflictDoNothing({
+        target: [eventRegistration.eventId, eventRegistration.userId],
+      })
       .returning();
-    if (!inserted) return null;
+    if (!inserted) return 'exists' as const;
 
     const [previous] = await tx
       .select({ id: eventRegistration.id })

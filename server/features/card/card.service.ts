@@ -1,15 +1,16 @@
 import {
-  deleteCardWithPendingRequests,
   findCardWithContextBySlug,
   isCardSlugTaken,
   listCardsInOrganization,
   listWorkspaceCards,
+  removeCard,
   updateCardById,
   type CardWithContext,
 } from '~~/server/features/card/card.repository';
 import { toCardDetail } from '~~/server/features/card/card.mapper';
 import type { Collection } from '~~/shared/contracts/collection';
 import type { CardDetail, UpdateCardRequest } from '~~/shared/contracts/card';
+import { isUniqueViolation } from '~~/server/lib/db-errors';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
 import { effectiveSubscriptionStatus } from '~~/shared/utils/subscription';
@@ -27,6 +28,14 @@ export function cardActivity(row: CardWithContext): 'ok' | 'paused' | 'vacant' {
   // Personal cards from before subscriptions have no row and stay live.
   if (!subscription?.status) {
     return type === ORGANIZATION_TYPES.COMPANY ? 'paused' : 'ok';
+  }
+  // A receipt awaiting review never revives an ended period. A new card
+  // awaiting its first approval has no period yet and stays live.
+  if (subscription.status === 'pending_approval') {
+    const end =
+      subscription.currentPeriodEndAt ??
+      (subscription.isTrial ? subscription.trialEndAt : null);
+    return end && end <= new Date() ? 'paused' : 'ok';
   }
   const status = effectiveSubscriptionStatus(
     subscription.status,
@@ -99,16 +108,21 @@ export async function updateCard(
     values.phoneCountryCode = resolved.phoneCountryCode;
   }
 
+  const slugTaken = () =>
+    conflict(
+      'That card URL is already taken. Please choose a different slug.',
+      'card_slug_taken'
+    );
   if (changes.slug && changes.slug !== target.card.slug) {
-    if (await isCardSlugTaken(changes.slug, target.card.id)) {
-      throw conflict(
-        'That card URL is already taken. Please choose a different slug.',
-        'card_slug_taken'
-      );
-    }
+    if (await isCardSlugTaken(changes.slug, target.card.id)) throw slugTaken();
   }
 
-  const updated = await updateCardById(target.card.id, values);
+  // Someone may take the slug between the check and the write.
+  const updated = await updateCardById(target.card.id, values).catch(
+    (error: unknown) => {
+      throw isUniqueViolation(error) ? slugTaken() : error;
+    }
+  );
   if (!updated) throw notFound('Card');
 
   const refreshed = await findCardWithContextBySlug(updated.slug);
@@ -116,7 +130,7 @@ export async function updateCard(
   return toCardDetail(refreshed);
 }
 
-/** Card holders delete their own personal cards; community cards follow membership. */
+/** Card holders remove their own personal cards; community cards follow membership. */
 export async function deleteCard(target: CardWithContext, actorUserId: string) {
   if (
     target.organization.type === ORGANIZATION_TYPES.COMMUNITY ||
@@ -130,5 +144,6 @@ export async function deleteCard(target: CardWithContext, actorUserId: string) {
   if (target.card.userId !== actorUserId) {
     throw forbidden('You can only delete your own cards.', 'not_card_holder');
   }
-  await deleteCardWithPendingRequests(target.card.id, actorUserId);
+  // Soft-removed so the contacts collected on it stay in the owner's Contacts.
+  await removeCard(target.card.id, actorUserId);
 }

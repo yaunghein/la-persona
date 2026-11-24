@@ -19,7 +19,7 @@ import {
   findPersonalCardOfUser,
   findUserAccount,
   findUserCardInOrganization,
-  insertCard,
+  insertCommunityCard,
   insertMember,
   listCardsOfUsersInOrganization,
   listPendingInvitations,
@@ -120,7 +120,7 @@ export async function ensureCommunityCard(
   const firstName = names.firstName || 'Member';
   const lastName = names.lastName || null;
 
-  const inserted = await insertCard({
+  const inserted = await insertCommunityCard({
     firstName,
     lastName,
     email: personalCard?.email || account?.email || null,
@@ -402,11 +402,15 @@ export async function previewJoinLink(
 export async function joinCommunityWithLink(
   token: string,
   userId: string
-): Promise<MembershipResult & { organizationId: string }> {
+): Promise<
+  MembershipResult & { organizationId: string; alreadyMember: boolean }
+> {
   const organization = await resolveJoinLink(token);
+  const alreadyMember = !!(await findMembership(userId, organization.id));
   await joinCommunity(userId, organization.id);
   return {
     organizationId: organization.id,
+    alreadyMember,
     organizationSlug: organization.slug,
     redirectTo: communityHomePath(organization.slug),
   };

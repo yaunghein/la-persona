@@ -38,7 +38,7 @@ import {
   insertWalkInRegistration,
   listEventAttendees,
   toViewerStatus,
-  updateEventRegistrationStatus,
+  checkInRegistration,
 } from '~~/server/features/event/registration.repository';
 import { sendEventRegistrationEmails } from '~~/server/features/event/registration.notifications';
 import { toCsv } from '~~/server/lib/csv';
@@ -250,7 +250,15 @@ export async function registerForEvent(
   });
   if (inserted === 'full')
     throw conflict(registrationBlockMessage('full'), 'event_full');
-  if (inserted === 'not_found' || !inserted) throw notFound('Event');
+  if (inserted === 'not_found') throw notFound('Event');
+  if (inserted === 'exists') {
+    const registration = await findRegistrationByEventAndUser(
+      record.id,
+      userId
+    );
+    if (!registration) throw notFound('Registration');
+    return { registration, created: false };
+  }
 
   await sendEventRegistrationEmails(h3Event, {
     userId,
@@ -321,11 +329,21 @@ function assertWalkInWindow(record: SelectEvent) {
   }
 }
 
+/** Self walk-ins follow the event's registration mode; staff walk-ins don't. */
+function assertSelfWalkInMode(record: SelectEvent) {
+  if (record.registrationMode === 'open') return;
+  throw forbidden(
+    registrationBlockMessage(record.registrationMode),
+    `registration_${record.registrationMode}`
+  );
+}
+
 /**
- * The caller registers from the walk-in page (idempotent). Closed and
- * invite-only events still accept them during the check-in window. An
- * existing registration is returned unchanged, so an earlier online signup
- * is not relabeled. Manual approval is skipped.
+ * The caller registers from the walk-in page (idempotent), during the
+ * check-in window. Closed and invite-only events refuse self walk-ins; staff
+ * still add guests with `createWalkInRegistration`. An existing registration
+ * is returned unchanged, so an earlier online signup is not relabeled.
+ * Manual approval is skipped.
  */
 export async function registerWalkIn(
   h3Event: H3Event,
@@ -334,8 +352,10 @@ export async function registerWalkIn(
   const { record, organization, userId } = params;
   assertWalkInWindow(record);
 
+  // Someone who registered before registration closed still gets in.
   const existing = await findRegistrationByEventAndUser(record.id, userId);
   if (existing) return { registration: existing, created: false };
+  assertSelfWalkInMode(record);
 
   const inserted = await insertRegistrationWithinCapacity({
     eventId: record.id,
@@ -345,7 +365,15 @@ export async function registerWalkIn(
   });
   if (inserted === 'full')
     throw conflict(registrationBlockMessage('full'), 'event_full');
-  if (inserted === 'not_found' || !inserted) throw notFound('Event');
+  if (inserted === 'not_found') throw notFound('Event');
+  if (inserted === 'exists') {
+    const registration = await findRegistrationByEventAndUser(
+      record.id,
+      userId
+    );
+    if (!registration) throw notFound('Registration');
+    return { registration, created: false };
+  }
 
   await sendEventRegistrationEmails(h3Event, {
     userId,
@@ -437,23 +465,19 @@ export async function checkInAttendee(
   if (registration.status === 'checked_in')
     return { registration, created: false };
 
-  const checkedInAt = new Date();
-  const updated = await updateEventRegistrationStatus(
-    registration.id,
-    'checked_in',
-    { checkedInAt }
-  );
-  if (updated) {
-    await sendEventCheckInEmail(h3Event, {
-      userId: card.card.userId!,
-      cardSlug: card.card.slug,
-      cardFirstName: card.card.firstName,
-      event: { id: record.id, title: record.title },
-      organization: { id: organization.id, slug: organization.slug },
-      checkedInAt,
-    });
-  }
-  return { registration: updated ?? registration, created: true };
+  const updated = await checkInRegistration(registration.id, new Date());
+  // Another scanner checked them in first: no second email.
+  if (!updated) return { registration, created: false };
+
+  await sendEventCheckInEmail(h3Event, {
+    userId: card.card.userId!,
+    cardSlug: card.card.slug,
+    cardFirstName: card.card.firstName,
+    event: { id: record.id, title: record.title },
+    organization: { id: organization.id, slug: organization.slug },
+    checkedInAt: updated.checkedInAt ?? new Date(),
+  });
+  return { registration: updated, created: true };
 }
 
 /**
@@ -646,9 +670,16 @@ async function joinHostingCommunity(
 ): Promise<EventMembershipResult & { organizationId: string }> {
   const row = await findPublicEventById(eventId);
   if (!row) throw notFound('Event');
-  const registeredCount = await countCountedRegistrations(eventId);
+  const organizationId = row.event.organizationId;
+  const [registeredCount, membership] = await Promise.all([
+    countCountedRegistrations(eventId),
+    findMembership(userId, organizationId),
+  ]);
+  const alreadyMember = !!membership;
   if (gate === 'walk_in') {
     assertWalkInWindow(row.event);
+    // Existing members pass; the registration step decides for them.
+    if (!alreadyMember) assertSelfWalkInMode(row.event);
     if (row.event.capacity != null && registeredCount >= row.event.capacity) {
       throw conflict(registrationBlockMessage('full'), 'event_full');
     }
@@ -656,8 +687,6 @@ async function joinHostingCommunity(
     assertRegistrationOpen(row.event, registeredCount);
   }
 
-  const organizationId = row.event.organizationId;
-  const alreadyMember = !!(await findMembership(userId, organizationId));
   await joinCommunity(userId, organizationId);
   const card = await findUserCardInOrganization(userId, organizationId);
   return {

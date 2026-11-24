@@ -98,13 +98,12 @@ export async function createOnboardingInvitation(params: {
   );
 
   return await db.transaction(async (tx) => {
-    const selectedCard = await tx.query.card.findFirst({
-      where: eq(card.id, params.cardId),
-      columns: {
-        id: true,
-        userId: true,
-      },
-    });
+    // Locked so two overlapping creates for one card can't both pass the pending check.
+    const [selectedCard] = await tx
+      .select({ id: card.id, userId: card.userId })
+      .from(card)
+      .where(eq(card.id, params.cardId))
+      .for('update');
 
     if (!selectedCard) {
       throw notFound("'Card'");
@@ -208,9 +207,12 @@ export async function acceptOnboardingInvitation(params: {
   const now = new Date();
 
   return await db.transaction(async (tx) => {
-    const invite = await tx.query.onboardingInvitation.findFirst({
-      where: eq(onboardingInvitation.id, params.invitationId),
-    });
+    // Locked so a second overlapping accept waits, then sees `accepted`.
+    const [invite] = await tx
+      .select()
+      .from(onboardingInvitation)
+      .where(eq(onboardingInvitation.id, params.invitationId))
+      .for('update');
     if (!invite) {
       throw notFound("'Invitation'");
     }
@@ -405,9 +407,11 @@ export async function cancelOnboardingInvitation(invitationId: string) {
   const now = new Date();
 
   return await db.transaction(async (tx) => {
-    const invite = await tx.query.onboardingInvitation.findFirst({
-      where: eq(onboardingInvitation.id, invitationId),
-    });
+    const [invite] = await tx
+      .select()
+      .from(onboardingInvitation)
+      .where(eq(onboardingInvitation.id, invitationId))
+      .for('update');
     if (!invite) {
       throw notFound("'Invitation'");
     }
@@ -570,9 +574,13 @@ export async function deliverOnboardingInvitation(invitationId: string) {
     );
   }
 
+  // Expiry and resend count only move once the email is out, so a failed
+  // send leaves the invite as it was for Thakhin to resend.
   await sendOnboardingInvitationEmail({
     invitationId,
     email: invitation.email,
+  }).catch(() => {
+    throw upstreamFailed('The invitation email could not be sent.');
   });
 
   const now = new Date();

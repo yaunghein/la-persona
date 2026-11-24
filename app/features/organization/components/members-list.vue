@@ -18,7 +18,7 @@ const emit = defineEmits<{
   invite: [];
   export: [];
   remove: [member: CommunityMember];
-  approve: [member: CommunityMember];
+  resend: [member: CommunityMember];
   reject: [member: CommunityMember];
   changeRole: [member: CommunityMember, role: CommunityInviteRole];
 }>();
@@ -122,6 +122,16 @@ function getActionItems(member: CommunityMember): DropdownMenuItem[][] {
           icon: 'i-lucide-user',
           onSelect: () => openProfile(member),
         },
+        // Organizer invites come from Thakhin, so only member and volunteer invites resend here.
+        ...(member.memberRole === 'admin'
+          ? []
+          : [
+              {
+                label: 'Resend invite',
+                icon: 'i-lucide-send',
+                onSelect: () => emit('resend', member),
+              },
+            ]),
         {
           label: 'Cancel',
           icon: 'i-lucide-x',
@@ -431,7 +441,6 @@ function closeInfo() {
     v-model:open="isProfileOpen"
     :member="selectedMember"
     @remove="emit('remove', $event)"
-    @approve="emit('approve', $event)"
     @reject="emit('reject', $event)"
     @change-role="(member, role) => emit('changeRole', member, role)"
   />

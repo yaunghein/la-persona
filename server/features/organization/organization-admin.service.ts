@@ -17,7 +17,7 @@ import {
   upsertCommunitySettingByOrganizationId,
 } from '~~/server/features/organization/community-setting.repository';
 import {
-  insertInvitation,
+  upsertPendingInvitation,
   updateCommunityCardsBrand,
 } from '~~/server/features/organization/community.repository';
 import { ensureCommunityCard } from '~~/server/features/organization/community.service';
@@ -129,7 +129,7 @@ async function sendOrganizerInvitation(
   email: string,
   inviterId: string
 ) {
-  const invitation = await insertInvitation({
+  const invitation = await upsertPendingInvitation({
     organizationId: organization.id,
     email,
     role: 'admin',

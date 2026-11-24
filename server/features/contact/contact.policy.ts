@@ -18,6 +18,14 @@ export async function authorizeContactAccess(
   const contact = await findContactOwnership(contactId);
   if (!contact) throw notFound('Contact');
 
+  // A removed card's former holder keeps its contacts, even after leaving the
+  // community (so without membership there).
+  const principal = requirePrincipal(event);
+  if (contact.cardRemovedAt && contact.cardUserId === principal.user.id) {
+    enrichLog(event, { contact: { id: contact.id, card_id: contact.cardId } });
+    return { contact, principal };
+  }
+
   const access = await authorizeOrganizationAccessById(
     event,
     contact.cardOrganizationId

@@ -20,7 +20,6 @@ export default defineConfig({
   reporter: isCI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: process.env.BASE_URL,
-    headless: isCI,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
@@ -35,6 +34,6 @@ export default defineConfig({
     // Never attach to a dev server already on this port: it would use the dev database.
     reuseExistingServer: false,
     timeout: 180_000,
-    stdout: 'pipe',
+    stdout: isCI ? 'pipe' : 'ignore',
   },
 });

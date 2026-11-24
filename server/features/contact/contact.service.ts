@@ -1,6 +1,7 @@
 import {
   findCardOwnerEmail,
   findLatestCardInOrganization,
+  listContactCardIds,
   listWorkspaceCards,
   type CardRecord,
 } from '~~/server/features/card/card.repository';
@@ -210,15 +211,14 @@ export function organizationContactScope(
     : { organizationId };
 }
 
-/** Every card the user holds across personal, community and company workspaces. */
+/**
+ * Every card the user holds across personal, community and company
+ * workspaces, plus cards they removed or left with, so those contacts stay.
+ */
 export async function workspaceContactScope(
   userId: string
 ): Promise<ContactScope> {
-  const workspaceCards = await listWorkspaceCards(userId);
-  return {
-    cardIds: workspaceCards.map((row) => row.card.id),
-    holderUserId: userId,
-  };
+  return { cardIds: await listContactCardIds(userId), holderUserId: userId };
 }
 
 /** Upper bound for one export; far above any real workspace today. */

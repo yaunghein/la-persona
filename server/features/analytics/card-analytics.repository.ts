@@ -102,7 +102,10 @@ export async function aggregateCardInteractions(
       .from(analytics)
       .where(ofType('save_action'))
       .groupBy(sql`metadata->>'action'`),
-    db.select({ socials: card.socials }).from(card).where(cardFilter(scope)),
+    db
+      .select({ socials: card.socials })
+      .from(card)
+      .where(and(cardFilter(scope), isNull(card.removedAt))),
   ]);
 
   return {

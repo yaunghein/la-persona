@@ -11,7 +11,8 @@ export const CreateOnboardingInvitationRequest = z.object({
   cardId: z.string().trim().min(1),
   subscriptionPlanCode: z.string().trim().min(1),
   amountMinor: z.coerce.number().int().min(0),
-  freeMonths: z.coerce.number().int().min(0).max(120),
+  // A zero-month invite would hand over a card that is already paused.
+  freeMonths: z.coerce.number().int().min(1).max(120),
   expirationMinutes: z.coerce
     .number()
     .int()

@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import type { H3Event } from 'h3';
 import { db } from '~~/server/db';
 import {
@@ -224,11 +224,25 @@ export async function sendEventBroadcastEmail(
     });
   }
 
+  // Claimed before any email goes out, so a double click or a second
+  // organizer can't send the same broadcast twice.
   const sentAt = new Date();
-  await db
+  const [claimed] = await db
     .update(eventTable)
     .set({ [config.sentAtColumn]: sentAt })
-    .where(eq(eventTable.id, params.event.id));
+    .where(
+      and(
+        eq(eventTable.id, params.event.id),
+        isNull(eventTable[config.sentAtColumn])
+      )
+    )
+    .returning({ id: eventTable.id });
+  if (!claimed) {
+    throw conflict(
+      'This email was already sent for this event.',
+      'broadcast_sent'
+    );
+  }
 
   const to = sendable.map((recipient) => recipient.email);
   enrichLog(h3Event, { email: { attempted: true, to } });

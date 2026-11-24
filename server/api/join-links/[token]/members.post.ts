@@ -8,10 +8,13 @@ export default defineEventHandler(async (event) => {
   const result = await joinCommunityWithLink(token, principal.user.id);
   enrichLog(event, {
     organization_id: result.organizationId,
-    membership: { result: 'joined' },
+    membership: { result: result.alreadyMember ? 'already_member' : 'joined' },
   });
-  return respondCreated(event, result.redirectTo, {
+  const body = {
     organizationSlug: result.organizationSlug,
     redirectTo: result.redirectTo,
-  });
+  };
+  return result.alreadyMember
+    ? body
+    : respondCreated(event, result.redirectTo, body);
 });

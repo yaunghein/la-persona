@@ -1,5 +1,16 @@
-import { and, desc, eq, inArray, ne, or, type SQL } from 'drizzle-orm';
+import {
+  and,
+  desc,
+  eq,
+  inArray,
+  isNotNull,
+  isNull,
+  ne,
+  or,
+  type SQL,
+} from 'drizzle-orm';
 import { db } from '~~/server/db';
+import type { Transaction } from '~~/server/features/billing/billing.repository';
 import {
   card,
   cardRequest,
@@ -45,7 +56,7 @@ function selectCardsWithContext() {
 
 export async function findCardWithContextBySlug(slug: string) {
   const [row] = await selectCardsWithContext()
-    .where(eq(card.slug, slug))
+    .where(and(eq(card.slug, slug), isNull(card.removedAt)))
     .limit(1);
   return row ?? null;
 }
@@ -63,6 +74,7 @@ export function listCardsInOrganization(
     .where(
       and(
         eq(card.organizationId, organizationId),
+        isNull(card.removedAt),
         holderUserId ? eq(card.userId, holderUserId) : undefined
       )
     )
@@ -101,15 +113,40 @@ export async function listWorkspaceCards(userId: string) {
   if (!scopes.length) return [];
 
   return selectCardsWithContext()
-    .where(or(...scopes))
+    .where(and(or(...scopes), isNull(card.removedAt)))
     .orderBy(desc(card.createdAt));
+}
+
+/**
+ * Cards whose contacts the user sees: their workspace cards plus cards they
+ * removed or held in a community they left, so leaving never loses contacts.
+ */
+export async function listContactCardIds(userId: string) {
+  const [workspace, removed] = await Promise.all([
+    listWorkspaceCards(userId),
+    db
+      .select({ id: card.id })
+      .from(card)
+      .innerJoin(organization, eq(organization.id, card.organizationId))
+      .where(
+        and(
+          eq(card.userId, userId),
+          ne(organization.type, ORGANIZATION_TYPES.COMPANY),
+          isNotNull(card.removedAt)
+        )
+      ),
+  ]);
+  return [
+    ...workspace.map((row) => row.card.id),
+    ...removed.map((row) => row.id),
+  ];
 }
 
 export async function findCardBySlug(slug: string): Promise<CardRecord | null> {
   const [row] = await db
     .select()
     .from(card)
-    .where(eq(card.slug, slug))
+    .where(and(eq(card.slug, slug), isNull(card.removedAt)))
     .limit(1);
   return row ?? null;
 }
@@ -135,6 +172,7 @@ export async function findLatestCardInOrganization(
     .where(
       and(
         eq(card.organizationId, organizationId),
+        isNull(card.removedAt),
         holderUserId ? eq(card.userId, holderUserId) : undefined
       )
     )
@@ -175,53 +213,90 @@ const PENDING_REQUEST_NOTE =
   /^(?:Existing|New) design request \((?<requestId>[^)]+)\)$/;
 
 /**
- * Deletes a card. A card awaiting payment approval also withdraws the
- * holder's pending card requests linked to that payment.
+ * Withdraws what waits on a card's submitted payments: the holder's pending
+ * card requests linked to them. Returns those payments' ids.
  */
-export async function deleteCardWithPendingRequests(
+async function withdrawPendingRequests(
+  tx: Transaction,
   cardId: string,
   /** Only withdraw this user's requests; omit when Thakhin deletes the card. */
   holderUserId?: string
 ) {
-  await db.transaction(async (tx) => {
-    const pendingNotes = await tx
-      .select({
-        note: subscriptionPayment.note,
-        requestId: subscriptionPayment.requestId,
-      })
-      .from(subscriptionPaymentItem)
-      .innerJoin(
-        subscriptionPayment,
-        eq(subscriptionPayment.id, subscriptionPaymentItem.paymentId)
+  const pending = await tx
+    .select({
+      id: subscriptionPayment.id,
+      note: subscriptionPayment.note,
+      requestId: subscriptionPayment.requestId,
+    })
+    .from(subscriptionPaymentItem)
+    .innerJoin(
+      subscriptionPayment,
+      eq(subscriptionPayment.id, subscriptionPaymentItem.paymentId)
+    )
+    .where(
+      and(
+        eq(subscriptionPaymentItem.cardId, cardId),
+        eq(subscriptionPayment.status, 'submitted')
       )
+    );
+
+  const requestIds = pending
+    .map(
+      (row) =>
+        row.requestId ||
+        (row.note || '').match(PENDING_REQUEST_NOTE)?.groups?.requestId ||
+        null
+    )
+    .filter((id): id is string => !!id);
+
+  if (requestIds.length) {
+    await tx
+      .delete(cardRequest)
       .where(
         and(
-          eq(subscriptionPaymentItem.cardId, cardId),
-          eq(subscriptionPayment.status, 'submitted')
+          inArray(cardRequest.id, requestIds),
+          holderUserId ? eq(cardRequest.userId, holderUserId) : undefined,
+          eq(cardRequest.status, 'pending')
         )
       );
+  }
+  return pending.map((row) => row.id);
+}
 
-    const requestIds = pendingNotes
-      .map(
-        (row) =>
-          row.requestId ||
-          (row.note || '').match(PENDING_REQUEST_NOTE)?.groups?.requestId ||
-          null
-      )
-      .filter((id): id is string => !!id);
+/** Thakhin purges a card, and with it everything that references it. */
+export async function deleteCardWithPendingRequests(cardId: string) {
+  await db.transaction(async (tx) => {
+    await withdrawPendingRequests(tx, cardId);
+    await tx.delete(card).where(eq(card.id, cardId));
+  });
+}
 
-    if (requestIds.length) {
+/**
+ * Removes a card from view but keeps the row, so the contacts collected on it
+ * stay with the former holder and the organization. Receipts still waiting
+ * for review are rejected, since there is no card left to extend.
+ */
+export async function removeCard(
+  cardId: string,
+  holderUserId: string,
+  executor: typeof db | Transaction = db
+) {
+  await executor.transaction(async (tx) => {
+    const paymentIds = await withdrawPendingRequests(tx, cardId, holderUserId);
+    if (paymentIds.length) {
       await tx
-        .delete(cardRequest)
+        .update(subscriptionPayment)
+        .set({ status: 'rejected', note: 'Card removed by its holder' })
         .where(
           and(
-            inArray(cardRequest.id, requestIds),
-            holderUserId ? eq(cardRequest.userId, holderUserId) : undefined,
-            eq(cardRequest.status, 'pending')
+            inArray(subscriptionPayment.id, paymentIds),
+            eq(subscriptionPayment.status, 'submitted')
           )
         );
     }
-
-    await tx.delete(card).where(eq(card.id, cardId));
+    await tx
+      .update(card)
+      .set({ removedAt: new Date() })
+      .where(and(eq(card.id, cardId), isNull(card.removedAt)));
   });
 }

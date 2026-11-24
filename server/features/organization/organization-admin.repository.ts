@@ -1,4 +1,4 @@
-import { and, count, desc, eq, ne } from 'drizzle-orm';
+import { and, count, desc, eq, isNull, ne } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { db } from '~~/server/db';
 import {
@@ -26,6 +26,7 @@ export async function listOrganizationsWithCounts() {
     db
       .select({ organizationId: card.organizationId, value: count(card.id) })
       .from(card)
+      .where(isNull(card.removedAt))
       .groupBy(card.organizationId),
   ]);
   const membersByOrg = new Map(
@@ -141,7 +142,9 @@ export async function findOrganizationDetail(organizationId: string) {
         userId: card.userId,
       })
       .from(card)
-      .where(eq(card.organizationId, organizationId))
+      .where(
+        and(eq(card.organizationId, organizationId), isNull(card.removedAt))
+      )
       .orderBy(desc(card.createdAt), desc(card.id)),
   ]);
   return { organization: existing, members, cards };
