@@ -1,7 +1,9 @@
 import { Resend } from 'resend';
+import { createTransport } from 'nodemailer';
 import { env } from '~~/env';
 
 const resend = new Resend(env.RESEND_API_KEY);
+const smtp = env.SMTP_URL ? createTransport(env.SMTP_URL) : null;
 const FROM = 'La Persona <welcome@contact.la-persona.com>';
 // Resend batch limit; batch sends can't carry attachments.
 const BATCH_SIZE = 100;
@@ -18,6 +20,8 @@ export const sendEmail = async (params: {
   html: string;
   attachments?: { filename: string; content: Buffer }[];
 }) => {
+  if (smtp) return smtp.sendMail({ from: FROM, ...params });
+
   const response = await resend.emails.send({
     from: FROM,
     to: params.to,
@@ -43,6 +47,13 @@ export const sendBatchEmails = async (
     const chunk = emails.slice(start, start + BATCH_SIZE);
     const to = chunk.map((email) => email.to);
     try {
+      if (smtp) {
+        await Promise.all(
+          chunk.map((email) => smtp.sendMail({ from: FROM, ...email }))
+        );
+        chunks.push({ to });
+        continue;
+      }
       const response = await resend.batch.send(
         chunk.map((email) => ({
           from: FROM,

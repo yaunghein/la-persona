@@ -86,13 +86,16 @@ export async function listWorkspaceCards(userId: string) {
       .map((item) => item.organizationId);
   const personalIds = idsOfType(ORGANIZATION_TYPES.PERSONAL);
   const communityIds = idsOfType(ORGANIZATION_TYPES.COMMUNITY);
+  const companyIds = idsOfType(ORGANIZATION_TYPES.COMPANY);
 
   const scopes: SQL[] = [];
   if (personalIds.length)
     scopes.push(inArray(card.organizationId, personalIds));
-  if (communityIds.length) {
+  // Community and company cards count only while the user holds them.
+  const heldIds = [...communityIds, ...companyIds];
+  if (heldIds.length) {
     scopes.push(
-      and(inArray(card.organizationId, communityIds), eq(card.userId, userId))!
+      and(inArray(card.organizationId, heldIds), eq(card.userId, userId))!
     );
   }
   if (!scopes.length) return [];

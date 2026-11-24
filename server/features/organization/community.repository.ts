@@ -1,6 +1,7 @@
 import { and, count, desc, eq, inArray } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { db } from '~~/server/db';
+import type { Transaction } from '~~/server/features/billing/billing.repository';
 import {
   card,
   communitySetting,
@@ -131,12 +132,24 @@ export async function insertMember(
       role,
       createdAt: new Date(),
     })
+    .onConflictDoNothing({ target: [member.organizationId, member.userId] })
     .returning();
   return row ?? null;
 }
 
-export async function countOwners(organizationId: string) {
-  const [row] = await db
+/**
+ * With `tx`, locks the organization row first, so two removals running at once
+ * can't both count the other admin and leave none.
+ */
+export async function countOwners(organizationId: string, tx?: Transaction) {
+  if (tx) {
+    await tx
+      .select({ id: organization.id })
+      .from(organization)
+      .where(eq(organization.id, organizationId))
+      .for('update');
+  }
+  const [row] = await (tx ?? db)
     .select({ value: count() })
     .from(member)
     .where(
@@ -312,12 +325,15 @@ export async function findInvitationById(invitationId: string) {
  * card (with its analytics and contacts), and their sessions stop defaulting
  * to this organization.
  */
-export async function deleteMemberWithCommunityData(target: {
-  memberId: string;
-  userId: string;
-  organizationId: string;
-}) {
-  await db.transaction(async (tx) => {
+export async function deleteMemberWithCommunityData(
+  target: {
+    memberId: string;
+    userId: string;
+    organizationId: string;
+  },
+  executor: typeof db | Transaction = db
+) {
+  await executor.transaction(async (tx) => {
     await tx
       .delete(card)
       .where(

@@ -6,7 +6,7 @@ import {
 import { ListContactsQuery } from '~~/shared/contracts/contact';
 
 /**
- * Contacts across every card the caller holds (personal and community).
+ * Contacts across every card the caller holds (personal, community and company).
  * JSON page by default; `Accept: text/csv` downloads every matching contact.
  */
 export default defineEventHandler(async (event) => {

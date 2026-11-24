@@ -3,6 +3,11 @@
 // Crawlers need an absolute og:image. Pages override it via usePageSeo.
 const DEFAULT_OG_IMAGE = `${(process.env.BASE_URL || '').replace(/\/$/, '')}/og.png`;
 
+// E2E runs send every request from one IP, so per-IP limits would fail the suite.
+const RATE_LIMITS_DISABLED = process.env.DISABLE_RATE_LIMITS === 'true';
+const rateLimit = (tokensPerInterval: number) =>
+  RATE_LIMITS_DISABLED ? false : { tokensPerInterval, interval: 300000 };
+
 // Feature modules under app/features/<domain>. Components auto-import with the
 // domain as prefix (features/event/components/create-slideover.vue -> <EventCreateSlideover>).
 const FEATURE_DOMAINS = [
@@ -63,6 +68,7 @@ export default defineNuxtConfig({
     },
   },
   security: {
+    ...(RATE_LIMITS_DISABLED && { rateLimiter: false }),
     headers: {
       permissionsPolicy: {
         camera: ['self'],
@@ -198,23 +204,21 @@ export default defineNuxtConfig({
     '/thakhin/**': { ssr: false },
     // Anonymous writes that send email or store data: tight per-IP budgets.
     '/api/public/cards/*/contact-exchanges': {
-      security: { rateLimiter: { tokensPerInterval: 10, interval: 300000 } },
+      security: { rateLimiter: rateLimit(10) },
     },
     '/api/public/legacy-cards/*/contact-exchanges': {
-      security: { rateLimiter: { tokensPerInterval: 10, interval: 300000 } },
+      security: { rateLimiter: rateLimit(10) },
     },
     '/api/public/leads': {
-      security: { rateLimiter: { tokensPerInterval: 5, interval: 300000 } },
+      security: { rateLimiter: rateLimit(5) },
     },
     // Venue Wi-Fi is one public IP, so a walk-in queue shares this budget.
     '/api/auth/sign-in/**': {
-      security: { rateLimiter: { tokensPerInterval: 60, interval: 300000 } },
+      security: { rateLimiter: rateLimit(60) },
     },
     // Pages can request many images; keep them out of the shared request budget.
     '/_ipx/**': {
-      security: {
-        rateLimiter: { tokensPerInterval: 600, interval: 300000 },
-      },
+      security: { rateLimiter: rateLimit(600) },
     },
   },
   app: {

@@ -11,6 +11,7 @@ import {
   sql,
 } from 'drizzle-orm';
 import { db } from '~~/server/db';
+import type { Transaction } from '~~/server/features/billing/billing.repository';
 import {
   attendeeLabel,
   event,
@@ -212,9 +213,10 @@ export async function updateEventRegistrationStatus(
 
 export async function deleteRegistrationsForUserInOrganization(
   userId: string,
-  organizationId: string
+  organizationId: string,
+  executor: typeof db | Transaction = db
 ) {
-  const eventRows = await db
+  const eventRows = await executor
     .select({ id: event.id })
     .from(event)
     .where(eq(event.organizationId, organizationId));
@@ -222,7 +224,7 @@ export async function deleteRegistrationsForUserInOrganization(
   const eventIds = eventRows.map((row) => row.id);
   if (eventIds.length === 0) return;
 
-  await db
+  await executor
     .delete(eventRegistration)
     .where(
       and(

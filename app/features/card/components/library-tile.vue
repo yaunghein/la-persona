@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { CardDetail } from '~~/shared/contracts/card';
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 import { communityCardPath } from '~~/shared/utils/routes';
 import {
   cardBadgeColor,
@@ -18,6 +19,10 @@ const emit = defineEmits<{
 }>();
 
 const isCommunity = computed(() => isCommunityCard(props.card));
+// Community and company cards belong to the organization; only Thakhin or an admin removes them.
+const isPersonal = computed(
+  () => props.card.organization.type === ORGANIZATION_TYPES.PERSONAL
+);
 const isPending = computed(
   () => !isCommunity.value && isCardPendingApproval(props.card)
 );
@@ -155,7 +160,7 @@ function onBadgeClick() {
           </template>
         </UButton>
         <div class="ml-auto flex items-center gap-3">
-          <UTooltip v-if="!isCommunity" text="Delete card">
+          <UTooltip v-if="isPersonal" text="Delete card">
             <UButton
               icon="i-lucide-trash-2"
               color="error"

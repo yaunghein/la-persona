@@ -11,6 +11,7 @@ export const organizationPermissionStatements = {
   media: ['upload'],
   checkIn: ['read', 'create'],
   insight: ['read'],
+  billing: ['read'],
   department: ['read', 'create', 'update', 'delete'],
   // `update` also covers attaching labels to a registration.
   attendeeLabel: ['read', 'create', 'update', 'delete'],
@@ -38,6 +39,7 @@ export const organizationVolunteerRole = organizationAccessControl.newRole({
 
 export const organizationAdminRole = organizationAccessControl.newRole({
   insight: ['read'],
+  billing: ['read'],
   department: ['read', 'create', 'update', 'delete'],
   // Only Thakhin deletes a community (`/api/admin/organizations/{id}`).
   organization: ['read', 'update'],

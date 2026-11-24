@@ -23,6 +23,8 @@ const ServerEnv = PublicEnv.extend({
   AWS_ACCESS_KEY: z.string(),
   AWS_SECRET_ACCESS_KEY: z.string(),
   RESEND_API_KEY: z.string(),
+  SMTP_URL: z.string().optional(),
+  DISABLE_RATE_LIMITS: z.stringbool().default(false),
   ADMIN_EMAILS: z
     .string()
     .default('')
@@ -47,5 +49,8 @@ const ServerEnv = PublicEnv.extend({
 export const env = (
   import.meta.client
     ? PublicEnv.parse((globalThis as any).__NUXT__.config.public)
-    : ServerEnv.parse(process.env)
+    : ServerEnv.refine(
+        (env) => !(env.DISABLE_RATE_LIMITS && env.RAILWAY_ENVIRONMENT_NAME),
+        'DISABLE_RATE_LIMITS must never be set on a Railway deploy.'
+      ).parse(process.env)
 ) as z.infer<typeof ServerEnv>;

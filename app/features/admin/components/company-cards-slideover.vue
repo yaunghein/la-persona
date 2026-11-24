@@ -202,7 +202,7 @@ async function createCards() {
   if (!props.organizationId) return;
   saving.value = true;
   try {
-    await $fetch(
+    const created = await $fetch<{ unsentEmails: string[] }>(
       `/api/admin/organizations/${props.organizationId}/company-cards` as string,
       {
         method: 'POST',
@@ -215,7 +215,15 @@ async function createCards() {
         },
       }
     );
-    toast.add({ title: 'Cards created', color: 'success' });
+    toast.add(
+      created.unsentEmails.length
+        ? {
+            title: "Cards created, but some invites didn't send",
+            description: `Not sent to ${created.unsentEmails.join(', ')}. Resend from the company's Members\u00a0page.`,
+            color: 'warning',
+          }
+        : { title: 'Cards created', color: 'success' }
+    );
     drafts.value = [blankDraft()];
     isAmountEdited.value = false;
     await refresh();
@@ -239,11 +247,15 @@ async function recordPayment() {
       {
         method: 'POST',
         body: {
-          cardIds: selectedIds.value,
+          cards: cards.value
+            .filter((item) => selectedIds.value.includes(item.id))
+            .map((item) => ({ id: item.id, periodEnd: item.periodEnd })),
           amountMinor: renewAmount.value,
           ...(renewMode.value === 'years'
             ? { termYears: renewYears.value }
-            : { endAt: renewEndAt.value }),
+            : {
+                endAt: new Date(`${renewEndAt.value}T23:59:59`).toISOString(),
+              }),
         },
       }
     );

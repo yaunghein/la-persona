@@ -190,6 +190,13 @@
       "when": 1795496018217,
       "tag": "0026_drop_payment_item_term_years",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1795511635695,
+      "tag": "0027_unique_member_and_company_invite",
+      "breakpoints": true
     }
   ]
 }

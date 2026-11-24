@@ -101,7 +101,9 @@ export async function listContactPage(
     ...query,
     labelOwnerUserId: viewerUserId,
     assignmentUserId:
-      'cardIds' in scope || scope.cardOwnerUserId ? viewerUserId : undefined,
+      'cardOwnerUserId' in scope && scope.cardOwnerUserId
+        ? viewerUserId
+        : undefined,
   });
   const labels = await listContactLabelsByContactIds(
     rows.map((row) => row.contact.id),
@@ -208,12 +210,15 @@ export function organizationContactScope(
     : { organizationId };
 }
 
-/** Every card the user holds across personal and community workspaces. */
+/** Every card the user holds across personal, community and company workspaces. */
 export async function workspaceContactScope(
   userId: string
 ): Promise<ContactScope> {
   const workspaceCards = await listWorkspaceCards(userId);
-  return { cardIds: workspaceCards.map((row) => row.card.id) };
+  return {
+    cardIds: workspaceCards.map((row) => row.card.id),
+    holderUserId: userId,
+  };
 }
 
 /** Upper bound for one export; far above any real workspace today. */

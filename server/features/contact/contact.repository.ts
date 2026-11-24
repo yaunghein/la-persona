@@ -29,8 +29,8 @@ const personaCard = alias(card, 'persona_card');
 export type ContactScope =
   /** All contacts of an organization's cards, optionally only one owner's cards. */
   | { organizationId: string; cardOwnerUserId?: string }
-  /** Contacts of an explicit set of cards (the caller's workspace). */
-  | { cardIds: string[] };
+  /** Contacts of the caller's workspace cards, from their own holding of each. */
+  | { cardIds: string[]; holderUserId: string };
 
 export type ContactFilter = {
   cardId?: string;
@@ -68,7 +68,10 @@ function holderAssignmentCondition(userId: string) {
 function scopeCondition(scope: ContactScope): SQL | undefined {
   if ('cardIds' in scope) {
     return scope.cardIds.length
-      ? inArray(contactExchange.cardId, scope.cardIds)
+      ? and(
+          inArray(contactExchange.cardId, scope.cardIds),
+          holderAssignmentCondition(scope.holderUserId)
+        )
       : undefined;
   }
   return and(
@@ -214,10 +217,17 @@ export async function findContactOwnership(contactId: string) {
       cardId: card.id,
       cardOrganizationId: card.organizationId,
       cardUserId: card.userId,
+      cardAssignmentId: contactExchange.cardAssignmentId,
+      assignmentUserId: cardAssignment.userId,
+      assignmentEndedAt: cardAssignment.endedAt,
       source: contactExchange.source,
     })
     .from(contactExchange)
     .innerJoin(card, eq(contactExchange.cardId, card.id))
+    .leftJoin(
+      cardAssignment,
+      eq(cardAssignment.id, contactExchange.cardAssignmentId)
+    )
     .where(eq(contactExchange.id, contactId))
     .limit(1);
   return row ?? null;

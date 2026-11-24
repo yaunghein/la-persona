@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   const { organization } = await authorizeOrganizationAccess(
     event,
     orgSlug,
-    'organization:read'
+    'billing:read'
   );
   return listBillingHistory(organization.id);
 });

@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX "invitation_company_pending_email_uidx" ON "invitation" USING btree ("organization_id",lower("email")) WHERE "invitation"."status" = 'pending' and "invitation"."card_id" is not null;--> statement-breakpoint
+CREATE UNIQUE INDEX "member_organization_user_uidx" ON "member" USING btree ("organization_id","user_id");

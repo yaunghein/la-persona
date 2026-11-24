@@ -23,9 +23,10 @@ export default defineEventHandler(async (event) => {
     },
   });
   trackEmailSends(event, Promise.resolve(created.emails));
-  return respondCreated(
-    event,
-    `/api/admin/organizations/${organizationId}`,
-    { items: created.cards }
-  );
+  return respondCreated(event, `/api/admin/organizations/${organizationId}`, {
+    items: created.cards,
+    unsentEmails: created.emails
+      .filter((email) => !email.ok)
+      .flatMap((email) => email.to),
+  });
 });

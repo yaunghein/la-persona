@@ -34,7 +34,16 @@ export type CreateCompanyCardsRequest = z.infer<
 /** Extends each card by `termYears`, or every card to the same `endAt`; never both. */
 export const RecordCompanyPaymentRequest = z
   .object({
-    cardIds: z.array(z.string().trim().min(1)).min(1).max(50),
+    // Each card's period end as the admin saw it; a retry or a second tab no longer matches.
+    cards: z
+      .array(
+        z.object({
+          id: z.string().trim().min(1),
+          periodEnd: z.iso.datetime().nullable(),
+        })
+      )
+      .min(1)
+      .max(50),
     termYears: z.number().int().min(1).max(5).optional(),
     amountMinor: z.number().int().min(0),
     endAt: z.string().trim().min(1).optional(),

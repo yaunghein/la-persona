@@ -308,11 +308,19 @@ async function resendInvite(card: CompanyCard) {
 async function assign() {
   if (!selected.value) return;
   try {
-    await $fetch(`/api/cards/${selected.value.slug}/invitations` as string, {
-      method: 'POST',
-      body: assignForm,
-    });
-    toast.add({ title: 'Invite sent', color: 'success' });
+    const assigned = await $fetch<{ emailSent: boolean }>(
+      `/api/cards/${selected.value.slug}/invitations` as string,
+      { method: 'POST', body: assignForm }
+    );
+    toast.add(
+      assigned.emailSent
+        ? { title: 'Invite sent', color: 'success' }
+        : {
+            title: "Card saved, but the email didn't send",
+            description: 'Use Resend invite to try\u00a0again.',
+            color: 'warning',
+          }
+    );
     open.value = false;
     await refresh();
   } catch (error) {

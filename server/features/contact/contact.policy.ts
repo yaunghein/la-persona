@@ -22,7 +22,14 @@ export async function authorizeContactAccess(
     event,
     contact.cardOrganizationId
   );
-  const isCardHolder = contact.cardUserId === access.principal.user.id;
+  // A company contact belongs to the tenure it came in on, so a card's next
+  // holder can't reach the previous holder's contacts.
+  const holderUserId = contact.cardAssignmentId
+    ? contact.assignmentEndedAt
+      ? null
+      : contact.assignmentUserId
+    : contact.cardUserId;
+  const isCardHolder = holderUserId === access.principal.user.id;
   if (
     !isCardHolder &&
     !canAccessOrganization(access, 'contactExchange:readAll')

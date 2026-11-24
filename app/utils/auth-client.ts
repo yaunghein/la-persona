@@ -99,11 +99,10 @@ export const signOut = async () => {
     fetchOptions: {
       onSuccess: () => {
         clearFormDrafts();
-        navigateTo({
-          path: ROUTES.SIGN_IN,
-          query: {
-            redirectTo: route.fullPath,
-          },
+        // A full reload, not navigateTo: the cached session would otherwise make
+        // the sign-in guard bounce back to /platform, and it drops cached user data.
+        reloadNuxtApp({
+          path: `${ROUTES.SIGN_IN}?redirectTo=${encodeURIComponent(route.fullPath)}`,
         });
       },
     },

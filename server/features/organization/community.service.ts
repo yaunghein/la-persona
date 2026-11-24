@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid';
 import { env } from '~~/env';
+import { runInTransaction } from '~~/server/features/billing/billing.repository';
 import { countContactsByCardIds } from '~~/server/features/contact/contact.repository';
 import { formatEventDateTime } from '~~/server/features/event/event-email-content';
 import {
@@ -147,9 +148,11 @@ export async function joinCommunity(
   organizationId: string,
   role: CommunityInviteRole = 'member'
 ) {
+  // A concurrent join may insert first; then the insert is skipped and we read theirs.
   const membership =
     (await findMembership(userId, organizationId)) ??
-    (await insertMember(userId, organizationId, role));
+    (await insertMember(userId, organizationId, role)) ??
+    (await findMembership(userId, organizationId));
   await ensureCommunityCard(userId, organizationId);
   return membership;
 }
@@ -170,42 +173,53 @@ export async function removeMember(params: {
   );
   if (!target) throw notFound('Member');
 
-  if (target.role === 'admin') {
-    if (params.actorRole !== 'admin') {
-      throw forbidden(
-        'Only an organizer can remove another organizer.',
-        'owner_protected'
-      );
-    }
-    if ((await countOwners(params.organizationId)) <= 1) {
-      throw conflict(
-        'The last organizer cannot be removed from this community.',
-        'last_owner'
-      );
-    }
+  if (target.role === 'admin' && params.actorRole !== 'admin') {
+    throw forbidden(
+      'Only an organizer can remove another organizer.',
+      'owner_protected'
+    );
   }
 
   const organization = await findOrganizationById(params.organizationId);
-  if (organization?.type === ORGANIZATION_TYPES.COMPANY) {
-    const { offboardCompanyMember } = await import(
-      '~~/server/features/organization/company.service'
+  const isCompany = organization?.type === ORGANIZATION_TYPES.COMPANY;
+  await runInTransaction(async (tx) => {
+    if (
+      target.role === 'admin' &&
+      (await countOwners(params.organizationId, tx)) <= 1
+    ) {
+      throw conflict(
+        isCompany
+          ? "The last admin can't be offboarded from this company."
+          : 'The last organizer cannot be removed from this community.',
+        'last_owner'
+      );
+    }
+    if (isCompany) {
+      const { offboardCompanyMember } =
+        await import('~~/server/features/organization/company.service');
+      await offboardCompanyMember(
+        {
+          memberId: target.id,
+          organizationId: params.organizationId,
+          actorUserId: params.actorUserId,
+        },
+        tx
+      );
+      return;
+    }
+    await deleteRegistrationsForUserInOrganization(
+      target.userId,
+      params.organizationId,
+      tx
     );
-    await offboardCompanyMember({
-      memberId: target.id,
-      organizationId: params.organizationId,
-      actorUserId: params.actorUserId,
-    });
-    return target;
-  }
-
-  await deleteRegistrationsForUserInOrganization(
-    target.userId,
-    params.organizationId
-  );
-  await deleteMemberWithCommunityData({
-    memberId: target.id,
-    userId: target.userId,
-    organizationId: params.organizationId,
+    await deleteMemberWithCommunityData(
+      {
+        memberId: target.id,
+        userId: target.userId,
+        organizationId: params.organizationId,
+      },
+      tx
+    );
   });
   return target;
 }

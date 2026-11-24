@@ -8,6 +8,7 @@ import {
   updateUserName,
 } from '~~/server/features/auth/user-admin.repository';
 import { deletePersonalOrganizationsForUser } from '~~/server/features/auth/account.service';
+import { countOwners } from '~~/server/features/organization/community.repository';
 import { vacateCompanyCards } from '~~/server/features/organization/company.service';
 import type {
   AdminUserDetail,
@@ -157,6 +158,18 @@ export async function deleteAccount(
   if (!existing) throw notFound('User');
 
   const footprint = await findUserFootprint(params.userId);
+  for (const row of footprint.memberships) {
+    if (
+      row.organizationType === ORGANIZATION_TYPES.COMPANY &&
+      row.role === 'admin' &&
+      (await countOwners(row.organizationId)) <= 1
+    ) {
+      throw conflict(
+        `This user is the only admin of ${row.organizationName}. Add another admin there before deleting them.`,
+        'last_company_admin'
+      );
+    }
+  }
   const deletedOrganizationIds = await deletePersonalOrganizationsForUser(
     params.userId
   );

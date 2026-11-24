@@ -21,5 +21,6 @@ export default defineEventHandler(async (event) => {
     email: { attempted: true, to: email.to },
   });
   trackEmailSends(event, Promise.resolve([email]));
-  return { ok: email.ok };
+  if (!email.ok) throw upstreamFailed('The invite email could not be sent.');
+  return respondAccepted(event, { invitationId });
 });

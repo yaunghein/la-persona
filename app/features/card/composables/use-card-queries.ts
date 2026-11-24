@@ -25,7 +25,7 @@ export const cardQueryKeys = {
     [...cardQueryKeys.all, 'update-requests', query] as const,
 };
 
-/** Every card the user holds across personal and community workspaces. */
+/** Every card the user holds across personal, community and company workspaces. */
 export function useWorkspaceCardsQuery(
   options: { enabled?: MaybeRefOrGetter<boolean> } = {}
 ) {

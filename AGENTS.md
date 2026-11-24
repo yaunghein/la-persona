@@ -24,6 +24,7 @@ Not set up yet, so load these only if the task introduces them: `vitest`, `vue-t
 ## Commands (bun)
 
 - `bun run dev` / `build` / `format` (Prettier). `bun run typecheck` must stay at 0 errors.
+- Don't add or run tests (`bun run test:e2e`) unless the user asks.
 - `db:generate` / `db:migrate`: Drizzle migrations in `server/db/migrations`.
 - `db:seed`, `db:reset`, `db:backfill-subscriptions`, `db:backfill-media-keys`: CLI scripts in `server/scripts`. Run one against a Railway environment with `railway run -e <environment> -s <service> -- bun run <script>`.
 - Nitro tasks in `server/tasks`:

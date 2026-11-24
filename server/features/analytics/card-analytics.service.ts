@@ -97,7 +97,7 @@ export function summarizeOrganizationAnalytics(params: {
   );
 }
 
-/** Every card the user holds, across personal and community workspaces. */
+/** Every card the user holds, across personal, community and company workspaces. */
 export async function summarizeWorkspaceAnalytics(
   userId: string,
   query: AnalyticsQuery
@@ -121,5 +121,5 @@ export async function summarizeWorkspaceAnalytics(
       otherConfiguredLabels: [],
     } satisfies CardAnalyticsSummary;
   }
-  return summarize({ cardIds: scopedIds }, query, true);
+  return summarize({ cardIds: scopedIds, holderUserId: userId }, query, true);
 }

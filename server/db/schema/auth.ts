@@ -1,4 +1,4 @@
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import {
   pgTable,
   text,
@@ -119,6 +119,11 @@ export const member = pgTable(
   (table) => [
     index('member_organizationId_idx').on(table.organizationId),
     index('member_userId_idx').on(table.userId),
+    // Two overlapping accepts of one invite would otherwise add the person twice.
+    uniqueIndex('member_organization_user_uidx').on(
+      table.organizationId,
+      table.userId
+    ),
   ]
 );
 
@@ -144,6 +149,10 @@ export const invitation = pgTable(
     index('invitation_organizationId_idx').on(table.organizationId),
     index('invitation_email_idx').on(table.email),
     index('invitation_cardId_idx').on(table.cardId),
+    // One open company card invite per person, even when "Create Cards" is retried.
+    uniqueIndex('invitation_company_pending_email_uidx')
+      .on(table.organizationId, sql`lower(${table.email})`)
+      .where(sql`${table.status} = 'pending' and ${table.cardId} is not null`),
   ]
 );
 

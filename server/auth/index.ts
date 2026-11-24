@@ -59,6 +59,8 @@ export const auth = betterAuth({
     provider: 'pg',
   }),
   socialProviders,
+  // Unset keeps better-auth's default: on in production, off in dev.
+  rateLimit: env.DISABLE_RATE_LIMITS ? { enabled: false } : undefined,
   plugins: [
     magicLink({
       expiresIn: 60 * 30,
@@ -80,7 +82,8 @@ export const auth = betterAuth({
       ac: organizationAccessControl,
       roles: organizationRoles,
       creatorRole: 'admin',
-      membershipLimit: 500,
+      membershipLimit: 5000,
+      invitationLimit: 500,
       // Organizations are provisioned by the app (personal on sign-up, communities by Thakhin).
       allowUserToCreateOrganization: false,
       disableOrganizationDeletion: true,

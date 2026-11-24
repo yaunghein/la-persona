@@ -26,6 +26,7 @@ import type {
   InvitationInvitee,
   InvitationReviewResult,
 } from '~~/shared/contracts/organization';
+import { isUniqueViolation } from '~~/server/lib/db-errors';
 import { isCommunityCardComplete } from '~~/shared/utils/event-flow';
 import { ROUTES } from '~~/shared/utils/routes';
 import {
@@ -78,6 +79,22 @@ export function sendInvitation(
     },
     headers: event.headers,
   });
+}
+
+/** The member unique index turns a second tab's overlapping accept into a 409. */
+async function acceptWithBetterAuth(event: H3Event, invitationId: string) {
+  try {
+    await auth.api.acceptInvitation({
+      body: { invitationId },
+      headers: event.headers,
+    });
+  } catch (error) {
+    if (!isUniqueViolation(error)) throw error;
+    throw conflict(
+      'This invitation was just accepted. Reload the page.',
+      'invitation_closed'
+    );
+  }
 }
 
 async function loadInvitation(event: H3Event, invitationId: string) {
@@ -259,10 +276,7 @@ async function acceptCompanyInvitation(
     organizationId: invitation.organizationId,
     userId: viewer.userId,
   });
-  await auth.api.acceptInvitation({
-    body: { invitationId: invitation.id },
-    headers: event.headers,
-  });
+  await acceptWithBetterAuth(event, invitation.id);
   try {
     const claimed = await claimCompanyInvitation({
       invitationId: invitation.id,
@@ -306,10 +320,7 @@ async function acceptAsInvitee(
         'invitation_closed'
       );
     }
-    await auth.api.acceptInvitation({
-      body: { invitationId: invitation.id },
-      headers: event.headers,
-    });
+    await acceptWithBetterAuth(event, invitation.id);
   }
 
   const card = await ensureCommunityCard(userId, organization.id);

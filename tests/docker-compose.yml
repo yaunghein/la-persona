@@ -1,0 +1,27 @@
+# Throwaway services for e2e tests. Data lives in tmpfs, so every run starts empty.
+name: la-persona-test
+
+services:
+  postgres:
+    image: postgres:17.11 # match production
+    environment:
+      POSTGRES_USER: la_persona
+      POSTGRES_PASSWORD: la_persona
+      POSTGRES_DB: la_persona_test
+    ports:
+      - '55432:5432'
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U la_persona -d la_persona_test']
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    environment:
+      MP_ENABLE_CHAOS: 'true' # lets tests make SMTP fail on demand
+    ports:
+      - '11025:1025' # macOS Handoff sometimes holds host port 1025
+      - '8025:8025'

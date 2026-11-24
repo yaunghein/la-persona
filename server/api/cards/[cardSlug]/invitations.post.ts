@@ -24,5 +24,9 @@ export default defineEventHandler(async (event) => {
     email: { attempted: true, to: [request.email] },
   });
   trackEmailSends(event, Promise.resolve([assigned.email]));
-  return { slug: assigned.slug, invitationId: assigned.invitationId };
+  return {
+    slug: assigned.slug,
+    invitationId: assigned.invitationId,
+    emailSent: assigned.email.ok,
+  };
 });

@@ -32,6 +32,7 @@ import {
   user,
 } from '~~/server/db/schema';
 import type { Transaction } from '~~/server/features/billing/billing.repository';
+import { isUniqueViolation } from '~~/server/lib/db-errors';
 import { sendEmail } from '~~/server/lib/mailer';
 import type { EmailSendResult } from '~~/server/utils/wide-event';
 import type {
@@ -241,6 +242,15 @@ async function assertEmailsFreeInCompany(
   }
 }
 
+/** The pending-invite unique index catches what the check above misses when two requests overlap. */
+function rethrowPendingInviteTaken(error: unknown): never {
+  if (!isUniqueViolation(error)) throw error;
+  throw conflict(
+    'One of these emails already has a pending invite. Reload to see it.',
+    'company_invite_exists'
+  );
+}
+
 /** A company invite claims its card only while the card is vacant and the person holds no other card there. */
 export async function assertCompanyCardClaimable(
   params: { cardId: string; organizationId: string; userId: string },
@@ -404,161 +414,165 @@ export async function createCompanyCards(params: {
     plan.priceMinor * params.request.termYears * paidCards.length;
   const shares = shareAmounts(amount, Math.max(paidCards.length, 1));
 
-  const created = await db.transaction(async (tx) => {
-    const cards: {
-      id: string;
-      email: string;
-      role: string;
-      invitationId: string;
-    }[] = [];
-    let paidIndex = 0;
-    const freeItems: {
-      cardId: string;
-      startAt: Date;
-      endAt: Date;
-    }[] = [];
-    const paidItems: {
-      cardId: string;
-      startAt: Date;
-      endAt: Date;
-      amountMinor: number;
-    }[] = [];
-
-    for (const draft of params.request.cards) {
-      const id = nanoid();
-      const slug = await freshSlug(
-        `${draft.firstName} ${draft.lastName ?? ''}`
-      );
-      const freeEnd = addMonth(now);
-      const paidStart = draft.freeMonth ? freeEnd : now;
-      const paidEnd = addYears(paidStart, params.request.termYears);
-      await tx.insert(card).values({
-        id,
-        firstName: draft.firstName,
-        lastName: draft.lastName || null,
-        slug,
-        position: draft.position,
-        email: draft.email,
-        company: company.name,
-        website: setting.website || null,
-        splineUrl: setting.splineUrl || env.DEFAULT_SPLINE_URL,
-        wallpaperUrl: setting.wallpaperUrl || env.DEFAULT_WALLPAPER_URL,
-        cardBackUrl: setting.cardBackUrl || env.DEFAULT_CARD_BACK_URL,
-        organizationId: company.id,
-        userId: null,
-      });
-      const periodEnd = draft.paid ? paidEnd : freeEnd;
-      const [subscription] = await tx
-        .insert(cardSubscription)
-        .values({
-          cardId: id,
-          planCode: 'standard',
-          status: 'active',
-          isTrial: false,
-          currentPeriodStartAt: now,
-          currentPeriodEndAt: periodEnd,
-          activatedAt: now,
-        })
-        .returning({ id: cardSubscription.id });
-      if (!subscription)
-        throw new Error('Subscription insert returned no row.');
-      if (draft.freeMonth) {
-        freeItems.push({ cardId: id, startAt: now, endAt: freeEnd });
-      }
-      if (draft.paid) {
-        paidItems.push({
-          cardId: id,
-          startAt: paidStart,
-          endAt: paidEnd,
-          amountMinor: shares[paidIndex] ?? 0,
-        });
-        paidIndex += 1;
-      }
-      const invitationId = nanoid();
-      await tx.insert(invitation).values({
-        id: invitationId,
-        organizationId: company.id,
-        email: draft.email,
-        role: draft.role,
-        status: 'pending',
-        expiresAt: new Date(now.getTime() + INVITE_DAYS * 24 * 60 * 60 * 1000),
-        inviterId: params.inviterId,
-        cardId: id,
-      });
-      cards.push({
-        id,
-        email: draft.email,
-        role: draft.role,
-        invitationId,
-      });
-    }
-
-    async function writePayment(
-      method: 'system' | 'manual',
-      items: {
+  const created = await db
+    .transaction(async (tx) => {
+      const cards: {
+        id: string;
+        email: string;
+        role: string;
+        invitationId: string;
+      }[] = [];
+      let paidIndex = 0;
+      const freeItems: {
+        cardId: string;
+        startAt: Date;
+        endAt: Date;
+      }[] = [];
+      const paidItems: {
         cardId: string;
         startAt: Date;
         endAt: Date;
         amountMinor: number;
-      }[]
-    ) {
-      if (!items.length) return new Map<string, string>();
-      const [payment] = await tx
-        .insert(subscriptionPayment)
-        .values({
+      }[] = [];
+
+      for (const draft of params.request.cards) {
+        const id = nanoid();
+        const slug = await freshSlug(
+          `${draft.firstName} ${draft.lastName ?? ''}`
+        );
+        const freeEnd = addMonth(now);
+        const paidStart = draft.freeMonth ? freeEnd : now;
+        const paidEnd = addYears(paidStart, params.request.termYears);
+        await tx.insert(card).values({
+          id,
+          firstName: draft.firstName,
+          lastName: draft.lastName || null,
+          slug,
+          position: draft.position,
+          email: draft.email,
+          company: company.name,
+          website: setting.website || null,
+          splineUrl: setting.splineUrl || env.DEFAULT_SPLINE_URL,
+          wallpaperUrl: setting.wallpaperUrl || env.DEFAULT_WALLPAPER_URL,
+          cardBackUrl: setting.cardBackUrl || env.DEFAULT_CARD_BACK_URL,
           organizationId: company.id,
-          paidByUserId: payerId,
-          paymentMethod: method,
-          status: 'approved',
-          receiptUrl: null,
-          paymentReference:
-            method === 'manual' ? params.request.paymentReference : null,
-          note: method === 'manual' ? params.request.note : 'Free month',
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning({ id: subscriptionPayment.id });
-      if (!payment) throw new Error('Payment insert returned no row.');
-      const ids = new Map<string, string>();
-      for (const item of items) {
-        const [row] = await tx
-          .insert(subscriptionPaymentItem)
+          userId: null,
+        });
+        const periodEnd = draft.paid ? paidEnd : freeEnd;
+        const [subscription] = await tx
+          .insert(cardSubscription)
           .values({
-            paymentId: payment.id,
-            cardId: item.cardId,
+            cardId: id,
             planCode: 'standard',
-            startAt: item.startAt,
-            endAt: item.endAt,
-            amountMinor: item.amountMinor,
-            currency: plan.currency,
+            status: 'active',
+            isTrial: false,
+            currentPeriodStartAt: now,
+            currentPeriodEndAt: periodEnd,
+            activatedAt: now,
+          })
+          .returning({ id: cardSubscription.id });
+        if (!subscription)
+          throw new Error('Subscription insert returned no row.');
+        if (draft.freeMonth) {
+          freeItems.push({ cardId: id, startAt: now, endAt: freeEnd });
+        }
+        if (draft.paid) {
+          paidItems.push({
+            cardId: id,
+            startAt: paidStart,
+            endAt: paidEnd,
+            amountMinor: shares[paidIndex] ?? 0,
+          });
+          paidIndex += 1;
+        }
+        const invitationId = nanoid();
+        await tx.insert(invitation).values({
+          id: invitationId,
+          organizationId: company.id,
+          email: draft.email,
+          role: draft.role,
+          status: 'pending',
+          expiresAt: new Date(
+            now.getTime() + INVITE_DAYS * 24 * 60 * 60 * 1000
+          ),
+          inviterId: params.inviterId,
+          cardId: id,
+        });
+        cards.push({
+          id,
+          email: draft.email,
+          role: draft.role,
+          invitationId,
+        });
+      }
+
+      async function writePayment(
+        method: 'system' | 'manual',
+        items: {
+          cardId: string;
+          startAt: Date;
+          endAt: Date;
+          amountMinor: number;
+        }[]
+      ) {
+        if (!items.length) return new Map<string, string>();
+        const [payment] = await tx
+          .insert(subscriptionPayment)
+          .values({
+            organizationId: company.id,
+            paidByUserId: payerId,
+            paymentMethod: method,
+            status: 'approved',
+            receiptUrl: null,
+            paymentReference:
+              method === 'manual' ? params.request.paymentReference : null,
+            note: method === 'manual' ? params.request.note : 'Free month',
             createdAt: now,
             updatedAt: now,
           })
-          .returning({ id: subscriptionPaymentItem.id });
-        if (!row) throw new Error('Payment item insert returned no row.');
-        ids.set(item.cardId, row.id);
+          .returning({ id: subscriptionPayment.id });
+        if (!payment) throw new Error('Payment insert returned no row.');
+        const ids = new Map<string, string>();
+        for (const item of items) {
+          const [row] = await tx
+            .insert(subscriptionPaymentItem)
+            .values({
+              paymentId: payment.id,
+              cardId: item.cardId,
+              planCode: 'standard',
+              startAt: item.startAt,
+              endAt: item.endAt,
+              amountMinor: item.amountMinor,
+              currency: plan.currency,
+              createdAt: now,
+              updatedAt: now,
+            })
+            .returning({ id: subscriptionPaymentItem.id });
+          if (!row) throw new Error('Payment item insert returned no row.');
+          ids.set(item.cardId, row.id);
+        }
+        return ids;
       }
-      return ids;
-    }
 
-    const freeIds = await writePayment(
-      'system',
-      freeItems.map((item) => ({ ...item, amountMinor: 0 }))
-    );
-    const paidIds = await writePayment('manual', paidItems);
-    for (const [index, draft] of params.request.cards.entries()) {
-      const cardId = cards[index]?.id;
-      if (!cardId) continue;
-      const latest =
-        (draft.paid ? paidIds.get(cardId) : freeIds.get(cardId)) ?? null;
-      if (!latest) continue;
-      await tx
-        .update(cardSubscription)
-        .set({ lastPaymentItemId: latest, updatedAt: now })
-        .where(eq(cardSubscription.cardId, cardId));
-    }
-    return cards;
-  });
+      const freeIds = await writePayment(
+        'system',
+        freeItems.map((item) => ({ ...item, amountMinor: 0 }))
+      );
+      const paidIds = await writePayment('manual', paidItems);
+      for (const [index, draft] of params.request.cards.entries()) {
+        const cardId = cards[index]?.id;
+        if (!cardId) continue;
+        const latest =
+          (draft.paid ? paidIds.get(cardId) : freeIds.get(cardId)) ?? null;
+        if (!latest) continue;
+        await tx
+          .update(cardSubscription)
+          .set({ lastPaymentItemId: latest, updatedAt: now })
+          .where(eq(cardSubscription.cardId, cardId));
+      }
+      return cards;
+    })
+    .catch(rethrowPendingInviteTaken);
 
   const emails = await Promise.all(
     created.map((item) =>
@@ -582,22 +596,41 @@ export async function recordCompanyPayment(params: {
   const now = new Date();
   const enteredEnd = parseEnd(params.request.endAt);
   const payerId = await currentAdminUserId(company.id);
-  const uniqueIds = [...new Set(params.request.cardIds)];
-  const rows = await db
-    .select({
-      id: card.id,
-      endAt: cardSubscription.currentPeriodEndAt,
-      status: cardSubscription.status,
-    })
-    .from(card)
-    .leftJoin(cardSubscription, eq(cardSubscription.cardId, card.id))
-    .where(
-      and(eq(card.organizationId, company.id), inArray(card.id, uniqueIds))
-    );
-  if (rows.length !== uniqueIds.length) throw notFound('Card');
-  const shares = shareAmounts(params.request.amountMinor, rows.length);
+  const seenEnd = new Map(
+    params.request.cards.map((item) => [item.id, item.periodEnd])
+  );
+  const uniqueIds = [...seenEnd.keys()];
 
+  const inCompany = and(
+    eq(card.organizationId, company.id),
+    inArray(card.id, uniqueIds)
+  );
   return db.transaction(async (tx) => {
+    // Lock first, then read in a new statement: a locking read that waited
+    // still returns the joined subscription as it was before the wait.
+    await tx.select({ id: card.id }).from(card).where(inCompany).for('update');
+    const rows = await tx
+      .select({
+        id: card.id,
+        endAt: cardSubscription.currentPeriodEndAt,
+        status: cardSubscription.status,
+      })
+      .from(card)
+      .leftJoin(cardSubscription, eq(cardSubscription.cardId, card.id))
+      .where(inCompany);
+    if (rows.length !== uniqueIds.length) throw notFound('Card');
+    if (
+      rows.some(
+        (row) => (row.endAt?.toISOString() ?? null) !== seenEnd.get(row.id)
+      )
+    ) {
+      throw conflict(
+        'These cards changed since you opened them. Reload and try again.',
+        'payment_stale'
+      );
+    }
+    const shares = shareAmounts(params.request.amountMinor, rows.length);
+
     const [payment] = await tx
       .insert(subscriptionPayment)
       .values({
@@ -769,12 +802,15 @@ export async function revertCompanyInviteAcceptance(params: {
   });
 }
 
-export async function offboardCompanyMember(params: {
-  memberId: string;
-  organizationId: string;
-  actorUserId: string;
-}) {
-  const [target] = await db
+export async function offboardCompanyMember(
+  params: {
+    memberId: string;
+    organizationId: string;
+    actorUserId: string;
+  },
+  executor: typeof db | Transaction = db
+) {
+  const [target] = await executor
     .select()
     .from(member)
     .where(
@@ -785,7 +821,7 @@ export async function offboardCompanyMember(params: {
     )
     .limit(1);
   if (!target) throw notFound('Member');
-  await db.transaction(async (tx) => {
+  await executor.transaction(async (tx) => {
     await vacateCompanyCards(
       {
         userId: target.userId,
@@ -844,45 +880,62 @@ export async function assignVacantCompanyCard(params: {
   const invitationId = nanoid();
   // Only a link someone actually held says they left; an unclaimed one just goes away.
   const wasHeld = await isCurrentLinkVacated(target.id);
-  await db.transaction(async (tx) => {
-    if (wasHeld) {
-      await tx.insert(retiredCardSlug).values({
-        slug: target.slug,
-        cardId: target.id,
-        retiredAt: now,
-      });
-    }
-    // The retired link must not let an earlier invitee claim the card.
-    await tx
-      .update(invitation)
-      .set({ status: 'canceled' })
-      .where(
-        and(eq(invitation.cardId, target.id), eq(invitation.status, 'pending'))
-      );
-    await tx
-      .update(card)
-      .set({
-        ...CLEARED_HOLDER_FIELDS,
-        slug,
-        firstName: params.request.firstName,
-        lastName: params.request.lastName || null,
+  await db
+    .transaction(async (tx) => {
+      // Two assigns at once would both cancel nothing and leave two pending invites.
+      const [locked] = await tx
+        .select({ slug: card.slug, userId: card.userId })
+        .from(card)
+        .where(eq(card.id, target.id))
+        .for('update');
+      if (!locked || locked.userId || locked.slug !== target.slug) {
+        throw conflict(
+          'This card was just changed. Reload and try again.',
+          'card_changed'
+        );
+      }
+      if (wasHeld) {
+        await tx.insert(retiredCardSlug).values({
+          slug: target.slug,
+          cardId: target.id,
+          retiredAt: now,
+        });
+      }
+      // The retired link must not let an earlier invitee claim the card.
+      await tx
+        .update(invitation)
+        .set({ status: 'canceled' })
+        .where(
+          and(
+            eq(invitation.cardId, target.id),
+            eq(invitation.status, 'pending')
+          )
+        );
+      await tx
+        .update(card)
+        .set({
+          ...CLEARED_HOLDER_FIELDS,
+          slug,
+          firstName: params.request.firstName,
+          lastName: params.request.lastName || null,
+          email: params.request.email,
+          position: params.request.position,
+          departmentId,
+          updatedAt: now,
+        })
+        .where(eq(card.id, target.id));
+      await tx.insert(invitation).values({
+        id: invitationId,
+        organizationId: params.organizationId,
         email: params.request.email,
-        position: params.request.position,
-        departmentId,
-        updatedAt: now,
-      })
-      .where(eq(card.id, target.id));
-    await tx.insert(invitation).values({
-      id: invitationId,
-      organizationId: params.organizationId,
-      email: params.request.email,
-      role: 'member',
-      status: 'pending',
-      expiresAt: new Date(now.getTime() + INVITE_DAYS * 24 * 60 * 60 * 1000),
-      inviterId: params.inviterId,
-      cardId: target.id,
-    });
-  });
+        role: 'member',
+        status: 'pending',
+        expiresAt: new Date(now.getTime() + INVITE_DAYS * 24 * 60 * 60 * 1000),
+        inviterId: params.inviterId,
+        cardId: target.id,
+      });
+    })
+    .catch(rethrowPendingInviteTaken);
   const email = await sendCompanyInvite({
     invitationId,
     email: params.request.email,
@@ -1062,31 +1115,17 @@ export async function listDepartments(organizationId: string) {
   return { items: rows.map((row) => ({ id: row.id, name: row.name })) };
 }
 
-async function assertDepartmentNameFree(
-  organizationId: string,
-  name: string,
-  exceptId?: string
-) {
-  const [taken] = await db
-    .select({ id: department.id })
-    .from(department)
-    .where(
-      and(
-        eq(department.organizationId, organizationId),
-        eq(department.name, name),
-        exceptId ? ne(department.id, exceptId) : undefined
-      )
-    )
-    .limit(1);
-  if (taken) throw conflict('A department with this name already exists.');
+function rethrowDepartmentNameTaken(error: unknown): never {
+  if (!isUniqueViolation(error)) throw error;
+  throw conflict('A department with this name already exists.');
 }
 
 export async function createDepartment(organizationId: string, name: string) {
-  await assertDepartmentNameFree(organizationId, name);
   const [row] = await db
     .insert(department)
     .values({ organizationId, name })
-    .returning();
+    .returning()
+    .catch(rethrowDepartmentNameTaken);
   if (!row) throw new Error('Department insert returned no row.');
   return { id: row.id, name: row.name };
 }
@@ -1096,7 +1135,6 @@ export async function renameDepartment(
   departmentId: string,
   name: string
 ) {
-  await assertDepartmentNameFree(organizationId, name, departmentId);
   const [row] = await db
     .update(department)
     .set({ name, updatedAt: new Date() })
@@ -1106,7 +1144,8 @@ export async function renameDepartment(
         eq(department.organizationId, organizationId)
       )
     )
-    .returning();
+    .returning()
+    .catch(rethrowDepartmentNameTaken);
   if (!row) throw notFound('Department');
   return { id: row.id, name: row.name };
 }

@@ -1,13 +1,14 @@
-import { and, eq, gte, inArray, sql, type SQL } from 'drizzle-orm';
+import { and, eq, gte, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 import { db } from '~~/server/db';
-import { analytics, card } from '~~/server/db/schema';
+import { analytics, card, cardAssignment } from '~~/server/db/schema';
 import { viewerDaySql } from '~~/server/utils/request-timezone';
 import type { TimezoneOffset } from '~~/shared/utils/datetime';
 
 /** Which cards' interactions to aggregate. */
 export type CardAnalyticsScope =
   | { organizationId: string; holderUserId?: string; cardId?: string }
-  | { cardIds: string[] };
+  /** The caller's workspace cards, counting only their own holding of each. */
+  | { cardIds: string[]; holderUserId: string };
 
 function interactionFilter(
   scope: CardAnalyticsScope,
@@ -16,7 +17,23 @@ function interactionFilter(
   if ('cardIds' in scope) {
     return and(
       inArray(analytics.cardId, scope.cardIds),
-      gte(analytics.createdAt, since)
+      gte(analytics.createdAt, since),
+      // Only company cards have holdings; a new holder doesn't inherit earlier views.
+      or(
+        isNull(analytics.cardAssignmentId),
+        inArray(
+          analytics.cardAssignmentId,
+          db
+            .select({ id: cardAssignment.id })
+            .from(cardAssignment)
+            .where(
+              and(
+                eq(cardAssignment.userId, scope.holderUserId),
+                isNull(cardAssignment.endedAt)
+              )
+            )
+        )
+      )
     );
   }
   return and(
