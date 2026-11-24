@@ -1,7 +1,12 @@
 import type { H3Event } from 'h3';
 import { auth } from '~~/server/auth';
 import { findPersonalOrganization } from '~~/server/features/auth/account.repository';
-import { claimCompanyInvitation } from '~~/server/features/organization/company.service';
+import {
+  assertCompanyCardClaimable,
+  claimCompanyInvitation,
+  findHeldCompanyCardSlug,
+  revertCompanyInviteAcceptance,
+} from '~~/server/features/organization/company.service';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 import {
   findInvitationById,
@@ -145,12 +150,12 @@ export async function reviewInvitation(
   const invitation = await loadInvitation(event, invitationId);
 
   if (status === 'accepted' && isInvitee(invitation, viewer.email)) {
-    return acceptAsInvitee(event, invitation, viewer.userId);
+    return acceptAsInvitee(event, invitation, viewer);
   }
 
   const permission =
     status === 'accepted' ? 'member:create' : 'invitation:cancel';
-  await authorizeOrganizationAccessById(
+  const access = await authorizeOrganizationAccessById(
     event,
     invitation.organizationId,
     permission
@@ -161,8 +166,13 @@ export async function reviewInvitation(
       'invitation_decided'
     );
   }
-  // Admin invitations come from Thakhin; only the invitee can accept them.
-  if (status === 'accepted' && invitation.role === 'admin') {
+  // Admin invitations come from Thakhin, and company invites claim a card;
+  // only the invitee can accept either.
+  if (
+    status === 'accepted' &&
+    (invitation.role === 'admin' ||
+      access.organization.type === ORGANIZATION_TYPES.COMPANY)
+  ) {
     throw forbidden(
       'Only the invited organizer can accept this invitation.',
       'owner_invitation'
@@ -198,13 +208,95 @@ export async function reviewInvitation(
   return { status: 'invitation_resent' };
 }
 
+/**
+ * Checks the card before better-auth adds the member, then claims it. A failed
+ * claim removes the member again so nobody is left in the company without a card.
+ */
+async function acceptCompanyInvitation(
+  event: H3Event,
+  invitation: InvitationRecord,
+  viewer: { userId: string; email: string },
+  organizationSlug: string
+): Promise<InvitationReviewResult> {
+  if (!invitation.cardId) {
+    throw conflict('This invitation has no card.', 'invitation_card');
+  }
+  const accepted = async (
+    cardSlug: string
+  ): Promise<InvitationReviewResult> => {
+    // Members have no company workspace; they land in their personal one.
+    const personal = await findPersonalOrganization(viewer.userId);
+    return {
+      status: 'accepted',
+      organizationSlug: personal?.slug ?? organizationSlug,
+      redirectTo: `/platform/${organizationSlug}/cards/${cardSlug}`,
+    };
+  };
+
+  const membership = await findMembership(
+    viewer.userId,
+    invitation.organizationId
+  );
+  if (membership) {
+    const heldSlug = await findHeldCompanyCardSlug(
+      invitation.cardId,
+      viewer.userId
+    );
+    if (heldSlug) return accepted(heldSlug);
+    throw conflict(
+      'This invitation has expired or was already processed.',
+      'invitation_closed'
+    );
+  }
+  if (!isOpen(invitation)) {
+    throw conflict(
+      'This invitation has expired or was already processed.',
+      'invitation_closed'
+    );
+  }
+  await assertCompanyCardClaimable({
+    cardId: invitation.cardId,
+    organizationId: invitation.organizationId,
+    userId: viewer.userId,
+  });
+  await auth.api.acceptInvitation({
+    body: { invitationId: invitation.id },
+    headers: event.headers,
+  });
+  try {
+    const claimed = await claimCompanyInvitation({
+      invitationId: invitation.id,
+      userId: viewer.userId,
+      userEmail: viewer.email,
+    });
+    return accepted(claimed.cardSlug);
+  } catch (error) {
+    await revertCompanyInviteAcceptance({
+      invitationId: invitation.id,
+      userId: viewer.userId,
+      organizationId: invitation.organizationId,
+    });
+    throw error;
+  }
+}
+
 async function acceptAsInvitee(
   event: H3Event,
   invitation: InvitationRecord,
-  userId: string
+  viewer: { userId: string; email: string }
 ): Promise<InvitationReviewResult> {
+  const userId = viewer.userId;
   const organization = await findOrganizationById(invitation.organizationId);
   if (!organization) throw notFound('Community');
+
+  if (organization.type === ORGANIZATION_TYPES.COMPANY) {
+    return acceptCompanyInvitation(
+      event,
+      invitation,
+      viewer,
+      organization.slug
+    );
+  }
 
   const membership = await findMembership(userId, organization.id);
   if (!membership) {
@@ -218,25 +310,6 @@ async function acceptAsInvitee(
       body: { invitationId: invitation.id },
       headers: event.headers,
     });
-  }
-
-  if (organization.type === ORGANIZATION_TYPES.COMPANY) {
-    const invite = await findInvitationById(invitation.id);
-    if (!invite?.cardId) {
-      throw conflict('This invitation has no card.', 'invitation_card');
-    }
-    const claimed = await claimCompanyInvitation({
-      invitationId: invitation.id,
-      userId,
-      userEmail: invitation.email,
-      userName: '',
-    });
-    const personal = await findPersonalOrganization(userId);
-    return {
-      status: 'accepted',
-      organizationSlug: personal?.slug ?? organization.slug,
-      redirectTo: `/platform/${organization.slug}/cards/${claimed.cardSlug}`,
-    };
   }
 
   const card = await ensureCommunityCard(userId, organization.id);

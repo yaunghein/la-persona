@@ -1,4 +1,16 @@
-import { and, desc, eq, gte, inArray, isNull, or, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  isNull,
+  ne,
+  or,
+  sql,
+} from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { env } from '~~/env';
 import { db } from '~~/server/db';
@@ -19,6 +31,7 @@ import {
   subscriptionPlan,
   user,
 } from '~~/server/db/schema';
+import type { Transaction } from '~~/server/features/billing/billing.repository';
 import { sendEmail } from '~~/server/lib/mailer';
 import type { EmailSendResult } from '~~/server/utils/wide-event';
 import type {
@@ -74,17 +87,28 @@ async function companyOrThrow(organizationId: string) {
   return row;
 }
 
-export async function ensureCompanySetting(organizationId: string) {
-  const [existing] = await db
+export async function findCompanySetting(organizationId: string) {
+  const [row] = await db
     .select()
     .from(companySetting)
     .where(eq(companySetting.organizationId, organizationId))
     .limit(1);
+  return row ?? null;
+}
+
+export async function ensureCompanySetting(organizationId: string) {
+  const existing = await findCompanySetting(organizationId);
   if (existing) return existing;
-  const [created] = await db
+  // A concurrent first call may insert the row between the select and here.
+  await db
     .insert(companySetting)
     .values({ organizationId })
-    .returning();
+    .onConflictDoNothing({ target: companySetting.organizationId });
+  const [created] = await db
+    .select()
+    .from(companySetting)
+    .where(eq(companySetting.organizationId, organizationId))
+    .limit(1);
   if (!created) throw new Error('Company setting insert returned no row.');
   return created;
 }
@@ -96,6 +120,7 @@ async function currentAdminUserId(organizationId: string) {
     .where(
       and(eq(member.organizationId, organizationId), eq(member.role, 'admin'))
     )
+    .orderBy(asc(member.createdAt))
     .limit(1);
   return row?.userId ?? null;
 }
@@ -145,43 +170,174 @@ export async function openAssignmentId(cardId: string) {
   return row?.id ?? null;
 }
 
-/** Company cards that have expired or have no holder do not collect anything. */
-export async function companyCardActivity(
-  cardId: string
-): Promise<'ok' | 'paused' | 'vacant' | 'skip'> {
-  const [row] = await db
+/**
+ * Whether someone held the card's current link and has left. Links only change
+ * on reassignment, and a held link is retired then, so a holder who started
+ * after the card's latest retirement held the current one.
+ */
+export async function isCurrentLinkVacated(cardId: string) {
+  const [latest] = await db
     .select({
-      type: organization.type,
-      userId: card.userId,
-      status: cardSubscription.status,
-      trialEndAt: cardSubscription.trialEndAt,
-      currentPeriodEndAt: cardSubscription.currentPeriodEndAt,
+      at: sql<Date | null>`max(${retiredCardSlug.retiredAt})`.mapWith(
+        retiredCardSlug.retiredAt
+      ),
     })
-    .from(card)
-    .innerJoin(organization, eq(organization.id, card.organizationId))
-    .leftJoin(cardSubscription, eq(cardSubscription.cardId, card.id))
-    .where(eq(card.id, cardId))
-    .limit(1);
-  if (!row || row.type !== ORGANIZATION_TYPES.COMPANY) return 'skip';
-  if (!row.userId) return 'vacant';
-  const status = row.status
-    ? effectiveSubscriptionStatus(
-        row.status,
-        row.trialEndAt,
-        row.currentPeriodEndAt
+    .from(retiredCardSlug)
+    .where(eq(retiredCardSlug.cardId, cardId));
+  const [row] = await db
+    .select({ id: cardAssignment.id })
+    .from(cardAssignment)
+    .where(
+      and(
+        eq(cardAssignment.cardId, cardId),
+        isNotNull(cardAssignment.endedAt),
+        latest?.at ? gte(cardAssignment.startedAt, latest.at) : undefined
       )
-    : 'expired';
-  return status === 'expired' ? 'paused' : 'ok';
+    )
+    .limit(1);
+  return Boolean(row);
 }
 
-export async function assertCompanyCardLive(cardId: string) {
-  const activity = await companyCardActivity(cardId);
-  if (activity === 'paused') {
-    throw conflict('This card is currently unavailable.', 'card_paused');
+/** One company card per person: no membership and no pending invite on another card. */
+async function assertEmailsFreeInCompany(
+  organizationId: string,
+  emails: string[],
+  exceptCardId?: string
+) {
+  const [taken] = await db
+    .select({ email: user.email })
+    .from(member)
+    .innerJoin(user, eq(user.id, member.userId))
+    .where(
+      and(
+        eq(member.organizationId, organizationId),
+        inArray(sql`lower(${user.email})`, emails)
+      )
+    )
+    .limit(1);
+  if (taken) {
+    throw conflict(
+      `${taken.email} is already in this company.`,
+      'company_member_exists'
+    );
   }
-  if (activity === 'vacant') {
-    throw conflict('This card is not assigned.', 'card_vacant');
+  const [invited] = await db
+    .select({ email: invitation.email })
+    .from(invitation)
+    .where(
+      and(
+        eq(invitation.organizationId, organizationId),
+        eq(invitation.status, 'pending'),
+        inArray(sql`lower(${invitation.email})`, emails),
+        exceptCardId ? ne(invitation.cardId, exceptCardId) : undefined
+      )
+    )
+    .limit(1);
+  if (invited) {
+    throw conflict(
+      `${invited.email} already has a pending invite to another card.`,
+      'company_invite_exists'
+    );
   }
+}
+
+/** A company invite claims its card only while the card is vacant and the person holds no other card there. */
+export async function assertCompanyCardClaimable(
+  params: { cardId: string; organizationId: string; userId: string },
+  executor: typeof db | Transaction = db
+) {
+  const [target] = await executor
+    .select()
+    .from(card)
+    .where(
+      and(
+        eq(card.id, params.cardId),
+        eq(card.organizationId, params.organizationId)
+      )
+    )
+    .limit(1);
+  if (!target) throw notFound('Card');
+  if (target.userId) {
+    throw conflict('This card already has a holder.', 'card_claimed');
+  }
+  const [held] = await executor
+    .select({ id: cardAssignment.id })
+    .from(cardAssignment)
+    .innerJoin(card, eq(card.id, cardAssignment.cardId))
+    .where(
+      and(
+        eq(cardAssignment.userId, params.userId),
+        eq(card.organizationId, params.organizationId),
+        isNull(cardAssignment.endedAt)
+      )
+    )
+    .limit(1);
+  if (held) {
+    throw conflict(
+      'You already hold a card in this company.',
+      'company_card_held'
+    );
+  }
+  return target;
+}
+
+/** The holder's own details; company fields and the card's identity stay. */
+const CLEARED_HOLDER_FIELDS = {
+  userId: null,
+  phone: null,
+  phoneCountryCode: null,
+  avatarUrl: null,
+  socials: [],
+};
+
+/**
+ * Ends the user's company tenures: closes the open assignments, clears the
+ * holder's details off the cards, and retires pending invites to them.
+ */
+export async function vacateCompanyCards(
+  params: { userId: string; organizationId?: string; actorUserId: string },
+  outer?: Transaction
+) {
+  if (!outer) {
+    await db.transaction((tx) => vacateCompanyCards(params, tx));
+    return;
+  }
+  const tx = outer;
+  const held = await tx
+    .select({ id: card.id })
+    .from(card)
+    .innerJoin(organization, eq(organization.id, card.organizationId))
+    .where(
+      and(
+        eq(card.userId, params.userId),
+        eq(organization.type, ORGANIZATION_TYPES.COMPANY),
+        params.organizationId
+          ? eq(card.organizationId, params.organizationId)
+          : undefined
+      )
+    );
+  const cardIds = held.map((row) => row.id);
+  if (!cardIds.length) return;
+  const now = new Date();
+  await tx
+    .update(cardAssignment)
+    .set({ endedAt: now, endedByUserId: params.actorUserId })
+    .where(
+      and(
+        inArray(cardAssignment.cardId, cardIds),
+        isNull(cardAssignment.endedAt)
+      )
+    );
+  await tx
+    .update(card)
+    .set({ ...CLEARED_HOLDER_FIELDS, updatedAt: now })
+    .where(inArray(card.id, cardIds));
+  await tx
+    .update(invitation)
+    .set({ status: 'canceled' })
+    .where(
+      and(inArray(invitation.cardId, cardIds), eq(invitation.status, 'pending'))
+    );
 }
 
 async function sendCompanyInvite(params: {
@@ -232,12 +388,16 @@ export async function createCompanyCards(params: {
   request: CreateCompanyCardsRequest;
 }) {
   const company = await companyOrThrow(params.organizationId);
+  const invitedEmails = params.request.cards.map((item) => item.email);
+  if (new Set(invitedEmails).size !== invitedEmails.length) {
+    throw badRequest('Each card needs a different email.');
+  }
+  await assertEmailsFreeInCompany(company.id, invitedEmails);
   const setting = await ensureCompanySetting(company.id);
   const plan = await standardPlan();
   const now = new Date();
   const paidCards = params.request.cards.filter((item) => item.paid);
   const freeCards = params.request.cards.filter((item) => item.freeMonth);
-  const enteredEnd = parseEnd(params.request.endAt);
   const payerId = await currentAdminUserId(company.id);
   const amount =
     params.request.amountMinor ??
@@ -271,11 +431,7 @@ export async function createCompanyCards(params: {
       );
       const freeEnd = addMonth(now);
       const paidStart = draft.freeMonth ? freeEnd : now;
-      const paidEnd =
-        enteredEnd ?? addYears(paidStart, params.request.termYears);
-      if (draft.paid && paidEnd <= paidStart) {
-        throw badRequest('The end date must be after the paid term starts.');
-      }
+      const paidEnd = addYears(paidStart, params.request.termYears);
       await tx.insert(card).values({
         id,
         firstName: draft.firstName,
@@ -371,7 +527,6 @@ export async function createCompanyCards(params: {
             paymentId: payment.id,
             cardId: item.cardId,
             planCode: 'standard',
-            termYears: method === 'system' ? 1 : params.request.termYears,
             startAt: item.startAt,
             endAt: item.endAt,
             amountMinor: item.amountMinor,
@@ -391,8 +546,8 @@ export async function createCompanyCards(params: {
       freeItems.map((item) => ({ ...item, amountMinor: 0 }))
     );
     const paidIds = await writePayment('manual', paidItems);
-    for (const draft of params.request.cards) {
-      const cardId = cards.find((item) => item.email === draft.email)?.id;
+    for (const [index, draft] of params.request.cards.entries()) {
+      const cardId = cards[index]?.id;
       if (!cardId) continue;
       const latest =
         (draft.paid ? paidIds.get(cardId) : freeIds.get(cardId)) ?? null;
@@ -464,7 +619,8 @@ export async function recordCompanyPayment(params: {
         row.status === 'expired' ||
         row.endAt.getTime() <= now.getTime();
       const startAt = !row.endAt || row.endAt <= now ? now : row.endAt;
-      const endAt = enteredEnd ?? addYears(startAt, params.request.termYears);
+      const endAt =
+        enteredEnd ?? addYears(startAt, params.request.termYears ?? 1);
       if (endAt <= startAt) {
         throw badRequest('The end date must be after the paid term starts.');
       }
@@ -474,7 +630,6 @@ export async function recordCompanyPayment(params: {
           paymentId: payment.id,
           cardId: row.id,
           planCode: 'standard',
-          termYears: params.request.termYears,
           startAt,
           endAt,
           amountMinor: shares[index] ?? 0,
@@ -519,11 +674,11 @@ export async function recordCompanyPayment(params: {
   });
 }
 
+/** Runs after better-auth accepted the invite and added the member. */
 export async function claimCompanyInvitation(params: {
   invitationId: string;
   userId: string;
   userEmail: string;
-  userName: string;
 }) {
   const now = new Date();
   return db.transaction(async (tx) => {
@@ -532,37 +687,26 @@ export async function claimCompanyInvitation(params: {
       .from(invitation)
       .where(eq(invitation.id, params.invitationId))
       .limit(1);
-    if (!invite?.cardId) throw notFound('Invitation');
-    const [target] = await tx
-      .select()
-      .from(card)
-      .where(eq(card.id, invite.cardId))
-      .limit(1);
-    if (!target) throw notFound('Card');
-    if (target.userId) {
-      throw conflict('This card already has a holder.', 'card_claimed');
+    if (
+      !invite?.cardId ||
+      invite.status !== 'accepted' ||
+      invite.email.toLowerCase() !== params.userEmail.toLowerCase()
+    ) {
+      throw notFound('Invitation');
     }
+    const target = await assertCompanyCardClaimable(
+      {
+        cardId: invite.cardId,
+        organizationId: invite.organizationId,
+        userId: params.userId,
+      },
+      tx
+    );
     const [account] = await tx
       .select({ name: user.name })
       .from(user)
       .where(eq(user.id, params.userId))
       .limit(1);
-    const [existingMember] = await tx
-      .select({ id: member.id })
-      .from(member)
-      .where(
-        and(
-          eq(member.organizationId, invite.organizationId),
-          eq(member.userId, params.userId)
-        )
-      )
-      .limit(1);
-    if (existingMember) {
-      throw conflict(
-        'You are already a member of this company.',
-        'already_member'
-      );
-    }
     await tx
       .update(card)
       .set({ userId: params.userId, updatedAt: now })
@@ -570,8 +714,8 @@ export async function claimCompanyInvitation(params: {
     await tx.insert(cardAssignment).values({
       cardId: target.id,
       userId: params.userId,
-      holderName: account?.name || params.userName || target.firstName,
-      holderEmail: params.userEmail,
+      holderName: account?.name || target.firstName,
+      holderEmail: invite.email,
       startedAt: now,
     });
     if (invite.role === 'admin') {
@@ -589,12 +733,47 @@ export async function claimCompanyInvitation(params: {
   });
 }
 
+export async function findHeldCompanyCardSlug(cardId: string, userId: string) {
+  const [row] = await db
+    .select({ slug: card.slug })
+    .from(card)
+    .where(and(eq(card.id, cardId), eq(card.userId, userId)))
+    .limit(1);
+  return row?.slug ?? null;
+}
+
+/** Undoes better-auth's accept when the card claim fails, so the invite can be retried. */
+export async function revertCompanyInviteAcceptance(params: {
+  invitationId: string;
+  userId: string;
+  organizationId: string;
+}) {
+  await db.transaction(async (tx) => {
+    await tx
+      .delete(member)
+      .where(
+        and(
+          eq(member.userId, params.userId),
+          eq(member.organizationId, params.organizationId)
+        )
+      );
+    await tx
+      .update(invitation)
+      .set({ status: 'pending' })
+      .where(
+        and(
+          eq(invitation.id, params.invitationId),
+          eq(invitation.status, 'accepted')
+        )
+      );
+  });
+}
+
 export async function offboardCompanyMember(params: {
   memberId: string;
   organizationId: string;
   actorUserId: string;
 }) {
-  const now = new Date();
   const [target] = await db
     .select()
     .from(member)
@@ -606,32 +785,15 @@ export async function offboardCompanyMember(params: {
     )
     .limit(1);
   if (!target) throw notFound('Member');
-  const held = await db
-    .select({ id: card.id })
-    .from(card)
-    .where(
-      and(
-        eq(card.userId, target.userId),
-        eq(card.organizationId, params.organizationId)
-      )
-    );
-  const cardIds = held.map((row) => row.id);
   await db.transaction(async (tx) => {
-    if (cardIds.length) {
-      await tx
-        .update(cardAssignment)
-        .set({ endedAt: now, endedByUserId: params.actorUserId })
-        .where(
-          and(
-            inArray(cardAssignment.cardId, cardIds),
-            isNull(cardAssignment.endedAt)
-          )
-        );
-      await tx
-        .update(card)
-        .set({ userId: null, updatedAt: now })
-        .where(inArray(card.id, cardIds));
-    }
+    await vacateCompanyCards(
+      {
+        userId: target.userId,
+        organizationId: params.organizationId,
+        actorUserId: params.actorUserId,
+      },
+      tx
+    );
     await tx.delete(member).where(eq(member.id, target.id));
   });
 }
@@ -656,26 +818,57 @@ export async function assignVacantCompanyCard(params: {
   if (!target) throw notFound('Card');
   if (target.userId)
     throw conflict('This card already has a holder.', 'card_claimed');
+  const departmentId = params.request.departmentId ?? null;
+  if (departmentId) {
+    const [owned] = await db
+      .select({ id: department.id })
+      .from(department)
+      .where(
+        and(
+          eq(department.id, departmentId),
+          eq(department.organizationId, params.organizationId)
+        )
+      )
+      .limit(1);
+    if (!owned) throw badRequest('Choose a department from this company.');
+  }
+  await assertEmailsFreeInCompany(
+    params.organizationId,
+    [params.request.email],
+    target.id
+  );
   const now = new Date();
   const slug = await freshSlug(
     `${params.request.firstName} ${params.request.lastName ?? ''}`
   );
   const invitationId = nanoid();
+  // Only a link someone actually held says they left; an unclaimed one just goes away.
+  const wasHeld = await isCurrentLinkVacated(target.id);
   await db.transaction(async (tx) => {
-    await tx.insert(retiredCardSlug).values({
-      slug: target.slug,
-      cardId: target.id,
-      retiredAt: now,
-    });
+    if (wasHeld) {
+      await tx.insert(retiredCardSlug).values({
+        slug: target.slug,
+        cardId: target.id,
+        retiredAt: now,
+      });
+    }
+    // The retired link must not let an earlier invitee claim the card.
+    await tx
+      .update(invitation)
+      .set({ status: 'canceled' })
+      .where(
+        and(eq(invitation.cardId, target.id), eq(invitation.status, 'pending'))
+      );
     await tx
       .update(card)
       .set({
+        ...CLEARED_HOLDER_FIELDS,
         slug,
         firstName: params.request.firstName,
         lastName: params.request.lastName || null,
         email: params.request.email,
         position: params.request.position,
-        departmentId: params.request.departmentId ?? null,
+        departmentId,
         updatedAt: now,
       })
       .where(eq(card.id, target.id));
@@ -700,43 +893,48 @@ export async function assignVacantCompanyCard(params: {
 }
 
 export async function resendCompanyCardInvite(cardId: string) {
-  const [pending] = await db
-    .select()
-    .from(invitation)
-    .where(and(eq(invitation.cardId, cardId), eq(invitation.status, 'pending')))
-    .limit(1);
-  if (!pending?.email)
-    throw conflict('There is no pending invite.', 'no_invite');
   const [company] = await db
-    .select({ name: organization.name })
+    .select({ name: organization.name, holderId: card.userId })
     .from(card)
     .innerJoin(organization, eq(organization.id, card.organizationId))
     .where(eq(card.id, cardId))
     .limit(1);
   if (!company) throw notFound('Card');
+  if (company.holderId) {
+    throw conflict('This card already has a holder.', 'card_claimed');
+  }
+  const [pending] = await db
+    .select()
+    .from(invitation)
+    .where(and(eq(invitation.cardId, cardId), eq(invitation.status, 'pending')))
+    .orderBy(desc(invitation.createdAt))
+    .limit(1);
+  if (!pending?.email)
+    throw conflict('There is no pending invite.', 'no_invite');
   await db
     .update(invitation)
     .set({
       expiresAt: new Date(Date.now() + INVITE_DAYS * 24 * 60 * 60 * 1000),
     })
     .where(eq(invitation.id, pending.id));
-  return sendCompanyInvite({
+  const email = await sendCompanyInvite({
     invitationId: pending.id,
     email: pending.email,
     organizationName: company.name,
     role: pending.role ?? 'member',
   });
+  return { invitationId: pending.id, email };
 }
 
 export async function describeCompanySettings(organizationId: string) {
   const company = await companyOrThrow(organizationId);
-  const setting = await ensureCompanySetting(company.id);
+  const setting = await findCompanySetting(company.id);
   const departments = await listDepartments(company.id);
   return {
     name: company.name,
-    website: setting.website,
+    website: setting?.website ?? '',
     logoUrl: company.logo,
-    coverImageUrl: setting.coverUrl,
+    coverImageUrl: setting?.coverUrl ?? null,
     departments: departments.items,
   };
 }
@@ -864,7 +1062,27 @@ export async function listDepartments(organizationId: string) {
   return { items: rows.map((row) => ({ id: row.id, name: row.name })) };
 }
 
+async function assertDepartmentNameFree(
+  organizationId: string,
+  name: string,
+  exceptId?: string
+) {
+  const [taken] = await db
+    .select({ id: department.id })
+    .from(department)
+    .where(
+      and(
+        eq(department.organizationId, organizationId),
+        eq(department.name, name),
+        exceptId ? ne(department.id, exceptId) : undefined
+      )
+    )
+    .limit(1);
+  if (taken) throw conflict('A department with this name already exists.');
+}
+
 export async function createDepartment(organizationId: string, name: string) {
+  await assertDepartmentNameFree(organizationId, name);
   const [row] = await db
     .insert(department)
     .values({ organizationId, name })
@@ -873,18 +1091,40 @@ export async function createDepartment(organizationId: string, name: string) {
   return { id: row.id, name: row.name };
 }
 
-export async function renameDepartment(departmentId: string, name: string) {
+export async function renameDepartment(
+  organizationId: string,
+  departmentId: string,
+  name: string
+) {
+  await assertDepartmentNameFree(organizationId, name, departmentId);
   const [row] = await db
     .update(department)
     .set({ name, updatedAt: new Date() })
-    .where(eq(department.id, departmentId))
+    .where(
+      and(
+        eq(department.id, departmentId),
+        eq(department.organizationId, organizationId)
+      )
+    )
     .returning();
   if (!row) throw notFound('Department');
   return { id: row.id, name: row.name };
 }
 
-export async function deleteDepartment(departmentId: string) {
-  await db.delete(department).where(eq(department.id, departmentId));
+export async function deleteDepartment(
+  organizationId: string,
+  departmentId: string
+) {
+  const deleted = await db
+    .delete(department)
+    .where(
+      and(
+        eq(department.id, departmentId),
+        eq(department.organizationId, organizationId)
+      )
+    )
+    .returning({ id: department.id });
+  if (!deleted.length) throw notFound('Department');
 }
 
 export async function updateCompanySettings(
@@ -904,7 +1144,9 @@ export async function updateCompanySettings(
   await db
     .update(companySetting)
     .set({
-      website: request.website ?? '',
+      ...(request.website !== undefined
+        ? { website: request.website ?? '' }
+        : {}),
       ...(request.coverImageUrl !== undefined
         ? { coverUrl: request.coverImageUrl }
         : {}),
@@ -915,7 +1157,7 @@ export async function updateCompanySettings(
     .update(card)
     .set({
       company: request.name,
-      website: request.website || null,
+      ...(request.website !== undefined ? { website: request.website } : {}),
       updatedAt: now,
     })
     .where(eq(card.organizationId, organizationId));
@@ -956,6 +1198,8 @@ export async function companyInsights(
     clicks,
     contacts,
     members,
+    viewCounts,
+    contactCounts,
     dailyViewRows,
     dailyContactRows,
   ] = await Promise.all([
@@ -1008,24 +1252,46 @@ export async function companyInsights(
         id: cardAssignment.id,
         name: cardAssignment.holderName,
         departmentName: department.name,
-        views: sql<number>`count(distinct ${analytics.id}) filter (where ${analytics.type} = 'view' and ${analytics.createdAt} >= ${since})::int`,
-        contacts: sql<number>`count(distinct ${contactExchange.id}) filter (where ${contactExchange.createdAt} >= ${since})::int`,
       })
       .from(cardAssignment)
       .innerJoin(card, eq(card.id, cardAssignment.cardId))
       .leftJoin(department, eq(department.id, card.departmentId))
-      .leftJoin(analytics, eq(analytics.cardAssignmentId, cardAssignment.id))
-      .leftJoin(
-        contactExchange,
-        eq(contactExchange.cardAssignmentId, cardAssignment.id)
-      )
       .where(
         and(
           eq(card.organizationId, organizationId),
           departmentId ? eq(card.departmentId, departmentId) : undefined
         )
+      ),
+    db
+      .select({
+        id: analytics.cardAssignmentId,
+        value: sql<number>`count(*)::int`,
+      })
+      .from(analytics)
+      .where(
+        and(
+          eq(analytics.organizationId, organizationId),
+          eq(analytics.type, 'view'),
+          gte(analytics.createdAt, since),
+          isNotNull(analytics.cardAssignmentId)
+        )
       )
-      .groupBy(cardAssignment.id, cardAssignment.holderName, department.name),
+      .groupBy(analytics.cardAssignmentId),
+    db
+      .select({
+        id: contactExchange.cardAssignmentId,
+        value: sql<number>`count(*)::int`,
+      })
+      .from(contactExchange)
+      .innerJoin(card, eq(card.id, contactExchange.cardId))
+      .where(
+        and(
+          eq(card.organizationId, organizationId),
+          gte(contactExchange.createdAt, since),
+          isNotNull(contactExchange.cardAssignmentId)
+        )
+      )
+      .groupBy(contactExchange.cardAssignmentId),
     db
       .select({
         date: viewDay.as('day'),
@@ -1057,6 +1323,12 @@ export async function companyInsights(
       )
       .groupBy(sql`day`),
   ]);
+  const viewsByAssignment = new Map(
+    viewCounts.map((row) => [row.id, row.value])
+  );
+  const contactsByAssignment = new Map(
+    contactCounts.map((row) => [row.id, row.value])
+  );
   const days = viewerRecentDays(range.days + 1, range.timezoneOffset);
   const fillDays = (rows: { date: string; count: number }[]) => {
     const byDay = new Map(rows.map((row) => [row.date, row.count]));
@@ -1077,8 +1349,8 @@ export async function companyInsights(
         id: row.id,
         name: row.name,
         departmentName: row.departmentName,
-        views: row.views,
-        contacts: row.contacts,
+        views: viewsByAssignment.get(row.id) ?? 0,
+        contacts: contactsByAssignment.get(row.id) ?? 0,
       }))
       .sort(
         (a, b) =>

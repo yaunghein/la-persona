@@ -9,6 +9,7 @@ definePageMeta({
 });
 
 const toast = useToast();
+const { normalizeUrlWithHttps } = useUrlNormalization();
 const { organizationSlug } = useOrganizationSlug();
 const { data: userOrgs } = useUserOrganizations();
 const isCompany = computed(
@@ -180,7 +181,7 @@ async function saveCompany() {
         method: 'PATCH',
         body: {
           name: companyForm.name,
-          website: companyForm.website,
+          website: normalizeUrlWithHttps(companyForm.website),
           ...(companyForm.logoUrl !== (loaded?.logoUrl ?? '') && {
             logoUrl: companyForm.logoUrl,
           }),

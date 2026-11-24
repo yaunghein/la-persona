@@ -8,6 +8,7 @@ import {
   updateUserName,
 } from '~~/server/features/auth/user-admin.repository';
 import { deletePersonalOrganizationsForUser } from '~~/server/features/auth/account.service';
+import { vacateCompanyCards } from '~~/server/features/organization/company.service';
 import type {
   AdminUserDetail,
   AdminUserSummary,
@@ -159,6 +160,11 @@ export async function deleteAccount(
   const deletedOrganizationIds = await deletePersonalOrganizationsForUser(
     params.userId
   );
+  // Company cards stay with the company; the holder's tenure ends here.
+  await vacateCompanyCards({
+    userId: params.userId,
+    actorUserId: params.actorUserId,
+  });
   // removeUser also deletes the user's sessions.
   await auth.api.removeUser({
     body: { userId: params.userId },

@@ -21,7 +21,12 @@ import {
   updateCommunityCardsBrand,
 } from '~~/server/features/organization/community.repository';
 import { ensureCommunityCard } from '~~/server/features/organization/community.service';
-import { ensureCompanySetting } from '~~/server/features/organization/company.service';
+import {
+  ensureCompanySetting,
+  findCompanySetting,
+  propagateCompanyBrand,
+  updateCompanySettings,
+} from '~~/server/features/organization/company.service';
 import { sendOrganizerInvitationEmail } from '~~/server/features/organization/invitation.notifications';
 import { sanitizeRichText } from '~~/server/lib/html-sanitizer';
 import type { Collection } from '~~/shared/contracts/collection';
@@ -195,6 +200,10 @@ export async function describeOrganization(
   const setting = isCommunity
     ? await findCommunitySettingByOrganizationId(organizationId)
     : null;
+  const isCompany = organization.type === ORGANIZATION_TYPES.COMPANY;
+  const companySetting = isCompany
+    ? await findCompanySetting(organizationId)
+    : null;
 
   return {
     id: organization.id,
@@ -212,6 +221,14 @@ export async function describeOrganization(
           logo: organization.logo,
         })
       : null,
+    company: isCompany
+      ? {
+          website: companySetting?.website ?? '',
+          logoUrl: organization.logo ?? '',
+          coverImageUrl: companySetting?.coverUrl ?? '',
+          splineUrl: companySetting?.splineUrl ?? '',
+        }
+      : null,
   };
 }
 
@@ -227,6 +244,13 @@ const COMMUNITY_FIELDS = [
   'emailQrBackgroundUrl',
   'emailContactExchangeUrl',
   'emailAfterEventUrl',
+] as const;
+
+const COMPANY_FIELDS = [
+  'website',
+  'logoUrl',
+  'coverImageUrl',
+  'splineUrl',
 ] as const;
 
 export async function updateOrganization(
@@ -264,6 +288,26 @@ export async function updateOrganization(
   if (!updated) throw notFound('Organization');
 
   let cardsUpdated = 0;
+  const changedCompanyFields = COMPANY_FIELDS.filter(
+    (field) => changes[field] !== undefined
+  );
+  if (existing.type === ORGANIZATION_TYPES.COMPANY) {
+    // Company cards always carry the company name, website and design.
+    await updateCompanySettings(organizationId, {
+      name: changes.name,
+      website: changes.website,
+      logoUrl: changes.logoUrl,
+      coverImageUrl: changes.coverImageUrl,
+    });
+    if (changes.splineUrl !== undefined) {
+      await propagateCompanyBrand(
+        organizationId,
+        'splineUrl',
+        changes.splineUrl
+      );
+    }
+    cardsUpdated = detail.cards.length;
+  }
   if (writesCommunity) {
     const brand = (value: string | null | undefined) =>
       value === undefined ? undefined : (value ?? '');
@@ -299,7 +343,9 @@ export async function updateOrganization(
     id: updated.id,
     slug: updated.slug,
     cardsUpdated,
-    changedCommunityFields: writesCommunity ? changedCommunityFields : [],
+    changedCommunityFields: writesCommunity
+      ? changedCommunityFields
+      : changedCompanyFields,
   };
 }
 

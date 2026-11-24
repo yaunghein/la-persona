@@ -12,6 +12,39 @@ import type { Collection } from '~~/shared/contracts/collection';
 import type { CardDetail, UpdateCardRequest } from '~~/shared/contracts/card';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 import { resolvedPhoneFields } from '~~/shared/utils/phone';
+import { effectiveSubscriptionStatus } from '~~/shared/utils/subscription';
+
+/**
+ * Whether a public card collects views, saves and contact exchanges. Expired
+ * personal and company cards pause, a company card without a holder is
+ * vacant, and community cards never pause.
+ */
+export function cardActivity(row: CardWithContext): 'ok' | 'paused' | 'vacant' {
+  const type = row.organization.type;
+  if (type === ORGANIZATION_TYPES.COMMUNITY) return 'ok';
+  if (type === ORGANIZATION_TYPES.COMPANY && !row.card.userId) return 'vacant';
+  const { subscription } = row;
+  // Personal cards from before subscriptions have no row and stay live.
+  if (!subscription?.status) {
+    return type === ORGANIZATION_TYPES.COMPANY ? 'paused' : 'ok';
+  }
+  const status = effectiveSubscriptionStatus(
+    subscription.status,
+    subscription.trialEndAt,
+    subscription.currentPeriodEndAt
+  );
+  return status === 'expired' ? 'paused' : 'ok';
+}
+
+export function assertCardLive(row: CardWithContext) {
+  const activity = cardActivity(row);
+  if (activity === 'paused') {
+    throw conflict('This card is currently unavailable.', 'card_paused');
+  }
+  if (activity === 'vacant') {
+    throw conflict('This card is not assigned.', 'card_vacant');
+  }
+}
 
 /** Managers see every card in the organization; members only the cards they hold. */
 export async function listOrganizationCards(
@@ -49,9 +82,8 @@ export async function updateCard(
     delete values.departmentId;
   }
   if (values.departmentId) {
-    const { listDepartments } = await import(
-      '~~/server/features/organization/company.service'
-    );
+    const { listDepartments } =
+      await import('~~/server/features/organization/company.service');
     const departments = await listDepartments(target.card.organizationId);
     if (!departments.items.some((item) => item.id === values.departmentId)) {
       throw badRequest('Choose a department from this company.');

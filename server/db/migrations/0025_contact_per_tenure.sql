@@ -1,0 +1,3 @@
+DROP INDEX "contact_exchange_card_la_persona_user_uidx";--> statement-breakpoint
+CREATE UNIQUE INDEX "contact_exchange_assignment_la_persona_user_uidx" ON "contact_exchange" USING btree ("card_id","la_persona_user_id","card_assignment_id") WHERE "contact_exchange"."card_assignment_id" IS NOT NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX "contact_exchange_card_la_persona_user_uidx" ON "contact_exchange" USING btree ("card_id","la_persona_user_id") WHERE "contact_exchange"."card_assignment_id" IS NULL;

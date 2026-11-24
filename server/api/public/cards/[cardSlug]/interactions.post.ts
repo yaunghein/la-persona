@@ -1,4 +1,6 @@
-import { findCardBySlug } from '~~/server/features/card/card.repository';
+import { findCardWithContextBySlug } from '~~/server/features/card/card.repository';
+import { cardActivity } from '~~/server/features/card/card.service';
+import { openAssignmentId } from '~~/server/features/organization/company.service';
 import { insertCardInteraction } from '~~/server/features/analytics/card-interaction.repository';
 import { RecordCardInteractionRequest } from '~~/shared/contracts/analytics';
 import { CardRouteParams } from '~~/shared/contracts/card';
@@ -11,13 +13,10 @@ export default defineEventHandler(async (event) => {
   const { cardSlug } = await parseRouteParams(event, CardRouteParams);
   const request = await parseRequestBody(event, RecordCardInteractionRequest);
 
-  const card = await findCardBySlug(cardSlug);
-  if (!card) throw notFound('Card');
-  const { companyCardActivity, openAssignmentId } = await import(
-    '~~/server/features/organization/company.service'
-  );
-  const activity = await companyCardActivity(card.id);
-  if (activity === 'paused' || activity === 'vacant') return respondNoContent(event);
+  const row = await findCardWithContextBySlug(cardSlug);
+  if (!row) throw notFound('Card');
+  if (cardActivity(row) !== 'ok') return respondNoContent(event);
+  const { card } = row;
 
   const metadata = request.metadata ? { ...request.metadata } : undefined;
   if (metadata?.action === 'vcf_download' && metadata.photoHost) {

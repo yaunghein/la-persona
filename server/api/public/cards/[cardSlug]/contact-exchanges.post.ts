@@ -1,4 +1,5 @@
-import { findCardBySlug } from '~~/server/features/card/card.repository';
+import { findCardWithContextBySlug } from '~~/server/features/card/card.repository';
+import { assertCardLive } from '~~/server/features/card/card.service';
 import {
   exchangeContactSeamlessly,
   exchangeContactViaForm,
@@ -17,12 +18,10 @@ export default defineEventHandler(async (event) => {
   const { cardSlug } = await parseRouteParams(event, CardRouteParams);
   const request = await parseRequestBody(event, CreateContactExchangeRequest);
 
-  const ownerCard = await findCardBySlug(cardSlug);
-  if (!ownerCard) throw notFound('Card');
-  const { assertCompanyCardLive } = await import(
-    '~~/server/features/organization/company.service'
-  );
-  await assertCompanyCardLive(ownerCard.id);
+  const row = await findCardWithContextBySlug(cardSlug);
+  if (!row) throw notFound('Card');
+  assertCardLive(row);
+  const ownerCard = row.card;
   enrichLog(event, {
     contact_exchange: {
       card_id: ownerCard.id,

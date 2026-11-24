@@ -324,7 +324,6 @@ export async function acceptOnboardingInvitation(params: {
         paymentId: payment.id,
         cardId: invite.cardId,
         planCode: invite.subscriptionPlanCode,
-        termYears: 1,
         startAt,
         endAt,
         amountMinor: invite.amountMinor,

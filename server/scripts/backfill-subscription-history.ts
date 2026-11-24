@@ -136,7 +136,6 @@ async function main() {
       paymentId: payment.id,
       cardId: row.cardId,
       planCode: row.planCode,
-      termYears: 1,
       startAt: row.startAt,
       endAt: row.endAt,
       amountMinor: 0,

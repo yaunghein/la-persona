@@ -1,0 +1,1 @@
+ALTER TABLE "subscription_payment_item" DROP COLUMN "term_years";

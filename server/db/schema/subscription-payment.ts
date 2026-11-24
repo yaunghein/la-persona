@@ -58,7 +58,6 @@ export const subscriptionPaymentItem = pgTable(
     planCode: text()
       .notNull()
       .references(() => subscriptionPlan.code, { onDelete: 'restrict' }),
-    termYears: integer().default(1).notNull(),
     startAt: timestamp().notNull(),
     endAt: timestamp().notNull(),
     amountMinor: integer().notNull(),

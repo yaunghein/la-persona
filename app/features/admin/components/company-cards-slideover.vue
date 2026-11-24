@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { format } from 'date-fns';
+import { addDays, addYears, format } from 'date-fns';
 import {
   ADMIN_GHOST_BUTTON_CLASS,
   ADMIN_SLIDEOVER_BUTTON_CLASS,
@@ -49,14 +49,26 @@ function blankDraft(): Draft {
 const drafts = ref<Draft[]>([blankDraft()]);
 const termYears = ref(1);
 const amountMinor = ref(0);
-const endAt = ref('');
+const isAmountEdited = ref(false);
 const paymentReference = ref('');
 const note = ref('');
 const selectedIds = ref<string[]>([]);
+const renewMode = ref<'years' | 'date'>('years');
 const renewYears = ref(1);
 const renewAmount = ref(0);
+const isRenewAmountEdited = ref(false);
 const renewEndAt = ref('');
 const saving = ref(false);
+
+const renewModeItems = [
+  { label: 'By years', value: 'years' },
+  { label: 'To a date', value: 'date' },
+];
+
+const { data: plans } = useSubscriptionPlansQuery();
+const standardPriceMinor = computed(
+  () => plans.value?.find((plan) => plan.code === 'standard')?.priceMinor ?? 0
+);
 
 const roleItems = [
   { label: 'Member', value: 'member' },
@@ -104,6 +116,28 @@ watch(
 );
 
 const paidCount = computed(() => drafts.value.filter((row) => row.paid).length);
+
+// Mirrors the server: a free month is 30 days and the paid term starts after it.
+function draftEndLabel(draft: Draft) {
+  if (!draft.freeMonth && !draft.paid) return null;
+  const freeEnd = draft.freeMonth ? addDays(new Date(), 30) : new Date();
+  const end = draft.paid ? addYears(freeEnd, termYears.value || 1) : freeEnd;
+  return `Ends ${format(end, 'd MMM yyyy')}`;
+}
+
+// The amount follows the standard price until someone types their own.
+watchEffect(() => {
+  if (isAmountEdited.value) return;
+  amountMinor.value =
+    standardPriceMinor.value * paidCount.value * (termYears.value || 1);
+});
+watchEffect(() => {
+  if (isRenewAmountEdited.value || renewMode.value !== 'years') return;
+  renewAmount.value =
+    standardPriceMinor.value *
+    selectedIds.value.length *
+    (renewYears.value || 1);
+});
 
 const SUBSCRIPTION_PILLS: Record<
   string,
@@ -175,7 +209,6 @@ async function createCards() {
         body: {
           termYears: termYears.value,
           amountMinor: amountMinor.value,
-          endAt: endAt.value || undefined,
           paymentReference: paymentReference.value || undefined,
           note: note.value || undefined,
           cards: drafts.value,
@@ -184,6 +217,7 @@ async function createCards() {
     );
     toast.add({ title: 'Cards created', color: 'success' });
     drafts.value = [blankDraft()];
+    isAmountEdited.value = false;
     await refresh();
   } catch (error) {
     toast.add({
@@ -206,14 +240,16 @@ async function recordPayment() {
         method: 'POST',
         body: {
           cardIds: selectedIds.value,
-          termYears: renewYears.value,
           amountMinor: renewAmount.value,
-          endAt: renewEndAt.value || undefined,
+          ...(renewMode.value === 'years'
+            ? { termYears: renewYears.value }
+            : { endAt: renewEndAt.value }),
         },
       }
     );
     toast.add({ title: 'Payment recorded', color: 'success' });
     selectedIds.value = [];
+    isRenewAmountEdited.value = false;
     await refresh();
   } catch (error) {
     toast.add({
@@ -315,6 +351,9 @@ async function recordPayment() {
                 :ui="checkboxUi"
               />
             </div>
+            <p v-if="draftEndLabel(draft)" class="text-xs text-subtle">
+              {{ draftEndLabel(draft) }}
+            </p>
           </div>
 
           <UButton
@@ -348,15 +387,7 @@ async function recordPayment() {
                 class="w-full"
                 size="xl"
                 :ui="inputUi"
-              />
-            </UFormField>
-            <UFormField label="Shared End Date" :class="formFieldClass">
-              <UInput
-                v-model="endAt"
-                type="date"
-                class="w-full"
-                size="xl"
-                :ui="inputUi"
+                @update:model-value="isAmountEdited = true"
               />
             </UFormField>
             <UFormField label="Payment Reference" :class="formFieldClass">
@@ -421,12 +452,40 @@ async function recordPayment() {
               </div>
             </li>
           </ul>
-          <UFormField label="Term in Years" :class="formFieldClass">
+          <UFormField label="Extend" :class="formFieldClass">
+            <URadioGroup
+              v-model="renewMode"
+              :items="renewModeItems"
+              orientation="horizontal"
+              :ui="{ label: 'text-sm font-medium text-ink' }"
+            />
+          </UFormField>
+          <UFormField
+            v-if="renewMode === 'years'"
+            label="Term in Years"
+            help="Added to each card's current end date, or from today if it has ended."
+            :class="formFieldClass"
+          >
             <UInput
               v-model.number="renewYears"
               type="number"
               min="1"
               max="5"
+              class="w-full"
+              size="xl"
+              :ui="inputUi"
+            />
+          </UFormField>
+          <UFormField
+            v-else
+            label="End Date"
+            help="Every selected card ends on this date."
+            required
+            :class="formFieldClass"
+          >
+            <UInput
+              v-model="renewEndAt"
+              type="date"
               class="w-full"
               size="xl"
               :ui="inputUi"
@@ -440,15 +499,7 @@ async function recordPayment() {
               class="w-full"
               size="xl"
               :ui="inputUi"
-            />
-          </UFormField>
-          <UFormField label="Shared End Date" :class="formFieldClass">
-            <UInput
-              v-model="renewEndAt"
-              type="date"
-              class="w-full"
-              size="xl"
-              :ui="inputUi"
+              @update:model-value="isRenewAmountEdited = true"
             />
           </UFormField>
           <div class="flex justify-end">
@@ -456,7 +507,9 @@ async function recordPayment() {
               type="submit"
               label="Record Payment"
               color="neutral"
-              :disabled="!selectedIds.length"
+              :disabled="
+                !selectedIds.length || (renewMode === 'date' && !renewEndAt)
+              "
               :loading="saving"
               :class="ADMIN_SLIDEOVER_BUTTON_CLASS"
             />

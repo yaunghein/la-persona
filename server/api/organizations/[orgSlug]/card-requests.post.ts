@@ -2,6 +2,7 @@ import { env } from '~~/env';
 import { submitCardRequest } from '~~/server/features/card/card-request.service';
 import { CreateCardRequestRequest } from '~~/shared/contracts/card';
 import { OrganizationRouteParams } from '~~/shared/contracts/organization';
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
 export default defineEventHandler(async (event) => {
   const { orgSlug } = await parseRouteParams(event, OrganizationRouteParams);
@@ -10,6 +11,10 @@ export default defineEventHandler(async (event) => {
     orgSlug,
     'cardRequest:create'
   );
+  // Only Thakhin adds company cards.
+  if (organization.type === ORGANIZATION_TYPES.COMPANY) {
+    throw notFound('Organization');
+  }
   const request = await parseRequestBody(event, CreateCardRequestRequest);
 
   const { receipt, emails } = await submitCardRequest({

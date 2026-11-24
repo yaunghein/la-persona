@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import type { PublicCard } from '~~/shared/contracts/card';
+import type {
+  PublicCard,
+  UnavailablePublicCard,
+} from '~~/shared/contracts/card';
 import type { CreateContactExchangeRequest } from '~~/shared/contracts/contact';
 import { Application } from '@splinetool/runtime';
 import type { ConcreteComponent } from 'vue';
@@ -18,9 +21,7 @@ const route = useRoute();
 const { normalizeCardLinkValue } = useUrlNormalization();
 
 const { slug } = route.params;
-type PublicCardResponse =
-  | PublicCard
-  | { availability: 'paused' | 'retired'; companyName: string };
+type PublicCardResponse = PublicCard | UnavailablePublicCard;
 
 const {
   data: cardResponse,
@@ -38,6 +39,44 @@ const card = computed(() =>
     : null
 );
 const isMembersOnly = cardError.value?.statusCode === 401;
+
+const unavailableNotice = computed(() => {
+  const value = unavailable.value;
+  if (!value) return null;
+  const company = value.companyName ?? 'the company';
+  if (value.availability === 'retired') {
+    return {
+      icon: 'i-lucide-user-round-x',
+      title: 'No longer here',
+      description: `This person is no longer with ${company}. This link has been\u00a0retired.`,
+      action: null,
+    };
+  }
+  if (value.organizationType === ORGANIZATION_TYPES.COMPANY) {
+    return {
+      icon: 'i-lucide-pause',
+      title: 'Card paused',
+      description: `This card is taking a short break. If it’s yours, ask your ${company}\u00a0admin.`,
+      action: null,
+    };
+  }
+  if (value.renewPath) {
+    return {
+      icon: 'i-lucide-pause',
+      title: 'Your card is paused',
+      description:
+        'Your subscription has ended, so visitors can’t see your card. Extend it to bring it\u00a0back.',
+      action: { label: 'Extend my card', to: value.renewPath },
+    };
+  }
+  return {
+    icon: 'i-lucide-pause',
+    title: 'Card paused',
+    description:
+      'This card is taking a short break. Please check back\u00a0soon.',
+    action: null,
+  };
+});
 
 if (!card.value && !unavailable.value && !isMembersOnly) {
   throw createError({
@@ -140,24 +179,22 @@ onMounted(async () => {
   if (!canvas) return;
   const spline = new Application(canvas);
   splineApp = spline;
-  spline
-    .load(card.value?.splineUrl + `?v=${new Date().getTime()}`)
-    .then(() => {
-      if (splineApp !== spline) return;
-      loading.value = false;
-      if (!card.value) return;
-      applyCombinedCardToSpline(spline, {
-        firstName: card.value.firstName,
-        lastName: card.value.lastName,
-        position: card.value.position,
-        phone: card.value.phone,
-        phoneCountryCode: card.value.phoneCountryCode,
-        email: card.value.email,
-        website: card.value.website,
-        planCode: card.value.plan?.code,
-        joinedAt: card.value.joinedAt,
-      });
+  spline.load(card.value?.splineUrl + `?v=${new Date().getTime()}`).then(() => {
+    if (splineApp !== spline) return;
+    loading.value = false;
+    if (!card.value) return;
+    applyCombinedCardToSpline(spline, {
+      firstName: card.value.firstName,
+      lastName: card.value.lastName,
+      position: card.value.position,
+      phone: card.value.phone,
+      phoneCountryCode: card.value.phoneCountryCode,
+      email: card.value.email,
+      website: card.value.website,
+      planCode: card.value.plan?.code,
+      joinedAt: card.value.joinedAt,
     });
+  });
 });
 
 const isMenuOpen = ref(false);
@@ -660,18 +697,13 @@ async function onSaveContact() {
 </script>
 
 <template>
-  <div
-    v-if="unavailable"
-    class="flex h-dvh items-center justify-center bg-[#232323] px-6 text-center text-white"
-  >
-    <p class="max-w-sm text-lg">
-      {{
-        unavailable.availability === 'retired'
-          ? `This person is no longer with ${unavailable.companyName}.`
-          : 'This card is currently unavailable.'
-      }}
-    </p>
-  </div>
+  <CardUnavailableNotice
+    v-if="unavailableNotice"
+    :icon="unavailableNotice.icon"
+    :title="unavailableNotice.title"
+    :description="unavailableNotice.description"
+    :action="unavailableNotice.action"
+  />
   <div
     v-else-if="card"
     class="relative z-10 h-dvh w-screen overflow-hidden bg-[#232323]"

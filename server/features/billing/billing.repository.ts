@@ -88,7 +88,6 @@ export async function insertCardPayment(input: {
 
     await tx.insert(subscriptionPaymentItem).values({
       paymentId: payment.id,
-      termYears: 1,
       ...input.line,
     });
 
@@ -448,7 +447,6 @@ export async function insertStaffPeriod(
       paymentId: payment.id,
       cardId: input.cardId,
       planCode: input.planCode,
-      termYears: 1,
       startAt: input.startAt,
       endAt: input.endAt,
       amountMinor: input.amountMinor,

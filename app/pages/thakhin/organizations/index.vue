@@ -52,10 +52,23 @@ const editForm = reactive({
   logoUrl: '',
   coverImageUrl: '',
   splineUrl: '',
+  website: '',
   applyToMemberCards: false,
 });
+const isEditingCommunity = computed(
+  () => editingRow.value?.type === ORGANIZATION_TYPES.COMMUNITY
+);
+const isEditingCompany = computed(
+  () => editingRow.value?.type === ORGANIZATION_TYPES.COMPANY
+);
+const { normalizeUrlWithHttps } = useUrlNormalization();
 
-const MEDIA_FIELDS = ['logoUrl', 'coverImageUrl', 'splineUrl'] as const;
+const MEDIA_FIELDS = [
+  'logoUrl',
+  'coverImageUrl',
+  'splineUrl',
+  'website',
+] as const;
 
 /** Media as loaded, so unchanged values are left out of the save. */
 let loadedMedia: Partial<Record<(typeof MEDIA_FIELDS)[number], string>> = {};
@@ -64,7 +77,12 @@ let loadedMedia: Partial<Record<(typeof MEDIA_FIELDS)[number], string>> = {};
 function changedMedia() {
   return Object.fromEntries(
     MEDIA_FIELDS.filter((field) => editForm[field] !== loadedMedia[field]).map(
-      (field) => [field, editForm[field]]
+      (field) => [
+        field,
+        field === 'website'
+          ? normalizeUrlWithHttps(editForm.website)
+          : editForm[field],
+      ]
     )
   );
 }
@@ -141,24 +159,34 @@ async function openEdit(row: OrgRow) {
   editForm.logoUrl = row.logo || '';
   editForm.coverImageUrl = '';
   editForm.splineUrl = '';
+  editForm.website = '';
   editForm.applyToMemberCards = false;
   loadedMedia = Object.fromEntries(
     MEDIA_FIELDS.map((field) => [field, editForm[field]])
   );
   isEditOpen.value = true;
 
-  if (row.type !== ORGANIZATION_TYPES.COMMUNITY) return;
+  if (
+    row.type !== ORGANIZATION_TYPES.COMMUNITY &&
+    row.type !== ORGANIZATION_TYPES.COMPANY
+  )
+    return;
 
   const detail = await adminApi.getOrganization(row.id);
-  if (editingRow.value?.id !== row.id || !detail.community) return;
-  editForm.description = detail.community.description;
-  editForm.guidelines = detail.community.guidelines;
-  editForm.whyJoin = detail.community.whyJoin;
-  editForm.logoUrl = detail.community.logoUrl;
-  editForm.coverImageUrl = detail.community.coverImageUrl;
-  editForm.splineUrl = detail.community.splineUrl;
+  if (editingRow.value?.id !== row.id) return;
+  const brand = detail.community ?? detail.company;
+  if (!brand) return;
+  if (detail.community) {
+    editForm.description = detail.community.description;
+    editForm.guidelines = detail.community.guidelines;
+    editForm.whyJoin = detail.community.whyJoin;
+  }
+  editForm.logoUrl = brand.logoUrl;
+  editForm.coverImageUrl = brand.coverImageUrl;
+  editForm.splineUrl = brand.splineUrl;
+  editForm.website = detail.company?.website ?? '';
   loadedMedia = Object.fromEntries(
-    MEDIA_FIELDS.map((field) => [field, detail.community![field]])
+    MEDIA_FIELDS.map((field) => [field, editForm[field]])
   );
 }
 
@@ -198,7 +226,7 @@ async function onSaveEdit() {
     const saved = await adminApi.updateOrganization(editingRow.value.id, {
       name,
       slug,
-      ...(editingRow.value.type === ORGANIZATION_TYPES.COMMUNITY
+      ...(isEditingCommunity.value
         ? {
             description: editForm.description,
             guidelines: editForm.guidelines,
@@ -207,16 +235,19 @@ async function onSaveEdit() {
             applyToMemberCards: editForm.applyToMemberCards,
           }
         : {}),
+      ...(isEditingCompany.value ? changedMedia() : {}),
     });
     await invalidateAdmin();
     const cardsUpdated = saved.cardsUpdated || 0;
     toast.add({
       title: 'Organization updated',
-      description: editForm.applyToMemberCards
-        ? cardsUpdated > 0
-          ? `Copied spline, wallpaper, and card back onto ${cardsUpdated} member ${cardsUpdated === 1 ? 'card' : 'cards'}.`
-          : 'No member cards to update.'
-        : undefined,
+      description: isEditingCompany.value
+        ? `Updated ${cardsUpdated} company ${cardsUpdated === 1 ? 'card' : 'cards'}.`
+        : editForm.applyToMemberCards
+          ? cardsUpdated > 0
+            ? `Copied spline, wallpaper, and card back onto ${cardsUpdated} member ${cardsUpdated === 1 ? 'card' : 'cards'}.`
+            : 'No member cards to update.'
+          : undefined,
       color: 'success',
     });
     closeEdit();
@@ -626,7 +657,7 @@ const selectMenuUi = {
                 :ui="inputUi"
               />
             </UFormField>
-            <template v-if="editingRow?.type === ORGANIZATION_TYPES.COMMUNITY">
+            <template v-if="isEditingCommunity || isEditingCompany">
               <UFormField label="Logo URL" :class="formFieldClass">
                 <UInput
                   v-model="editForm.logoUrl"
@@ -654,6 +685,23 @@ const selectMenuUi = {
                   :ui="inputUi"
                 />
               </UFormField>
+            </template>
+            <template v-if="isEditingCompany">
+              <UFormField label="Website" :class="formFieldClass">
+                <UInput
+                  v-model="editForm.website"
+                  placeholder="https://"
+                  class="w-full"
+                  size="xl"
+                  :ui="inputUi"
+                />
+              </UFormField>
+              <p class="text-xs leading-relaxed text-ink/50">
+                The name, website and Spline scene are copied onto every company
+                card when you&nbsp;save.
+              </p>
+            </template>
+            <template v-if="isEditingCommunity">
               <div class="rounded-lg border border-raised bg-ink/[0.03] p-4">
                 <UCheckbox
                   v-model="editForm.applyToMemberCards"

@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   pgTable,
   text,
@@ -46,9 +47,13 @@ export const contactExchange = pgTable(
     index('contact_exchange_assignment_idx').on(table.cardAssignmentId),
     index('contact_exchange_la_persona_user_idx').on(table.laPersonaUserId),
     index('contact_exchange_event_idx').on(table.eventId),
-    uniqueIndex('contact_exchange_card_la_persona_user_uidx').on(
-      table.cardId,
-      table.laPersonaUserId
-    ),
+    // One seamless contact per person per card, and per holder tenure on
+    // company cards, so a new holder starts their own row.
+    uniqueIndex('contact_exchange_card_la_persona_user_uidx')
+      .on(table.cardId, table.laPersonaUserId)
+      .where(sql`${table.cardAssignmentId} IS NULL`),
+    uniqueIndex('contact_exchange_assignment_la_persona_user_uidx')
+      .on(table.cardId, table.laPersonaUserId, table.cardAssignmentId)
+      .where(sql`${table.cardAssignmentId} IS NOT NULL`),
   ]
 );

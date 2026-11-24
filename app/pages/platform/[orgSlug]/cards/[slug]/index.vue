@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import type { TabsItem } from '@nuxt/ui';
-import type { CardPaymentKind } from '~~/shared/contracts/billing';
+import {
+  CARD_PAYMENT_KINDS,
+  type CardPaymentKind,
+} from '~~/shared/contracts/billing';
 import {
   cardHolderName,
   isCommunityCard,
@@ -62,20 +65,32 @@ const upgradeButtonLabel = computed(() =>
   isTrial.value ? 'Upgrade to Premium' : 'Update to Premium'
 );
 
-const paymentKind = ref<CardPaymentKind | null>(null);
+// Kept in the URL so links (e.g. a paused public card) can open the slideover.
+const paymentKind = computed<CardPaymentKind | null>(() => {
+  const kind = route.query.payment;
+  return CARD_PAYMENT_KINDS.includes(kind as CardPaymentKind)
+    ? (kind as CardPaymentKind)
+    : null;
+});
+
+function setPaymentKind(kind: CardPaymentKind | null) {
+  const { payment: _payment, ...query } = route.query;
+  router.replace({ query: kind ? { ...query, payment: kind } : query });
+}
+
 const isPaymentOpen = computed({
   get: () => paymentKind.value !== null,
   set: (open) => {
-    if (!open) paymentKind.value = null;
+    if (!open) setPaymentKind(null);
   },
 });
 
 function openRenewal() {
-  paymentKind.value = 'renewal';
+  setPaymentKind('renewal');
 }
 
 function openPremiumUpgrade() {
-  paymentKind.value = 'premium_upgrade';
+  setPaymentKind('premium_upgrade');
 }
 
 const isPendingInfoOpen = ref(false);

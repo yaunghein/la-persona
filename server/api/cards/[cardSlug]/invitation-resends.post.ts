@@ -5,12 +5,21 @@ import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
 export default defineEventHandler(async (event) => {
   const { cardSlug } = await parseRouteParams(event, CardRouteParams);
-  const access = await authorizeCardAccess(event, cardSlug, 'card:readAll');
+  const access = await authorizeCardAccess(
+    event,
+    cardSlug,
+    'invitation:create'
+  );
   if (access.card.organization.type !== ORGANIZATION_TYPES.COMPANY) {
     throw notFound('Card');
   }
-  const email = await resendCompanyCardInvite(access.card.card.id);
-  enrichLog(event, { email: { attempted: true, to: email.to } });
+  const { invitationId, email } = await resendCompanyCardInvite(
+    access.card.card.id
+  );
+  enrichLog(event, {
+    invitation: { id: invitationId },
+    email: { attempted: true, to: email.to },
+  });
   trackEmailSends(event, Promise.resolve([email]));
   return { ok: email.ok };
 });

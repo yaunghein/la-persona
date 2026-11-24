@@ -5,6 +5,7 @@ import {
   MemberRouteParams,
   UpdateMemberRequest,
 } from '~~/shared/contracts/organization';
+import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
 export default defineEventHandler(async (event) => {
   const { memberId } = await parseRouteParams(event, MemberRouteParams);
@@ -14,6 +15,9 @@ export default defineEventHandler(async (event) => {
     'member:update'
   );
   const { role } = await parseRequestBody(event, UpdateMemberRequest);
+  if (organization.type === ORGANIZATION_TYPES.COMPANY && role !== 'member') {
+    throw badRequest('Company members can only have the member role.');
+  }
 
   const target = await assertMemberRoleChangeable(memberId, organization.id);
   await auth.api.updateMemberRole({

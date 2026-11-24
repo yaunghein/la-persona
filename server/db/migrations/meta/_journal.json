@@ -176,6 +176,20 @@
       "when": 1795373411189,
       "tag": "0024_company_cover",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1795489618872,
+      "tag": "0025_contact_per_tenure",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1795496018217,
+      "tag": "0026_drop_payment_item_term_years",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { StoredImageReference } from '~~/shared/contracts/card';
+import { StoredImageReference, WebsiteUrl } from '~~/shared/contracts/card';
 import {
   COMMUNITY_INVITE_ROLES,
   type OrganizationMemberRole,
@@ -273,10 +273,15 @@ export const CreateOrganizationRequest = z
   })
   .refine(
     (request) =>
-      request.type === 'personal' ? !request.ownerEmail : !request.ownerUserId,
+      request.type === 'personal'
+        ? !request.ownerEmail
+        : request.type === 'community'
+          ? !request.ownerUserId
+          : // A company's first admin is invited through a card.
+            !request.ownerEmail && !request.ownerUserId,
     {
       message:
-        'Communities take an owner email; personal spaces an owner user.',
+        'Communities take an owner email, personal spaces an owner user, and companies neither.',
       path: ['ownerEmail'],
     }
   );
@@ -324,6 +329,8 @@ export const UpdateOrganizationRequest = z.object({
   splineUrl: z
     .union([z.literal(''), z.url({ protocol: /^https$/ }).max(2048)])
     .optional(),
+  /** Companies only; copied onto every company card. */
+  website: WebsiteUrl.optional(),
   wallpaperUrl: optionalAsset,
   cardBackUrl: optionalAsset,
   emailQrBackgroundUrl: optionalAsset,
@@ -367,4 +374,10 @@ export type AdminOrganizationDetail = Omit<
     userId: string | null;
   }[];
   community: CommunitySettings | null;
+  company: {
+    website: string;
+    logoUrl: string;
+    coverImageUrl: string;
+    splineUrl: string;
+  } | null;
 };

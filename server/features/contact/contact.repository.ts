@@ -7,6 +7,7 @@ import {
   inArray,
   isNull,
   or,
+  sql,
   type SQL,
 } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
@@ -162,7 +163,9 @@ export async function listContacts(scope: ContactScope, filter: ContactFilter) {
   const where = and(
     scoped,
     filter.cardId ? eq(contactExchange.cardId, filter.cardId) : undefined,
-    filter.departmentId ? eq(card.departmentId, filter.departmentId) : undefined,
+    filter.departmentId
+      ? eq(card.departmentId, filter.departmentId)
+      : undefined,
     filter.eventId ? eq(contactExchange.eventId, filter.eventId) : undefined,
     labelCondition(filter),
     searchCondition(filter.q),
@@ -265,9 +268,8 @@ export async function deleteContact(contactId: string) {
 
 async function assignmentFor(cardId: string | null | undefined) {
   if (!cardId) return null;
-  const { openAssignmentId } = await import(
-    '~~/server/features/organization/company.service'
-  );
+  const { openAssignmentId } =
+    await import('~~/server/features/organization/company.service');
   return openAssignmentId(cardId);
 }
 
@@ -314,13 +316,29 @@ export async function upsertSeamlessExchange(
         source: 'seamless_exchange' as const,
         cardAssignmentId: await assignmentFor(values.cardId),
       };
-      // A re-exchange away from an event keeps where they first met.
+      // A re-exchange with the same holder updates their row; a new holder
+      // gets a new row. Away from an event it keeps where they first met.
       const { eventId, ...withoutEvent } = row;
       const [saved] = await tx
         .insert(contactExchange)
         .values(row)
         .onConflictDoUpdate({
-          target: [contactExchange.cardId, contactExchange.laPersonaUserId],
+          ...(row.cardAssignmentId
+            ? {
+                target: [
+                  contactExchange.cardId,
+                  contactExchange.laPersonaUserId,
+                  contactExchange.cardAssignmentId,
+                ],
+                targetWhere: sql`${contactExchange.cardAssignmentId} IS NOT NULL`,
+              }
+            : {
+                target: [
+                  contactExchange.cardId,
+                  contactExchange.laPersonaUserId,
+                ],
+                targetWhere: sql`${contactExchange.cardAssignmentId} IS NULL`,
+              }),
           set: { ...(eventId ? row : withoutEvent), updatedAt: new Date() },
         })
         .returning({ id: contactExchange.id });

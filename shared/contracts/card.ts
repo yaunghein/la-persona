@@ -169,6 +169,19 @@ export type PublicCard = Pick<
   } | null;
 };
 
+/**
+ * Shown instead of the card. `paused`: the subscription ended (or a company
+ * card has no holder yet). `retired`: the holder left the company.
+ */
+export type UnavailablePublicCard = {
+  availability: 'paused' | 'retired';
+  organizationType: OrganizationType;
+  /** Set for company cards. */
+  companyName: string | null;
+  /** Set only for the card's owner, who can extend it. */
+  renewPath: string | null;
+};
+
 /** Contact details printed on a requested card. */
 export const RequestedCardDetails = z.object({
   name: z.string().trim().min(1, 'Name is required').max(160),
