@@ -260,6 +260,18 @@ export async function emailsTo(email: string, subject = '') {
   return search.messages_count as number;
 }
 
+export async function latestEmailHtml(email: string) {
+  const search = await fetch(
+    `${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}`
+  ).then((response) => response.json());
+  const newest = search.messages?.[0];
+  if (!newest) throw new Error(`No email reached ${email}`);
+  const message = await fetch(
+    `${MAILPIT_URL}/api/v1/message/${newest.ID}`
+  ).then((response) => response.json());
+  return message.HTML as string;
+}
+
 export async function waitForEmail(email: string, subject: string) {
   await expect
     .poll(() => emailsTo(email, subject), { timeout: 15_000 })

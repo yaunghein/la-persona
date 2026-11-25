@@ -4,10 +4,12 @@ import {
   emailsTo,
   expectError,
   givePersonalCard,
+  latestEmailHtml,
   setEmailDown,
   setPeriodEnd,
   sql,
   type Person,
+  waitForEmail,
   type World,
 } from './support/companies';
 import {
@@ -132,13 +134,18 @@ function exchangeSeamlessly(person: Person, slug: string, cardId?: string) {
   });
 }
 
-async function exchangeByForm(world: World, slug: string, name = 'Walk In') {
+async function exchangeByForm(
+  world: World,
+  slug: string,
+  name = 'Walk In',
+  email = uniqueEmail('walkin')
+) {
   const visitor = await world.anonymous();
   return visitor.request.post(`/api/public/cards/${slug}/contact-exchanges`, {
     data: {
       mode: 'form',
       name,
-      email: uniqueEmail('walkin'),
+      email,
       phone: '91234567',
     },
   });
@@ -931,8 +938,13 @@ test.describe('Part 6: The public card and contacts', () => {
     const card = await givePersonalCard(A);
     const before = await emailsTo(A.email);
     const name = '=HYPERLINK("http://evil.example")';
-    expect((await exchangeByForm(world, card.slug, name)).status()).toBe(201);
+    const visitorEmail = uniqueEmail('walkin');
+    expect(
+      (await exchangeByForm(world, card.slug, name, visitorEmail)).status()
+    ).toBe(201);
     await expect.poll(() => emailsTo(A.email)).toBeGreaterThan(before);
+    await waitForEmail(visitorEmail, "Personal's contact details");
+    expect(await latestEmailHtml(visitorEmail)).toContain(`/c/${card.slug}`);
     expect((await myContacts(A)).map((item) => item.name)).toContain(name);
     const csv = await (
       await A.api.get('/api/me/contacts', { headers: { accept: 'text/csv' } })
