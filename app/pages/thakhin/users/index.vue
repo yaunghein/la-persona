@@ -341,6 +341,7 @@ const columns: TableColumn<UserRow>[] = [
       :page="pagination.pageIndex + 1"
       :total="paginationTotal"
       :items-per-page="pagination.pageSize"
+      :loading="pending"
       @update:page="onPageChange"
     >
       <template #toolbar>

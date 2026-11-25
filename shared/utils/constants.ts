@@ -1,3 +1,6 @@
+export const BACKGROUND_THEMES = ['dark', 'light'] as const;
+export type BackgroundTheme = (typeof BACKGROUND_THEMES)[number];
+
 export const ORGANIZATION_TYPES = {
   PERSONAL: 'personal',
   COMMUNITY: 'community',

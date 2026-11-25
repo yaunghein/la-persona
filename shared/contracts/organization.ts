@@ -4,7 +4,11 @@ import {
   COMMUNITY_INVITE_ROLES,
   type OrganizationMemberRole,
 } from '~~/shared/permissions/organization';
-import type { OrganizationType } from '~~/shared/utils/constants';
+import {
+  BACKGROUND_THEMES,
+  type BackgroundTheme,
+  type OrganizationType,
+} from '~~/shared/utils/constants';
 
 export const OrganizationRouteParams = z.object({
   orgSlug: z.string().trim().min(1),
@@ -153,7 +157,7 @@ export type CommunityEmailImages = {
 };
 
 export type CommunitySettings = CommunitySettingsFormValues &
-  CommunityEmailImages;
+  CommunityEmailImages & { backgroundTheme: BackgroundTheme };
 
 const richText = z.string().max(20_000);
 
@@ -213,6 +217,7 @@ export function toCommunitySettings(params: {
   guidelines?: string | null;
   whyJoin?: string | null;
   splineUrl?: string | null;
+  backgroundTheme?: BackgroundTheme | null;
   wallpaperUrl?: string | null;
   cardBackUrl?: string | null;
   emailQrBackgroundUrl?: string | null;
@@ -229,6 +234,7 @@ export function toCommunitySettings(params: {
     guidelines: params.guidelines ?? '',
     whyJoin: params.whyJoin ?? '',
     splineUrl: params.splineUrl?.trim() || '',
+    backgroundTheme: params.backgroundTheme ?? 'dark',
     wallpaperUrl: params.wallpaperUrl?.trim() || '',
     cardBackUrl: params.cardBackUrl?.trim() || '',
     emailQrBackgroundUrl: params.emailQrBackgroundUrl?.trim() || '',
@@ -324,6 +330,7 @@ export const UpdateOrganizationRequest = z.object({
   splineUrl: z
     .union([z.literal(''), z.url({ protocol: /^https$/ }).max(2048)])
     .optional(),
+  backgroundTheme: z.enum(BACKGROUND_THEMES).optional(),
   /** Companies only; copied onto every company card. */
   website: WebsiteUrl.optional(),
   wallpaperUrl: optionalAsset,
@@ -374,5 +381,6 @@ export type AdminOrganizationDetail = Omit<
     logoUrl: string;
     coverImageUrl: string;
     splineUrl: string;
+    backgroundTheme: BackgroundTheme;
   } | null;
 };

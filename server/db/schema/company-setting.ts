@@ -1,5 +1,6 @@
 import { pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 import { nanoid } from 'nanoid';
+import type { BackgroundTheme } from '~~/shared/utils/constants';
 import { organization } from './auth';
 
 export const companySetting = pgTable(
@@ -15,6 +16,7 @@ export const companySetting = pgTable(
     website: text().default('').notNull(),
     coverUrl: text(),
     splineUrl: text().default('').notNull(),
+    backgroundTheme: text().$type<BackgroundTheme>().default('dark').notNull(),
     wallpaperUrl: text().default('').notNull(),
     cardBackUrl: text().default('').notNull(),
     createdAt: timestamp().defaultNow().notNull(),

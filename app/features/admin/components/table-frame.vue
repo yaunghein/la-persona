@@ -3,6 +3,7 @@ const props = defineProps<{
   page: number;
   total: number;
   itemsPerPage: number;
+  loading?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -17,7 +18,10 @@ const { siblingCount, showEdges } = usePaginationWindow(0);
     <div v-if="$slots.toolbar" class="flex flex-wrap items-center gap-2">
       <slot name="toolbar" />
     </div>
-    <div class="hide-scrollbar overflow-x-auto">
+    <div v-if="loading" class="flex flex-col gap-2">
+      <USkeleton v-for="i in 6" :key="i" class="h-14 w-full rounded-md" />
+    </div>
+    <div v-else class="hide-scrollbar overflow-x-auto">
       <slot />
     </div>
     <div class="flex items-center justify-center pt-4 sm:justify-end sm:pt-0">

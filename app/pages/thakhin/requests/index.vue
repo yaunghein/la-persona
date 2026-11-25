@@ -290,6 +290,7 @@ const columns: TableColumn<CardRequestRow>[] = [
         :page="pagination.pageIndex + 1"
         :total="paginationTotal"
         :items-per-page="pagination.pageSize"
+        :loading="pending"
         @update:page="onPageChange"
       >
         <template #toolbar>
@@ -413,6 +414,7 @@ const columns: TableColumn<CardRequestRow>[] = [
       :page="updatePagination.pageIndex + 1"
       :total="updatePaginationTotal"
       :items-per-page="updatePagination.pageSize"
+      :loading="updatesLoading"
       @update:page="onUpdatePageChange"
     >
       <template #toolbar>

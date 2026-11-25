@@ -122,6 +122,7 @@ defineExpose({ isPending });
         :key="field.name"
         :label="field.label"
         :name="field.name"
+        :required="field.name === 'firstName'"
         class="[&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         :class="layout === 'wide' ? '[&_label]:mb-3' : '[&_label]:mb-1'"
       >
@@ -131,6 +132,7 @@ defineExpose({ isPending });
       <UFormField
         label="Phone Number"
         name="phone"
+        required
         class="[&_label]:text-sm [&_label]:font-medium [&_label]:text-ink"
         :class="layout === 'wide' ? '[&_label]:mb-3' : '[&_label]:mb-1'"
       >

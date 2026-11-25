@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CONTACT_SOURCES } from '~~/shared/contracts/contact';
 
 type MonthComparison = { current: number; previous: number };
 
@@ -70,6 +71,51 @@ export type AdminRevenue = {
   /** The previous window of the same length. Absent for all time. */
   previous: number | null;
   byPlan: AdminRevenuePlan[];
+};
+
+/**
+ * Activity filters. A connection is a contact saved on a card the person
+ * held at the time; the range applies to when it was saved and to when the
+ * event started.
+ */
+export const AdminActivityQuery = z.object({
+  range: z.enum(ADMIN_REVENUE_RANGES).default('all'),
+  organizationId: z.string().trim().min(1).max(64).optional(),
+  eventId: z.string().trim().min(1).max(64).optional(),
+  source: z.enum(CONTACT_SOURCES).optional(),
+});
+
+export type AdminActivityQuery = z.infer<typeof AdminActivityQuery>;
+
+export type AdminPersonActivity = {
+  userId: string;
+  name: string;
+  email: string;
+  image: string | null;
+  connections: number;
+  eventConnections: number;
+  eventsRegistered: number;
+  eventsAttended: number;
+  lastConnectionAt: string | null;
+};
+
+export type AdminEventOption = {
+  id: string;
+  title: string;
+  startsAt: string;
+  organizationId: string;
+  organizationName: string;
+};
+
+export type AdminPersonEventActivity = {
+  eventId: string;
+  title: string;
+  startsAt: string;
+  organizationName: string;
+  /** null when the person made connections there without a registration. */
+  status: 'pending' | 'registered' | 'checked_in' | null;
+  checkedInAt: string | null;
+  connections: number;
 };
 
 export const AdminChartsQuery = z.object({

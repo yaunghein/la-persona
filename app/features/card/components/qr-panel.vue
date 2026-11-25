@@ -31,9 +31,9 @@ watch(
 
 <template>
   <div
-    class="w-64 overflow-hidden rounded-[26px] border border-[#3a3a3a] bg-[#2f2f2f] px-2 pt-2 text-center sm:w-96"
+    class="w-64 overflow-hidden rounded-[26px] border border-line-heavy bg-surface px-2 pt-2 text-center sm:w-96"
   >
-    <div class="rounded-[17px] bg-[#1c1c1c] p-2.25">
+    <div class="rounded-[17px] bg-raised p-2.25">
       <div class="overflow-hidden rounded-lg bg-white p-4">
         <img
           v-if="dottedQrUrl"
@@ -45,10 +45,10 @@ watch(
       </div>
     </div>
     <div class="flex flex-col items-center gap-1 px-3 pt-2 pb-3">
-      <p v-if="name" class="text-sm text-white">
+      <p v-if="name" class="text-sm text-ink">
         {{ name }}
       </p>
-      <p v-if="detail" class="text-xs text-white/50">
+      <p v-if="detail" class="text-xs text-subtle">
         {{ detail }}
       </p>
     </div>

@@ -220,7 +220,7 @@ const CHART_RANGES: Record<
   '1y': { bucket: 'month', count: 12 },
 };
 
-function chartWindow(range: AdminChartRange) {
+export function chartWindow(range: AdminChartRange) {
   const { bucket, count: bucketCount } = CHART_RANGES[range];
   const today = yangonDay();
   const lastStart =

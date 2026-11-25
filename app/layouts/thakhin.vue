@@ -54,6 +54,12 @@ const links = computed(() => {
       onSelect: close,
     },
     {
+      label: 'Activity',
+      icon: 'i-material-symbols:insights-sharp',
+      to: ROUTES.THAKHIN.ACTIVITY,
+      onSelect: close,
+    },
+    {
       label: 'Organizations',
       icon: 'i-material-symbols:corporate-fare-sharp',
       to: ROUTES.THAKHIN.ORGANIZATIONS,
@@ -87,6 +93,7 @@ const pageLabel: Record<string, string> = {
   [ROUTES.THAKHIN.PAYMENTS]: 'Payments',
   [ROUTES.THAKHIN.ORGANIZATIONS]: 'Organizations',
   [ROUTES.THAKHIN.USERS]: 'People',
+  [ROUTES.THAKHIN.ACTIVITY]: 'Activity',
   [ROUTES.THAKHIN.CARDS]: 'Cards',
   [ROUTES.THAKHIN.INVITATIONS]: 'Invitations',
   [ROUTES.THAKHIN.INBOX]: 'Inbox',

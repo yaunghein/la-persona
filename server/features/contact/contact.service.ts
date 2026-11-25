@@ -291,11 +291,11 @@ export async function createManualContact(params: {
 
   const phoneFields = resolvedPhoneFields(input.phone, input.phoneCountryCode);
   return insertContact({
-    name: `${input.firstName} ${input.lastName}`.trim(),
+    name: [input.firstName, input.lastName].filter(Boolean).join(' '),
     phone: phoneFields.phone || input.phone,
     phoneCountryCode: phoneFields.phoneCountryCode,
     email: input.email || null,
-    position: input.position,
+    position: input.position || null,
     company: input.company || null,
     note: input.note,
     eventId: input.eventId ?? null,

@@ -217,24 +217,7 @@ function openCreateLinkSlideover() {
   isSocialSlideoverOpen.value = true;
 }
 
-function applyCardInfo(
-  source: (typeof importableCards.value)[number],
-  mode: 'fill-blanks' | 'replace'
-) {
-  const keep = (current: string, next: string | null | undefined) =>
-    mode === 'replace' || !current.trim() ? String(next || '').trim() : current;
-
-  state.name = keep(state.name, cardHolderName(source));
-  state.position = keep(state.position, source.position);
-  state.company = keep(state.company, source.company);
-  if (mode === 'replace' || !state.phone.trim()) {
-    state.phone = source.phone || '';
-    if (source.phoneCountryCode)
-      state.phoneCountryCode = source.phoneCountryCode;
-  }
-  state.email = keep(state.email, source.email);
-  state.website = keep(state.website, source.website);
-
+function importSocialLinks(source: (typeof importableCards.value)[number]) {
   const builtInLabels = new Set<string>(CARD_LINK_LABELS);
   const linkKey = (link: { label: string; value: string }) =>
     builtInLabels.has(link.label) ? link.label : `${link.label}|${link.value}`;
@@ -251,6 +234,23 @@ function applyCardInfo(
   return imported.length;
 }
 
+function fillBlanksFromCard(source: (typeof importableCards.value)[number]) {
+  const keep = (current: string, next: string | null | undefined) =>
+    current.trim() ? current : String(next || '').trim();
+
+  state.name = keep(state.name, cardHolderName(source));
+  state.position = keep(state.position, source.position);
+  state.company = keep(state.company, source.company);
+  if (!state.phone.trim()) {
+    state.phone = source.phone || '';
+    if (source.phoneCountryCode)
+      state.phoneCountryCode = source.phoneCountryCode;
+  }
+  state.email = keep(state.email, source.email);
+  state.website = keep(state.website, source.website);
+  importSocialLinks(source);
+}
+
 function openImportModal() {
   importSourceCardId.value = defaultImportCard.value?.id;
   isImportModalOpen.value = true;
@@ -265,14 +265,14 @@ function importChosenCard() {
     (item) => item.id === importSourceCardId.value
   );
   if (!source) return;
-  const added = applyCardInfo(source, 'replace');
+  const added = importSocialLinks(source);
   isImportModalOpen.value = false;
   toast.add({
-    title: 'Card info imported',
+    title: added ? 'Links imported' : 'No new links',
     description: added
-      ? `Details copied from ${cardHolderName(source)}.`
-      : `${cardHolderName(source)} is already on this request.`,
-    color: 'success',
+      ? `${added} link${added === 1 ? '' : 's'} copied from ${cardHolderName(source)}.`
+      : `Every link on ${cardHolderName(source)} is already on this request.`,
+    color: added ? 'success' : 'neutral',
   });
 }
 
@@ -288,7 +288,7 @@ watch(
       return;
     }
     didAutoImport.value = true;
-    applyCardInfo(source, 'fill-blanks');
+    fillBlanksFromCard(source);
   },
   { immediate: true }
 );

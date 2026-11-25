@@ -10,8 +10,12 @@ import type {
   UpdateUserRequest,
 } from '~~/shared/contracts/account';
 import type {
+  AdminActivityQuery,
   AdminChartRange,
   AdminCharts,
+  AdminEventOption,
+  AdminPersonActivity,
+  AdminPersonEventActivity,
   AdminOverview,
   AdminRevenue,
   AdminRevenueRange,
@@ -73,6 +77,11 @@ export const adminQueryKeys = {
     [...adminQueryKeys.all, 'card-images', name] as const,
   uploads: () => [...adminQueryKeys.all, 'uploads'] as const,
   users: () => [...adminQueryKeys.all, 'users'] as const,
+  activity: (filter: AdminActivityQuery) =>
+    [...adminQueryKeys.all, 'activity', filter] as const,
+  personEventActivity: (userId: string) =>
+    [...adminQueryKeys.all, 'activity', 'person', userId] as const,
+  events: () => [...adminQueryKeys.all, 'events'] as const,
   cards: (claimed?: boolean) =>
     [...adminQueryKeys.all, 'cards', claimed ?? 'any'] as const,
   onboardingInvitations: () =>
@@ -194,6 +203,52 @@ export function useAdminUsersQuery() {
   return useQuery({
     queryKey: adminQueryKeys.users(),
     queryFn: () => $fetch<Collection<AdminUserSummary>>(url('users')),
+    select: (collection) => collection.items,
+  });
+}
+
+export function useAdminActivityQuery(
+  filter: MaybeRefOrGetter<AdminActivityQuery>
+) {
+  return useQuery({
+    queryKey: computed(() => adminQueryKeys.activity(toValue(filter))),
+    queryFn: () =>
+      $fetch<Collection<AdminPersonActivity>>(url('user-activity'), {
+        query: toValue(filter),
+      }),
+    select: (collection) => collection.items,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function downloadAdminActivityCsv(filter: AdminActivityQuery) {
+  return $fetch<Blob>(url('user-activity'), {
+    query: filter,
+    headers: { Accept: 'text/csv' },
+    responseType: 'blob',
+  });
+}
+
+export function usePersonEventActivityQuery(
+  userId: MaybeRefOrGetter<string | null>
+) {
+  return useQuery({
+    queryKey: computed(() =>
+      adminQueryKeys.personEventActivity(toValue(userId) ?? '')
+    ),
+    queryFn: () =>
+      $fetch<Collection<AdminPersonEventActivity>>(
+        url(`users/${toValue(userId)}/event-activity`)
+      ),
+    select: (collection) => collection.items,
+    enabled: () => Boolean(toValue(userId)),
+  });
+}
+
+export function useAdminEventsQuery() {
+  return useQuery({
+    queryKey: adminQueryKeys.events(),
+    queryFn: () => $fetch<Collection<AdminEventOption>>(url('events')),
     select: (collection) => collection.items,
   });
 }

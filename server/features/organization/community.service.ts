@@ -135,6 +135,7 @@ export async function ensureCommunityCard(
     userId,
     organizationId,
     splineUrl: setting?.splineUrl || env.DEFAULT_SPLINE_URL,
+    backgroundTheme: setting?.backgroundTheme ?? 'dark',
     wallpaperUrl: setting?.wallpaperUrl || env.DEFAULT_WALLPAPER_URL,
     cardBackUrl: setting?.cardBackUrl || env.DEFAULT_CARD_BACK_URL,
   });

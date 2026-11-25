@@ -13,7 +13,10 @@ import {
   user,
 } from '~~/server/db/schema';
 import type { OrganizationMemberRole } from '~~/shared/permissions/organization';
-import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
+import {
+  ORGANIZATION_TYPES,
+  type BackgroundTheme,
+} from '~~/shared/utils/constants';
 
 export async function findOrganizationById(organizationId: string) {
   const [row] = await db
@@ -269,7 +272,12 @@ export async function insertCommunityCard(
 /** Re-brands every member card when the community changes its card design. */
 export async function updateCommunityCardsBrand(
   organizationId: string,
-  values: { splineUrl: string; wallpaperUrl: string; cardBackUrl: string }
+  values: {
+    splineUrl: string;
+    backgroundTheme: BackgroundTheme;
+    wallpaperUrl: string;
+    cardBackUrl: string;
+  }
 ) {
   await db
     .update(card)

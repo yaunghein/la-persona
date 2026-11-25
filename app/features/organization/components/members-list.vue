@@ -12,6 +12,7 @@ import {
 
 const props = defineProps<{
   data: CommunityMembersData;
+  loading?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -285,7 +286,11 @@ function closeInfo() {
       </div>
     </div>
 
+    <div v-if="loading" class="flex flex-col gap-2 pt-2 pb-6">
+      <USkeleton v-for="i in 6" :key="i" class="h-16 w-full rounded-md" />
+    </div>
     <div
+      v-else
       class="hide-scrollbar shrink-0 overflow-x-auto overflow-y-hidden pt-2 pb-6"
     >
       <UTable

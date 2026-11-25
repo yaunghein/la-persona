@@ -1,5 +1,6 @@
 import { pgTable, text, timestamp, jsonb, index } from 'drizzle-orm/pg-core';
 import { nanoid } from 'nanoid';
+import type { BackgroundTheme } from '~~/shared/utils/constants';
 import { user, organization } from './auth';
 import { department } from './department';
 
@@ -15,6 +16,7 @@ export const card = pgTable(
     slug: text().notNull().unique(),
     position: text().notNull(),
     splineUrl: text(),
+    backgroundTheme: text().$type<BackgroundTheme>().default('dark').notNull(),
     company: text(),
     phone: text(),
     phoneCountryCode: text(),

@@ -6,6 +6,7 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { nanoid } from 'nanoid';
+import type { BackgroundTheme } from '~~/shared/utils/constants';
 import { member, organization } from './auth';
 
 export const communitySetting = pgTable(
@@ -24,6 +25,7 @@ export const communitySetting = pgTable(
       .$defaultFn(() => nanoid()),
     /** Join links expire; managers rotate the token to issue a fresh link. */
     splineUrl: text().default('').notNull(),
+    backgroundTheme: text().$type<BackgroundTheme>().default('dark').notNull(),
     wallpaperUrl: text().default('').notNull(),
     cardBackUrl: text().default('').notNull(),
     // Community-branded email artwork, uploaded from Thakhin only.

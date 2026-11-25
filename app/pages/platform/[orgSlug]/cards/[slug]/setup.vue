@@ -20,10 +20,12 @@ function goToDashboard() {
       ></div>
       <div class="flex flex-col items-center gap-4">
         <div
-          class="w-9 aspect-square rounded-full flex relative bg-raised"
-          :class="{
-            'bg-ink text-ink-inverse': step === 'contact',
-          }"
+          class="w-9 aspect-square rounded-full flex relative"
+          :class="
+            step === 'contact'
+              ? 'bg-ink text-ink-inverse'
+              : 'bg-raised text-subtle'
+          "
         >
           <Icon
             name="material-symbols:phone-enabled-outline-sharp"
@@ -39,10 +41,12 @@ function goToDashboard() {
       </div>
       <div class="flex flex-col items-center gap-4">
         <div
-          class="w-9 aspect-square rounded-full flex relative bg-raised"
-          :class="{
-            'bg-ink text-ink-inverse': step === 'link',
-          }"
+          class="w-9 aspect-square rounded-full flex relative"
+          :class="
+            step === 'link'
+              ? 'bg-ink text-ink-inverse'
+              : 'bg-raised text-subtle'
+          "
         >
           <Icon
             name="material-symbols:link"

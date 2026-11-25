@@ -18,9 +18,10 @@ const isCompany = computed(
     userOrgs.value?.find((org) => org.slug === organizationSlug.value)?.type ===
     'company'
 );
-const { data: members } = useCommunityMembersQuery(organizationSlug, {
-  enabled: () => !isCompany.value,
-});
+const { data: members, isLoading: isMembersLoading } = useCommunityMembersQuery(
+  organizationSlug,
+  { enabled: () => !!userOrgs.value && !isCompany.value }
+);
 const { mutate: removeMember, isPending: isRemoving } =
   useRemoveMemberMutation(organizationSlug);
 const { mutate: updateMemberRole } =
@@ -174,6 +175,7 @@ async function exportMembers() {
   <OrganizationMembersList
     v-else
     :data="membersData"
+    :loading="!userOrgs || isMembersLoading"
     @invite="openInvite"
     @export="exportMembers"
     @remove="askRemove"

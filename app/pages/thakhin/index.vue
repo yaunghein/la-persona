@@ -39,8 +39,10 @@ definePageMeta({
 const { data, isLoading } = useAdminOverviewQuery();
 const chartRange = useQueryState<AdminChartRange>('range', '1m');
 const revenueRange = useQueryState<AdminRevenueRange>('revenue', 'all');
-const { data: charts } = useAdminChartsQuery(chartRange);
-const { data: revenue } = useAdminRevenueQuery(revenueRange);
+const { data: charts, isLoading: isChartsLoading } =
+  useAdminChartsQuery(chartRange);
+const { data: revenue, isLoading: isRevenueLoading } =
+  useAdminRevenueQuery(revenueRange);
 const chartColors = useChartColors();
 
 const SECTION_TITLE_CLASS =
@@ -442,7 +444,11 @@ const analyticsChartOptions = computed(() =>
             :ui="ADMIN_TABS_UI"
           />
         </div>
-        <div class="grid gap-4 md:grid-cols-3">
+        <div v-if="isRevenueLoading" class="grid gap-4 md:grid-cols-3">
+          <USkeleton class="h-40 rounded-lg" />
+          <USkeleton class="h-40 rounded-lg md:col-span-2" />
+        </div>
+        <div v-else class="grid gap-4 md:grid-cols-3">
           <AdminStatTile v-if="revenueTile" v-bind="revenueTile" />
           <div class="rounded-lg bg-surface p-4 sm:p-6 md:col-span-2">
             <p :class="CARD_LABEL_CLASS">By plan</p>
@@ -526,26 +532,38 @@ const analyticsChartOptions = computed(() =>
             :ui="ADMIN_TABS_UI"
           />
         </div>
-        <div class="rounded-lg bg-surface p-4 sm:p-6">
-          <p :class="CARD_LABEL_CLASS">Approved revenue</p>
-          <div class="mt-4 h-60">
-            <Line :data="revenueChart" :options="revenueChartOptions" />
+        <template v-if="isChartsLoading">
+          <USkeleton class="h-80 w-full rounded-lg" />
+          <div class="grid gap-4 lg:grid-cols-2">
+            <USkeleton
+              v-for="index in 2"
+              :key="index"
+              class="h-80 rounded-lg"
+            />
           </div>
-        </div>
-        <div class="grid gap-4 lg:grid-cols-2">
+        </template>
+        <template v-else>
           <div class="rounded-lg bg-surface p-4 sm:p-6">
-            <p :class="CARD_LABEL_CLASS">Active people</p>
+            <p :class="CARD_LABEL_CLASS">Approved revenue</p>
             <div class="mt-4 h-60">
-              <Line :data="activeChart" :options="activeChartOptions" />
+              <Line :data="revenueChart" :options="revenueChartOptions" />
             </div>
           </div>
-          <div class="rounded-lg bg-surface p-4 sm:p-6">
-            <p :class="CARD_LABEL_CLASS">Card activity</p>
-            <div class="mt-4 h-60">
-              <Line :data="analyticsChart" :options="analyticsChartOptions" />
+          <div class="grid gap-4 lg:grid-cols-2">
+            <div class="rounded-lg bg-surface p-4 sm:p-6">
+              <p :class="CARD_LABEL_CLASS">Active people</p>
+              <div class="mt-4 h-60">
+                <Line :data="activeChart" :options="activeChartOptions" />
+              </div>
+            </div>
+            <div class="rounded-lg bg-surface p-4 sm:p-6">
+              <p :class="CARD_LABEL_CLASS">Card activity</p>
+              <div class="mt-4 h-60">
+                <Line :data="analyticsChart" :options="analyticsChartOptions" />
+              </div>
             </div>
           </div>
-        </div>
+        </template>
       </section>
 
       <section class="flex flex-col gap-4">

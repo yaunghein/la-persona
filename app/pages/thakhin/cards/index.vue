@@ -4,6 +4,7 @@ definePageMeta({
 });
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
+import type { BackgroundTheme } from '~~/shared/utils/constants';
 import { getThakhinCardPlanAssetDefaults } from '~~/shared/constants/thakhin-card-plan-assets';
 import {
   MAX_UPLOAD_BYTES,
@@ -62,6 +63,7 @@ const form = reactive({
   email: '',
   website: '',
   splineUrl: '',
+  backgroundTheme: 'dark' as BackgroundTheme,
   avatarUrl: '',
   wallpaperUrl: '',
   cardBackUrl: '',
@@ -92,6 +94,7 @@ function resetForm() {
   form.email = '';
   form.website = '';
   form.splineUrl = '';
+  form.backgroundTheme = 'dark';
   form.avatarUrl = '';
   form.wallpaperUrl = '';
   form.cardBackUrl = '';
@@ -108,6 +111,7 @@ function fillForm(row: CardRow) {
   form.email = row.email || '';
   form.website = row.website || '';
   form.splineUrl = row.splineUrl || '';
+  form.backgroundTheme = row.backgroundTheme;
   form.avatarUrl = row.avatarUrl || '';
   form.wallpaperUrl = row.wallpaperUrl || '';
   form.cardBackUrl = row.cardBackUrl || '';
@@ -461,6 +465,7 @@ async function onSubmitForm() {
       email: form.email.trim() || null,
       website: form.website.trim() || null,
       splineUrl: form.splineUrl.trim() || null,
+      backgroundTheme: form.backgroundTheme,
       avatarUrl: form.avatarUrl.trim() || null,
       wallpaperUrl: form.wallpaperUrl.trim() || null,
       cardBackUrl: form.cardBackUrl.trim() || null,
@@ -694,6 +699,11 @@ const selectUi = {
   item: 'text-ink data-[highlighted]:bg-raised',
   value: 'text-ink',
 };
+
+const BACKGROUND_THEME_ITEMS: { label: string; value: BackgroundTheme }[] = [
+  { label: 'Dark', value: 'dark' },
+  { label: 'Light', value: 'light' },
+];
 </script>
 
 <template>
@@ -716,6 +726,7 @@ const selectUi = {
       :page="pagination.pageIndex + 1"
       :total="paginationTotal"
       :items-per-page="pagination.pageSize"
+      :loading="pending"
       @update:page="onPageChange"
     >
       <template #toolbar>
@@ -959,6 +970,19 @@ const selectUi = {
                 class="w-full"
                 size="xl"
                 :ui="inputUi"
+              />
+            </UFormField>
+            <UFormField
+              label="Background theme"
+              description="The Spline scene's background. Light makes the public card use dark&nbsp;text."
+              :class="formFieldClass"
+            >
+              <USelect
+                v-model="form.backgroundTheme"
+                :items="BACKGROUND_THEME_ITEMS"
+                size="xl"
+                class="w-full"
+                :ui="selectUi"
               />
             </UFormField>
             <UFormField label="Avatar URL" :class="formFieldClass">

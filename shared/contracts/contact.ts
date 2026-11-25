@@ -88,12 +88,13 @@ export type CreateLegacyContactExchangeRequest = z.infer<
 
 export const CreateManualContactRequest = z.object({
   firstName: z.string().trim().min(1, 'First name is required').max(80),
-  lastName: z.string().trim().min(1, 'Last name is required').max(80),
-  position: z
+  lastName: z
     .string()
     .trim()
-    .min(1, 'Professional title / role is required')
-    .max(200),
+    .max(80)
+    .optional()
+    .transform((value) => value || null),
+  position: optionalText,
   company: optionalText,
   phone,
   phoneCountryCode,

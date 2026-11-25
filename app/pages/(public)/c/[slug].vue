@@ -706,7 +706,8 @@ async function onSaveContact() {
   />
   <div
     v-else-if="card"
-    class="relative z-10 h-dvh w-screen overflow-hidden bg-[#232323]"
+    class="relative z-10 h-dvh w-screen overflow-hidden bg-raised text-ink"
+    :class="card.backgroundTheme"
   >
     <div
       class="absolute inset-0 h-full w-full origin-center transition duration-300 ease-out motion-reduce:transition-none"
@@ -1077,12 +1078,27 @@ async function onSaveContact() {
         </div>
         <div
           class="hide-scrollbar mt-8 flex gap-3 overflow-x-scroll px-5"
-          :class="
-            ownCard && !card.socials?.length
-              ? 'justify-center'
-              : 'justify-start'
-          "
+          :class="!card.socials?.length ? 'justify-center' : 'justify-start'"
         >
+          <button
+            type="button"
+            :disabled="isSavingContact"
+            class="flex shrink-0 cursor-pointer flex-col items-center gap-4 transition duration-750 disabled:cursor-wait"
+            :class="isMenuOpen ? 'opacity-100' : 'opacity-0'"
+            style="transition-delay: 100ms"
+            @click="onSaveContact"
+          >
+            <div
+              class="grid aspect-square w-[4.56rem] place-items-center rounded-full bg-line-strong"
+            >
+              <div class="aspect-square w-8">
+                <IconSaveContact />
+              </div>
+            </div>
+            <div class="max-w-16 text-center text-xs leading-[1.1]">
+              Save Contact
+            </div>
+          </button>
           <a
             v-for="(link, index) in card.socials"
             :key="`${link.label}-${link.value}-${index}`"
@@ -1090,7 +1106,7 @@ async function onSaveContact() {
             target="_blank"
             class="flex shrink-0 flex-col items-center gap-4 transition duration-750"
             :class="isMenuOpen ? 'opacity-100' : 'opacity-0'"
-            :style="{ transitionDelay: `${(index + 1) * 100}ms` }"
+            :style="{ transitionDelay: `${(index + 2) * 100}ms` }"
             @click="trackLinkClick(link)"
           >
             <div
@@ -1103,6 +1119,10 @@ async function onSaveContact() {
                 width="73"
                 height="73"
                 class="aspect-square h-full w-full object-cover"
+                :class="{
+                  invert:
+                    card.backgroundTheme === 'light' && link.label === 'Github',
+                }"
               />
               <div
                 v-else
@@ -1123,7 +1143,7 @@ async function onSaveContact() {
             class="group flex shrink-0 cursor-pointer flex-col items-center gap-4 transition duration-750"
             :class="isMenuOpen ? 'opacity-100' : 'opacity-0'"
             :style="{
-              transitionDelay: `${((card.socials?.length ?? 0) + 1) * 100}ms`,
+              transitionDelay: `${((card.socials?.length ?? 0) + 2) * 100}ms`,
             }"
             @click="openLinkManager"
           >
@@ -1166,7 +1186,7 @@ async function onSaveContact() {
             'opacity-0': !isMenuOpen,
           }"
           :style="{
-            transitionDelay: `${((card?.socials?.length ?? 0) + (ownCard && card.socials?.length ? 2 : 1)) * 100}ms`,
+            transitionDelay: `${((card?.socials?.length ?? 0) + (ownCard ? 3 : 2)) * 100}ms`,
           }"
         >
           <UiPoweredByLaPersona />

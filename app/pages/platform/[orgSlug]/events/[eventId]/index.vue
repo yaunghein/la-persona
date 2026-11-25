@@ -48,8 +48,11 @@ const {
   isLoading,
   refetch: refetchEvent,
 } = useEventQuery(eventId);
-const { data: attendees, refetch: refetchAttendees } =
-  useEventAttendeesQuery(eventId);
+const {
+  data: attendees,
+  isLoading: isAttendeesLoading,
+  refetch: refetchAttendees,
+} = useEventAttendeesQuery(eventId);
 const { mutate: approveRegistration } = useApproveRegistrationMutation();
 
 function approveAttendee(attendee: EventAttendee) {
@@ -287,7 +290,7 @@ async function onCheckedIn() {
 </script>
 
 <template>
-  <div v-if="isLoading" class="flex flex-col gap-6 py-2">
+  <div v-if="isLoading || isAttendeesLoading" class="flex flex-col gap-6 py-2">
     <USkeleton class="h-8 w-80 rounded-md" />
     <USkeleton class="h-10 w-72 rounded-md" />
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">

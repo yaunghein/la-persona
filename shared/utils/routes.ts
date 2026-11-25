@@ -59,6 +59,7 @@ export const ROUTES = {
     PAYMENTS: `${THAKHIN_ROOT}/payments`,
     ORGANIZATIONS: `${THAKHIN_ROOT}/organizations`,
     USERS: `${THAKHIN_ROOT}/users`,
+    ACTIVITY: `${THAKHIN_ROOT}/activity`,
     CARDS: `${THAKHIN_ROOT}/cards`,
     INVITATIONS: `${THAKHIN_ROOT}/invitations`,
     INBOX: `${THAKHIN_ROOT}/inbox`,

@@ -89,6 +89,7 @@ export const upsertCommunitySettingByOrganizationId = async (
       Pick<
         InsertCommunitySetting,
         | 'splineUrl'
+        | 'backgroundTheme'
         | 'wallpaperUrl'
         | 'cardBackUrl'
         | 'emailQrBackgroundUrl'
@@ -103,6 +104,9 @@ export const upsertCommunitySettingByOrganizationId = async (
   const defaults = communityBrandDefaults();
   const brand = {
     ...(values.splineUrl !== undefined ? { splineUrl: values.splineUrl } : {}),
+    ...(values.backgroundTheme !== undefined
+      ? { backgroundTheme: values.backgroundTheme }
+      : {}),
     ...(values.wallpaperUrl !== undefined
       ? { wallpaperUrl: values.wallpaperUrl }
       : {}),

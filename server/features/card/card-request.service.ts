@@ -18,6 +18,7 @@ import {
 } from '~~/server/features/card/card-request.repository';
 import { findPersonalOrganization } from '~~/server/features/auth/account.repository';
 import { splitPersonName } from '~~/shared/utils/person-name';
+import type { BackgroundTheme } from '~~/shared/utils/constants';
 import { restoreSubscriptionsAfterRejection } from '~~/server/features/billing/subscription.repository';
 import type {
   CardRequestForReview,
@@ -97,6 +98,7 @@ export async function submitCardRequest(params: {
 
   let design: {
     splineUrl: string | null;
+    backgroundTheme: BackgroundTheme;
     cardBackUrl: string | null;
     wallpaperUrl: string | null;
   } | null = null;
@@ -113,6 +115,7 @@ export async function submitCardRequest(params: {
       );
     design = {
       splineUrl: source.card.splineUrl,
+      backgroundTheme: source.card.backgroundTheme,
       cardBackUrl: source.card.cardBackUrl,
       wallpaperUrl: source.card.wallpaperUrl,
     };

@@ -227,6 +227,7 @@ export async function describeOrganization(
           logoUrl: organization.logo ?? '',
           coverImageUrl: companySetting?.coverUrl ?? '',
           splineUrl: companySetting?.splineUrl ?? '',
+          backgroundTheme: companySetting?.backgroundTheme ?? 'dark',
         }
       : null,
   };
@@ -239,6 +240,7 @@ const COMMUNITY_FIELDS = [
   'logoUrl',
   'coverImageUrl',
   'splineUrl',
+  'backgroundTheme',
   'wallpaperUrl',
   'cardBackUrl',
   'emailQrBackgroundUrl',
@@ -251,6 +253,7 @@ const COMPANY_FIELDS = [
   'logoUrl',
   'coverImageUrl',
   'splineUrl',
+  'backgroundTheme',
 ] as const;
 
 export async function updateOrganization(
@@ -306,6 +309,13 @@ export async function updateOrganization(
         changes.splineUrl
       );
     }
+    if (changes.backgroundTheme !== undefined) {
+      await propagateCompanyBrand(
+        organizationId,
+        'backgroundTheme',
+        changes.backgroundTheme
+      );
+    }
     cardsUpdated = detail.cards.length;
   }
   if (writesCommunity) {
@@ -319,6 +329,7 @@ export async function updateOrganization(
         whyJoin: sanitizeRichText(changes.whyJoin ?? '') ?? '',
         coverUrl: changes.coverImageUrl,
         splineUrl: brand(changes.splineUrl),
+        backgroundTheme: changes.backgroundTheme,
         wallpaperUrl: brand(changes.wallpaperUrl),
         cardBackUrl: brand(changes.cardBackUrl),
         emailQrBackgroundUrl: brand(changes.emailQrBackgroundUrl),
@@ -332,6 +343,7 @@ export async function updateOrganization(
       if (cardsUpdated) {
         await updateCommunityCardsBrand(organizationId, {
           splineUrl: setting.splineUrl,
+          backgroundTheme: setting.backgroundTheme,
           wallpaperUrl: setting.wallpaperUrl,
           cardBackUrl: setting.cardBackUrl,
         });

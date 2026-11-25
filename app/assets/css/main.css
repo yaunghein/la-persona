@@ -55,7 +55,10 @@ html {
   --color-green: var(--lp-green);
 }
 
-:root {
+/* `.light` re-applies the light tokens under a dark <html>, e.g. a public card
+   whose Spline scene is light. */
+:root,
+.light {
   --lp-canvas: #ededf0;
   --lp-surface: #f6f6f8;
   --lp-surface-soft: #f1f1f4;

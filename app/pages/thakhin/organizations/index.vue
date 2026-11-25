@@ -4,6 +4,7 @@ definePageMeta({
 });
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
+import type { BackgroundTheme } from '~~/shared/utils/constants';
 import {
   ORGANIZATION_TYPES,
   ORGANIZATION_TYPE_LABELS,
@@ -52,6 +53,7 @@ const editForm = reactive({
   logoUrl: '',
   coverImageUrl: '',
   splineUrl: '',
+  backgroundTheme: 'dark' as BackgroundTheme,
   website: '',
   applyToMemberCards: false,
 });
@@ -72,6 +74,7 @@ const MEDIA_FIELDS = [
 
 /** Media as loaded, so unchanged values are left out of the save. */
 let loadedMedia: Partial<Record<(typeof MEDIA_FIELDS)[number], string>> = {};
+let loadedBackgroundTheme: BackgroundTheme = 'dark';
 
 /** A value the form can't produce (e.g. a legacy path) never blocks a save. */
 function changedMedia() {
@@ -159,6 +162,8 @@ async function openEdit(row: OrgRow) {
   editForm.logoUrl = row.logo || '';
   editForm.coverImageUrl = '';
   editForm.splineUrl = '';
+  editForm.backgroundTheme = 'dark';
+  loadedBackgroundTheme = 'dark';
   editForm.website = '';
   editForm.applyToMemberCards = false;
   loadedMedia = Object.fromEntries(
@@ -184,6 +189,8 @@ async function openEdit(row: OrgRow) {
   editForm.logoUrl = brand.logoUrl;
   editForm.coverImageUrl = brand.coverImageUrl;
   editForm.splineUrl = brand.splineUrl;
+  editForm.backgroundTheme = brand.backgroundTheme;
+  loadedBackgroundTheme = brand.backgroundTheme;
   editForm.website = detail.company?.website ?? '';
   loadedMedia = Object.fromEntries(
     MEDIA_FIELDS.map((field) => [field, editForm[field]])
@@ -236,6 +243,10 @@ async function onSaveEdit() {
           }
         : {}),
       ...(isEditingCompany.value ? changedMedia() : {}),
+      ...((isEditingCommunity.value || isEditingCompany.value) &&
+      editForm.backgroundTheme !== loadedBackgroundTheme
+        ? { backgroundTheme: editForm.backgroundTheme }
+        : {}),
     });
     await invalidateAdmin();
     const cardsUpdated = saved.cardsUpdated || 0;
@@ -427,6 +438,11 @@ const selectUi = {
   value: 'text-ink',
 };
 
+const BACKGROUND_THEME_ITEMS: { label: string; value: BackgroundTheme }[] = [
+  { label: 'Dark', value: 'dark' },
+  { label: 'Light', value: 'light' },
+];
+
 const selectMenuUi = {
   base: 'h-[47px] w-full rounded-[4px] border-line bg-raised px-3 text-sm text-ink',
   content: 'border border-line bg-raised',
@@ -457,6 +473,7 @@ const selectMenuUi = {
       :page="pagination.pageIndex + 1"
       :total="paginationTotal"
       :items-per-page="pagination.pageSize"
+      :loading="pending"
       @update:page="onPageChange"
     >
       <template #toolbar>
@@ -685,6 +702,19 @@ const selectMenuUi = {
                   :ui="inputUi"
                 />
               </UFormField>
+              <UFormField
+                label="Background theme"
+                description="The Spline scene's background. Light makes the public card use dark&nbsp;text."
+                :class="formFieldClass"
+              >
+                <USelect
+                  v-model="editForm.backgroundTheme"
+                  :items="BACKGROUND_THEME_ITEMS"
+                  size="xl"
+                  class="w-full"
+                  :ui="selectUi"
+                />
+              </UFormField>
             </template>
             <template v-if="isEditingCompany">
               <UFormField label="Website" :class="formFieldClass">
@@ -697,8 +727,8 @@ const selectMenuUi = {
                 />
               </UFormField>
               <p class="text-xs leading-relaxed text-ink/50">
-                The name, website and Spline scene are copied onto every company
-                card when you&nbsp;save.
+                The name, website, Spline scene and its tone are copied onto
+                every company card when you&nbsp;save.
               </p>
             </template>
             <template v-if="isEditingCommunity">
@@ -709,8 +739,8 @@ const selectMenuUi = {
                   :ui="{ label: 'text-sm font-medium text-ink' }"
                 />
                 <p class="mt-2 text-xs leading-relaxed text-ink/50">
-                  Member cards keep the spline, wallpaper, and card back they
-                  received when they joined. Turn this on to copy those three
+                  Member cards keep the spline, scene tone, wallpaper, and card
+                  back they received when they joined. Turn this on to copy them
                   onto every card in this community when you&nbsp;save.
                 </p>
               </div>

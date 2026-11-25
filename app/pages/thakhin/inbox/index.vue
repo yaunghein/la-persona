@@ -165,6 +165,7 @@ onMounted(() => {
       :page="pagination.pageIndex + 1"
       :total="paginationTotal"
       :items-per-page="pagination.pageSize"
+      :loading="isLoading"
       @update:page="onPageChange"
     >
       <template #toolbar>

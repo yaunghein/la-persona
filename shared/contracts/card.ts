@@ -1,7 +1,11 @@
 import { z } from 'zod';
 import { AdminPaginationQuery } from '~~/shared/contracts/collection';
 import type { SubscriptionStatus } from '~~/shared/utils/subscription';
-import type { OrganizationType } from '~~/shared/utils/constants';
+import {
+  BACKGROUND_THEMES,
+  type BackgroundTheme,
+  type OrganizationType,
+} from '~~/shared/utils/constants';
 import {
   isObjectStorageUrl,
   objectStorageKey,
@@ -125,6 +129,7 @@ export type CardDetail = {
   avatarUrl: string | null;
   socials: CardSocialLink[];
   splineUrl: string | null;
+  backgroundTheme: BackgroundTheme;
   wallpaperUrl: string | null;
   cardBackUrl: string | null;
   visibility: CardVisibility;
@@ -155,6 +160,7 @@ export type PublicCard = Pick<
   | 'avatarUrl'
   | 'socials'
   | 'splineUrl'
+  | 'backgroundTheme'
   | 'wallpaperUrl'
   | 'cardBackUrl'
 > & {
@@ -361,6 +367,7 @@ const adminCardFields = {
     .transform((value) => value || null),
   website: WebsiteUrl.nullish(),
   splineUrl: optionalHttpsUrl,
+  backgroundTheme: z.enum(BACKGROUND_THEMES).optional(),
   avatarUrl: optionalHttpsUrl,
   wallpaperUrl: optionalObjectKey('Wallpaper'),
   cardBackUrl: optionalObjectKey('Card back'),
@@ -399,6 +406,7 @@ export type AdminCardSummary = {
   email: string | null;
   website: string | null;
   splineUrl: string | null;
+  backgroundTheme: BackgroundTheme;
   avatarUrl: string | null;
   wallpaperUrl: string | null;
   cardBackUrl: string | null;

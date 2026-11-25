@@ -7,6 +7,7 @@ import {
   contactOriginLabel,
   contactOriginPath,
 } from '~~/shared/utils/contact-origin';
+import { formatDateLabel, formatTimeLabel } from '~~/shared/utils/datetime';
 
 const props = defineProps<{
   contacts: ContactSummary[];
@@ -97,6 +98,16 @@ const columns = computed<TableColumn<ContactRow>[]>(() => [
       ]
     : []),
   {
+    id: 'createdAt',
+    header: 'ADDED',
+    meta: {
+      class: {
+        th: headerClass,
+        td: itemCellClass(`${mutedCellClass} whitespace-nowrap`),
+      },
+    },
+  },
+  {
     id: 'actions',
     header: '',
     meta: {
@@ -186,6 +197,14 @@ const columns = computed<TableColumn<ContactRow>[]>(() => [
         <span v-else class="text-sm font-medium text-muted">
           {{ contactOriginLabel(row.original.item) }}
         </span>
+      </template>
+    </template>
+    <template #createdAt-cell="{ row }">
+      <template v-if="row.original.item">
+        <p>{{ formatDateLabel(row.original.item.createdAt) }}</p>
+        <p class="text-xs">
+          {{ formatTimeLabel(row.original.item.createdAt) }}
+        </p>
       </template>
     </template>
     <template #actions-cell="{ row }">

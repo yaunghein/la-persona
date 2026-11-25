@@ -239,6 +239,7 @@ const columns: TableColumn<PaymentRow>[] = [
       :page="pagination.pageIndex + 1"
       :total="paginationTotal"
       :items-per-page="pagination.pageSize"
+      :loading="pending"
       @update:page="onPageChange"
     >
       <template #toolbar>
