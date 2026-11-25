@@ -313,7 +313,6 @@ async function loadPlaceholderSpline() {
         phoneCountryCode: scannedAttendee.value.phoneCountryCode,
         email: scannedAttendee.value.email,
         website: scannedAttendee.value.website,
-        planCode: scannedAttendee.value.planCode,
         joinedAt: scannedAttendee.value.joinedAt,
       });
     }

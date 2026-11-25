@@ -9,7 +9,6 @@ export type SplineCardFields = {
   phoneCountryCode?: string | null;
   email?: string | null;
   website?: string | null;
-  planCode?: string | null;
   joinedAt?: string | Date | null;
 };
 
@@ -26,25 +25,14 @@ export function splineVariablesForCard(card: SplineCardFields) {
     .filter(Boolean)
     .join(' ')
     .trim();
-  const planCode = card.planCode;
-  const isFounderSubscription =
-    planCode === 'founder' || planCode === 'founder-club';
   const phone = card.phone?.trim()
     ? internationalPhone(card.phone, card.phoneCountryCode)
     : '';
 
-  if (isFounderSubscription) {
-    return {
-      firstname: card.firstName || '',
-      lastname: card.lastName || '',
-      position: card.position || '',
-      phone,
-      email: card.email || '',
-      website: displayWebsite(card.website),
-    };
-  }
-
+  // Founders' Club scenes read firstname/lastname, the others read name.
   return {
+    firstname: card.firstName || '',
+    lastname: card.lastName || '',
     name: fullname,
     position: card.position || '',
     phone,

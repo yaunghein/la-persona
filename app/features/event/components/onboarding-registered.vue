@@ -15,7 +15,6 @@ const props = defineProps<{
   phoneCountryCode?: string | null;
   email?: string | null;
   website?: string | null;
-  planCode?: string | null;
   /** `undefined` while the card is still loading; `null` when it has no scene. */
   splineUrl?: string | null;
   joinedAt?: string | null;
@@ -39,7 +38,6 @@ const cardFields = computed(() => ({
   phoneCountryCode: props.phoneCountryCode,
   email: props.email,
   website: props.website,
-  planCode: props.planCode,
   joinedAt: props.joinedAt,
 }));
 

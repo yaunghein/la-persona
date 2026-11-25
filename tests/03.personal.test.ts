@@ -22,6 +22,7 @@ import {
 
 const DAY = 86_400_000;
 const PREMIUM_PRICE = 150_000;
+const FOUNDER_CLUB_PRICE = 100_000;
 
 async function space(person: Person) {
   return personalSpace(person);
@@ -31,17 +32,18 @@ function receipt(spaceId: string) {
   return `organizations/${spaceId}/receipt-${crypto.randomUUID().slice(0, 8)}.png`;
 }
 
-/** A personal card with an active standard period ending in `days`. */
-async function activeCard(person: Person, days = 200) {
+/** A personal card with an active period on `planCode` ending in `days`. */
+async function activeCard(person: Person, days = 200, planCode = 'standard') {
   const card = await givePersonalCard(person);
   await sql(
     `insert into card_subscription
        (id, card_id, plan_code, status, is_trial, current_period_start_at, current_period_end_at, activated_at)
-     values ($1, $2, 'standard', 'active', false, now() - interval '100 days', $3, now() - interval '100 days')`,
+     values ($1, $2, $4, 'active', false, now() - interval '100 days', $3, now() - interval '100 days')`,
     [
       `s${crypto.randomUUID().slice(0, 12)}`,
       card.id,
       new Date(Date.now() + days * DAY),
+      planCode,
     ]
   );
   return card;
@@ -293,6 +295,28 @@ test.describe('Part 3.2: Requesting a card', () => {
       card_back_url: 'uploads/b.webp',
       background_theme: 'light',
     });
+  });
+
+  test("3.2.2a a Founders' Club design is copied as premium", async ({
+    world,
+  }) => {
+    const A = await world.person('alice');
+    const own = await space(A);
+    const source = await activeCard(A, 200, 'founder-club');
+    const response = await requestCard(A, own.slug, {
+      type: 'existing_design',
+      sourceCardId: source.id,
+      card: { name: 'Alice Two' },
+      receiptUrl: receipt(own.id),
+    });
+    expect(response.status(), await response.text()).toBe(201);
+    const created = await response.json();
+    expect(created.planCode).toBe('premium');
+    const [item] = await sql(
+      `select plan_code, amount_minor from subscription_payment_item where payment_id = $1`,
+      [created.paymentId]
+    );
+    expect(item).toEqual({ plan_code: 'premium', amount_minor: PREMIUM_PRICE });
   });
 
   test('3.2.3 prices come from the server', async ({ world }) => {
@@ -934,6 +958,51 @@ test.describe('Part 3.5: Renewal and premium upgrade', () => {
         await A.api.get(`/api/cards/${card.slug}/payment-quote?kind=renewal`)
       ).status()
     ).toBe(200);
+  });
+
+  test('3.5.10 a premium renewal stays premium', async ({ world }) => {
+    const A = await world.person('alice');
+    const card = await activeCard(A, 200, 'premium');
+    const quote = await (
+      await A.api.get(`/api/cards/${card.slug}/payment-quote?kind=renewal`)
+    ).json();
+    expect(quote).toMatchObject({
+      planCode: 'premium',
+      totalAmountMinor: PREMIUM_PRICE,
+    });
+  });
+
+  test("3.5.11 a Founders' Club renewal stays Founders' Club", async ({
+    world,
+  }) => {
+    const T = await world.thakhin();
+    const A = await world.person('alice');
+    const card = await activeCard(A, 30, 'founder-club');
+    const quote = await (
+      await A.api.get(`/api/cards/${card.slug}/payment-quote?kind=renewal`)
+    ).json();
+    expect(quote).toMatchObject({
+      scenario: 'premium_renewal',
+      planCode: 'founder-club',
+      totalAmountMinor: FOUNDER_CLUB_PRICE,
+    });
+
+    const submitted = await submitRenewal(A, card.slug);
+    expect(submitted.status(), await submitted.text()).toBe(201);
+    const { paymentId } = await submitted.json();
+    const [item] = await sql(
+      `select plan_code, amount_minor from subscription_payment_item where payment_id = $1`,
+      [paymentId]
+    );
+    expect(item).toEqual({
+      plan_code: 'founder-club',
+      amount_minor: FOUNDER_CLUB_PRICE,
+    });
+
+    expect((await reviewPayment(T, paymentId, 'approved')).status()).toBe(200);
+    const after = await subscription(card.id);
+    expect(after.status).toBe('active');
+    expect(after.plan_code).toBe('founder-club');
   });
 });
 

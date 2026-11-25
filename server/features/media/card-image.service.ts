@@ -1,3 +1,4 @@
+import { customAlphabet } from 'nanoid';
 import { communityUsesCardImageKeys } from '~~/server/features/organization/community-setting.repository';
 import { companyUsesCardImageKeys } from '~~/server/features/organization/company.service';
 import {
@@ -98,19 +99,27 @@ export async function listCardImages(name: string) {
   return Promise.all(CARD_IMAGE_KINDS.map((kind) => findCardImage(kind, slug)));
 }
 
-/** Upload never overwrites: the current file has to be deleted first. */
+// Lowercase and digits only, so the suffixed key still passes CARD_IMAGE_SLUG.
+const imageNameSuffix = customAlphabet(
+  '0123456789abcdefghijklmnopqrstuvwxyz',
+  6
+);
+
+/**
+ * Upload never overwrites. When the name already has a file (another card for
+ * the same person), the new file gets a random suffix instead.
+ */
 export async function issueCardImageUploadTicket(
   request: CreateCardImageUploadRequest
 ) {
   const slug = await requireCardImageSlug(request.name);
   const existing = await findCardImage(request.kind, slug);
-  if (existing.exists) {
-    throw conflict(
-      `${existing.fileName} already exists. Delete it before uploading a new one.`,
-      'card_image_exists'
-    );
-  }
-  const image = cardImageAt(request.kind, slug, request.contentType, false);
+  const image = cardImageAt(
+    request.kind,
+    existing.exists ? `${slug}-${imageNameSuffix()}` : slug,
+    request.contentType,
+    false
+  );
   const ticket = await createUploadTicket({
     key: image.key,
     contentType: request.contentType,

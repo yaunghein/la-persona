@@ -51,14 +51,19 @@ export async function listPlans(): Promise<
   return { items: await listSubscriptionPlans() };
 }
 
-/** Standard and premium plan prices. */
+/** Standard, premium and Founders' Club plan prices. */
 export async function loadCardPricing(): Promise<CardPricingTable> {
-  const plans = await listActivePlansByCode(['standard', 'premium']);
+  const plans = await listActivePlansByCode([
+    'standard',
+    'premium',
+    'founder-club',
+  ]);
   const standard = plans.find((plan) => plan.code === 'standard');
   const premium = plans.find((plan) => plan.code === 'premium');
-  if (!standard || !premium) {
+  const founderClub = plans.find((plan) => plan.code === 'founder-club');
+  if (!standard || !premium || !founderClub) {
     throw conflict(
-      'Active standard/premium pricing is not configured.',
+      'Active standard/premium/founder-club pricing is not configured.',
       'pricing_not_configured'
     );
   }
@@ -66,6 +71,7 @@ export async function loadCardPricing(): Promise<CardPricingTable> {
     currency: standard.currency.toUpperCase(),
     standardPlanPriceMinor: standard.priceMinor,
     premiumPlanPriceMinor: premium.priceMinor,
+    founderClubPlanPriceMinor: founderClub.priceMinor,
   };
 }
 
@@ -118,7 +124,8 @@ export async function quoteCardPaymentFor(
   return quoteCardPayment(
     kind,
     resolveCardPaymentScenario(kind, state),
-    await loadCardPricing()
+    await loadCardPricing(),
+    state.planCode
   );
 }
 
@@ -143,7 +150,12 @@ export async function submitCardPayment(params: {
 
   const state = (await cardSubscriptionState(target)) ?? NO_PERIOD;
   const scenario = resolveCardPaymentScenario(kind, state);
-  const quote = quoteCardPayment(kind, scenario, await loadCardPricing());
+  const quote = quoteCardPayment(
+    kind,
+    scenario,
+    await loadCardPricing(),
+    state.planCode
+  );
   const term = resolvePaidTerm(scenario, state);
   const upgrade = isPremiumUpgrade(scenario);
   const { card } = target;

@@ -10,13 +10,14 @@ execSync(`${compose} up -d --wait`, { stdio: 'inherit' });
 execSync('bunx drizzle-kit migrate', { stdio: 'inherit' });
 
 // Real environments got these from db:backfill-subscriptions and the seed:
-// both plans price cards, and unclaimed cards live in the placeholder organization.
+// these plans price cards, and unclaimed cards live in the placeholder organization.
 const db = new pg.Client({ connectionString: process.env.DATABASE_URL });
 await db.connect();
 await db.query(
   `insert into subscription_plan (id, code, name, price_minor) values
      ('plan-standard', 'standard', 'Standard', 50000),
-     ('plan-premium', 'premium', 'Premium', 150000)
+     ('plan-premium', 'premium', 'Premium', 150000),
+     ('plan-founder-club', 'founder-club', 'Founders'' Club', 100000)
    on conflict (code) do nothing`
 );
 await db.query(

@@ -13,6 +13,7 @@ export type CardPricingTable = {
   currency: string;
   standardPlanPriceMinor: number;
   premiumPlanPriceMinor: number;
+  founderClubPlanPriceMinor: number;
 };
 
 const PREMIUM_PLAN_CODES = new Set(['premium', 'founder-club']);
@@ -53,11 +54,17 @@ export function isPremiumUpgrade(scenario: CardPaymentScenario) {
 export function quoteCardPayment(
   kind: CardPaymentKind,
   scenario: CardPaymentScenario,
-  pricing: CardPricingTable
+  pricing: CardPricingTable,
+  currentPlanCode: string | null | undefined
 ): CardPaymentQuote {
   const upgrade = isPremiumUpgrade(scenario);
-  const planCode =
-    scenario === 'trial_to_standard_renewal' || scenario === 'standard_renewal'
+  // Founders' Club stays Founders' Club on renewal, at its own price.
+  const isFounderClubRenewal =
+    scenario === 'premium_renewal' && currentPlanCode === 'founder-club';
+  const planCode = isFounderClubRenewal
+    ? 'founder-club'
+    : scenario === 'trial_to_standard_renewal' ||
+        scenario === 'standard_renewal'
       ? 'standard'
       : 'premium';
 
@@ -73,8 +80,9 @@ export function quoteCardPayment(
     : [
         {
           label: 'Hosting Fee',
-          amountMinor:
-            scenario === 'premium_renewal'
+          amountMinor: isFounderClubRenewal
+            ? pricing.founderClubPlanPriceMinor
+            : scenario === 'premium_renewal'
               ? pricing.premiumPlanPriceMinor
               : pricing.standardPlanPriceMinor,
           isFree: false,

@@ -31,7 +31,7 @@ export type CardPaymentQuoteLine = {
 export type CardPaymentQuote = {
   kind: CardPaymentKind;
   scenario: CardPaymentScenario;
-  planCode: 'standard' | 'premium';
+  planCode: 'standard' | 'premium' | 'founder-club';
   currency: string;
   lines: CardPaymentQuoteLine[];
   totalAmountMinor: number;

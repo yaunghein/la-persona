@@ -70,7 +70,7 @@ const form = reactive({
 });
 
 function applyPlanAssetPrefills(planCode: string) {
-  if (planCode === 'premium') {
+  if (planCode === 'premium' || planCode === 'founder-club') {
     form.splineUrl = '';
     form.wallpaperUrl = '';
     form.cardBackUrl = '';
@@ -239,6 +239,7 @@ const CREATE_PLANS = [
   { code: 'friend-family', label: 'Friends & Family' },
   { code: 'standard', label: 'Standard' },
   { code: 'premium', label: 'Premium' },
+  { code: 'founder-club', label: "Founders' Club" },
 ] as const;
 
 const createPlanItems = computed(() =>
@@ -287,7 +288,10 @@ const cardImageName = computed(() =>
 );
 
 const choosingPremiumImages = computed(
-  () => !editingId.value && createPlanCode.value === 'premium'
+  () =>
+    !editingId.value &&
+    (createPlanCode.value === 'premium' ||
+      createPlanCode.value === 'founder-club')
 );
 const showCardImageUpload = computed(
   () => Boolean(editingId.value) && customImages.value
@@ -417,7 +421,7 @@ async function onSubmitForm() {
   ) {
     toast.add({
       title: 'Choose both images',
-      description: 'A premium card needs a wallpaper and a card back.',
+      description: 'This plan needs a wallpaper and a card back.',
       color: 'warning',
     });
     return;

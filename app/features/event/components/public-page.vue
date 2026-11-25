@@ -276,7 +276,6 @@ function onCancelOnboarding() {
         :phone-country-code="viewerCard?.phoneCountryCode"
         :email="viewerCard?.email"
         :website="viewerCard?.website"
-        :plan-code="viewerCard?.subscription?.planCode"
         :spline-url="viewerCard?.splineUrl"
         :joined-at="viewerCard?.createdAt"
         @add-to-google-calendar="addToGoogleCalendar()"

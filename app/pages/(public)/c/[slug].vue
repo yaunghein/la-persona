@@ -191,7 +191,6 @@ onMounted(async () => {
       phoneCountryCode: card.value.phoneCountryCode,
       email: card.value.email,
       website: card.value.website,
-      planCode: card.value.plan?.code,
       joinedAt: card.value.joinedAt,
     });
   });

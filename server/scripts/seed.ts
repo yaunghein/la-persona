@@ -19,6 +19,14 @@ const defaultPlans = [
     currency: 'MMK',
     isActive: true,
   },
+  {
+    code: 'founder-club',
+    name: "Founders' Club",
+    billingCycle: 'yearly',
+    priceMinor: 0,
+    currency: 'MMK',
+    isActive: true,
+  },
 ];
 
 async function main() {
