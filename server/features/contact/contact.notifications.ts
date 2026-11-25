@@ -1,4 +1,5 @@
 import { env } from '~~/env';
+import { publicCardUrl } from '~~/server/features/event/event-email-content';
 import { sendEmail } from '~~/server/lib/mailer';
 import {
   emailErrorLabel,
@@ -41,5 +42,31 @@ export async function sendContactExchangeEmail(params: {
     return { ok: true, template: TEMPLATE, to };
   } catch (error) {
     return { ok: false, template: TEMPLATE, to, error: emailErrorLabel(error) };
+  }
+}
+
+/** A public-form visitor without an account gets the card holder's details and a link to their card. */
+export async function sendContactExchangeVisitorEmail(params: {
+  to: string;
+  recipientName: string;
+  contact: ExchangedContact;
+  cardSlug: string;
+}): Promise<EmailSendResult> {
+  const template = 'contact_exchange_visitor';
+  const to = [params.to];
+  try {
+    const html = await renderEmailComponent('ContactExchangeVisitor', {
+      ...params.contact,
+      recipientName: params.recipientName,
+      cardUrl: publicCardUrl(params.cardSlug),
+    });
+    await sendEmail({
+      to,
+      subject: `${params.contact.name}'s contact details`,
+      html,
+    });
+    return { ok: true, template, to };
+  } catch (error) {
+    return { ok: false, template, to, error: emailErrorLabel(error) };
   }
 }

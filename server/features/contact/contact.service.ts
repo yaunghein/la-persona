@@ -27,6 +27,7 @@ import {
 import { toContactSummary } from '~~/server/features/contact/contact.mapper';
 import {
   sendContactExchangeEmail,
+  sendContactExchangeVisitorEmail,
   type ExchangedContact,
 } from '~~/server/features/contact/contact.notifications';
 import { toCsv } from '~~/server/lib/csv';
@@ -339,16 +340,31 @@ export async function exchangeContactViaForm(
     position: input.position || '',
   };
 
+  const ownerEmail = ownerCard.email || ownerAccountEmail;
+  const recipients: string[] = [];
+  const deliveries: Promise<EmailSendResult>[] = [];
+  if (ownerEmail) {
+    recipients.push(ownerEmail);
+    deliveries.push(
+      sendContactExchangeEmail({ to: ownerEmail, contact: visitor })
+    );
+  }
+  if (input.email) {
+    recipients.push(input.email);
+    deliveries.push(
+      sendContactExchangeVisitorEmail({
+        to: input.email,
+        recipientName: input.name,
+        contact: cardAsExchangedContact(ownerCard, ownerAccountEmail),
+        cardSlug: ownerCard.slug,
+      })
+    );
+  }
+
   return {
     contactId: saved.id,
     eventId,
-    emails: deliverContactExchangeEmails([
-      { to: ownerCard.email || ownerAccountEmail, contact: visitor },
-      {
-        to: input.email,
-        contact: cardAsExchangedContact(ownerCard, ownerAccountEmail),
-      },
-    ]),
+    emails: { recipients, deliveries: Promise.all(deliveries) },
   };
 }
 

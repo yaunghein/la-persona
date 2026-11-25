@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { Application } from '@splinetool/runtime';
-import type { ConcreteComponent } from 'vue';
-import { downloadUrl } from '~/utils/share-or-download';
+import { ROUTES } from '~~/shared/utils/routes';
 
 const { cardId } = useRoute().params;
 const card = cards.find((card) => card.id === cardId);
@@ -14,416 +12,56 @@ if (!card) {
 }
 
 usePageSeo({ title: card.name });
+useSeoMeta({ robots: 'noindex' });
 
-const isMenuOpen = ref(false);
-const isFormOpen = ref(false);
-const isSuccess = ref(false);
-const isValid = ref(true);
-const isSubmitting = ref(false);
-const error = ref('');
-const loading = ref(false);
-
-const toast = useToast();
-
-onMounted(async () => {
-  if (!card) return;
-  loading.value = true;
-  const canvas = document.querySelector('#card') as HTMLCanvasElement;
-  const spline = new Application(canvas);
-  spline
-    .load(card.spline + `?v=${new Date().getTime()}`)
-    .then(() => (loading.value = false));
-});
-
-const closeForm = () => {
-  isFormOpen.value = false;
-  setTimeout(() => {
-    isSuccess.value = false;
-    error.value = '';
-  }, 750);
-};
-
-const onSubmit = async (e: SubmitEvent) => {
-  const formData = new FormData(e.target as HTMLFormElement);
-  const data = Object.fromEntries(formData.entries());
-
-  isSubmitting.value = true;
-
-  try {
-    await $fetch(`/api/public/legacy-cards/${card.id}/contact-exchanges`, {
-      method: 'POST',
-      body: {
-        name: String(data.name ?? ''),
-        email: String(data.email ?? ''),
-        phone: String(data.phone ?? ''),
-        company: String(data.company ?? ''),
-        position: String(data.position ?? ''),
-      },
-    });
-
-    isSuccess.value = true;
-  } catch (error: any) {
-    toast.add({
-      title: 'Error while sending request.',
-      description: error.statusMessage || 'Please try again.',
-      color: 'error',
-      icon: 'i-heroicons-x-circle',
-      progress: false,
-      duration: 10000,
-    });
-  } finally {
-    isSubmitting.value = false;
-  }
-};
-
-const iconMap: Record<string, string | ConcreteComponent> = {
-  world: resolveComponent('IconWorld'),
-  directMessage: resolveComponent('IconDirectMessage'),
-  arrowDown: resolveComponent('IconArrowDown'),
-  buyMeCoffee: resolveComponent('IconBuyMeCoffee'),
-  saveContact: resolveComponent('IconSaveContact'),
-};
-
-async function onActionClick(link: { action?: string; label: string }) {
-  try {
-    switch (link.action) {
-      case 'buyMeCoffee':
-        await shareOrDownloadUrl({
-          url: '/images/mhm-laos-qr.jpg',
-          fileName: 'mhm-laos-qr.jpg',
-        });
-        return;
-      case 'saveContact':
-        if (!card?.vcf) return;
-        await downloadUrl({
-          url: card.vcf,
-          fileName: `${card.id}.vcf`,
-        });
-        return;
-    }
-  } catch (error) {
-    console.error('Failed to save file', error);
-  }
-}
+const contactLinks = [
+  { label: 'Facebook', href: 'https://www.facebook.com/share/1A3rzUmSoh/' },
+  { label: 'Instagram', href: 'https://www.instagram.com/lapersona.mm' },
+];
 </script>
 
 <template>
-  <div v-if="card" class="relative z-10 h-dvh w-screen overflow-hidden">
-    <div class="absolute inset-0 w-full h-full">
-      <div
-        v-if="loading"
-        class="inline-block size-12 animate-spin rounded-full border border-current border-t-transparent text-ink/20 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-        role="status"
-        aria-label="loading"
+  <div class="flex min-h-dvh flex-col bg-canvas text-ink">
+    <header class="flex justify-center px-6 py-8 sm:py-10">
+      <NuxtLink :to="ROUTES.HOME" class="inline-flex">
+        <IconLogo class="aspect-[1/0.09] w-32 text-ink sm:w-40" />
+        <span class="sr-only">LA PERSONA home</span>
+      </NuxtLink>
+    </header>
+
+    <main
+      class="flex flex-1 flex-col items-center justify-center px-6 pb-24 text-center"
+    >
+      <h1
+        class="max-w-xl text-2xl font-medium leading-tight tracking-wider text-balance uppercase sm:text-3xl"
       >
-        <span class="sr-only">Loading...</span>
-      </div>
-      <canvas id="card" class="h-full w-full"></canvas>
-    </div>
-
-    <div
-      class="absolute bottom-8 left-0 right-0 flex w-full gap-3 px-5 transition duration-750 sm:mx-auto sm:max-w-96"
-      :class="{
-        'translate-y-full': isMenuOpen || isFormOpen,
-        'translate-y-0': !isMenuOpen || !isFormOpen,
-      }"
-    >
-      <button
-        @click="isFormOpen = !isFormOpen"
-        class="grid flex-1 place-items-center rounded-full border border-ink/10 bg-ink/10 text-sm font-bold"
+        We're moving to our new&nbsp;platform
+      </h1>
+      <p
+        class="mt-4 max-w-md text-sm leading-relaxed text-balance text-subtle sm:text-base"
       >
-        Exchange Contact
-      </button>
-      <UTooltip text="Explore">
-        <button
-          type="button"
-          aria-label="Explore"
-          @click="isMenuOpen = !isMenuOpen"
-          class="grid aspect-square w-13 shrink-0 place-items-center rounded-full border border-ink/10 bg-ink/10"
+        This card is no longer available. If you're the owner of this card,
+        please contact LA&nbsp;PERSONA to set up your new digital&nbsp;card.
+      </p>
+
+      <div class="mt-10 flex flex-wrap justify-center gap-3">
+        <UButton
+          v-for="link in contactLinks"
+          :key="link.label"
+          :to="link.href"
+          target="_blank"
+          color="neutral"
+          class="h-10 rounded-full bg-ink px-8 text-sm font-medium text-ink-inverse hover:bg-ink/90"
         >
-          <div class="aspect-square w-6">
-            <IconMenu />
-          </div>
-        </button>
-      </UTooltip>
-    </div>
-
-    <div
-      class="fixed inset-0 top-auto -mb-px h-[calc(100dvh-3.5rem)] w-full scale-[1.005] rounded-t-xl border border-ink/10 bg-canvas transition duration-750 sm:mx-auto sm:max-w-104"
-      :class="{
-        'translate-y-0': isFormOpen,
-        'translate-y-[101%]': !isFormOpen,
-      }"
-    >
-      <div class="flex h-full flex-col">
-        <div
-          class="flex items-center justify-center border-b border-ink/10 py-6 text-center text-sm font-bold transition duration-750"
-          :class="{
-            'opacity-100': isFormOpen,
-            'opacity-0': !isFormOpen,
-          }"
-        >
-          Exchange Contact
-        </div>
-
-        <div
-          v-if="isSuccess"
-          class="flex flex-1 flex-col items-center justify-center gap-6"
-        >
-          <div class="text-sm font-bold leading-none tracking-[0.1rem]">
-            You're all set!
-          </div>
-          <p
-            class="mx-auto max-w-[16rem] text-center text-xs font-light leading-normal tracking-[0.1rem]"
-          >
-            Tap below to save {{ card.name }}'s contact directly to your phone.
-          </p>
-        </div>
-
-        <div v-else class="hide-scrollbar flex-1 overflow-y-scroll">
-          <div
-            class="mx-auto max-w-52 pt-8 text-center text-sm font-light leading-normal sm:max-w-[18rem]"
-          >
-            Share your information to receive this contact and stay connected.
-          </div>
-          <form
-            id="form"
-            autocomplete="off"
-            class="flex flex-col gap-7 px-5 py-9"
-            @submit.prevent="onSubmit"
-          >
-            <label
-              class="flex flex-col gap-3 text-xs font-light tracking-[0.1rem]"
-            >
-              Your Name*
-              <input
-                name="name"
-                type="text"
-                autocomplete="off"
-                required
-                class="h-[2.8rem] w-full appearance-none border border-ink/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-ink/20 hover:border-ink/20 focus:border-ink/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
-              />
-            </label>
-            <ContactPhoneInput />
-            <label
-              class="flex flex-col gap-3 text-xs font-light tracking-[0.1rem]"
-            >
-              Email Address*
-              <input
-                name="email"
-                type="email"
-                autocomplete="off"
-                required
-                class="h-[2.8rem] w-full appearance-none border border-ink/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-ink/20 hover:border-ink/20 focus:border-ink/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
-              />
-            </label>
-
-            <label
-              class="flex flex-col gap-3 text-xs font-light tracking-[0.1rem]"
-            >
-              Company (Optional)
-              <input
-                name="company"
-                type="text"
-                autocomplete="off"
-                class="h-[2.8rem] w-full appearance-none border border-ink/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-ink/20 hover:border-ink/20 focus:border-ink/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
-              />
-            </label>
-
-            <label
-              class="flex flex-col gap-3 text-xs font-light tracking-[0.1rem]"
-            >
-              Role / Position (Optional)
-              <input
-                name="position"
-                type="text"
-                autocomplete="off"
-                class="h-[2.8rem] w-full appearance-none border border-ink/10 bg-transparent px-4 text-sm font-light tracking-[0.1rem] transition duration-500 placeholder:text-xs placeholder:tracking-[0.1rem] placeholder:text-ink/20 hover:border-ink/20 focus:border-ink/50 focus:outline-none sm:h-[3.13rem] sm:px-6"
-              />
-            </label>
-          </form>
-        </div>
-        <div
-          class="flex flex-col items-center justify-center gap-6 border-t border-ink/10 px-5 py-8"
-        >
-          <a
-            v-if="isSuccess"
-            :href="card.vcf"
-            :download="`${card.id}.vcf`"
-            class="cursor-pointer w-full rounded-full border border-ink/10 bg-ink py-4 text-center text-xs font-bold leading-none tracking-[0.1rem] text-ink-inverse transition-all duration-500 disabled:bg-ink/10 disabled:text-ink/20"
-          >
-            Save Contact
-          </a>
-          <button
-            v-else
-            type="submit"
-            form="form"
-            :disabled="!isValid || isSubmitting"
-            class="cursor-pointer relative w-full rounded-full border border-ink/10 bg-ink py-4 text-xs font-bold leading-none tracking-[0.1rem] text-ink-inverse transition-all duration-500 disabled:bg-ink/10 disabled:text-ink/20"
-          >
-            Continue
-            <div
-              v-if="isSubmitting"
-              class="absolute right-[0.26rem] top-[51.75%] -translate-y-1/2"
-            >
-              <div
-                class="inline-block size-9 animate-spin rounded-full border border-current border-t-transparent text-ink/20"
-                role="status"
-                aria-label="loading"
-              >
-                <span class="sr-only">Loading...</span>
-              </div>
-            </div>
-          </button>
-
-          <div
-            v-if="error"
-            class="flex cursor-pointer items-start gap-3 sm:gap-6"
-          >
-            <span
-              class="text-center text-xs font-light leading-normal tracking-[0.1rem] text-red-600 sm:text-sm"
-            >
-              {{ error }}
-            </span>
-          </div>
-
-          <button
-            @click="closeForm"
-            class="text-xs font-bold leading-none tracking-[0.1rem] underline underline-offset-4"
-          >
-            Exit
-          </button>
-        </div>
+          {{ link.label }}
+        </UButton>
       </div>
-    </div>
+    </main>
 
-    <div
-      class="fixed inset-0 top-auto -mb-px w-full scale-[1.005] rounded-t-xl border border-ink/10 bg-canvas py-6 transition duration-750 sm:mx-auto sm:max-w-104"
-      :class="{
-        'translate-y-0': isMenuOpen,
-        'translate-y-100': !isMenuOpen,
-      }"
+    <footer
+      class="px-6 pb-8 text-center text-xs font-light uppercase tracking-wide text-ink/30"
     >
-      <div>
-        <UTooltip text="Close">
-          <button
-            type="button"
-            aria-label="Close"
-            @click="isMenuOpen = false"
-            class="absolute right-4 top-4 grid aspect-square w-8 place-items-center rounded-full border border-ink/10 bg-ink/10 transition duration-750"
-            :class="{
-              'opacity-100': isMenuOpen,
-              'opacity-0': !isMenuOpen,
-            }"
-          >
-            <div class="aspect-square w-[0.62rem]">
-              <IconClose />
-            </div>
-          </button>
-        </UTooltip>
-        <div
-          class="text-center text-sm font-bold transition duration-750"
-          :class="{
-            'opacity-100': isMenuOpen,
-            'opacity-0': !isMenuOpen,
-          }"
-        >
-          Explore
-        </div>
-        <div
-          class="hide-scrollbar mt-8 flex justify-start gap-3 overflow-x-scroll px-5"
-        >
-          <template v-for="(link, index) in card.links" :key="index">
-            <button
-              v-if="link.action && link.icon.includes('.')"
-              type="button"
-              class="flex shrink-0 flex-col items-center gap-4 transition duration-750"
-              :class="isMenuOpen ? 'opacity-100' : 'opacity-0'"
-              :style="{ transitionDelay: `${(index + 1) * 100}ms` }"
-              @click="onActionClick(link)"
-            >
-              <div
-                class="grid aspect-square w-[4.56rem] overflow-hidden rounded-full bg-ink/10"
-              >
-                <UiSkeletonImage
-                  :src="link.icon"
-                  :alt="link.label"
-                  width="73"
-                  height="73"
-                  class="aspect-square h-full w-full object-cover"
-                />
-              </div>
-              <div class="max-w-16 text-center text-xs leading-[1.1]">
-                {{ link.label }}
-              </div>
-            </button>
-
-            <a
-              v-else-if="link.href && link.icon.includes('.')"
-              :href="link.href"
-              target="_blank"
-              class="flex shrink-0 flex-col items-center gap-4 transition duration-750"
-              :class="isMenuOpen ? 'opacity-100' : 'opacity-0'"
-              :style="{ transitionDelay: `${(index + 1) * 100}ms` }"
-            >
-              <div
-                class="grid aspect-square w-[4.56rem] overflow-hidden rounded-full bg-ink/10"
-              >
-                <UiSkeletonImage
-                  :src="link.icon"
-                  :alt="link.label"
-                  width="73"
-                  height="73"
-                  class="aspect-square h-full w-full object-cover"
-                />
-              </div>
-              <div class="max-w-16 text-center text-xs leading-[1.1]">
-                {{ link.label }}
-              </div>
-            </a>
-
-            <button
-              v-else-if="link.action && !link.icon.includes('.')"
-              type="button"
-              class="flex shrink-0 flex-col items-center gap-4 transition duration-750"
-              :class="isMenuOpen ? 'opacity-100' : 'opacity-0'"
-              :style="{ transitionDelay: `${(index + 1) * 100}ms` }"
-              @click="onActionClick(link)"
-            >
-              <div
-                class="grid aspect-square w-[4.56rem] place-items-center rounded-full bg-ink/10"
-              >
-                <div class="aspect-square w-8">
-                  <component :is="iconMap[link.icon]" />
-                </div>
-              </div>
-              <div class="max-w-16 text-center text-xs leading-[1.1]">
-                {{ link.label }}
-              </div>
-            </button>
-
-            <a
-              v-else-if="link.href && !link.icon.includes('.')"
-              :href="link.href"
-              target="_blank"
-              class="flex shrink-0 flex-col items-center gap-4 transition duration- 750"
-              :class="isMenuOpen ? 'opacity-100' : 'opacity-0'"
-              :style="{ transitionDelay: `${(index + 1) * 100}ms` }"
-            >
-              <div
-                class="grid aspect-square w-[4.56rem] place-items-center rounded-full bg-ink/10"
-              >
-                <div class="aspect-square w-8">
-                  <component :is="iconMap[link.icon]" />
-                </div>
-              </div>
-              <div class="max-w-16 text-center text-xs leading-[1.1]">
-                {{ link.label }}
-              </div>
-            </a>
-          </template>
-        </div>
-      </div>
-    </div>
+      © la persona. All rights reserved.
+    </footer>
   </div>
 </template>
