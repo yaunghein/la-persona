@@ -9,8 +9,8 @@ import {
 } from './support/auth';
 import { countEmails } from './support/mailpit';
 
-test.describe('Part 1: Signing in', () => {
-  test('1.1 new user signs in', async ({ page }) => {
+test.describe('Part 1.1: Signing in', () => {
+  test('1.1.1 new user signs in', async ({ page }) => {
     const email = uniqueEmail('new');
     await gotoHydrated(page, '/sign-in');
     const link = await requestMagicLink(page, email);
@@ -24,7 +24,7 @@ test.describe('Part 1: Signing in', () => {
     expect(JSON.stringify(await organizations.json())).toContain('personal');
   });
 
-  test('1.2 existing user signs in again', async ({ page }) => {
+  test('1.1.2 existing user signs in again', async ({ page }) => {
     const email = uniqueEmail('user');
     await signIn(page, email);
     const before = await (
@@ -40,7 +40,7 @@ test.describe('Part 1: Signing in', () => {
     expect(after).toEqual(before);
   });
 
-  test('1.3 email validation on the form', async ({ page }) => {
+  test('1.1.3 email validation on the form', async ({ page }) => {
     await gotoHydrated(page, '/sign-in');
     const send = page.getByRole('button', { name: 'Send Magic Link' });
 
@@ -53,7 +53,7 @@ test.describe('Part 1: Signing in', () => {
     expect(await countEmails('not-an-email')).toBe(0);
   });
 
-  test('1.4 a magic link works only once', async ({ page }) => {
+  test('1.1.4 a magic link works only once', async ({ page }) => {
     const email = uniqueEmail('user');
     await gotoHydrated(page, '/sign-in');
     const link = await requestMagicLink(page, email);
@@ -69,7 +69,7 @@ test.describe('Part 1: Signing in', () => {
     );
   });
 
-  test('1.5 a tampered link fails', async ({ page }) => {
+  test('1.1.5 a tampered link fails', async ({ page }) => {
     await gotoHydrated(page, '/sign-in');
     const link = await requestMagicLink(page, uniqueEmail('user'));
 
@@ -81,7 +81,7 @@ test.describe('Part 1: Signing in', () => {
     );
   });
 
-  test('1.6 return to the page you came from', async ({ page }) => {
+  test('1.1.6 return to the page you came from', async ({ page }) => {
     await page.goto('/platform/contacts');
     await expect(page).toHaveURL('/sign-in?redirectTo=/platform/contacts');
 
@@ -93,14 +93,14 @@ test.describe('Part 1: Signing in', () => {
     await expect(page).toHaveURL('/platform/contacts');
   });
 
-  test('1.7 external redirects are ignored', async ({ page }) => {
+  test('1.1.7 external redirects are ignored', async ({ page }) => {
     await gotoHydrated(page, '/sign-in?redirectTo=https://example.com');
     await page.goto(await requestMagicLink(page, uniqueEmail('user')));
 
     await expect(page).toHaveURL(/localhost:3100\/platform/);
   });
 
-  test('1.8 signed-in users skip the sign-in page', async ({ page }) => {
+  test('1.1.8 signed-in users skip the sign-in page', async ({ page }) => {
     await signIn(page, uniqueEmail('user'));
 
     await page.goto('/sign-in');
@@ -109,8 +109,8 @@ test.describe('Part 1: Signing in', () => {
   });
 });
 
-test.describe('Part 2: Signing out', () => {
-  test('2.1 log out', async ({ page }) => {
+test.describe('Part 1.2: Signing out', () => {
+  test('1.2.1 log out', async ({ page }) => {
     const email = uniqueEmail('user');
     await signIn(page, email);
 
@@ -123,8 +123,8 @@ test.describe('Part 2: Signing out', () => {
   });
 });
 
-test.describe('Part 3: Access boundaries', () => {
-  test('3.1 signed-out visitors', async ({ page }) => {
+test.describe('Part 1.3: Access boundaries', () => {
+  test('1.3.1 signed-out visitors', async ({ page }) => {
     await page.goto('/platform');
     await expect(page).toHaveURL('/sign-in?redirectTo=/platform');
 
@@ -137,7 +137,7 @@ test.describe('Part 3: Access boundaries', () => {
     expect((await page.request.get('/api/admin/overview')).status()).toBe(404);
   });
 
-  test('3.2 non-admin user', async ({ page }) => {
+  test('1.3.2 non-admin user', async ({ page }) => {
     await signIn(page, uniqueEmail('user'));
 
     await page.goto('/thakhin');
@@ -146,7 +146,7 @@ test.describe('Part 3: Access boundaries', () => {
     expect((await page.request.get('/api/admin/overview')).status()).toBe(404);
   });
 
-  test('3.3 platform admin', async ({ page }) => {
+  test('1.3.3 platform admin', async ({ page }) => {
     const email = uniqueEmail('admin');
     await signIn(page, email);
     await makePlatformAdmin(email);

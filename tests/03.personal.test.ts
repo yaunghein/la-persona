@@ -159,6 +159,7 @@ async function myContacts(person: Person) {
     name: string;
     personaCardSlug: string | null;
     card: { id: string } | null;
+    createdAt: string;
   }[];
 }
 
@@ -166,8 +167,8 @@ async function statuses(responses: { status(): number }[]) {
   return responses.map((response) => response.status()).sort();
 }
 
-test.describe('Part 1: The personal workspace', () => {
-  test('1.1 created on first sign-in', async ({ world }) => {
+test.describe('Part 3.1: The personal workspace', () => {
+  test('3.1.1 created on first sign-in', async ({ world }) => {
     const A = await world.person('alice');
     const own = await space(A);
     const [organization] = await sql(
@@ -188,7 +189,7 @@ test.describe('Part 1: The personal workspace', () => {
     expect(session?.active_organization_id).toBe(own.id);
   });
 
-  test('1.2 only one, ever', async ({ world }) => {
+  test('3.1.2 only one, ever', async ({ world }) => {
     const T = await world.thakhin();
     const A = await world.person('alice');
     await world.person('alice', A.email);
@@ -208,7 +209,7 @@ test.describe('Part 1: The personal workspace', () => {
     );
   });
 
-  test('1.3 private to its owner', async ({ world }) => {
+  test('3.1.3 private to its owner', async ({ world }) => {
     const A = await world.person('alice');
     const B = await world.person('bob');
     const own = await space(A);
@@ -220,7 +221,7 @@ test.describe('Part 1: The personal workspace', () => {
     ).toBe(404);
   });
 
-  test('1.4 no members, no invites', async ({ world }) => {
+  test('3.1.4 no members, no invites', async ({ world }) => {
     const A = await world.person('alice');
     const own = await space(A);
     const invited = await A.api.post(
@@ -241,8 +242,8 @@ test.describe('Part 1: The personal workspace', () => {
   });
 });
 
-test.describe('Part 2: Requesting a card', () => {
-  test('2.1 new design', async ({ world }) => {
+test.describe('Part 3.2: Requesting a card', () => {
+  test('3.2.1 new design', async ({ world }) => {
     const A = await world.person('alice');
     const receiptOf = await newDesignRequest(A);
     expect(receiptOf.planCode).toBe('premium');
@@ -263,13 +264,14 @@ test.describe('Part 2: Requesting a card', () => {
     });
   });
 
-  test('2.2 existing design', async ({ world }) => {
+  test('3.2.2 existing design', async ({ world }) => {
     const A = await world.person('alice');
     const own = await space(A);
     const source = await givePersonalCard(A);
     await sql(
       `update card set spline_url = 'https://prod.spline.design/x/scene.splinecode',
-         wallpaper_url = 'uploads/w.webp', card_back_url = 'uploads/b.webp' where id = $1`,
+         wallpaper_url = 'uploads/w.webp', card_back_url = 'uploads/b.webp',
+         background_theme = 'light' where id = $1`,
       [source.id]
     );
     const response = await requestCard(A, own.slug, {
@@ -282,17 +284,18 @@ test.describe('Part 2: Requesting a card', () => {
     const created = await response.json();
     expect(created.planCode).toBe('standard');
     const [card] = await sql(
-      `select spline_url, wallpaper_url, card_back_url from card where slug = $1`,
+      `select spline_url, wallpaper_url, card_back_url, background_theme from card where slug = $1`,
       [created.cardSlug]
     );
     expect(card).toEqual({
       spline_url: 'https://prod.spline.design/x/scene.splinecode',
       wallpaper_url: 'uploads/w.webp',
       card_back_url: 'uploads/b.webp',
+      background_theme: 'light',
     });
   });
 
-  test('2.3 prices come from the server', async ({ world }) => {
+  test('3.2.3 prices come from the server', async ({ world }) => {
     const A = await world.person('alice');
     const B = await world.person('bob');
     const own = await space(A);
@@ -318,7 +321,7 @@ test.describe('Part 2: Requesting a card', () => {
     expect(item?.amount_minor).toBe(PREMIUM_PRICE);
   });
 
-  test('2.4 design source must be yours', async ({ world }) => {
+  test('3.2.4 design source must be yours', async ({ world }) => {
     const A = await world.person('alice');
     const B = await world.person('bob');
     const own = await space(A);
@@ -332,7 +335,7 @@ test.describe('Part 2: Requesting a card', () => {
     await expectError(response, 400, 'Selected card design is invalid.');
   });
 
-  test('2.5 receipt must be our upload', async ({ world }) => {
+  test('3.2.5 receipt must be our upload', async ({ world }) => {
     const A = await world.person('alice');
     const own = await space(A);
     for (const receiptUrl of [
@@ -350,7 +353,7 @@ test.describe('Part 2: Requesting a card', () => {
     }
   });
 
-  test('2.6 Thakhin approves', async ({ world }) => {
+  test('3.2.6 Thakhin approves', async ({ world }) => {
     const T = await world.thakhin();
     const A = await world.person('alice');
     const created = await newDesignRequest(A);
@@ -372,7 +375,7 @@ test.describe('Part 2: Requesting a card', () => {
     expect(payment?.status).toBe('approved');
   });
 
-  test('2.7 Thakhin declines', async ({ world }) => {
+  test('3.2.7 Thakhin declines', async ({ world }) => {
     const T = await world.thakhin();
     const A = await world.person('alice');
     const created = await newDesignRequest(A);
@@ -392,7 +395,7 @@ test.describe('Part 2: Requesting a card', () => {
     );
   });
 
-  test('2.8 approve without a receipt', async ({ world }) => {
+  test('3.2.8 approve without a receipt', async ({ world }) => {
     const T = await world.thakhin();
     const A = await world.person('alice');
     const created = await newDesignRequest(A);
@@ -407,7 +410,7 @@ test.describe('Part 2: Requesting a card', () => {
     );
   });
 
-  test('2.9 a new card is live while it waits for approval', async ({
+  test('3.2.9 a new card is live while it waits for approval', async ({
     world,
   }) => {
     const T = await world.thakhin();
@@ -417,10 +420,34 @@ test.describe('Part 2: Requesting a card', () => {
     await reviewRequest(T, created.requestId, 'declined');
     expect(await availability(world, created.cardSlug)).toBe('paused');
   });
+
+  test('3.2.10 Thakhin sets the background theme', async ({ world }) => {
+    const T = await world.thakhin();
+    const A = await world.person('alice');
+    const card = await givePersonalCard(A);
+    const theme = async () =>
+      (await (await publicCard(world, card.slug)).json()).backgroundTheme;
+    expect(await theme()).toBe('dark');
+
+    const saved = await T.api.patch(`/api/admin/cards/${card.id}`, {
+      data: { backgroundTheme: 'light' },
+    });
+    expect(saved.status(), await saved.text()).toBe(200);
+    expect(await theme()).toBe('light');
+
+    await expectError(
+      await T.api.patch(`/api/admin/cards/${card.id}`, {
+        data: { backgroundTheme: 'blue' },
+      }),
+      400,
+      'Invalid backgroundTheme'
+    );
+    expect(await theme()).toBe('light');
+  });
 });
 
-test.describe('Part 3: Editing a card', () => {
-  test('3.1 save contact info', async ({ world }) => {
+test.describe('Part 3.3: Editing a card', () => {
+  test('3.3.1 save contact info', async ({ world }) => {
     const A = await world.person('alice');
     const card = await givePersonalCard(A);
     const saved = await patchCard(A, card.slug, {
@@ -439,7 +466,7 @@ test.describe('Part 3: Editing a card', () => {
     });
   });
 
-  test('3.2 links', async ({ world }) => {
+  test('3.3.2 links', async ({ world }) => {
     const A = await world.person('alice');
     const card = await givePersonalCard(A);
     const link = (index: number) => ({
@@ -458,7 +485,7 @@ test.describe('Part 3: Editing a card', () => {
     );
   });
 
-  test('3.3 link and website validation', async ({ world }) => {
+  test('3.3.3 link and website validation', async ({ world }) => {
     const A = await world.person('alice');
     const card = await givePersonalCard(A);
     const social = (value: string) => ({ socials: [{ label: 'Link', value }] });
@@ -486,7 +513,7 @@ test.describe('Part 3: Editing a card', () => {
     expect((await cleared.json()).website).toBeNull();
   });
 
-  test('3.4 photo', async ({ world }) => {
+  test('3.3.4 photo', async ({ world }) => {
     const A = await world.person('alice');
     const own = await space(A);
     const card = await givePersonalCard(A);
@@ -516,7 +543,7 @@ test.describe('Part 3: Editing a card', () => {
     );
   });
 
-  test("3.5 fields the owner can't set", async ({ world }) => {
+  test("3.3.5 fields the owner can't set", async ({ world }) => {
     const A = await world.person('alice');
     const B = await world.person('bob');
     const card = await givePersonalCard(A);
@@ -526,11 +553,12 @@ test.describe('Part 3: Editing a card', () => {
       splineUrl: 'https://prod.spline.design/evil/scene.splinecode',
       wallpaperUrl: 'uploads/evil.webp',
       cardBackUrl: 'uploads/evil.webp',
+      backgroundTheme: 'light',
       departmentId: 'dept',
     });
     expect(saved.status()).toBe(200);
     const [row] = await sql(
-      `select user_id, organization_id, spline_url, wallpaper_url, card_back_url, department_id
+      `select user_id, organization_id, spline_url, wallpaper_url, card_back_url, background_theme, department_id
        from card where id = $1`,
       [card.id]
     );
@@ -540,11 +568,12 @@ test.describe('Part 3: Editing a card', () => {
       spline_url: null,
       wallpaper_url: null,
       card_back_url: null,
+      background_theme: 'dark',
       department_id: null,
     });
   });
 
-  test('3.6 change the card URL', async ({ world }) => {
+  test('3.3.6 change the card URL', async ({ world }) => {
     const A = await world.person('alice');
     const card = await givePersonalCard(A);
     const slug = `alice-${crypto.randomUUID().slice(0, 6)}`;
@@ -553,7 +582,7 @@ test.describe('Part 3: Editing a card', () => {
     expect((await publicCard(world, card.slug)).status()).toBe(404);
   });
 
-  test('3.7 slug rules', async ({ world }) => {
+  test('3.3.7 slug rules', async ({ world }) => {
     const A = await world.person('alice');
     const B = await world.person('bob');
     const card = await givePersonalCard(A);
@@ -573,7 +602,7 @@ test.describe('Part 3: Editing a card', () => {
     );
   });
 
-  test('3.8 visibility', async ({ world }) => {
+  test('3.3.8 visibility', async ({ world }) => {
     const A = await world.person('alice');
     const B = await world.person('bob');
     const card = await givePersonalCard(A);
@@ -588,7 +617,7 @@ test.describe('Part 3: Editing a card', () => {
     expect((await publicCard(world, card.slug)).status()).toBe(200);
   });
 
-  test('3.9 phone normalization', async ({ world }) => {
+  test('3.3.9 phone normalization', async ({ world }) => {
     const A = await world.person('alice');
     const card = await givePersonalCard(A);
     await patchCard(A, card.slug, {
@@ -614,8 +643,8 @@ test.describe('Part 3: Editing a card', () => {
   });
 });
 
-test.describe('Part 4: Deleting a card', () => {
-  test('4.1 delete own personal card', async ({ world }) => {
+test.describe('Part 3.4: Deleting a card', () => {
+  test('3.4.1 delete own personal card', async ({ world }) => {
     const A = await world.person('alice');
     const B = await world.person('bob');
     const card = await givePersonalCard(A);
@@ -642,7 +671,7 @@ test.describe('Part 4: Deleting a card', () => {
     await expectError(await patchCard(B, other.slug, { slug: card.slug }), 409);
   });
 
-  test('4.2 contacts stay after delete', async ({ world }) => {
+  test('3.4.2 contacts stay after delete', async ({ world }) => {
     const A = await world.person('alice');
     const B = await world.person('bob');
     const card = await givePersonalCard(A);
@@ -676,7 +705,7 @@ test.describe('Part 4: Deleting a card', () => {
     );
   });
 
-  test('4.2a delete a card with a receipt waiting for review', async ({
+  test('3.4.2a delete a card with a receipt waiting for review', async ({
     world,
   }) => {
     const A = await world.person('alice');
@@ -695,7 +724,7 @@ test.describe('Part 4: Deleting a card', () => {
     });
   });
 
-  test("4.3 community and company cards can't be deleted here", async ({
+  test("3.4.3 community and company cards can't be deleted here", async ({
     world,
   }) => {
     const { community, O } = await createCommunity(world);
@@ -714,7 +743,7 @@ test.describe('Part 4: Deleting a card', () => {
     await expectError(await A.api.delete(`/api/cards/${held.slug}`), 403);
   });
 
-  test("4.4 someone else's card", async ({ world }) => {
+  test("3.4.4 someone else's card", async ({ world }) => {
     const A = await world.person('alice');
     const B = await world.person('bob');
     const card = await givePersonalCard(A);
@@ -726,8 +755,8 @@ test.describe('Part 4: Deleting a card', () => {
   });
 });
 
-test.describe('Part 5: Renewal and premium upgrade', () => {
-  test('5.1 quote', async ({ world }) => {
+test.describe('Part 3.5: Renewal and premium upgrade', () => {
+  test('3.5.1 quote', async ({ world }) => {
     const A = await world.person('alice');
     const card = await activeCard(A);
     for (const kind of ['renewal', 'premium_upgrade']) {
@@ -746,7 +775,7 @@ test.describe('Part 5: Renewal and premium upgrade', () => {
     );
   });
 
-  test('5.2 submit a renewal', async ({ world }) => {
+  test('3.5.2 submit a renewal', async ({ world }) => {
     const A = await world.person('alice');
     const card = await activeCard(A);
     const before = (
@@ -766,7 +795,7 @@ test.describe('Part 5: Renewal and premium upgrade', () => {
     );
   });
 
-  test('5.3 Thakhin approves', async ({ world }) => {
+  test('3.5.3 Thakhin approves', async ({ world }) => {
     const T = await world.thakhin();
     const A = await world.person('alice');
     const card = await activeCard(A, 30);
@@ -782,7 +811,7 @@ test.describe('Part 5: Renewal and premium upgrade', () => {
     );
   });
 
-  test('5.4 Thakhin rejects', async ({ world }) => {
+  test('3.5.4 Thakhin rejects', async ({ world }) => {
     const T = await world.thakhin();
     const A = await world.person('alice');
     const card = await activeCard(A);
@@ -804,7 +833,7 @@ test.describe('Part 5: Renewal and premium upgrade', () => {
     );
   });
 
-  test('5.5 premium upgrade', async ({ world }) => {
+  test('3.5.5 premium upgrade', async ({ world }) => {
     const T = await world.thakhin();
     const A = await world.person('alice');
     const card = await activeCard(A);
@@ -823,7 +852,7 @@ test.describe('Part 5: Renewal and premium upgrade', () => {
     expect((await subscription(card.id)).plan_code).toBe('premium');
   });
 
-  test("5.6 expired card, owner's view", async ({ world }) => {
+  test("3.5.6 expired card, owner's view", async ({ world }) => {
     const A = await world.person('alice');
     const B = await world.person('bob');
     const card = await activeCard(A);
@@ -839,7 +868,7 @@ test.describe('Part 5: Renewal and premium upgrade', () => {
     expect(other.renewPath).toBeNull();
   });
 
-  test("5.7 a receipt doesn't unpause an expired card", async ({ world }) => {
+  test("3.5.7 a receipt doesn't unpause an expired card", async ({ world }) => {
     const T = await world.thakhin();
     const A = await world.person('alice');
     const card = await activeCard(A);
@@ -864,7 +893,7 @@ test.describe('Part 5: Renewal and premium upgrade', () => {
     expect(await availability(world, card.slug)).toBe('ok');
   });
 
-  test('5.7a an active card stays live during review', async ({ world }) => {
+  test('3.5.7a an active card stays live during review', async ({ world }) => {
     const A = await world.person('alice');
     const card = await activeCard(A);
     expect((await submitRenewal(A, card.slug)).status()).toBe(201);
@@ -872,7 +901,7 @@ test.describe('Part 5: Renewal and premium upgrade', () => {
     expect(await availability(world, card.slug)).toBe('ok');
   });
 
-  test('5.8 one payment waiting at a time', async ({ world }) => {
+  test('3.5.8 one payment waiting at a time', async ({ world }) => {
     const T = await world.thakhin();
     const A = await world.person('alice');
     const card = await activeCard(A);
@@ -896,7 +925,7 @@ test.describe('Part 5: Renewal and premium upgrade', () => {
     expect((await submitRenewal(A, card.slug)).status()).toBe(201);
   });
 
-  test('5.9 legacy cards', async ({ world }) => {
+  test('3.5.9 legacy cards', async ({ world }) => {
     const A = await world.person('alice');
     const card = await givePersonalCard(A);
     expect(await availability(world, card.slug)).toBe('ok');
@@ -908,7 +937,7 @@ test.describe('Part 5: Renewal and premium upgrade', () => {
   });
 });
 
-test.describe('Part 6: The public card and contacts', () => {
+test.describe('Part 3.6: The public card and contacts', () => {
   async function interactions(cardId: string, type: string) {
     return sql(`select id from analytics where card_id = $1 and type = $2`, [
       cardId,
@@ -916,7 +945,7 @@ test.describe('Part 6: The public card and contacts', () => {
     ]);
   }
 
-  test('6.1 view and link clicks', async ({ world }) => {
+  test('3.6.1 view and link clicks', async ({ world }) => {
     const A = await world.person('alice');
     const card = await givePersonalCard(A);
     const visitor = (await world.anonymous()).request;
@@ -933,7 +962,7 @@ test.describe('Part 6: The public card and contacts', () => {
     expect(await interactions(card.id, 'save_action')).toHaveLength(1);
   });
 
-  test('6.2 exchange contact by form', async ({ world }) => {
+  test('3.6.2 exchange contact by form', async ({ world }) => {
     const A = await world.person('alice');
     const card = await givePersonalCard(A);
     const before = await emailsTo(A.email);
@@ -952,7 +981,7 @@ test.describe('Part 6: The public card and contacts', () => {
     expect(csv).toContain(`'=HYPERLINK`);
   });
 
-  test('6.3 seamless exchange', async ({ world }) => {
+  test('3.6.3 seamless exchange', async ({ world }) => {
     const A = await world.person('alice');
     const B = await world.person('bob');
     const card = await givePersonalCard(A);
@@ -967,7 +996,7 @@ test.describe('Part 6: The public card and contacts', () => {
     await expectError(await exchangeSeamlessly(B, card.slug, carols.id), 404);
   });
 
-  test('6.4 exchanging with yourself', async ({ world }) => {
+  test('3.6.4 exchanging with yourself', async ({ world }) => {
     const A = await world.person('alice');
     const card = await givePersonalCard(A);
     await expectError(
@@ -978,7 +1007,7 @@ test.describe('Part 6: The public card and contacts', () => {
     expect(await myContacts(A)).toHaveLength(0);
   });
 
-  test('6.5 paused cards take nothing', async ({ world }) => {
+  test('3.6.5 paused cards take nothing', async ({ world }) => {
     const A = await world.person('alice');
     const card = await activeCard(A);
     await setPeriodEnd(card.id, new Date(Date.now() - DAY));
@@ -994,9 +1023,9 @@ test.describe('Part 6: The public card and contacts', () => {
     expect(await interactions(card.id, 'view')).toHaveLength(0);
   });
 
-  // test.skip('6.6 rate limits (checked by hand; e2e runs with rate limits off)', () => {});
+  // test.skip('3.6.6 rate limits (checked by hand; e2e runs with rate limits off)', () => {});
 
-  test('6.7 contacts are private', async ({ world }) => {
+  test('3.6.7 contacts are private', async ({ world }) => {
     const A = await world.person('alice');
     const B = await world.person('bob');
     const card = await givePersonalCard(A);
@@ -1028,25 +1057,58 @@ test.describe('Part 6: The public card and contacts', () => {
     ).toBe(404);
   });
 
-  test('6.8 contacts list and export', async ({ world }) => {
+  test('3.6.8 contacts list and export', async ({ world }) => {
     const A = await world.person('alice');
     const kept = await givePersonalCard(A);
     const removed = await givePersonalCard(A);
     await exchangeByForm(world, kept.slug, 'Kept Contact');
     await exchangeByForm(world, removed.slug, 'Removed Contact');
     await A.api.delete(`/api/cards/${removed.slug}`);
-    const names = (await myContacts(A)).map((item) => item.name);
-    expect(names).toEqual(
+    const contacts = await myContacts(A);
+    expect(contacts.map((item) => item.name)).toEqual(
       expect.arrayContaining(['Kept Contact', 'Removed Contact'])
     );
+    for (const contact of contacts)
+      expect(new Date(contact.createdAt).toISOString()).toBe(contact.createdAt);
 
     const B = await world.person('bob');
     expect(await myContacts(B)).toHaveLength(0);
   });
+
+  test('3.6.9 manual contact needs only first name and phone', async ({
+    world,
+  }) => {
+    const A = await world.person('alice');
+    const own = await space(A);
+    await givePersonalCard(A);
+    const create = (data: Record<string, unknown>) =>
+      A.api.post(`/api/organizations/${own.slug}/contacts`, { data });
+
+    const created = await create({ firstName: 'Min', phone: '91234567' });
+    expect(created.status(), await created.text()).toBe(201);
+    const [row] = await sql(
+      `select name, position, company, email, source from contact_exchange where id = $1`,
+      [(await created.json()).id]
+    );
+    expect(row).toEqual({
+      name: 'Min',
+      position: null,
+      company: null,
+      email: null,
+      source: 'manual',
+    });
+
+    await expectError(await create({ firstName: 'Min' }), 400, 'Invalid phone');
+    await expectError(
+      await create({ phone: '91234567' }),
+      400,
+      'Invalid firstName'
+    );
+  });
 });
 
-test.describe('Part 7: Access checks (API)', () => {
-  test("7.1 someone else's things are not found", async ({ world }) => {
+test.describe('Part 3.7: Access checks (API)', () => {
+  test("3.7.1 someone else's things are not found", async ({ world }) => {
     const A = await world.person('alice');
     const B = await world.person('bob');
     const card = await activeCard(A);
@@ -1090,8 +1152,8 @@ test.describe('Part 7: Access checks (API)', () => {
   });
 });
 
-test.describe('Part 8: Reliability (API)', () => {
-  test('8.1 two tabs edit the same card', async ({ world }) => {
+test.describe('Part 3.8: Reliability (API)', () => {
+  test('3.8.1 two tabs edit the same card', async ({ world }) => {
     const A = await world.person('alice');
     const card = await givePersonalCard(A);
     const form = {
@@ -1113,7 +1175,7 @@ test.describe('Part 8: Reliability (API)', () => {
     expect(saved.socials).toHaveLength(1);
   });
 
-  test('8.2 two cards take the same slug at once', async ({ world }) => {
+  test('3.8.2 two cards take the same slug at once', async ({ world }) => {
     const A = await world.person('alice');
     const B = await world.person('bob');
     const mine = await givePersonalCard(A);
@@ -1126,7 +1188,9 @@ test.describe('Part 8: Reliability (API)', () => {
     expect(await statuses(results)).toEqual([200, 409]);
   });
 
-  test('8.3 approve and reject the same payment at once', async ({ world }) => {
+  test('3.8.3 approve and reject the same payment at once', async ({
+    world,
+  }) => {
     const T = await world.thakhin();
     const A = await world.person('alice');
     const card = await activeCard(A);
@@ -1149,7 +1213,7 @@ test.describe('Part 8: Reliability (API)', () => {
     }
   });
 
-  test('8.4 request submitted while email is down', async ({ world }) => {
+  test('3.8.4 request submitted while email is down', async ({ world }) => {
     const A = await world.person('alice');
     await setEmailDown(true);
     try {
@@ -1163,7 +1227,7 @@ test.describe('Part 8: Reliability (API)', () => {
     }
   });
 
-  test('8.5 expiry task', async ({ world }) => {
+  test('3.8.5 expiry task', async ({ world }) => {
     const T = await world.thakhin();
     const A = await world.person('alice');
     const card = await activeCard(A);

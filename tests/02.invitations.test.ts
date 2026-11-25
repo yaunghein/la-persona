@@ -141,8 +141,8 @@ async function statuses(responses: { status(): number }[]) {
   return responses.map((response) => response.status()).sort();
 }
 
-test.describe('Part 1: Organizer invites (Thakhin)', () => {
-  test('1.1 create a community with an organizer', async ({ world }) => {
+test.describe('Part 2.1: Organizer invites (Thakhin)', () => {
+  test('2.1.1 create a community with an organizer', async ({ world }) => {
     const T = await world.thakhin();
     const email = uniqueEmail('org');
     const response = await T.api.post('/api/admin/organizations', {
@@ -168,7 +168,7 @@ test.describe('Part 1: Organizer invites (Thakhin)', () => {
     expect(days).toBeLessThan(7.1);
   });
 
-  test('1.2 organizer accepts as a brand-new account', async ({ world }) => {
+  test('2.1.2 organizer accepts as a brand-new account', async ({ world }) => {
     const T = await world.thakhin();
     const email = uniqueEmail('org');
     const response = await T.api.post('/api/admin/organizations', {
@@ -192,13 +192,13 @@ test.describe('Part 1: Organizer invites (Thakhin)', () => {
     await personalSpace(O);
   });
 
-  test('1.3 invite a second organizer later', async ({ world }) => {
+  test('2.1.3 invite a second organizer later', async ({ world }) => {
     const { community } = await createCommunity(world);
     const O2 = await addOrganizer(world, community);
     expect((await membership(community, O2))?.role).toBe('admin');
   });
 
-  test('1.3a inviting the same organizer twice refreshes the invite', async ({
+  test('2.1.3a inviting the same organizer twice refreshes the invite', async ({
     world,
   }) => {
     const T = await world.thakhin();
@@ -229,7 +229,7 @@ test.describe('Part 1: Organizer invites (Thakhin)', () => {
     expect((await accept(O2, first.id)).status()).toBe(200);
   });
 
-  test('1.4 organizer invite to someone already in the community', async ({
+  test('2.1.4 organizer invite to someone already in the community', async ({
     world,
   }) => {
     const T = await world.thakhin();
@@ -247,7 +247,7 @@ test.describe('Part 1: Organizer invites (Thakhin)', () => {
     );
   });
 
-  test('1.5 organizer invites only exist for communities', async ({
+  test('2.1.5 organizer invites only exist for communities', async ({
     world,
   }) => {
     const T = await world.thakhin();
@@ -261,7 +261,7 @@ test.describe('Part 1: Organizer invites (Thakhin)', () => {
     await expectError(response, 409, 'Only communities have organizers.');
   });
 
-  test('1.6 expired organizer invite', async ({ world }) => {
+  test('2.1.6 expired organizer invite', async ({ world }) => {
     const T = await world.thakhin();
     const { community } = await createCommunity(world);
     const email = uniqueEmail('new');
@@ -284,7 +284,9 @@ test.describe('Part 1: Organizer invites (Thakhin)', () => {
     );
   });
 
-  test('1.7 nobody else can accept an organizer invite', async ({ world }) => {
+  test('2.1.7 nobody else can accept an organizer invite', async ({
+    world,
+  }) => {
     const T = await world.thakhin();
     const { community, O } = await createCommunity(world);
     const email = uniqueEmail('new');
@@ -305,8 +307,8 @@ test.describe('Part 1: Organizer invites (Thakhin)', () => {
   });
 });
 
-test.describe('Part 2: Member and volunteer invites (Organizer)', () => {
-  test('2.1 invite a member', async ({ world }) => {
+test.describe('Part 2.2: Member and volunteer invites (Organizer)', () => {
+  test('2.2.1 invite a member', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const email = uniqueEmail('member');
     await invite(O, community, email);
@@ -319,7 +321,7 @@ test.describe('Part 2: Member and volunteer invites (Organizer)', () => {
     );
   });
 
-  test('2.2 invite a volunteer', async ({ world }) => {
+  test('2.2.2 invite a volunteer', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const email = uniqueEmail('vol');
     await invite(O, community, email, 'volunteer');
@@ -336,7 +338,7 @@ test.describe('Part 2: Member and volunteer invites (Organizer)', () => {
     );
   });
 
-  test('2.3 existing user accepts', async ({ world }) => {
+  test('2.2.3 existing user accepts', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const M = await world.person('member');
     const space = await personalSpace(M);
@@ -365,7 +367,7 @@ test.describe('Part 2: Member and volunteer invites (Organizer)', () => {
     expect(personal).toHaveLength(1);
   });
 
-  test('2.4 new user accepts', async ({ world }) => {
+  test('2.2.4 new user accepts', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const email = uniqueEmail('new');
     const id = await invite(O, community, email);
@@ -376,7 +378,7 @@ test.describe('Part 2: Member and volunteer invites (Organizer)', () => {
     await personalSpace(N);
   });
 
-  test('2.5 volunteer accepts', async ({ world }) => {
+  test('2.2.5 volunteer accepts', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const VOL = await addMember(world, community, O, 'vol', 'volunteer');
     expect((await membership(community, VOL))?.role).toBe('volunteer');
@@ -392,7 +394,7 @@ test.describe('Part 2: Member and volunteer invites (Organizer)', () => {
     ).toBe(403);
   });
 
-  test('2.6 wrong account sees a masked address', async ({ world }) => {
+  test('2.2.6 wrong account sees a masked address', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const email = uniqueEmail('member');
     const id = await invite(O, community, email);
@@ -412,7 +414,7 @@ test.describe('Part 2: Member and volunteer invites (Organizer)', () => {
     expect(await membership(community, X)).toBeNull();
   });
 
-  test("2.7 email case doesn't matter", async ({ world }) => {
+  test("2.2.7 email case doesn't matter", async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const email = uniqueEmail('case');
     const id = await invite(O, community, email.toUpperCase());
@@ -422,7 +424,7 @@ test.describe('Part 2: Member and volunteer invites (Organizer)', () => {
     expect((await accept(person, id)).status()).toBe(200);
   });
 
-  test('2.8 re-sending an invite replaces it', async ({ world }) => {
+  test('2.2.8 re-sending an invite replaces it', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const email = uniqueEmail('vol2');
     const first = await invite(O, community, email);
@@ -436,7 +438,7 @@ test.describe('Part 2: Member and volunteer invites (Organizer)', () => {
     await expect.poll(() => emailsTo(email, MEMBER_SUBJECT)).toBe(2);
   });
 
-  test('2.9 invite someone already in the community', async ({ world }) => {
+  test('2.2.9 invite someone already in the community', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const M = await addMember(world, community, O, 'member');
     const before = await emailsTo(M.email, MEMBER_SUBJECT);
@@ -445,7 +447,7 @@ test.describe('Part 2: Member and volunteer invites (Organizer)', () => {
     expect(await emailsTo(M.email, MEMBER_SUBJECT)).toBe(before);
   });
 
-  test("2.10 organizers can't grant Organizer", async ({ world }) => {
+  test("2.2.10 organizers can't grant Organizer", async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const email = uniqueEmail('x');
     const response = await O.api.post(
@@ -461,7 +463,7 @@ test.describe('Part 2: Member and volunteer invites (Organizer)', () => {
     ).toHaveLength(0);
   });
 
-  test('2.11 cancel an invite', async ({ world }) => {
+  test('2.2.11 cancel an invite', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const email = uniqueEmail('vol2');
     const id = await invite(O, community, email);
@@ -474,7 +476,7 @@ test.describe('Part 2: Member and volunteer invites (Organizer)', () => {
     await expectError(await accept(person, id), 409);
   });
 
-  test('2.12 expired member invite', async ({ world }) => {
+  test('2.2.12 expired member invite', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const email = uniqueEmail('late');
     const id = await invite(O, community, email);
@@ -486,7 +488,7 @@ test.describe('Part 2: Member and volunteer invites (Organizer)', () => {
     expect((await accept(person, fresh)).status()).toBe(200);
   });
 
-  test('2.13 accept twice', async ({ world }) => {
+  test('2.2.13 accept twice', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const email = uniqueEmail('member');
     const id = await invite(O, community, email);
@@ -498,7 +500,7 @@ test.describe('Part 2: Member and volunteer invites (Organizer)', () => {
     expect((await accept(M, id)).status()).toBe(200);
   });
 
-  test('2.14 signed-out preview stays private', async ({ world }) => {
+  test('2.2.14 signed-out preview stays private', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const email = uniqueEmail('member');
     const id = await invite(O, community, email);
@@ -517,8 +519,8 @@ test.describe('Part 2: Member and volunteer invites (Organizer)', () => {
   });
 });
 
-test.describe('Part 3: Only the invitee joins', () => {
-  test('3.1 resend a pending invite', async ({ world }) => {
+test.describe('Part 2.3: Only the invitee joins', () => {
+  test('2.3.1 resend a pending invite', async ({ world }) => {
     test.slow();
     const { community, O } = await createCommunity(world);
     const email = uniqueEmail('later');
@@ -540,7 +542,7 @@ test.describe('Part 3: Only the invitee joins', () => {
     expect(rows).toHaveLength(1);
   });
 
-  test("3.2 organizers can't accept for an existing user", async ({
+  test("2.3.2 organizers can't accept for an existing user", async ({
     world,
   }) => {
     const { community, O } = await createCommunity(world);
@@ -555,7 +557,7 @@ test.describe('Part 3: Only the invitee joins', () => {
     expect(await communityCard(community, X)).toBeNull();
   });
 
-  test('3.3 expired invite, resent', async ({ world }) => {
+  test('2.3.3 expired invite, resent', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const X = await world.person('outsider');
     const id = await invite(O, community, X.email);
@@ -565,7 +567,7 @@ test.describe('Part 3: Only the invitee joins', () => {
     expect((await accept(X, fresh)).status()).toBe(200);
   });
 
-  test('3.4 company invites', async ({ world }) => {
+  test('2.3.4 company invites', async ({ world }) => {
     const company = await world.company();
     const A = await world.person('admin');
     await world.hire(company, A, { role: 'admin' });
@@ -577,7 +579,7 @@ test.describe('Part 3: Only the invitee joins', () => {
     );
   });
 
-  test('3.5 organizer invites have no resend here', async ({ world }) => {
+  test('2.3.5 organizer invites have no resend here', async ({ world }) => {
     test.slow();
     const T = await world.thakhin();
     const { community, O } = await createCommunity(world);
@@ -599,14 +601,14 @@ test.describe('Part 3: Only the invitee joins', () => {
   });
 });
 
-test.describe('Part 4: Join links', () => {
-  test('4.1 copy the link', async ({ world }) => {
+test.describe('Part 2.4: Join links', () => {
+  test('2.4.1 copy the link', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const first = await joinToken(O, community);
     expect(await joinToken(O, community)).toBe(first);
   });
 
-  test('4.2 preview signed out', async ({ world }) => {
+  test('2.4.2 preview signed out', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const token = await joinToken(O, community);
     const visitor = await world.anonymous();
@@ -625,7 +627,7 @@ test.describe('Part 4: Join links', () => {
     expect(JSON.stringify(body)).not.toContain(O.email);
   });
 
-  test('4.3 join', async ({ world }) => {
+  test('2.4.3 join', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const X = await world.person('outsider');
     const joined = await joinByLink(X, await joinToken(O, community));
@@ -637,7 +639,7 @@ test.describe('Part 4: Join links', () => {
     expect(await communityCard(community, X)).not.toBeNull();
   });
 
-  test('4.4 join again', async ({ world }) => {
+  test('2.4.4 join again', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const X = await world.person('outsider');
     const token = await joinToken(O, community);
@@ -647,7 +649,7 @@ test.describe('Part 4: Join links', () => {
     expect((await again.json()).redirectTo).toBe(`/platform/${community.slug}`);
   });
 
-  test('4.5 bad tokens', async ({ world }) => {
+  test('2.4.5 bad tokens', async ({ world }) => {
     const { O } = await createCommunity(world);
     const company = await world.company();
     const visitor = await world.anonymous();
@@ -659,7 +661,7 @@ test.describe('Part 4: Join links', () => {
     ).toBe(404);
   });
 
-  test('4.6 who can see the link', async ({ world }) => {
+  test('2.4.6 who can see the link', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const M = await addMember(world, community, O, 'member');
     const VOL = await addMember(world, community, O, 'vol', 'volunteer');
@@ -670,7 +672,7 @@ test.describe('Part 4: Join links', () => {
     expect((await X.api.get(path)).status()).toBe(404);
   });
 
-  test('4.7 a removed member rejoins', async ({ world }) => {
+  test('2.4.7 a removed member rejoins', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const X = await world.person('outsider');
     const token = await joinToken(O, community);
@@ -691,8 +693,8 @@ test.describe('Part 4: Join links', () => {
   });
 });
 
-test.describe('Part 5: Onboarding invites', () => {
-  test('5.1 create and send', async ({ world }) => {
+test.describe('Part 2.5: Onboarding invites', () => {
+  test('2.5.1 create and send', async ({ world }) => {
     const email = uniqueEmail('onboard');
     const { id, cardId, organizationId } = await onboarding(world, email);
     await waitForEmail(email, CARD_READY_SUBJECT);
@@ -712,7 +714,7 @@ test.describe('Part 5: Onboarding invites', () => {
     ).toHaveLength(0);
   });
 
-  test('5.2 new user accepts', async ({ world }) => {
+  test('2.5.2 new user accepts', async ({ world }) => {
     const email = uniqueEmail('onboard');
     const { id, cardId, organizationId } = await onboarding(world, email);
     const P = await world.person('onboard', email);
@@ -738,7 +740,7 @@ test.describe('Part 5: Onboarding invites', () => {
     expect(await systemPayments(id)).toHaveLength(1);
   });
 
-  test('5.3 existing user accepts', async ({ world }) => {
+  test('2.5.3 existing user accepts', async ({ world }) => {
     const M = await world.person('member');
     const space = await personalSpace(M);
     const { id, cardId, organizationId } = await onboarding(world, M.email);
@@ -758,7 +760,7 @@ test.describe('Part 5: Onboarding invites', () => {
     expect(spaces).toHaveLength(1);
   });
 
-  test('5.4 wrong account', async ({ world }) => {
+  test('2.5.4 wrong account', async ({ world }) => {
     const { id } = await onboarding(world, uniqueEmail('onboard'));
     const X = await world.person('outsider');
     await expectError(
@@ -768,7 +770,7 @@ test.describe('Part 5: Onboarding invites', () => {
     await expectError(await acceptOnboarding(X, id), 403);
   });
 
-  test('5.5 accept twice', async ({ world }) => {
+  test('2.5.5 accept twice', async ({ world }) => {
     const email = uniqueEmail('onboard');
     const { id } = await onboarding(world, email);
     const P = await world.person('onboard', email);
@@ -781,7 +783,7 @@ test.describe('Part 5: Onboarding invites', () => {
     expect(await systemPayments(id)).toHaveLength(1);
   });
 
-  test('5.6 expired, then resent', async ({ world }) => {
+  test('2.5.6 expired, then resent', async ({ world }) => {
     const email = uniqueEmail('onboard');
     const { T, id } = await onboarding(world, email);
     await sql(
@@ -803,7 +805,7 @@ test.describe('Part 5: Onboarding invites', () => {
     expect((await acceptOnboarding(P, id)).status()).toBe(200);
   });
 
-  test('5.7 cancel', async ({ world }) => {
+  test('2.5.7 cancel', async ({ world }) => {
     const { T, id, cardId, organizationId } = await onboarding(
       world,
       uniqueEmail('onboard')
@@ -832,7 +834,7 @@ test.describe('Part 5: Onboarding invites', () => {
     );
   });
 
-  test('5.8 one open invite per card', async ({ world }) => {
+  test('2.5.8 one open invite per card', async ({ world }) => {
     const { T, cardId } = await onboarding(world, uniqueEmail('onboard'));
     await expectError(
       await createOnboarding(T, uniqueEmail('other'), cardId),
@@ -864,7 +866,7 @@ test.describe('Part 5: Onboarding invites', () => {
     );
   });
 
-  test('5.9 validation', async ({ world }) => {
+  test('2.5.9 validation', async ({ world }) => {
     const T = await world.thakhin();
     const cardId = await unclaimedCard(world);
     for (const overrides of [
@@ -886,7 +888,7 @@ test.describe('Part 5: Onboarding invites', () => {
     }
   });
 
-  test('5.10 zero free months', async ({ world }) => {
+  test('2.5.10 zero free months', async ({ world }) => {
     const T = await world.thakhin();
     const response = await createOnboarding(
       T,
@@ -900,7 +902,9 @@ test.describe('Part 5: Onboarding invites', () => {
     expect(JSON.stringify(await response.json())).toContain('freeMonths');
   });
 
-  test('5.12 cancelled or expired invite for a new user', async ({ world }) => {
+  test('2.5.12 cancelled or expired invite for a new user', async ({
+    world,
+  }) => {
     test.slow();
     const email = uniqueEmail('n2');
     const { T, id } = await onboarding(world, email);
@@ -940,8 +944,8 @@ test.describe('Part 5: Onboarding invites', () => {
   });
 });
 
-test.describe('Part 6: Company card invites', () => {
-  test('6.1 company invite and community invite for the same person', async ({
+test.describe('Part 2.6: Company card invites', () => {
+  test('2.6.1 company invite and community invite for the same person', async ({
     world,
   }) => {
     const { community, O } = await createCommunity(world);
@@ -956,7 +960,7 @@ test.describe('Part 6: Company card invites', () => {
     expect((await world.card(company, companyInvite.id)).userId).toBe(M.userId);
   });
 
-  test('6.2 company invite link on another account', async ({ world }) => {
+  test('2.6.2 company invite link on another account', async ({ world }) => {
     const company = await world.company();
     const email = uniqueEmail('member');
     const invited = await world.invite(company, draft(email));
@@ -967,8 +971,8 @@ test.describe('Part 6: Company card invites', () => {
   });
 });
 
-test.describe('Part 7: Access checks (API)', () => {
-  test('7.1 signed out', async ({ world }) => {
+test.describe('Part 2.7: Access checks (API)', () => {
+  test('2.7.1 signed out', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const id = await invite(O, community, uniqueEmail('m'));
     const token = await joinToken(O, community);
@@ -1004,7 +1008,7 @@ test.describe('Part 7: Access checks (API)', () => {
     ).toBe(404);
   });
 
-  test('7.2 member and volunteer', async ({ world }) => {
+  test('2.7.2 member and volunteer', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const pending = await invite(O, community, uniqueEmail('p'));
     for (const role of ['member', 'volunteer'] as const) {
@@ -1024,7 +1028,7 @@ test.describe('Part 7: Access checks (API)', () => {
     }
   });
 
-  test('7.3 organizer of another community', async ({ world }) => {
+  test('2.7.3 organizer of another community', async ({ world }) => {
     const { O } = await createCommunity(world);
     const beta = await createCommunity(world);
     const betaInvite = await invite(beta.O, beta.community, uniqueEmail('b'));
@@ -1034,7 +1038,7 @@ test.describe('Part 7: Access checks (API)', () => {
     expect((await cancel(O, betaInvite)).status()).toBe(404);
   });
 
-  test("7.4 organizer can't escalate", async ({ world }) => {
+  test("2.7.4 organizer can't escalate", async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const M = await addMember(world, community, O, 'member');
     const O2 = await addOrganizer(world, community);
@@ -1059,7 +1063,7 @@ test.describe('Part 7: Access checks (API)', () => {
     expect(bypass.status()).toBe(404);
   });
 
-  test('7.5 personal and company workspaces have no email invites', async ({
+  test('2.7.5 personal and company workspaces have no email invites', async ({
     world,
   }) => {
     const A = await world.person('alice');
@@ -1082,7 +1086,7 @@ test.describe('Part 7: Access checks (API)', () => {
     );
   });
 
-  test('7.6 onboarding admin routes', async ({ world }) => {
+  test('2.7.6 onboarding admin routes', async ({ world }) => {
     const { id } = await onboarding(world, uniqueEmail('onboard'));
     const M = await world.person('member');
     expect(
@@ -1097,8 +1101,8 @@ test.describe('Part 7: Access checks (API)', () => {
   });
 });
 
-test.describe('Part 8: Reliability (API)', () => {
-  test('8.1 accept a community invite in two tabs at once', async ({
+test.describe('Part 2.8: Reliability (API)', () => {
+  test('2.8.1 accept a community invite in two tabs at once', async ({
     world,
   }) => {
     const { community, O } = await createCommunity(world);
@@ -1111,7 +1115,7 @@ test.describe('Part 8: Reliability (API)', () => {
     expect(results.some((result) => result.status() === 200)).toBe(true);
   });
 
-  test('8.2 join link double-click', async ({ world }) => {
+  test('2.8.2 join link double-click', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const X = await world.person('outsider');
     const token = await joinToken(O, community);
@@ -1123,7 +1127,7 @@ test.describe('Part 8: Reliability (API)', () => {
       expect([200, 201]).toContain(status);
   });
 
-  test('8.3 join link and email invite at once', async ({ world }) => {
+  test('2.8.3 join link and email invite at once', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const email = uniqueEmail('outsider');
     const id = await invite(O, community, email);
@@ -1135,7 +1139,7 @@ test.describe('Part 8: Reliability (API)', () => {
     expect((await membership(community, X))?.role).toBe('member');
   });
 
-  test('8.4 cancel while the invitee accepts', async ({ world }) => {
+  test('2.8.4 cancel while the invitee accepts', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const email = uniqueEmail('vol2');
     const id = await invite(O, community, email);
@@ -1154,7 +1158,7 @@ test.describe('Part 8: Reliability (API)', () => {
     }
   });
 
-  test('8.5 onboarding accept twice at once', async ({ world }) => {
+  test('2.8.5 onboarding accept twice at once', async ({ world }) => {
     const email = uniqueEmail('onboard');
     const { id } = await onboarding(world, email);
     const P = await world.person('onboard', email);
@@ -1166,7 +1170,7 @@ test.describe('Part 8: Reliability (API)', () => {
     expect(await systemPayments(id)).toHaveLength(1);
   });
 
-  test('8.6 create two onboarding invites for one card at once', async ({
+  test('2.8.6 create two onboarding invites for one card at once', async ({
     world,
   }) => {
     const T = await world.thakhin();
@@ -1183,7 +1187,7 @@ test.describe('Part 8: Reliability (API)', () => {
     expect(pending).toHaveLength(1);
   });
 
-  test('8.6a cancel while the invitee accepts (onboarding)', async ({
+  test('2.8.6a cancel while the invitee accepts (onboarding)', async ({
     world,
   }) => {
     const email = uniqueEmail('onboard');
@@ -1207,7 +1211,7 @@ test.describe('Part 8: Reliability (API)', () => {
     else expect(card?.user_id).toBeNull();
   });
 
-  test('8.7 email is down', async ({ world }) => {
+  test('2.8.7 email is down', async ({ world }) => {
     const T = await world.thakhin();
     const { community, O } = await createCommunity(world);
     await setEmailDown(true);

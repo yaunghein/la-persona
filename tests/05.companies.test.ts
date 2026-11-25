@@ -92,8 +92,8 @@ async function statuses(responses: { status(): number }[]) {
   return responses.map((response) => response.status()).sort();
 }
 
-test.describe('Part 1: Thakhin creates the company', () => {
-  test('1.1 create the company', async ({ world }) => {
+test.describe('Part 5.1: Thakhin creates the company', () => {
+  test('5.1.1 create the company', async ({ world }) => {
     test.slow();
     const T = await world.thakhin();
     const name = `Acme UI ${crypto.randomUUID().slice(0, 6)}`;
@@ -118,7 +118,7 @@ test.describe('Part 1: Thakhin creates the company', () => {
     world.companyIds.push(created!.id);
   });
 
-  test('1.2 list filters by type', async ({ world }) => {
+  test('5.1.2 list filters by type', async ({ world }) => {
     const T = await world.thakhin();
     const company = await world.company();
     const list = await (await T.api.get('/api/admin/organizations')).json();
@@ -128,7 +128,7 @@ test.describe('Part 1: Thakhin creates the company', () => {
     expect(row.type).toBe('company');
   });
 
-  test('1.3 edit company branding', async ({ world }) => {
+  test('5.1.3 edit company branding', async ({ world }) => {
     const T = await world.thakhin();
     const company = await world.company();
     const spline = 'https://prod.spline.design/acme/scene.splinecode';
@@ -163,11 +163,37 @@ test.describe('Part 1: Thakhin creates the company', () => {
   });
 
   // Uploads need S3, which the e2e stack doesn't run.
-  // test.skip('1.4 upload assets', () => {});
+  // test.skip('5.1.4 upload assets', () => {});
+
+  test('5.1.5 background theme reaches every card', async ({ world }) => {
+    const T = await world.thakhin();
+    const { company, mike } = await staffedCompany(world);
+    const save = (data: Record<string, unknown> = {}) =>
+      T.api.patch(`/api/admin/organizations/${company.id}`, {
+        data: { name: company.name, slug: company.slug, ...data },
+      });
+    const themes = async () =>
+      (
+        await sql(
+          `select background_theme from card where organization_id = $1`,
+          [company.id]
+        )
+      ).map((row) => row.background_theme);
+
+    const saved = await save({ backgroundTheme: 'light' });
+    expect(saved.status(), await saved.text()).toBe(200);
+    expect(await themes()).toEqual(['light', 'light']);
+
+    await sql(`update card set background_theme = 'dark' where id = $1`, [
+      mike.id,
+    ]);
+    expect((await save()).status()).toBe(200);
+    expect((await themes()).sort()).toEqual(['dark', 'light']);
+  });
 });
 
-test.describe('Part 2: Creating cards and sending invites', () => {
-  test('2.1 create the first admin card, free month only', async ({
+test.describe('Part 5.2: Creating cards and sending invites', () => {
+  test('5.2.1 create the first admin card, free month only', async ({
     world,
   }) => {
     test.slow();
@@ -222,7 +248,7 @@ test.describe('Part 2: Creating cards and sending invites', () => {
     ]);
   });
 
-  test('2.2 batch with free month plus paid term', async ({ world }) => {
+  test('5.2.2 batch with free month plus paid term', async ({ world }) => {
     const company = await world.company();
     const m1 = `mike-${crypto.randomUUID().slice(0, 8)}@test.local`;
     const m3 = `ivy-${crypto.randomUUID().slice(0, 8)}@test.local`;
@@ -269,7 +295,7 @@ test.describe('Part 2: Creating cards and sending invites', () => {
     expect(gapDays).toBeLessThan(32);
   });
 
-  test('2.3 validation errors', async ({ world }) => {
+  test('5.2.3 validation errors', async ({ world }) => {
     const company = await world.company();
     const taken = `m1-${crypto.randomUUID().slice(0, 8)}@test.local`;
     const twice = `twice-${crypto.randomUUID().slice(0, 8)}@test.local`;
@@ -298,8 +324,8 @@ test.describe('Part 2: Creating cards and sending invites', () => {
   });
 });
 
-test.describe('Part 3: Accepting invites', () => {
-  test('3.1 admin accepts', async ({ world }) => {
+test.describe('Part 5.3: Accepting invites', () => {
+  test('5.3.1 admin accepts', async ({ world }) => {
     test.slow();
     const company = await world.company();
     const A = await world.person('admin');
@@ -326,7 +352,7 @@ test.describe('Part 3: Accepting invites', () => {
     expect(payers).toEqual([{ paid_by_user_id: A.userId }]);
   });
 
-  test('3.2 accepting again redirects to the card', async ({ world }) => {
+  test('5.3.2 accepting again redirects to the card', async ({ world }) => {
     const company = await world.company();
     const A = await world.person('admin');
     const invited = await world.invite(company, draft(A, { role: 'admin' }));
@@ -340,7 +366,7 @@ test.describe('Part 3: Accepting invites', () => {
     );
   });
 
-  test('3.3 wrong account', async ({ world }) => {
+  test('5.3.3 wrong account', async ({ world }) => {
     const company = await world.company();
     const V = await world.person('visitor');
     const invited = await world.invite(
@@ -358,7 +384,7 @@ test.describe('Part 3: Accepting invites', () => {
     expect((await world.card(company, invited.id)).state).toBe('pending');
   });
 
-  test('3.4 member accepts', async ({ world }) => {
+  test('5.3.4 member accepts', async ({ world }) => {
     const company = await world.company();
     const M1 = await world.person('m1');
     const personal = await givePersonalCard(M1);
@@ -394,7 +420,7 @@ test.describe('Part 3: Accepting invites', () => {
     }
   });
 
-  test('3.5 what a member can edit', async ({ world }) => {
+  test('5.3.5 what a member can edit', async ({ world }) => {
     const company = await world.company();
     const M1 = await world.person('m1');
     const card = await world.hire(company, M1);
@@ -417,8 +443,8 @@ test.describe('Part 3: Accepting invites', () => {
   });
 });
 
-test.describe('Part 4: The company workspace (as A)', () => {
-  test('4.1 sidebar', async ({ world }) => {
+test.describe('Part 5.4: The company workspace (as A)', () => {
+  test('5.4.1 sidebar', async ({ world }) => {
     test.slow();
     const { company, A } = await staffedCompany(world);
     const page = await A.context.newPage();
@@ -431,7 +457,7 @@ test.describe('Part 4: The company workspace (as A)', () => {
     }
   });
 
-  test('4.2 settings → company', async ({ world }) => {
+  test('5.4.2 settings → company', async ({ world }) => {
     const { company, A, mike } = await staffedCompany(world);
     const name = `Acme Test Company ${crypto.randomUUID().slice(0, 4)}`;
 
@@ -454,7 +480,7 @@ test.describe('Part 4: The company workspace (as A)', () => {
     );
   });
 
-  test('4.3 settings → departments', async ({ world }) => {
+  test('5.4.3 settings → departments', async ({ world }) => {
     const { company, A } = await staffedCompany(world);
     const base = `/api/organizations/${company.slug}/departments`;
 
@@ -481,7 +507,7 @@ test.describe('Part 4: The company workspace (as A)', () => {
     expect(names).toEqual(['Sales']);
   });
 
-  test('4.4 members page', async ({ world }) => {
+  test('5.4.4 members page', async ({ world }) => {
     const { company, A, mike } = await staffedCompany(world);
     const ivy = unique('ivy');
     await world.invite(company, draft(ivy, { firstName: 'Ivy' }));
@@ -518,7 +544,7 @@ test.describe('Part 4: The company workspace (as A)', () => {
     await expect.poll(() => emailsTo(ivy, 'invited to join')).toBe(2);
   });
 
-  test('4.5 insights', async ({ world }) => {
+  test('5.4.5 insights', async ({ world }) => {
     const { company, A } = await staffedCompany(world);
     const data = await insights(A, company);
     expect(data).toMatchObject({ views: 0, clicks: 0, contacts: 0 });
@@ -527,8 +553,8 @@ test.describe('Part 4: The company workspace (as A)', () => {
   });
 });
 
-test.describe('Part 5: The public card and contacts', () => {
-  test('5.1 anonymous visitor', async ({ world }) => {
+test.describe('Part 5.5: The public card and contacts', () => {
+  test('5.5.1 anonymous visitor', async ({ world }) => {
     const { company, A, M1, mike } = await staffedCompany(world);
     const visitor = await world.anonymous();
     const interact = (type: string) =>
@@ -549,7 +575,7 @@ test.describe('Part 5: The public card and contacts', () => {
     expect(row).toMatchObject({ views: 1, contacts: 1 });
   });
 
-  test('5.2 exchange as a La Persona user', async ({ world }) => {
+  test('5.5.2 exchange as a La Persona user', async ({ world }) => {
     const { mike } = await staffedCompany(world);
     const V = await world.person('visitor');
     await givePersonalCard(V);
@@ -560,7 +586,7 @@ test.describe('Part 5: The public card and contacts', () => {
     expect(exchanged.status(), await exchanged.text()).toBeLessThan(300);
   });
 
-  test('5.3 contacts (as A)', async ({ world }) => {
+  test('5.5.3 contacts (as A)', async ({ world }) => {
     const { company, A, M1, mike } = await staffedCompany(world);
     const V = await world.person('visitor');
     await givePersonalCard(V);
@@ -586,7 +612,7 @@ test.describe('Part 5: The public card and contacts', () => {
     expect(header).toContain('Department');
   });
 
-  test('5.4 contacts (as M1)', async ({ world }) => {
+  test('5.5.4 contacts (as M1)', async ({ world }) => {
     const { M1, mike } = await staffedCompany(world);
     await exchangeByForm(world, mike.slug);
     await exchangeByForm(world, mike.slug);
@@ -595,8 +621,8 @@ test.describe('Part 5: The public card and contacts', () => {
   });
 });
 
-test.describe('Part 6: Offboarding', () => {
-  test('6.1 offboard Mike', async ({ world }) => {
+test.describe('Part 5.6: Offboarding', () => {
+  test('5.6.1 offboard Mike', async ({ world }) => {
     test.slow();
     const { company, A, M1, mike } = await staffedCompany(world);
     await exchangeByForm(world, mike.slug);
@@ -629,7 +655,7 @@ test.describe('Part 6: Offboarding', () => {
     expect(holder?.contactCount).toBe(2);
   });
 
-  test("6.2 Mike's side", async ({ world }) => {
+  test("5.6.2 Mike's side", async ({ world }) => {
     const { A, M1, mike } = await staffedCompany(world);
     const personal = await givePersonalCard(M1);
     await exchangeByForm(world, mike.slug);
@@ -649,7 +675,7 @@ test.describe('Part 6: Offboarding', () => {
     expect(kept?.user_id).toBe(M1.userId);
   });
 
-  test('6.3 old link', async ({ world }) => {
+  test('5.6.3 old link', async ({ world }) => {
     const { company, A, mike } = await staffedCompany(world);
     await offboard(A, mike);
 
@@ -665,7 +691,7 @@ test.describe('Part 6: Offboarding', () => {
     await expect(page.getByRole('button')).toHaveCount(0);
   });
 
-  test('6.4 nothing is recorded', async ({ world }) => {
+  test('5.6.4 nothing is recorded', async ({ world }) => {
     const { company, A, mike } = await staffedCompany(world);
     await offboard(A, mike);
     for (let visit = 0; visit < 3; visit += 1) {
@@ -679,7 +705,7 @@ test.describe('Part 6: Offboarding', () => {
     expect((await insights(A, company)).views).toBe(0);
   });
 
-  test('6.5 last admin', async ({ world }) => {
+  test('5.6.5 last admin', async ({ world }) => {
     const { company, A, alice } = await staffedCompany(world);
     await expectError(
       await offboard(A, alice),
@@ -689,7 +715,7 @@ test.describe('Part 6: Offboarding', () => {
     expect((await world.card(company, alice.id)).state).toBe('active');
   });
 
-  test('6.6 two admins offboard each other at once', async ({ world }) => {
+  test('5.6.6 two admins offboard each other at once', async ({ world }) => {
     const { company, A, alice } = await staffedCompany(world);
     const B = await world.person('admin2');
     const bob = await world.hire(company, B, {
@@ -710,8 +736,8 @@ test.describe('Part 6: Offboarding', () => {
   });
 });
 
-test.describe('Part 7: Reassigning a vacant card', () => {
-  test('7.1 assign to M2', async ({ world }) => {
+test.describe('Part 5.7: Reassigning a vacant card', () => {
+  test('5.7.1 assign to M2', async ({ world }) => {
     test.slow();
     const { company, A, M1, mike } = await staffedCompany(world);
     await M1.api.patch(`/api/cards/${mike.slug}`, {
@@ -747,7 +773,7 @@ test.describe('Part 7: Reassigning a vacant card', () => {
     expect(row?.socials ?? []).toEqual([]);
   });
 
-  test('7.2 links before acceptance', async ({ world }) => {
+  test('5.7.2 links before acceptance', async ({ world }) => {
     const { company, A, mike } = await staffedCompany(world);
     await offboard(A, mike);
     const nina = await (await assign(A, mike, unique('m2'))).json();
@@ -766,7 +792,7 @@ test.describe('Part 7: Reassigning a vacant card', () => {
     await expect(page.getByRole('button')).toHaveCount(0);
   });
 
-  test('7.3 re-invite before acceptance', async ({ world }) => {
+  test('5.7.3 re-invite before acceptance', async ({ world }) => {
     const { company, A, mike } = await staffedCompany(world);
     await offboard(A, mike);
     const M2 = await world.person('m2');
@@ -798,7 +824,7 @@ test.describe('Part 7: Reassigning a vacant card', () => {
     expect((await accept(M2, third.invitationId)).status()).toBe(200);
   });
 
-  test('7.4 already in the company', async ({ world }) => {
+  test('5.7.4 already in the company', async ({ world }) => {
     const { A, mike } = await staffedCompany(world);
     await offboard(A, mike);
     await expectError(
@@ -808,7 +834,7 @@ test.describe('Part 7: Reassigning a vacant card', () => {
     );
   });
 
-  test('7.5 M2 accepts', async ({ world }) => {
+  test('5.7.5 M2 accepts', async ({ world }) => {
     const { company, A, mike } = await staffedCompany(world);
     await offboard(A, mike);
     const M2 = await world.person('m2');
@@ -825,7 +851,7 @@ test.describe('Part 7: Reassigning a vacant card', () => {
     expect(rows.filter((row) => row.endedAt === null)).toHaveLength(1);
   });
 
-  test('7.6 one contact per holder', async ({ world }) => {
+  test('5.7.6 one contact per holder', async ({ world }) => {
     const { company, A, M1, mike } = await staffedCompany(world);
     await exchangeByForm(world, mike.slug);
     await exchangeByForm(world, mike.slug);
@@ -880,10 +906,35 @@ test.describe('Part 7: Reassigning a vacant card', () => {
     );
     expect((await insights(A, company)).views).toBe(1);
   });
+
+  test('5.7.7 activity credits the holder at the time', async ({ world }) => {
+    const T = await world.thakhin();
+    const { company, A, M1, mike } = await staffedCompany(world);
+    await exchangeByForm(world, mike.slug);
+    await exchangeByForm(world, mike.slug);
+    await offboard(A, mike);
+    const M2 = await world.person('m2');
+    const nina = await (await assign(A, mike, M2.email)).json();
+    await accept(M2, nina.invitationId);
+    await exchangeByForm(world, nina.slug);
+
+    const response = await T.api.get('/api/admin/user-activity', {
+      params: { organizationId: company.id },
+    });
+    expect(response.status(), await response.text()).toBe(200);
+    const rows = (await response.json()).items as {
+      userId: string;
+      connections: number;
+    }[];
+    const connectionsOf = (person: Person) =>
+      rows.find((row) => row.userId === person.userId)?.connections;
+    expect(connectionsOf(M1)).toBe(2);
+    expect(connectionsOf(M2)).toBe(1);
+  });
 });
 
-test.describe('Part 8: Cancelling an invite', () => {
-  test('8 cancel an invite nobody accepted', async ({ world }) => {
+test.describe('Part 5.8: Cancelling an invite', () => {
+  test('5.8 cancel an invite nobody accepted', async ({ world }) => {
     const { company, A } = await staffedCompany(world);
     const M3 = await world.person('m3');
     const ivy = await world.invite(company, draft(M3, { firstName: 'Ivy' }));
@@ -907,7 +958,7 @@ test.describe('Part 8: Cancelling an invite', () => {
   });
 });
 
-test.describe('Part 9: Thakhin payments and renewals', () => {
+test.describe('Part 5.9: Thakhin payments and renewals', () => {
   async function record(
     world: World,
     company: Company,
@@ -926,7 +977,7 @@ test.describe('Part 9: Thakhin payments and renewals', () => {
     });
   }
 
-  test('9.1 record a payment', async ({ world }) => {
+  test('5.9.1 record a payment', async ({ world }) => {
     const { company, A, alice, mike } = await staffedCompany(world);
     const response = await record(world, company, [alice, mike], {
       termYears: 2,
@@ -953,7 +1004,7 @@ test.describe('Part 9: Thakhin payments and renewals', () => {
     }
   });
 
-  test('9.2 extend to a date', async ({ world }) => {
+  test('5.9.2 extend to a date', async ({ world }) => {
     const { company, alice, mike } = await staffedCompany(world);
     const endAt = new Date();
     endAt.setMonth(endAt.getMonth() + 18);
@@ -981,7 +1032,7 @@ test.describe('Part 9: Thakhin payments and renewals', () => {
     );
   });
 
-  test('9.3 renaming in Thakhin', async ({ world }) => {
+  test('5.9.3 renaming in Thakhin', async ({ world }) => {
     const { company } = await staffedCompany(world);
     const T = await world.thakhin();
     const name = `Acme Final ${crypto.randomUUID().slice(0, 4)}`;
@@ -997,8 +1048,8 @@ test.describe('Part 9: Thakhin payments and renewals', () => {
   });
 });
 
-test.describe('Part 10: Paused cards', () => {
-  test('10.1 company card expires', async ({ world }) => {
+test.describe('Part 5.10: Paused cards', () => {
+  test('5.10.1 company card expires', async ({ world }) => {
     const { company, mike } = await staffedCompany(world);
     await setPeriodEnd(mike.id, new Date(Date.now() - 86_400_000));
 
@@ -1027,7 +1078,7 @@ test.describe('Part 10: Paused cards', () => {
     expect((await exchangeByForm(world, mike.slug)).status()).toBe(201);
   });
 
-  test('10.2 personal card expires', async ({ world }) => {
+  test('5.10.2 personal card expires', async ({ world }) => {
     test.slow();
     const P = await world.person('personal');
     const card = await givePersonalCard(P);
@@ -1059,7 +1110,7 @@ test.describe('Part 10: Paused cards', () => {
     );
   });
 
-  test('10.3 community cards never pause', async ({ world }) => {
+  test('5.10.3 community cards never pause', async ({ world }) => {
     const T = await world.thakhin();
     const O = await world.person('organizer');
     const created = await T.api.post('/api/admin/organizations', {
@@ -1089,8 +1140,8 @@ test.describe('Part 10: Paused cards', () => {
   });
 });
 
-test.describe('Part 11: Deleting a user', () => {
-  test("11.1 the only admin can't be deleted", async ({ world }) => {
+test.describe('Part 5.11: Deleting a user', () => {
+  test("5.11.1 the only admin can't be deleted", async ({ world }) => {
     const { company, A, alice } = await staffedCompany(world);
     const T = await world.thakhin();
     await expectError(
@@ -1101,7 +1152,7 @@ test.describe('Part 11: Deleting a user', () => {
     expect((await world.card(company, alice.id)).state).toBe('active');
   });
 
-  test('11.2 delete a member', async ({ world }) => {
+  test('5.11.2 delete a member', async ({ world }) => {
     const { company, A, M1, mike } = await staffedCompany(world);
     const T = await world.thakhin();
     expect((await T.api.delete(`/api/admin/users/${M1.userId}`)).status()).toBe(
@@ -1127,8 +1178,8 @@ test.describe('Part 11: Deleting a user', () => {
   });
 });
 
-test.describe('Part 12: Checks without a UI', () => {
-  test('12 cross-company and contract checks', async ({ world }) => {
+test.describe('Part 5.12: Checks without a UI', () => {
+  test('5.12 cross-company and contract checks', async ({ world }) => {
     const { company, A } = await staffedCompany(world);
     const beta = await world.company('Beta Co');
     const B = await world.person('beta-admin');
@@ -1188,8 +1239,8 @@ test.describe('Part 12: Checks without a UI', () => {
   });
 });
 
-test.describe('Part 13: Access checks', () => {
-  test("13.1 a member can't use admin routes", async ({ world }) => {
+test.describe('Part 5.13: Access checks', () => {
+  test("5.13.1 a member can't use admin routes", async ({ world }) => {
     const { company, M1, alice } = await staffedCompany(world);
     const vacant = await world.invite(company, draft(unique('v')));
     const vacantCard = await world.card(company, vacant.id);
@@ -1214,7 +1265,7 @@ test.describe('Part 13: Access checks', () => {
     expect(row?.name).toBe(company.name);
   });
 
-  test('13.2 outsiders get 404', async ({ world }) => {
+  test('5.13.2 outsiders get 404', async ({ world }) => {
     const { company, alice } = await staffedCompany(world);
     const V = await world.person('visitor');
     const org = `/api/organizations/${company.slug}`;
@@ -1231,7 +1282,7 @@ test.describe('Part 13: Access checks', () => {
     }
   });
 
-  test("13.3 one company's admin can't reach another", async ({ world }) => {
+  test("5.13.3 one company's admin can't reach another", async ({ world }) => {
     const { A } = await staffedCompany(world);
     const beta = await world.company('Beta Co');
     const org = `/api/organizations/${beta.slug}`;
@@ -1240,7 +1291,7 @@ test.describe('Part 13: Access checks', () => {
     }
   });
 
-  test('13.4 locked fields stay locked', async ({ world }) => {
+  test('5.13.4 locked fields stay locked', async ({ world }) => {
     const { company, M1, mike } = await staffedCompany(world);
     const response = await M1.api.patch(`/api/cards/${mike.slug}`, {
       data: {
@@ -1263,7 +1314,7 @@ test.describe('Part 13: Access checks', () => {
     });
   });
 
-  test("13.5 the next holder can't reach earlier contacts", async ({
+  test("5.13.5 the next holder can't reach earlier contacts", async ({
     world,
   }) => {
     const { company, A, mike } = await staffedCompany(world);
@@ -1295,7 +1346,9 @@ test.describe('Part 13: Access checks', () => {
     expect((await M2.api.delete(`/api/contacts/${own.id}`)).status()).toBe(204);
   });
 
-  test('13.6 retired and paused cards take no contacts', async ({ world }) => {
+  test('5.13.6 retired and paused cards take no contacts', async ({
+    world,
+  }) => {
     const { A, alice, mike } = await staffedCompany(world);
     await offboard(A, mike);
     await expectError(
@@ -1317,7 +1370,7 @@ test.describe('Part 13: Access checks', () => {
     );
     expect(contacts).toHaveLength(0);
   });
-  test('13.7 image uploads', async ({ world }) => {
+  test('5.13.7 image uploads', async ({ world }) => {
     const { company, A, M1 } = await staffedCompany(world);
     const uploads = `/api/organizations/${company.slug}/uploads`;
     const rejects = async (
@@ -1437,8 +1490,8 @@ test.describe('Part 13: Access checks', () => {
   });
 });
 
-test.describe('Part 14: Reliability', () => {
-  test('14.1 accept in two tabs at once', async ({ world }) => {
+test.describe('Part 5.14: Reliability', () => {
+  test('5.14.1 accept in two tabs at once', async ({ world }) => {
     const company = await world.company();
     const M1 = await world.person('m1');
     const invited = await world.invite(company, draft(M1));
@@ -1459,7 +1512,7 @@ test.describe('Part 14: Reliability', () => {
     expect((await M1.api.get(`/api/cards/${card.slug}`)).status()).toBe(200);
   });
 
-  test('14.1 community invite accepted twice at once', async ({ world }) => {
+  test('5.14.1a community invite accepted twice at once', async ({ world }) => {
     const T = await world.thakhin();
     const O = await world.person('organizer');
     const created = await (
@@ -1488,7 +1541,7 @@ test.describe('Part 14: Reliability', () => {
     expect(counts).toEqual([{ members: 1, cards: 1 }]);
   });
 
-  test('14.2 accept after the invite was cancelled', async ({ world }) => {
+  test('5.14.2 accept after the invite was cancelled', async ({ world }) => {
     const { company, A } = await staffedCompany(world);
     const M3 = await world.person('m3');
     const ivy = await world.invite(company, draft(M3));
@@ -1510,7 +1563,7 @@ test.describe('Part 14: Reliability', () => {
     ).toHaveLength(0);
   });
 
-  test('14.3 expired invite, then resend', async ({ world }) => {
+  test('5.14.3 expired invite, then resend', async ({ world }) => {
     const { company, A } = await staffedCompany(world);
     const M3 = await world.person('m3');
     const ivy = await world.invite(company, draft(M3));
@@ -1533,7 +1586,7 @@ test.describe('Part 14: Reliability', () => {
     expect((await accept(M3, ivy.invitationId)).status()).toBe(200);
   });
 
-  test('14.4 create the same batch twice at once', async ({ world }) => {
+  test('5.14.4 create the same batch twice at once', async ({ world }) => {
     const company = await world.company();
     const batch = [draft(unique('m1')), draft(unique('m3'), { paid: true })];
 
@@ -1558,7 +1611,9 @@ test.describe('Part 14: Reliability', () => {
     expect(payments).toHaveLength(2);
   });
 
-  test('14.5 assign the same vacant card twice at once', async ({ world }) => {
+  test('5.14.5 assign the same vacant card twice at once', async ({
+    world,
+  }) => {
     const { company, A, mike } = await staffedCompany(world);
     await offboard(A, mike);
 
@@ -1587,7 +1642,7 @@ test.describe('Part 14: Reliability', () => {
     expect(retired).toHaveLength(1);
   });
 
-  test('14.6 assign two vacant cards to the same person at once', async ({
+  test('5.14.6 assign two vacant cards to the same person at once', async ({
     world,
   }) => {
     const { company, A } = await staffedCompany(world);
@@ -1615,7 +1670,7 @@ test.describe('Part 14: Reliability', () => {
     expect(states).toEqual(['pending', 'vacant']);
   });
 
-  test('14.7 record the same payment twice', async ({ world }) => {
+  test('5.14.7 record the same payment twice', async ({ world }) => {
     const { company, alice, mike } = await staffedCompany(world);
     const T = await world.thakhin();
     const body = {
@@ -1656,7 +1711,7 @@ test.describe('Part 14: Reliability', () => {
     expect(after.periodEnd).toBe(expected.toISOString());
   });
 
-  test('14.8 email is down when cards are created', async ({ world }) => {
+  test('5.14.8 email is down when cards are created', async ({ world }) => {
     test.slow();
     const { company, A } = await staffedCompany(world);
     const M3 = await world.person('m3');
@@ -1704,7 +1759,7 @@ test.describe('Part 14: Reliability', () => {
     expect((await accept(M3, card.inviteId!)).status()).toBe(200);
   });
 
-  test('14.9 email is down when a card is reassigned', async ({ world }) => {
+  test('5.14.9 email is down when a card is reassigned', async ({ world }) => {
     test.slow();
     const { company, A, mike } = await staffedCompany(world);
     await offboard(A, mike);
@@ -1740,7 +1795,7 @@ test.describe('Part 14: Reliability', () => {
     expect((await accept(M3, card.inviteId!)).status()).toBe(200);
   });
 
-  test('14.10 expiry at the boundary', async ({ world }) => {
+  test('5.14.10 expiry at the boundary', async ({ world }) => {
     const { company, A, mike } = await staffedCompany(world);
     const view = async () => {
       const visitor = await world.anonymous();
@@ -1793,7 +1848,7 @@ test.describe('Part 14: Reliability', () => {
     expect((await exchangeByForm(world, mike.slug)).status()).toBe(201);
   });
 
-  test('14.11 two admins add the same department at once', async ({
+  test('5.14.11 two admins add the same department at once', async ({
     world,
   }) => {
     const { company, A } = await staffedCompany(world);

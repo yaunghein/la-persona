@@ -85,8 +85,8 @@ async function statuses(responses: { status(): number }[]) {
   return responses.map((response) => response.status()).sort();
 }
 
-test.describe('Part 1: Thakhin setup', () => {
-  test('1.1 branding', async ({ world }) => {
+test.describe('Part 4.1: Thakhin setup', () => {
+  test('4.1.1 branding', async ({ world }) => {
     const T = await world.thakhin();
     const { community } = await createCommunity(world);
     const base = { name: community.name, slug: community.slug };
@@ -113,7 +113,7 @@ test.describe('Part 1: Thakhin setup', () => {
     );
   });
 
-  test('1.2 rich text is sanitized', async ({ world }) => {
+  test('4.1.2 rich text is sanitized', async ({ world }) => {
     const T = await world.thakhin();
     const { community } = await createCommunity(world);
     const description =
@@ -129,9 +129,9 @@ test.describe('Part 1: Thakhin setup', () => {
     expect(shown.description).not.toMatch(/<script|onerror|javascript:/i);
   });
 
-  // test.skip('1.3 brand assets (needs S3)', () => {});
+  // test.skip('4.1.3 brand assets (needs S3)', () => {});
 
-  test('1.4 apply to member cards', async ({ world }) => {
+  test('4.1.4 apply to member cards', async ({ world }) => {
     const T = await world.thakhin();
     const { community, M } = await yangonDevs(world);
     const spline = 'https://prod.spline.design/new/scene.splinecode';
@@ -153,7 +153,7 @@ test.describe('Part 1: Thakhin setup', () => {
     expect(card?.spline_url).toBe(spline);
   });
 
-  test('1.5 delete rules', async ({ world }) => {
+  test('4.1.5 delete rules', async ({ world }) => {
     const T = await world.thakhin();
     const { community, O } = await createCommunity(world);
     await expectError(
@@ -165,10 +165,40 @@ test.describe('Part 1: Thakhin setup', () => {
       (await O.api.delete(`/api/admin/organizations/${community.id}`)).status()
     ).toBe(404);
   });
+
+  test('4.1.6 background theme', async ({ world }) => {
+    const T = await world.thakhin();
+    const { community, O, M } = await yangonDevs(world);
+    const save = (data: Record<string, unknown>) =>
+      T.api.patch(`/api/admin/organizations/${community.id}`, {
+        data: { name: community.name, slug: community.slug, ...data },
+      });
+    const themeOf = async (person: Person) => {
+      const [row] = await sql(
+        `select background_theme from card where id = $1`,
+        [(await communityCard(community, person))!.id]
+      );
+      return row?.background_theme;
+    };
+
+    const saved = await save({ backgroundTheme: 'light' });
+    expect(saved.status(), await saved.text()).toBe(200);
+    expect(await themeOf(M)).toBe('dark');
+    const detail = await (
+      await T.api.get(`/api/admin/organizations/${community.id}`)
+    ).json();
+    expect(detail.community.backgroundTheme).toBe('light');
+
+    const newcomer = await addMember(world, community, O, 'newcomer');
+    expect(await themeOf(newcomer)).toBe('light');
+
+    await save({ backgroundTheme: 'light', applyToMemberCards: true });
+    expect(await themeOf(M)).toBe('light');
+  });
 });
 
-test.describe('Part 2: Roles and members', () => {
-  test('2.1 members list', async ({ world }) => {
+test.describe('Part 4.2: Roles and members', () => {
+  test('4.2.1 members list', async ({ world }) => {
     const { community, O } = await yangonDevs(world);
     const list = await (
       await O.api.get(`/api/organizations/${community.slug}/members`)
@@ -188,7 +218,7 @@ test.describe('Part 2: Roles and members', () => {
     expect(csv).toContain('Organizer');
   });
 
-  test('2.2 change roles', async ({ world }) => {
+  test('4.2.2 change roles', async ({ world }) => {
     const { community, O, M } = await yangonDevs(world);
     const O2 = await addOrganizer(world, community);
     const m = (await membership(community, M))!;
@@ -219,7 +249,7 @@ test.describe('Part 2: Roles and members', () => {
     );
   });
 
-  test('2.3 remove a member keeps their contacts', async ({ world }) => {
+  test('4.2.3 remove a member keeps their contacts', async ({ world }) => {
     const { community, O, M } = await yangonDevs(world);
     const card = (await communityCard(community, M))!;
     const event = await createEvent(O, community);
@@ -272,7 +302,7 @@ test.describe('Part 2: Roles and members', () => {
     );
   });
 
-  test('2.4 organizer protections', async ({ world }) => {
+  test('4.2.4 organizer protections', async ({ world }) => {
     const { community, O, M } = await yangonDevs(world);
     const O2 = await addOrganizer(world, community);
     expect(
@@ -288,7 +318,7 @@ test.describe('Part 2: Roles and members', () => {
     ).toBe(403);
   });
 
-  test('2.5 quit community', async ({ world }) => {
+  test('4.2.5 quit community', async ({ world }) => {
     test.slow();
     const { community, O, M, VOL } = await yangonDevs(world);
     const card = (await communityCard(community, M))!;
@@ -328,7 +358,7 @@ test.describe('Part 2: Roles and members', () => {
     expect((await quit(X, community)).status()).toBe(404);
   });
 
-  test("2.6 organizers can read, not edit, a member's card", async ({
+  test("4.2.6 organizers can read, not edit, a member's card", async ({
     world,
   }) => {
     const { community, O, M } = await yangonDevs(world);
@@ -356,8 +386,8 @@ test.describe('Part 2: Roles and members', () => {
   });
 });
 
-test.describe('Part 3: Community cards', () => {
-  test('3.1 seeded from the personal card', async ({ world }) => {
+test.describe('Part 4.3: Community cards', () => {
+  test('4.3.1 seeded from the personal card', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const X = await world.person('outsider');
     const personal = await givePersonalCard(X);
@@ -392,7 +422,7 @@ test.describe('Part 3: Community cards', () => {
     expect(plain?.position).toBe('Member');
   });
 
-  test('3.2 setup flow', async ({ world }) => {
+  test('4.3.2 setup flow', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const N = await world.person('new');
     const invited = await O.api.post(
@@ -411,7 +441,7 @@ test.describe('Part 3: Community cards', () => {
     expect((await accepted.json()).redirectTo).toContain('community-setup');
   });
 
-  test('3.3 never pauses', async ({ world }) => {
+  test('4.3.3 never pauses', async ({ world }) => {
     const { community, M } = await yangonDevs(world);
     const card = (await communityCard(community, M))!;
     await sql(
@@ -426,7 +456,7 @@ test.describe('Part 3: Community cards', () => {
     );
   });
 
-  test("3.4 can't be deleted directly", async ({ world }) => {
+  test("4.3.4 can't be deleted directly", async ({ world }) => {
     const { community, M } = await yangonDevs(world);
     const card = (await communityCard(community, M))!;
     // Members lack `card:delete`, so they get the generic 403.
@@ -434,7 +464,7 @@ test.describe('Part 3: Community cards', () => {
     expect(await communityCard(community, M)).not.toBeNull();
   });
 
-  test('3.5 one card per member', async ({ world }) => {
+  test('4.3.5 one card per member', async ({ world }) => {
     const T = await world.thakhin();
     const { community, M } = await yangonDevs(world);
     const X = await world.person('outsider');
@@ -450,7 +480,7 @@ test.describe('Part 3: Community cards', () => {
   });
 });
 
-test.describe('Part 4: Settings and About', () => {
+test.describe('Part 4.4: Settings and About', () => {
   const settings = (name: string, extra: object = {}) => ({
     name,
     description: '<p>About</p>',
@@ -460,7 +490,7 @@ test.describe('Part 4: Settings and About', () => {
     ...extra,
   });
 
-  test('4.1 save settings', async ({ world }) => {
+  test('4.4.1 save settings', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const saved = await O.api.patch(`/api/organizations/${community.slug}`, {
       data: settings(community.name, {
@@ -473,7 +503,7 @@ test.describe('Part 4: Settings and About', () => {
     expect(body.foundedYear).toBe(2020);
   });
 
-  test('4.2 organizer contact must be an organizer', async ({ world }) => {
+  test('4.4.2 organizer contact must be an organizer', async ({ world }) => {
     const { community, O, M } = await yangonDevs(world);
     const beta = await createCommunity(world);
     for (const memberId of [
@@ -490,7 +520,7 @@ test.describe('Part 4: Settings and About', () => {
     }
   });
 
-  test('4.3 members can read, not write', async ({ world }) => {
+  test('4.4.3 members can read, not write', async ({ world }) => {
     const { community, M } = await yangonDevs(world);
     expect(
       (await M.api.get(`/api/organizations/${community.slug}`)).status()
@@ -504,7 +534,7 @@ test.describe('Part 4: Settings and About', () => {
     ).toBe(403);
   });
 
-  test('4.4 public community page', async ({ world }) => {
+  test('4.4.4 public community page', async ({ world }) => {
     const { community, M } = await yangonDevs(world);
     const visitor = (await world.anonymous()).request;
     const response = await visitor.get(
@@ -521,8 +551,8 @@ test.describe('Part 4: Settings and About', () => {
   });
 });
 
-test.describe('Part 5: Events', () => {
-  test('5.1 create', async ({ world }) => {
+test.describe('Part 4.5: Events', () => {
+  test('4.5.1 create', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const event = await createEvent(O, community, { capacity: 50 });
     const visitor = (await world.anonymous()).request;
@@ -531,7 +561,7 @@ test.describe('Part 5: Events', () => {
     );
   });
 
-  test('5.2 validation', async ({ world }) => {
+  test('4.5.2 validation', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const start = new Date(Date.now() + 3 * 86_400_000);
     const valid = {
@@ -562,7 +592,7 @@ test.describe('Part 5: Events', () => {
     }
   });
 
-  test('5.3 edit and delete', async ({ world }) => {
+  test('4.5.3 edit and delete', async ({ world }) => {
     const { community, O, M } = await yangonDevs(world);
     const event = await createEvent(O, community);
     await register(M, event.id);
@@ -587,7 +617,7 @@ test.describe('Part 5: Events', () => {
     );
   });
 
-  test('5.4 who can manage events', async ({ world }) => {
+  test('4.5.4 who can manage events', async ({ world }) => {
     const { community, O, M, VOL } = await yangonDevs(world);
     const X = await world.person('outsider');
     const beta = await createCommunity(world);
@@ -618,8 +648,8 @@ test.describe('Part 5: Events', () => {
   });
 });
 
-test.describe('Part 6: Registration', () => {
-  test('6.1 open event, member registers', async ({ world }) => {
+test.describe('Part 4.6: Registration', () => {
+  test('4.6.1 open event, member registers', async ({ world }) => {
     const { community, O, M } = await yangonDevs(world);
     const event = await createEvent(O, community);
     const first = await register(M, event.id);
@@ -630,7 +660,7 @@ test.describe('Part 6: Registration', () => {
     expect((await again.json()).id).toBe((await first.json()).id);
   });
 
-  test('6.2 non-member registers from the public page', async ({ world }) => {
+  test('4.6.2 non-member registers from the public page', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const event = await createEvent(O, community);
     const X = await world.person('outsider');
@@ -642,7 +672,7 @@ test.describe('Part 6: Registration', () => {
     expect((await membership(community, X))?.role).toBe('member');
   });
 
-  test('6.3 manual approval', async ({ world }) => {
+  test('4.6.3 manual approval', async ({ world }) => {
     const { community, O, M, VOL } = await yangonDevs(world);
     const event = await createEvent(O, community, {
       approvalMode: 'manual',
@@ -675,7 +705,7 @@ test.describe('Part 6: Registration', () => {
     );
   });
 
-  test('6.4 closed and invite-only', async ({ world }) => {
+  test('4.6.4 closed and invite-only', async ({ world }) => {
     const { community, O, M } = await yangonDevs(world);
     const X = await world.person('outsider');
     const closed = await createEvent(O, community, {
@@ -701,7 +731,7 @@ test.describe('Part 6: Registration', () => {
     );
   });
 
-  test('6.5 capacity', async ({ world }) => {
+  test('4.6.5 capacity', async ({ world }) => {
     const { community, O, M, VOL } = await yangonDevs(world);
     const O2 = await addOrganizer(world, community);
     const event = await createEvent(O, community, { capacity: 2 });
@@ -718,7 +748,7 @@ test.describe('Part 6: Registration', () => {
     expect((await register(O2, event.id)).status()).toBe(201);
   });
 
-  test('6.6 cancel own registration', async ({ world }) => {
+  test('4.6.6 cancel own registration', async ({ world }) => {
     const { community, O, M, VOL } = await yangonDevs(world);
     const event = await createEvent(O, community);
     await register(M, event.id);
@@ -743,7 +773,7 @@ test.describe('Part 6: Registration', () => {
     );
   });
 
-  test('6.7 past events', async ({ world }) => {
+  test('4.6.7 past events', async ({ world }) => {
     const { community, O, M } = await yangonDevs(world);
     const X = await world.person('outsider');
     const event = await createEvent(O, community);
@@ -755,7 +785,7 @@ test.describe('Part 6: Registration', () => {
     );
   });
 
-  test('6.8 attendee labels carry over', async ({ world }) => {
+  test('4.6.8 attendee labels carry over', async ({ world }) => {
     const { community, O, M } = await yangonDevs(world);
     const label = async (name: string, carriesOver: boolean) =>
       (
@@ -788,8 +818,8 @@ test.describe('Part 6: Registration', () => {
   });
 });
 
-test.describe('Part 7: Check-in', () => {
-  test('7.1 before and after the event day', async ({ world }) => {
+test.describe('Part 4.7: Check-in', () => {
+  test('4.7.1 before and after the event day', async ({ world }) => {
     const { community, O, M, VOL } = await yangonDevs(world);
     const event = await createEvent(O, community);
     await register(M, event.id);
@@ -807,7 +837,7 @@ test.describe('Part 7: Check-in', () => {
     );
   });
 
-  test('7.2 scan a registered member', async ({ world }) => {
+  test('4.7.2 scan a registered member', async ({ world }) => {
     const { community, O, M, VOL } = await yangonDevs(world);
     const event = await createEvent(O, community);
     await register(M, event.id);
@@ -829,7 +859,7 @@ test.describe('Part 7: Check-in', () => {
     ).toBe('already');
   });
 
-  test('7.3 scan someone not registered', async ({ world }) => {
+  test('4.7.3 scan someone not registered', async ({ world }) => {
     const { community, O, M, VOL } = await yangonDevs(world);
     const event = await createEvent(O, community, { approvalMode: 'manual' });
     await scheduleEvent(event.id, 'live');
@@ -868,7 +898,7 @@ test.describe('Part 7: Check-in', () => {
     expect((await checkIn(VOL, event.id, slug)).status()).toBe(404);
   });
 
-  test('7.4 walk-in without email', async ({ world }) => {
+  test('4.7.4 walk-in without email', async ({ world }) => {
     const { community, O, VOL } = await yangonDevs(world);
     const event = await createEvent(O, community, {
       capacity: 1,
@@ -888,7 +918,7 @@ test.describe('Part 7: Check-in', () => {
     expect(rows).toEqual([{ status: 'checked_in' }, { status: 'checked_in' }]);
   });
 
-  test('7.5 self walk-in', async ({ world }) => {
+  test('4.7.5 self walk-in', async ({ world }) => {
     const { community, O, M } = await yangonDevs(world);
     const selfWalkIn = async (person: Person, eventId: string) => {
       const joined = await person.api.post(
@@ -944,7 +974,7 @@ test.describe('Part 7: Check-in', () => {
     ).toBe(404);
   });
 
-  test('7.6 attendee list and export', async ({ world }) => {
+  test('4.7.6 attendee list and export', async ({ world }) => {
     const { community, O, M, VOL } = await yangonDevs(world);
     const event = await createEvent(O, community);
     await register(M, event.id);
@@ -969,7 +999,7 @@ test.describe('Part 7: Check-in', () => {
     expect(checkedIn.trim().split('\n')).toHaveLength(1);
   });
 
-  test("7.7 members can't check in", async ({ world }) => {
+  test("4.7.7 members can't check in", async ({ world }) => {
     const { community, O, M } = await yangonDevs(world);
     const event = await createEvent(O, community);
     await scheduleEvent(event.id, 'live');
@@ -984,8 +1014,10 @@ test.describe('Part 7: Check-in', () => {
   });
 });
 
-test.describe('Part 8: Broadcasts', () => {
-  test('8 reminders and after-event emails go out once', async ({ world }) => {
+test.describe('Part 4.8: Broadcasts', () => {
+  test('4.8 reminders and after-event emails go out once', async ({
+    world,
+  }) => {
     const { community, O, M, VOL } = await yangonDevs(world);
     const event = await createEvent(O, community);
     const empty = await createEvent(O, community);
@@ -1031,8 +1063,8 @@ test.describe('Part 8: Broadcasts', () => {
   });
 });
 
-test.describe('Part 9: Contacts and insights', () => {
-  test('9.1 contacts on community cards', async ({ world }) => {
+test.describe('Part 4.9: Contacts and insights', () => {
+  test('4.9.1 contacts on community cards', async ({ world }) => {
     const { community, O, M, VOL } = await yangonDevs(world);
     const card = (await communityCard(community, M))!;
     await exchangeByForm(world, card.slug, 'Community Contact');
@@ -1070,7 +1102,7 @@ test.describe('Part 9: Contacts and insights', () => {
     ).toBe(200);
   });
 
-  test('9.2 insights', async ({ world }) => {
+  test('4.9.2 insights', async ({ world }) => {
     const { community, O, M, VOL } = await yangonDevs(world);
     expect(
       (
@@ -1090,8 +1122,8 @@ test.describe('Part 9: Contacts and insights', () => {
   });
 });
 
-test.describe('Part 10: Isolation', () => {
-  test('10 an organizer of another community gets not found', async ({
+test.describe('Part 4.10: Isolation', () => {
+  test('4.10 an organizer of another community gets not found', async ({
     world,
   }) => {
     const { community, O, M } = await yangonDevs(world);
@@ -1159,8 +1191,8 @@ test.describe('Part 10: Isolation', () => {
   });
 });
 
-test.describe('Part 11: Reliability', () => {
-  test('11.1 last seat, two people at once', async ({ world }) => {
+test.describe('Part 4.11: Reliability', () => {
+  test('4.11.1 last seat, two people at once', async ({ world }) => {
     const { community, O, M, VOL } = await yangonDevs(world);
     const event = await createEvent(O, community, { capacity: 1 });
     const results = await Promise.all([
@@ -1170,7 +1202,7 @@ test.describe('Part 11: Reliability', () => {
     expect(await statuses(results)).toEqual([201, 409]);
   });
 
-  test('11.2 same person registers twice at once', async ({ world }) => {
+  test('4.11.2 same person registers twice at once', async ({ world }) => {
     const { community, O, M } = await yangonDevs(world);
     const event = await createEvent(O, community);
     const before = await emailsTo(M.email);
@@ -1190,7 +1222,7 @@ test.describe('Part 11: Reliability', () => {
     expect(await statuses(walkIns)).toEqual([200, 201]);
   });
 
-  test('11.3 two scanners, one card', async ({ world }) => {
+  test('4.11.3 two scanners, one card', async ({ world }) => {
     const { community, O, M, VOL } = await yangonDevs(world);
     const event = await createEvent(O, community);
     await register(M, event.id);
@@ -1204,7 +1236,7 @@ test.describe('Part 11: Reliability', () => {
     await expect.poll(() => emailsTo(M.email, 'checked in')).toBe(1);
   });
 
-  test('11.5 two organizers remove each other at once', async ({ world }) => {
+  test('4.11.5 two organizers remove each other at once', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     const O2 = await addOrganizer(world, community);
     const o = (await membership(community, O))!;
@@ -1218,7 +1250,7 @@ test.describe('Part 11: Reliability', () => {
     expect([404, 409]).toContain(codes[1]);
   });
 
-  test('11.6 approve the last seat twice', async ({ world }) => {
+  test('4.11.6 approve the last seat twice', async ({ world }) => {
     const { community, O, M, VOL } = await yangonDevs(world);
     const event = await createEvent(O, community, {
       capacity: 1,
@@ -1234,7 +1266,7 @@ test.describe('Part 11: Reliability', () => {
     expect(await statuses(results)).toEqual([200, 409]);
   });
 
-  test('11.7 email down during registration', async ({ world }) => {
+  test('4.11.7 email down during registration', async ({ world }) => {
     const { community, O, M } = await yangonDevs(world);
     const event = await createEvent(O, community);
     await setEmailDown(true);
@@ -1246,7 +1278,7 @@ test.describe('Part 11: Reliability', () => {
     }
   });
 
-  test('11.8 first settings read, many at once', async ({ world }) => {
+  test('4.11.8 first settings read, many at once', async ({ world }) => {
     const { community, O } = await createCommunity(world);
     await sql('delete from community_setting where organization_id = $1', [
       community.id,
@@ -1264,5 +1296,173 @@ test.describe('Part 11: Reliability', () => {
       [community.id]
     );
     expect(rows).toHaveLength(1);
+  });
+});
+
+test.describe('Part 4.12: Thakhin activity', () => {
+  type Activity = {
+    userId: string;
+    email: string;
+    connections: number;
+    eventConnections: number;
+    eventsRegistered: number;
+    eventsAttended: number;
+  };
+
+  async function activity(T: Person, query: Record<string, string> = {}) {
+    const response = await T.api.get('/api/admin/user-activity', {
+      params: query,
+    });
+    expect(response.status(), await response.text()).toBe(200);
+    return (await response.json()).items as Activity[];
+  }
+
+  function rowOf(rows: Activity[], person: Person) {
+    return rows.find((row) => row.userId === person.userId);
+  }
+
+  /**
+   * M checks in and collects three contacts: two tagged to the event, one not.
+   * M2 registers and doesn't come.
+   */
+  async function meetupWithConnections(world: World) {
+    const T = await world.thakhin();
+    const { community, O, M } = await yangonDevs(world);
+    const M2 = await addMember(world, community, O, 'member2');
+    const event = await createEvent(O, community);
+    await register(M, event.id);
+    await register(M2, event.id);
+    await scheduleEvent(event.id, 'live');
+    const card = (await communityCard(community, M))!;
+    expect((await checkIn(O, event.id, card.slug)).status()).toBe(201);
+    for (const name of ['At Event 1', 'At Event 2', 'Elsewhere']) {
+      expect((await exchangeByForm(world, card.slug, name)).status()).toBe(201);
+    }
+    // Tag directly so the counts don't depend on check-in timing rules.
+    await sql(
+      `update contact_exchange
+       set event_id = case when name like 'At Event%' then $2 else null end
+       where card_id = $1`,
+      [card.id, event.id]
+    );
+    return { T, community, O, M, M2, event, card };
+  }
+
+  test('4.12.1 counts per person', async ({ world }) => {
+    const { T, community, M, M2 } = await meetupWithConnections(world);
+    const rows = await activity(T, { organizationId: community.id });
+    expect(rowOf(rows, M)).toMatchObject({
+      connections: 3,
+      eventConnections: 2,
+      eventsRegistered: 1,
+      eventsAttended: 1,
+    });
+    expect(rowOf(rows, M2)).toMatchObject({
+      connections: 0,
+      eventConnections: 0,
+      eventsRegistered: 1,
+      eventsAttended: 0,
+    });
+  });
+
+  test('4.12.2 filters', async ({ world }) => {
+    const { T, community, M, event, card } = await meetupWithConnections(world);
+    const other = await yangonDevs(world);
+    await exchangeByForm(
+      world,
+      (await communityCard(other.community, other.M))!.slug
+    );
+
+    const byEvent = await activity(T, { eventId: event.id });
+    expect(rowOf(byEvent, M)).toMatchObject({
+      connections: 2,
+      eventsRegistered: 1,
+    });
+
+    await sql(
+      `update contact_exchange set source = 'manual' where card_id = $1 and name = 'Elsewhere'`,
+      [card.id]
+    );
+    const manual = await activity(T, {
+      organizationId: community.id,
+      source: 'manual',
+    });
+    expect(rowOf(manual, M)).toMatchObject({
+      connections: 1,
+      eventsAttended: 1,
+    });
+
+    await sql(
+      `update contact_exchange set created_at = now() - interval '30 days'
+       where card_id = $1 and name = 'At Event 1'`,
+      [card.id]
+    );
+    const lastWeek = await activity(T, {
+      organizationId: community.id,
+      range: '1w',
+    });
+    expect(rowOf(lastWeek, M)?.connections).toBe(2);
+
+    expect(
+      rowOf(await activity(T, { organizationId: community.id }), other.M)
+    ).toBeUndefined();
+    expect(rowOf(await activity(T), other.M)?.connections).toBe(1);
+  });
+
+  test('4.12.3 per-person events', async ({ world }) => {
+    const { T, community, O, M, event, card } =
+      await meetupWithConnections(world);
+    const later = await createEvent(O, community);
+    await exchangeByForm(world, card.slug, 'Later');
+    await sql(
+      `update contact_exchange set event_id = $2 where card_id = $1 and name = 'Later'`,
+      [card.id, later.id]
+    );
+
+    const response = await T.api.get(
+      `/api/admin/users/${M.userId}/event-activity`
+    );
+    expect(response.status(), await response.text()).toBe(200);
+    const items = (await response.json()).items as {
+      eventId: string;
+      status: string | null;
+      connections: number;
+    }[];
+    expect(items.map((item) => item.eventId)).toEqual([later.id, event.id]);
+    expect(items[0]).toMatchObject({ status: null, connections: 1 });
+    expect(items[1]).toMatchObject({ status: 'checked_in', connections: 2 });
+
+    const events = await (await T.api.get('/api/admin/events')).json();
+    expect(
+      events.items.find((item: { id: string }) => item.id === event.id)
+    ).toMatchObject({ organizationId: community.id });
+  });
+
+  test('4.12.4 CSV export', async ({ world }) => {
+    const { T, community, M } = await meetupWithConnections(world);
+    const rows = await activity(T, { organizationId: community.id });
+    const response = await T.api.get('/api/admin/user-activity', {
+      params: { organizationId: community.id },
+      headers: { accept: 'text/csv' },
+    });
+    expect(response.status()).toBe(200);
+    const lines = (await response.text()).trim().split('\r\n');
+    expect(lines[0]).toContain('Connections at events');
+    expect(lines).toHaveLength(rows.length + 1);
+    expect(lines.some((line) => line.includes(M.email))).toBe(true);
+  });
+
+  test('4.12.5 Thakhin only', async ({ world }) => {
+    const { O, M } = await yangonDevs(world);
+    const anonymous = (await world.anonymous()).request;
+    for (const path of [
+      '/api/admin/user-activity',
+      `/api/admin/users/${M.userId}/event-activity`,
+      '/api/admin/events',
+    ]) {
+      expect((await O.api.get(path)).status()).toBe(404);
+      expect((await M.api.get(path)).status()).toBe(404);
+      expect((await anonymous.get(path)).status()).toBe(404);
+    }
   });
 });
