@@ -15,7 +15,8 @@ import { cardEditorPath } from '~/features/card/utils/card-badge';
 import { applyCombinedCardToSpline } from '~/features/card/utils/spline-card';
 import { vcfPhoneLines } from '~~/shared/utils/phone';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
-import { ROUTES } from '~~/shared/utils/routes';
+import { communityCardPath, ROUTES } from '~~/shared/utils/routes';
+import { env } from '~~/env';
 
 const route = useRoute();
 const { normalizeCardLinkValue } = useUrlNormalization();
@@ -247,6 +248,26 @@ function toggleExplore() {
 function toggleCardQr() {
   isQrOpen.value = !isQrOpen.value;
   if (isQrOpen.value) isMenuOpen.value = false;
+}
+
+async function copyCardLink() {
+  if (!card.value) return;
+  try {
+    await navigator.clipboard.writeText(
+      `${env.BASE_URL.replace(/\/$/, '')}${communityCardPath(card.value.slug)}`
+    );
+    toast.add({
+      title: 'Link copied',
+      description: 'Your card link is ready to share.',
+      color: 'success',
+    });
+  } catch {
+    toast.add({
+      title: 'Copy failed',
+      description: 'Could not copy your card link.',
+      color: 'error',
+    });
+  }
 }
 
 const router = useRouter();
@@ -748,7 +769,7 @@ async function onSaveContact() {
 
     <div
       v-if="canGoBack || ownCard"
-      class="absolute top-8 left-0 right-0 flex w-full px-5 sm:mx-auto sm:max-w-96"
+      class="absolute top-8 left-5 flex sm:left-8"
     >
       <button
         type="button"
@@ -791,6 +812,18 @@ async function onSaveContact() {
         >
           <div class="aspect-square w-6">
             <IconMenu />
+          </div>
+        </button>
+      </UTooltip>
+      <UTooltip v-if="ownCard" text="Copy link">
+        <button
+          type="button"
+          aria-label="Copy card link"
+          class="grid aspect-square w-13 shrink-0 place-items-center rounded-full border border-line-heavy bg-line-strong transition duration-300 hover:bg-ink/10"
+          @click="copyCardLink"
+        >
+          <div class="size-5">
+            <IconCopy />
           </div>
         </button>
       </UTooltip>

@@ -3,7 +3,7 @@ import type { NavigationMenuItem } from '@nuxt/ui';
 import { ORGANIZATION_TYPES } from '~~/shared/utils/constants';
 
 const route = useRoute();
-const toast = useToast();
+// const toast = useToast();
 
 const open = ref(false);
 const orgSlug = computed(() => String(route.params.orgSlug || ''));
@@ -149,40 +149,40 @@ const groups = computed(() => [
   },
 ]);
 
-onMounted(async () => {
-  const cookie = useCookie<'accepted' | 'declined' | null>('cookie-consent', {
-    maxAge: 60 * 60 * 24 * 365,
-    sameSite: 'lax',
-  });
-  if (cookie.value) {
-    return;
-  }
-
-  toast.add({
-    title:
-      'We use first-party cookies to enhance your experience on our website.',
-    duration: 0,
-    close: false,
-    actions: [
-      {
-        label: 'Accept',
-        color: 'neutral',
-        variant: 'outline',
-        onClick: () => {
-          cookie.value = 'accepted';
-        },
-      },
-      {
-        label: 'Opt out',
-        color: 'neutral',
-        variant: 'ghost',
-        onClick: () => {
-          cookie.value = 'declined';
-        },
-      },
-    ],
-  });
-});
+// onMounted(async () => {
+//   const cookie = useCookie<'accepted' | 'declined' | null>('cookie-consent', {
+//     maxAge: 60 * 60 * 24 * 365,
+//     sameSite: 'lax',
+//   });
+//   if (cookie.value) {
+//     return;
+//   }
+//
+//   toast.add({
+//     title:
+//       'We use first-party cookies to enhance your experience on our website.',
+//     duration: 0,
+//     close: false,
+//     actions: [
+//       {
+//         label: 'Accept',
+//         color: 'neutral',
+//         variant: 'outline',
+//         onClick: () => {
+//           cookie.value = 'accepted';
+//         },
+//       },
+//       {
+//         label: 'Opt out',
+//         color: 'neutral',
+//         variant: 'ghost',
+//         onClick: () => {
+//           cookie.value = 'declined';
+//         },
+//       },
+//     ],
+//   });
+// });
 
 import type { FeedbackKind } from '~~/shared/contracts/feedback';
 import { FEEDBACK_KIND_LABELS } from '~~/shared/contracts/feedback';
