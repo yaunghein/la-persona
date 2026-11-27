@@ -332,7 +332,13 @@ function actionItems(card: CompanyCard): DropdownMenuItem[][] {
   const items: DropdownMenuItem[] = [
     {
       label: 'View card',
-      icon: 'i-lucide-user',
+      icon: 'i-lucide-external-link',
+      to: `/c/${card.slug}`,
+      target: '_blank',
+    },
+    {
+      label: 'Edit card',
+      icon: 'i-lucide-pencil',
       onSelect: () => openCard(card),
     },
   ];
