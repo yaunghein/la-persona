@@ -331,6 +331,14 @@ export const AdminCardRouteParams = z.object({
   cardId: z.string().trim().min(1),
 });
 
+export const DeleteAdminCardQuery = z.object({
+  /** `true`: also delete the holder's account. */
+  withUser: z
+    .enum(['true', 'false'])
+    .transform((value) => value === 'true')
+    .default(false),
+});
+
 export const ListAdminCardsQuery = z.object({
   /** `false`: cards not yet linked to an account (onboarding candidates). */
   claimed: z

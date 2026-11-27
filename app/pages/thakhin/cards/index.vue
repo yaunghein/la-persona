@@ -516,14 +516,14 @@ async function onSubmitForm() {
   }
 }
 
-async function onConfirmDelete() {
+async function onConfirmDelete(withUser: boolean) {
   if (!cardToDelete.value) return;
   isDeleting.value = true;
   try {
-    await adminApi.deleteCard(cardToDelete.value.id);
+    await adminApi.deleteCard(cardToDelete.value.id, { withUser });
     await invalidateAdmin();
     toast.add({
-      title: 'Card deleted',
+      title: withUser ? 'Card and user deleted' : 'Card deleted',
       description: `"${displayName(cardToDelete.value)}" was removed.`,
       color: 'success',
     });
@@ -1142,6 +1142,14 @@ const BACKGROUND_THEME_ITEMS: { label: string; value: BackgroundTheme }[] = [
           and related subscription, contact exchanges, and analytics on this
           card will be removed.
         </p>
+        <p
+          v-if="cardToDelete?.userId"
+          class="mt-3 text-sm leading-relaxed text-soft"
+        >
+          <span class="font-medium text-ink">Delete with User</span> also
+          deletes the holder's account, their personal cards and workspaces, and
+          their community&nbsp;memberships.
+        </p>
       </template>
       <template #footer>
         <UButton
@@ -1153,11 +1161,20 @@ const BACKGROUND_THEME_ITEMS: { label: string; value: BackgroundTheme }[] = [
           @click="closeDelete"
         />
         <UButton
+          v-if="cardToDelete?.userId"
+          label="Delete with User"
+          color="error"
+          variant="outline"
+          :disabled="isDeleting"
+          class="h-10 cursor-pointer rounded-full px-6 text-sm font-medium"
+          @click="onConfirmDelete(true)"
+        />
+        <UButton
           label="Delete"
           color="error"
           :loading="isDeleting"
           class="h-10 cursor-pointer rounded-full px-6 text-sm font-medium"
-          @click="onConfirmDelete"
+          @click="onConfirmDelete(false)"
         />
       </template>
     </UModal>

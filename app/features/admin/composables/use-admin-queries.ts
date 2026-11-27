@@ -368,8 +368,11 @@ export const adminApi = {
       method: 'PATCH',
       body: changes,
     }),
-  deleteCard: (cardId: string) =>
-    $fetch<void>(url(`cards/${cardId}`), { method: 'DELETE' }),
+  deleteCard: (cardId: string, options: { withUser: boolean }) =>
+    $fetch<void>(url(`cards/${cardId}`), {
+      method: 'DELETE',
+      query: options.withUser ? { withUser: 'true' } : undefined,
+    }),
 
   createOnboardingInvitation: (request: CreateOnboardingInvitationRequest) =>
     $fetch<OnboardingInvitationSummary>(url('onboarding-invitations'), {

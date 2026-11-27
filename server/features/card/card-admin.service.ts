@@ -1,5 +1,10 @@
+import type { H3Event } from 'h3';
 import { nanoid } from 'nanoid';
 import { env } from '~~/env';
+import {
+  assertAccountDeletable,
+  deleteAccount,
+} from '~~/server/features/auth/user-admin.service';
 import {
   findAdminCard,
   findPendingOnboardingInvitationForCard,
@@ -183,4 +188,23 @@ export async function deleteCardForAdmin(cardId: string) {
   if (!existing) throw notFound('Card');
   await deleteCardWithPendingRequests(cardId);
   return existing.card;
+}
+
+/** Purges the card, then its holder's account. */
+export async function deleteCardAndHolderForAdmin(
+  event: H3Event,
+  params: { cardId: string; actorUserId: string }
+) {
+  const existing = await findAdminCard(params.cardId);
+  if (!existing) throw notFound('Card');
+  const userId = existing.card.userId;
+  if (!userId) throw conflict('This card has no holder.', 'card_has_no_holder');
+  // The card purge can't be undone, so refuse before it if the account delete would.
+  await assertAccountDeletable({ userId, actorUserId: params.actorUserId });
+  await deleteCardWithPendingRequests(params.cardId);
+  const result = await deleteAccount(event, {
+    userId,
+    actorUserId: params.actorUserId,
+  });
+  return { card: existing.card, ...result };
 }

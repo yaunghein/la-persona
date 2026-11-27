@@ -149,11 +149,11 @@ export async function updateAccount(
   return { account: existing, changed };
 }
 
-/** Deletes personal workspaces and the account; community memberships end with it. */
-export async function deleteAccount(
-  event: H3Event,
-  params: { userId: string; actorUserId: string }
-) {
+/** Throws when the account can't be deleted. Run it before anything irreversible. */
+export async function assertAccountDeletable(params: {
+  userId: string;
+  actorUserId: string;
+}) {
   if (params.userId === params.actorUserId) {
     throw forbidden('You cannot delete your own account.', 'self_delete');
   }
@@ -173,6 +173,15 @@ export async function deleteAccount(
       );
     }
   }
+  return { existing, footprint };
+}
+
+/** Deletes personal workspaces and the account; community memberships end with it. */
+export async function deleteAccount(
+  event: H3Event,
+  params: { userId: string; actorUserId: string }
+) {
+  const { existing, footprint } = await assertAccountDeletable(params);
   const deletedOrganizationIds = await deletePersonalOrganizationsForUser(
     params.userId
   );
