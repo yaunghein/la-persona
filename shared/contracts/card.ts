@@ -416,6 +416,9 @@ export type AdminCardSummary = {
   organizationType: OrganizationType | null;
   userId: string | null;
   linkedUserEmail: string | null;
+  socials: CardSocialLink[];
+  /** Contact exchanges collected on this card, across every holder. */
+  connectionCount: number;
   createdAt: string;
   updatedAt: string;
   subscriptionStatus: SubscriptionStatus | null;

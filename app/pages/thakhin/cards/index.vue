@@ -42,6 +42,7 @@ import type {
 type CardRow = AdminCardSummary;
 
 const toast = useToast();
+const { normalizeCardLinkValue } = useUrlNormalization();
 const invalidateAdmin = useInvalidateAdmin();
 
 const isFormOpen = ref(false);
@@ -684,6 +685,15 @@ const columns: TableColumn<CardRow>[] = [
     accessorKey: 'subscriptionEndAt',
     header: sortableHeader('EXPIRES'),
   },
+  {
+    accessorKey: 'connectionCount',
+    header: sortableHeader('CONNECTIONS'),
+  },
+  {
+    id: 'socials',
+    header: 'SOCIALS',
+    accessorFn: (row) => row.socials.map((link) => link.label).join(', '),
+  },
   { accessorKey: 'email', header: sortableHeader('CARD EMAIL') },
   { accessorKey: 'createdAt', header: sortableHeader('CREATED') },
   ADMIN_ACTIONS_COLUMN,
@@ -842,6 +852,23 @@ const BACKGROUND_THEME_ITEMS: { label: string; value: BackgroundTheme }[] = [
               new Date(row.original.subscriptionStartAt).toLocaleDateString()
             }}
           </span>
+          <span v-else class="text-subtle">—</span>
+        </template>
+        <template #socials-cell="{ row }">
+          <div v-if="row.original.socials.length" class="flex flex-wrap gap-2">
+            <a
+              v-for="(link, index) in row.original.socials"
+              :key="`${link.label}-${index}`"
+              :href="normalizeCardLinkValue(link.value, link.label)"
+              :title="link.value"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-muted underline underline-offset-2 hover:text-ink"
+              @click.stop
+            >
+              {{ link.label }}
+            </a>
+          </div>
           <span v-else class="text-subtle">—</span>
         </template>
         <template #createdAt-cell="{ row }">

@@ -3,6 +3,7 @@ import { db } from '~~/server/db';
 import {
   card,
   cardSubscription,
+  contactExchange,
   onboardingInvitation,
   organization,
   subscriptionPayment,
@@ -18,6 +19,10 @@ function selectAdminCards() {
       organizationSlug: organization.slug,
       organizationType: organization.type,
       linkedUserEmail: user.email,
+      connectionCount: db.$count(
+        contactExchange,
+        eq(contactExchange.cardId, card.id)
+      ),
       subscription: {
         status: cardSubscription.status,
         planCode: cardSubscription.planCode,

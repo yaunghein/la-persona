@@ -73,6 +73,8 @@ function toAdminCardSummary(row: AdminCardRow): AdminCardSummary {
     organizationType: row.organizationType as OrganizationType | null,
     userId: card.userId,
     linkedUserEmail: row.linkedUserEmail,
+    socials: card.socials ?? [],
+    connectionCount: row.connectionCount,
     createdAt: card.createdAt.toISOString(),
     updatedAt: card.updatedAt.toISOString(),
     subscriptionStatus: subscription?.status
