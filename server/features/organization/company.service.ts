@@ -362,16 +362,8 @@ async function sendCompanyInvite(params: {
     params.role === 'admin' ? 'company_admin_invitation' : 'company_invitation';
   try {
     const html = await renderEmailComponent(
-      params.role === 'admin'
-        ? 'CommunityOrganizerInvitation'
-        : 'CommunityInvitation',
-      params.role === 'admin'
-        ? { organizationName: params.organizationName, inviteUrl }
-        : {
-            inviterName: params.organizationName,
-            organizationName: params.organizationName,
-            inviteUrl,
-          }
+      params.role === 'admin' ? 'CompanyAdminInvitation' : 'CompanyInvitation',
+      { organizationName: params.organizationName, inviteUrl }
     );
     await sendEmail({
       to,
