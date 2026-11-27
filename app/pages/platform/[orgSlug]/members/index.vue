@@ -184,6 +184,7 @@ async function exportMembers() {
     @change-role="changeMemberRole"
   />
   <OrganizationInviteMembersSlideover
+    v-if="userOrgs && !isCompany"
     v-model:open="isInviteOpen"
     :organization-slug="organizationSlug"
   />
