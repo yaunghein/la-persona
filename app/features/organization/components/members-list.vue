@@ -26,7 +26,7 @@ const emit = defineEmits<{
 
 const searchQuery = ref('');
 const activeTab = ref<CommunityMembersTab>('all');
-const page = ref(1);
+const page = useQueryPage();
 const itemsPerPage = 10;
 const { siblingCount, showEdges } = usePaginationWindow();
 const isInfoOpen = ref(false);
@@ -101,7 +101,7 @@ watch([searchQuery, activeTab], () => {
 
 watch(filteredMembers, () => {
   const maxPage = Math.max(1, Math.ceil(total.value / itemsPerPage));
-  if (page.value > maxPage) page.value = maxPage;
+  if (total.value > 0 && page.value > maxPage) page.value = maxPage;
 });
 
 const columns: TableColumn<CommunityMember>[] = [

@@ -46,7 +46,7 @@ const cards = computed(() => data.value?.items ?? []);
 
 const searchQuery = ref('');
 const activeTab = ref<MemberTab>('all');
-const page = ref(1);
+const page = useQueryPage();
 const itemsPerPage = 10;
 const { siblingCount, showEdges } = usePaginationWindow();
 const isInfoOpen = ref(false);

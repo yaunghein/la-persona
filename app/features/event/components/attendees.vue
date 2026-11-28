@@ -40,7 +40,7 @@ const activeTab = ref<AttendeeTab>('all');
 const selectedLabelIds = ref<string[]>([]);
 const isGrouped = ref(false);
 const isLabelsOpen = ref(false);
-const page = ref(1);
+const page = useQueryPage();
 const itemsPerPage = 10;
 const { siblingCount, showEdges } = usePaginationWindow();
 
@@ -161,7 +161,7 @@ watch([searchQuery, activeTab, selectedLabelIds], () => {
 
 watch(filteredAttendees, () => {
   const maxPage = Math.max(1, Math.ceil(total.value / itemsPerPage));
-  if (page.value > maxPage) page.value = maxPage;
+  if (total.value > 0 && page.value > maxPage) page.value = maxPage;
 });
 
 const hiddenOnGroupRow = {

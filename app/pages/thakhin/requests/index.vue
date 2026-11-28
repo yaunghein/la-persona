@@ -114,6 +114,7 @@ const {
   onPageChange: onUpdatePageChange,
 } = useAdminTable(() => updateRows.value.length, {
   searchQueryKey: 'updates_q',
+  pageQueryKey: 'updates_page',
   tableRef: 'updateTable',
 });
 

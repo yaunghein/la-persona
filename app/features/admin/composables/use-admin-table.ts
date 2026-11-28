@@ -12,8 +12,9 @@ export function useAdminTable(
   options?: {
     defaultSort?: AdminTableSorting;
     itemsPerPage?: number;
-    /** Query key for the search box; a page with two tables needs two. */
+    /** Query keys for the search box and page; a page with two tables needs two. */
     searchQueryKey?: string;
+    pageQueryKey?: string;
     /** Template `ref` name; a page with two tables needs two. */
     tableRef?: string;
   }
@@ -25,12 +26,18 @@ export function useAdminTable(
   const sorting = ref<AdminTableSorting>(
     options?.defaultSort ?? [{ id: 'createdAt', desc: true }]
   );
-  const pagination = ref({
-    pageIndex: 0,
-    pageSize: options?.itemsPerPage ?? 10,
+  const page = useQueryPage(options?.pageQueryKey ?? 'page');
+  const pageSize = options?.itemsPerPage ?? 10;
+  const pagination = computed({
+    get: () => ({ pageIndex: page.value - 1, pageSize }),
+    set: (value: { pageIndex: number }) => {
+      page.value = value.pageIndex + 1;
+    },
   });
   const paginationOptions = {
     getPaginationRowModel: getPaginationRowModel(),
+    // TanStack jumps to page 1 whenever the rows change, e.g. after a delete refetch.
+    autoResetPageIndex: false,
   };
 
   const paginationTotal = computed(
@@ -40,14 +47,21 @@ export function useAdminTable(
   );
 
   function resetPage() {
-    pagination.value = { ...pagination.value, pageIndex: 0 };
+    page.value = 1;
   }
 
-  function onPageChange(page: number) {
-    pagination.value = { ...pagination.value, pageIndex: page - 1 };
+  function onPageChange(value: number) {
+    page.value = value;
   }
 
   watch(globalFilter, resetPage);
+
+  // Deleting the last row of the last page would leave an empty page. A total
+  // of 0 is skipped so a URL page survives the first load.
+  watch(paginationTotal, (total) => {
+    const lastPage = Math.max(1, Math.ceil(total / pageSize));
+    if (total > 0 && page.value > lastPage) page.value = lastPage;
+  });
 
   return {
     table,

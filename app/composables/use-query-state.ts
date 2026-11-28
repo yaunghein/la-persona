@@ -28,3 +28,17 @@ export function useQueryState<T extends string>(key: string, defaultValue: T) {
 
   return state;
 }
+
+/** A 1-based page number mirrored to `?key=`; a bad value reads as page 1. */
+export function useQueryPage(key = 'page') {
+  const state = useQueryState<string>(key, '1');
+  return computed({
+    get: () => {
+      const page = Math.floor(Number(state.value));
+      return Number.isFinite(page) && page >= 1 ? page : 1;
+    },
+    set: (page: number) => {
+      state.value = String(page);
+    },
+  });
+}
