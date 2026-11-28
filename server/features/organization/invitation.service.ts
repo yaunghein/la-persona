@@ -141,6 +141,7 @@ export async function previewInvitation(
     email: invitation.email,
     organizationName: organization.name,
     organizationSlug: organization.slug,
+    organizationType: organization.type,
     logoUrl: organization.logo,
     alreadyMember: !!membership,
     expired: invitation.expiresAt.getTime() < Date.now(),

@@ -106,6 +106,7 @@ export type CommunityInvitationPreview = CommunityInviteStats & {
   email: string;
   organizationName: string;
   organizationSlug: string;
+  organizationType: OrganizationType;
   logoUrl: string | null;
   alreadyMember: boolean;
   expired: boolean;

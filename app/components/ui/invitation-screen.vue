@@ -6,6 +6,7 @@ const props = defineProps<{
   retryLabel?: string;
   coverSrc?: string;
   coverAspectClass?: string;
+  hideCover?: boolean;
   logoSrc?: string;
   organizationName?: string;
   meta?: string[];
@@ -48,8 +49,13 @@ const emit = defineEmits<{
         />
       </div>
 
-      <div v-else class="flex flex-col gap-10 pb-10 rounded-lg bg-raised">
+      <div
+        v-else
+        class="flex flex-col gap-10 pb-10 rounded-lg bg-raised"
+        :class="{ 'pt-10': hideCover }"
+      >
         <div
+          v-if="!hideCover"
           class="flex w-full items-center justify-center overflow-hidden rounded-t-lg"
           :class="[
             props.coverAspectClass || 'aspect-[1/0.25]',

@@ -1,12 +1,23 @@
 <script setup lang="ts">
-useSeoMeta({ ...getSeoTitle('Community invitation - LA PERSONA') });
-
 const route = useRoute();
 const toast = useToast();
 const invitationId = computed(() => String(route.params.token || ''));
 
 const { data, isPending, isError, error, refetch } =
   useInvitationPreviewQuery(invitationId);
+const isCompany = computed(
+  () => data.value?.organizationType === ORGANIZATION_TYPES.COMPANY
+);
+const organizationLabel = computed(() =>
+  isCompany.value ? 'company' : 'community'
+);
+
+const seoTitle = computed(() =>
+  isCompany.value
+    ? 'Company invitation - LA PERSONA'
+    : 'Community invitation - LA PERSONA'
+);
+useSeoMeta({ title: seoTitle, ogTitle: seoTitle, twitterTitle: seoTitle });
 const {
   mutate: acceptInvitation,
   isPending: isAccepting,
@@ -65,15 +76,21 @@ function onRetry() {
   void refetch();
 }
 
+const meta = computed(() =>
+  data.value && !isCompany.value ? communityInviteMeta(data.value) : []
+);
+
 useInAppBrowserPreview(() => {
   if (!data.value) return null;
   const { organizationName, logoUrl, coverUrl } = data.value;
   return {
     heading: `Join ${organizationName} in Your\u00a0Browser`,
     item: {
-      imageUrl: invitationLogoSrc(logoUrl) || communityCoverSrc(coverUrl),
+      imageUrl:
+        invitationLogoSrc(logoUrl) ||
+        (isCompany.value ? null : communityCoverSrc(coverUrl)),
       title: organizationName,
-      description: communityInviteMeta(data.value).slice(0, 2).join(' • '),
+      description: meta.value.slice(0, 2).join(' • '),
     },
   };
 });
@@ -86,14 +103,10 @@ const canAccept = computed(
     data.value.status === 'pending'
 );
 
-const meta = computed(() =>
-  data.value ? communityInviteMeta(data.value) : []
-);
-
 const notice = computed(() => {
   if (!data.value || isAcceptInProgress.value) return '';
   if (data.value.alreadyMember) {
-    return 'You are already a member of this community.';
+    return `You are already a member of this ${organizationLabel.value}.`;
   }
   if (data.value.status === 'accepted') {
     return 'This invitation has already been\u00a0accepted.';
@@ -119,7 +132,7 @@ const noticeColor = computed(() => {
 const actionLabel = computed(() => {
   if (!data.value) return '';
   if (isAcceptInProgress.value) return 'Accept Invitation';
-  if (data.value.alreadyMember) return 'Open community';
+  if (data.value.alreadyMember) return `Open ${organizationLabel.value}`;
   if (canAccept.value) return 'Accept Invitation';
   return 'View cards';
 });
@@ -146,6 +159,7 @@ function onAction() {
           : undefined
     "
     :cover-src="data ? invitationCoverSrc(data.coverUrl) : undefined"
+    :hide-cover="isCompany"
     :logo-src="data ? invitationLogoSrc(data.logoUrl) : undefined"
     :organization-name="data?.organizationName"
     :meta="meta"
