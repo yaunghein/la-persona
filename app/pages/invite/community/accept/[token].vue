@@ -132,13 +132,14 @@ const noticeColor = computed(() => {
 const actionLabel = computed(() => {
   if (!data.value) return '';
   if (isAcceptInProgress.value) return 'Accept Invitation';
-  if (data.value.alreadyMember) return `Open ${organizationLabel.value}`;
+  if (data.value.alreadyMember && !isCompany.value) return 'Open community';
   if (canAccept.value) return 'Accept Invitation';
   return 'View cards';
 });
 
 function onAction() {
-  if (data.value?.alreadyMember) {
+  // Company members have no company workspace, so they go to their cards.
+  if (data.value?.alreadyMember && !isCompany.value) {
     return navigateTo(`${ROUTES.PLATFORM.ROOT}/${data.value.organizationSlug}`);
   }
   if (canAccept.value) return accept();

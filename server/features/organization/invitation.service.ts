@@ -130,7 +130,7 @@ export async function previewInvitation(
     );
   }
   const organization = await findOrganizationById(invitation.organizationId);
-  if (!organization) throw notFound('Community');
+  if (!organization) throw notFound('Organization');
 
   const [membership, stats] = await Promise.all([
     findMembership(viewer.userId, organization.id),
@@ -276,7 +276,7 @@ async function acceptAsInvitee(
 ): Promise<InvitationReviewResult> {
   const userId = viewer.userId;
   const organization = await findOrganizationById(invitation.organizationId);
-  if (!organization) throw notFound('Community');
+  if (!organization) throw notFound('Organization');
 
   if (organization.type === ORGANIZATION_TYPES.COMPANY) {
     return acceptCompanyInvitation(
