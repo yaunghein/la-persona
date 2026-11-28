@@ -5,6 +5,8 @@ definePageMeta({
 
 import type { DropdownMenuItem, TableColumn } from '@nuxt/ui';
 import type { BackgroundTheme } from '~~/shared/utils/constants';
+import { env } from '~~/env';
+import { communityCardPath } from '~~/shared/utils/routes';
 import { getThakhinCardPlanAssetDefaults } from '~~/shared/constants/thakhin-card-plan-assets';
 import {
   MAX_UPLOAD_BYTES,
@@ -644,6 +646,15 @@ async function onExtend() {
   }
 }
 
+async function copyToClipboard(value: string, title: string) {
+  try {
+    await navigator.clipboard.writeText(value);
+    toast.add({ title, color: 'success' });
+  } catch {
+    toast.add({ title: 'Copy failed', color: 'error' });
+  }
+}
+
 const columns: TableColumn<CardRow>[] = [
   {
     id: 'displayName',
@@ -651,6 +662,7 @@ const columns: TableColumn<CardRow>[] = [
     accessorFn: (row) => displayName(row),
   },
   { accessorKey: 'slug', header: sortableHeader('SLUG') },
+  { accessorKey: 'email', header: sortableHeader('CARD EMAIL') },
   {
     accessorKey: 'organizationName',
     header: sortableHeader('ORGANIZATION'),
@@ -694,7 +706,6 @@ const columns: TableColumn<CardRow>[] = [
     header: 'SOCIALS',
     accessorFn: (row) => row.socials.map((link) => link.label).join(', '),
   },
-  { accessorKey: 'email', header: sortableHeader('CARD EMAIL') },
   { accessorKey: 'createdAt', header: sortableHeader('CREATED') },
   ADMIN_ACTIONS_COLUMN,
 ];
@@ -797,6 +808,38 @@ const BACKGROUND_THEME_ITEMS: { label: string; value: BackgroundTheme }[] = [
           <span class="font-medium text-ink">
             {{ displayName(row.original) }}
           </span>
+        </template>
+        <template #slug-cell="{ row }">
+          <div class="flex items-center gap-1">
+            <span>{{ row.original.slug }}</span>
+            <UButton
+              icon="i-lucide-copy"
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              aria-label="Copy card link"
+              @click.stop="
+                copyToClipboard(
+                  `${env.BASE_URL.replace(/\/$/, '')}${communityCardPath(row.original.slug)}`,
+                  'Link copied'
+                )
+              "
+            />
+          </div>
+        </template>
+        <template #email-cell="{ row }">
+          <div v-if="row.original.email" class="flex items-center gap-1">
+            <span>{{ row.original.email }}</span>
+            <UButton
+              icon="i-lucide-copy"
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              aria-label="Copy email"
+              @click.stop="copyToClipboard(row.original.email, 'Email copied')"
+            />
+          </div>
+          <span v-else class="text-subtle">—</span>
         </template>
         <template #claimStatus-cell="{ row }">
           <AdminStatusPill
