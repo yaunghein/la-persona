@@ -10,11 +10,6 @@ export const THAKHIN_CARD_PLAN_ASSET_DEFAULTS: Record<
   ThakhinCardPlanAssetDefaultsKeys,
   ThakhinCardPlanAssetDefaults
 > = {
-  // founders: {
-  //   splineUrl: 'https://prod.spline.design/RLMffXoyzfSZ0XE3/scene.splinecode',
-  //   wallpaperS3Key: 'uploads/wallpaper-founders.webp',
-  //   cardBackS3Key: 'uploads/back-founders.webp',
-  // },
   'friend-family': {
     splineUrl: 'https://prod.spline.design/AUU-ZUF6pr29W4pN/scene.splinecode',
     wallpaperS3Key: 'uploads/wallpaper-friends-family.webp',

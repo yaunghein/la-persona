@@ -5,7 +5,6 @@ export function prefersCsv(event: H3Event): boolean {
   return (getRequestHeader(event, 'accept') ?? '').includes('text/csv');
 }
 
-/** Sends a CSV attachment. */
 export function respondCsv(event: H3Event, fileName: string, csv: string) {
   setResponseHeaders(event, {
     'content-type': 'text/csv; charset=utf-8',

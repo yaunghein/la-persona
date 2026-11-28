@@ -32,7 +32,6 @@ export const AdminPaginationQuery = z.object({
   offset: z.coerce.number().int().min(0).default(0),
 });
 
-/** A page of a paginated collection. */
 export type Page<T> = {
   items: T[];
   total: number;

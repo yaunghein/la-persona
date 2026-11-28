@@ -61,7 +61,6 @@ const selectCountry = (country: (typeof countries)[0]) => {
         ></div>
       </button>
 
-      <!-- <Transition name="fly"> -->
       <div
         v-if="open"
         class="absolute left-0 top-[calc(3.13rem+0.5rem)] w-full border border-ink/10 bg-canvas z-20"
@@ -108,7 +107,6 @@ const selectCountry = (country: (typeof countries)[0]) => {
           <span v-else>No country found.</span>
         </div>
       </div>
-      <!-- </Transition> -->
 
       <input
         name="phone"
@@ -135,16 +133,3 @@ const selectCountry = (country: (typeof countries)[0]) => {
     </div>
   </label>
 </template>
-
-<!-- <style scoped>
-.fly-enter-active,
-.fly-leave-active {
-  transition: all 0.4s ease;
-}
-
-.fly-enter-from,
-.fly-leave-to {
-  opacity: 0;
-  transform: translateY(10%);
-}
-</style> -->

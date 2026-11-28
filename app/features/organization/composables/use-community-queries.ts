@@ -230,7 +230,6 @@ export function useInviteeEmailQuery(invitePath: MaybeRefOrGetter<string>) {
   });
 }
 
-/** The invitee accepts their invitation. */
 export function useAcceptInvitationMutation(
   invitationId: MaybeRefOrGetter<string>
 ) {

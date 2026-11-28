@@ -35,7 +35,6 @@ export const eventQueryKeys = {
 const eventUrl = (eventId: string, path = ''): string =>
   `/api/events/${eventId}${path ? `/${path}` : ''}`;
 
-/** Events the signed-in user registered for. */
 export function useRegisteredEventsQuery(
   options: { enabled?: MaybeRefOrGetter<boolean> } = {}
 ) {

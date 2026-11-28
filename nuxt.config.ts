@@ -1,4 +1,3 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
 // Build-time values only. Runtime env is validated and read through `~~/env`.
 // Crawlers need an absolute og:image. Pages override it via usePageSeo.
 const DEFAULT_OG_IMAGE = `${(process.env.BASE_URL || '').replace(/\/$/, '')}/og.png`;

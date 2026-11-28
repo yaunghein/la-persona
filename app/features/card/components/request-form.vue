@@ -680,16 +680,6 @@ function onFormError(event: FormErrorEvent) {
     @error="onFormError"
     class="space-y-8"
   >
-    <!-- <div class="space-y-4">
-      <h1 class="text-[20px] font-medium uppercase tracking-widest text-ink">
-        NEW CARD REQUEST FORM
-      </h1>
-      <p class="text-sm leading-[21px] text-subtle">
-        Whether you're creating a new identity or reusing an existing design,
-        we'll take care of the rest.
-      </p>
-    </div> -->
-
     <UFormField
       label="What would you like to create?"
       name="type"
@@ -735,7 +725,6 @@ function onFormError(event: FormErrorEvent) {
       >
         <template #description="{ item }">
           <div class="mt-2 space-y-2">
-            <!-- <p class="text-sm text-subtle">Use this card back design</p> -->
             <UiSkeletonImage
               v-if="item.cardBackUrl"
               :src="resolveObjectStorageUrl(item.cardBackUrl)"

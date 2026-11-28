@@ -29,7 +29,6 @@ export function findAnyOrganization(userId: string) {
   return findOrganizationOfUser(userId, false);
 }
 
-/** A personal workspace owned by the user. */
 export function insertPersonalOrganization(input: {
   userId: string;
   name: string;

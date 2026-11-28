@@ -150,7 +150,6 @@ function disposeSpline() {
 onMounted(async () => {
   if (!card || !card.value) return;
 
-  // Track View
   recordCardInteraction(card.value!.slug, {
     type: 'view',
     metadata: { path: route.path },
@@ -1022,14 +1021,6 @@ async function onSaveContact() {
           >
             {{ isSavingContact ? 'Preparing Contact...' : 'Save Contact' }}
           </button>
-          <!-- <a
-            v-if="isSuccess"
-            :href="card.vcf"
-            :download="`${card.id}.vcf`"
-            class="cursor-pointer w-full rounded-full border border-line-heavy bg-ink py-4 text-center text-xs font-bold leading-none tracking-[0.1rem] text-ink-inverse transition-all duration-500 disabled:bg-line-strong disabled:text-ink/20"
-          >
-            Save Contact
-          </a> -->
           <button
             v-else-if="!isPickingCard"
             type="submit"

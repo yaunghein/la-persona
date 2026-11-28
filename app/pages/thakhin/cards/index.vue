@@ -710,7 +710,6 @@ const columns: TableColumn<CardRow>[] = [
   ADMIN_ACTIONS_COLUMN,
 ];
 
-/** Matches `app/components/form/manual-contact.vue` / `update-card-info.vue` */
 const formFieldClass =
   '[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink';
 
@@ -1149,7 +1148,6 @@ const BACKGROUND_THEME_ITEMS: { label: string; value: BackgroundTheme }[] = [
           @click="
             () => {
               isFormOpen = false;
-              // resetForm();
             }
           "
         />

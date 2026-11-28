@@ -19,7 +19,6 @@ export const organizationQueryKeys = {
     [...organizationQueryKeys.all, 'invitee', invitePath] as const,
 };
 
-/** Organizations the signed-in user belongs to (with their role in each). */
 export function useUserOrganizations() {
   return useQuery({
     queryKey: organizationQueryKeys.mine(),

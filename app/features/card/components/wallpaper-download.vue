@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { env } from '~~/env';
-import { useQRCode } from '@vueuse/integrations/useQRCode';
 import { refDebounced, useStorage } from '@vueuse/core';
 import { phoneWallpaperModels } from '~~/shared/constants/phone-wallpaper-models';
 import {
@@ -59,16 +58,6 @@ const publicCardUrl = computed(() => {
   const origin = env.BASE_URL || (process.client ? window.location.origin : '');
   return `${origin}/c/${cardSlug}`;
 });
-const qrCodeOptions = computed(() => ({
-  width: 1024,
-  margin: 0,
-  errorCorrectionLevel: 'H' as const,
-  color: {
-    dark: qrColor.value,
-    light: '#00000000',
-  },
-}));
-// const qrCodeDataUrl = useQRCode(publicCardUrl, qrCodeOptions);
 
 const previewWallpaperFrameStyle = computed(() => ({
   aspectRatio: `${selectedModelConfig.value.width} / ${selectedModelConfig.value.height}`,
@@ -480,14 +469,6 @@ async function downloadQr() {
           </div>
         </div>
       </div>
-      <!-- <div class="mt-5 flex justify-center border-t border-line pt-5">
-        <UButton
-          label="Close"
-          color="neutral"
-          class="h-10 text-sm min-w-44 justify-center rounded-full bg-ink px-8 font-medium text-ink-inverse hover:bg-ink/90"
-          @click="isWallpaperPreviewModalOpen = false"
-        />
-      </div> -->
     </template>
   </UModal>
 </template>

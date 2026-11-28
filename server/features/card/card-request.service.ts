@@ -32,7 +32,6 @@ import { resolvedPhoneFields } from '~~/shared/utils/phone';
 import { slugify } from '~~/shared/utils/slugify';
 import { derivePlanCodeFromSource } from '~~/shared/utils/subscription';
 
-/** New designs are always produced on the premium plan. */
 const NEW_DESIGN_PLAN_CODE = 'premium';
 
 function addYears(base: Date, years: number) {

@@ -263,7 +263,6 @@ const columns: TableColumn<InvitationRow>[] = [
   ADMIN_ACTIONS_COLUMN,
 ];
 
-/** Matches thakhin cards slideover + `app/components/form/manual-contact.vue` */
 const formFieldClass =
   '[&_label]:mb-3 [&_label]:text-sm [&_label]:font-medium [&_label]:text-ink';
 

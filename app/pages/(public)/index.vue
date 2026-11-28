@@ -15,17 +15,10 @@ usePageSeo({
 });
 
 const { data: session } = await authClient.useSession(useFetch);
-// const heroCtaTo = computed(() =>
-//   session.value ? ROUTES.PLATFORM.ROOT : ROUTES.SIGN_IN
-// );
-// const heroCtaLabel = computed(() =>
-//   session.value ? 'Go to platform' : 'Try free'
-// );
 const messengerUrl = 'https://m.me/61571393589144';
 
 /**
- * Story — scrollytelling: tall track + sticky stage; ScrollTrigger scrub drives word motion
- * (same pattern as index.vue: Lenis + GSAP + ScrollTrigger).
+ * Story — scrollytelling: tall track + sticky stage; ScrollTrigger scrub drives word motion.
  */
 const storyLines = [
   {
@@ -408,19 +401,6 @@ const currentSection = ref<V2Section>(null);
 function goToV2Section(item: (typeof V2_NAV_LINKS)[number]) {
   document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' });
 }
-
-const freePlanFeatures = [
-  'Create and share your persona card with our professionally designed template',
-  'Instant contact exchange',
-  'Access your contact list',
-  'See engagement insights (total view, card saves, social clicks, etc)',
-] as const;
-
-const premiumPlanFeatures = [
-  'Everything in Standard',
-  'Fully custom-designed persona card',
-  'Priority support and updates',
-] as const;
 </script>
 
 <template>
@@ -487,9 +467,6 @@ const premiumPlanFeatures = [
   </nav>
 
   <main class="min-h-screen bg-canvas text-ink">
-    <!-- Header: centered logo (Figma); Sign in aligned for product continuity -->
-
-    <!-- Hero -->
     <section
       id="landing-v2-hero"
       class="flex flex-col items-center justify-center text-center"
@@ -514,13 +491,6 @@ const premiumPlanFeatures = [
         <div
           class="flex sm:w-full max-w-[23.33rem] flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center sm:gap-4"
         >
-          <!-- <UButton
-            :to="heroCtaTo"
-            size="xl"
-            class="whitespace-nowrap h-10 sm:h-12 justify-center rounded-full bg-ink px-10 text-xs font-light uppercase tracking-[0.1rem] text-ink-inverse sm:text-sm sm:tracking-[0.0875rem]"
-          >
-            {{ heroCtaLabel }}
-          </UButton> -->
           <UButton
             :to="messengerUrl"
             target="_blank"
@@ -554,7 +524,6 @@ const premiumPlanFeatures = [
       </div>
     </section>
 
-    <!-- Story: scrollytelling — pinned stage, scroll-scrubbed word waves per line -->
     <section
       id="landing-v2-story"
       class="relative"
@@ -562,7 +531,6 @@ const premiumPlanFeatures = [
       :style="{ minHeight: `${storyScrollMinVh}vh` }"
       aria-label="La Persona story"
     >
-      <!-- Reduced motion: plain stacked copy -->
       <div
         v-if="prefersReducedMotion"
         class="mx-auto max-w-152.5 space-y-24 px-4 py-24 text-center"
@@ -610,7 +578,6 @@ const premiumPlanFeatures = [
       </template>
     </section>
 
-    <!-- Product visual: tall track + sticky frame; border scrubs to 0 (motion, like index reveal) -->
     <section
       v-if="prefersReducedMotion"
       aria-label="Product visual"
@@ -650,7 +617,6 @@ const premiumPlanFeatures = [
       </div>
     </section>
 
-    <!-- What changes: tabs + phone + copy -->
     <section id="features" class="scroll-mt-16 py-14 sm:py-24">
       <div
         class="mx-auto flex max-w-360 flex-col items-center gap-12 sm:gap-18"
@@ -747,7 +713,6 @@ const premiumPlanFeatures = [
       </div>
     </section>
 
-    <!-- Why La Persona -->
     <section id="why-la-persona" class="px-4 py-14 sm:py-24">
       <div
         class="mx-auto flex max-w-305 flex-col items-center gap-12 sm:gap-18"
@@ -785,7 +750,6 @@ const premiumPlanFeatures = [
       </div>
     </section>
 
-    <!-- Bespoke cards: full-page Spline scene -->
     <section id="bespoke-cards" class="py-14 sm:py-24">
       <div
         class="mx-auto flex max-w-305.5 flex-col items-center gap-12 px-4 sm:gap-18 relative z-10"
@@ -826,92 +790,6 @@ const premiumPlanFeatures = [
       </div>
     </section>
 
-    <!-- Pricing (hidden for now)
-    <section id="pricing" class="px-4 py-14 sm:py-24 relative z-10">
-      <div
-        class="mx-auto flex max-w-196 flex-col items-center gap-12 sm:gap-18"
-      >
-        <h2
-          class="max-w-133 text-center text-xl font-light uppercase leading-snug tracking-[0.15rem] sm:text-[2rem] sm:tracking-[0.15rem]"
-        >
-          Start free. Upgrade when you're ready.
-        </h2>
-        <div class="grid w-full grid-cols-1 gap-6 sm:grid-cols-2">
-          <div
-            class="flex flex-col gap-4 rounded-xl border border-ink/10 bg-canvas p-8 sm:p-10"
-          >
-            <div class="flex flex-col gap-2">
-              <p
-                class="text-[0.6875rem] font-light uppercase tracking-[0.06875rem] text-gold"
-              >
-                Free Trial
-              </p>
-              <p class="text-sm font-medium uppercase tracking-[0.07rem]">
-                Standard Persona Card
-              </p>
-            </div>
-            <p
-              class="text-[0.8125rem] font-light leading-snug tracking-[0.024rem] text-ink/40"
-            >
-              Explore the platform and start connecting.
-            </p>
-            <ul
-              class="list-disc space-y-1 pl-5 text-[0.8125rem] font-light leading-snug tracking-[0.024rem] text-ink/40"
-            >
-              <li v-for="feat in freePlanFeatures" :key="feat">
-                {{ feat }}
-              </li>
-            </ul>
-            <NuxtLink
-              to="/sign-in"
-              class="btn-press mt-5 inline-flex h-10 sm:h-12 w-fit items-center justify-center rounded-full border border-ink/10 px-8 text-xs font-light uppercase tracking-[0.1rem] hover:bg-ink hover:text-ink-inverse sm:text-sm sm:tracking-[0.0875rem]"
-            >
-              Try Free
-            </NuxtLink>
-          </div>
-
-          <div
-            class="flex flex-col justify-between gap-4 rounded-xl border border-gold bg-canvas p-8 sm:p-10"
-          >
-            <div class="flex flex-col gap-4">
-              <div class="flex flex-col gap-2">
-                <p
-                  class="text-[0.6875rem] font-light uppercase tracking-[0.06875rem] text-gold"
-                >
-                  Premium
-                </p>
-                <p class="text-sm font-medium uppercase tracking-[0.07rem]">
-                  Bespoke Persona Card
-                </p>
-              </div>
-              <p
-                class="text-[0.8125rem] font-light leading-snug tracking-[0.024rem] text-ink/40"
-              >
-                Elevate your presence with a custom-designed persona card.
-              </p>
-              <ul
-                class="list-disc space-y-1 pl-5 text-[0.8125rem] font-light leading-snug tracking-[0.024rem] text-ink/40"
-              >
-                <li v-for="feat in premiumPlanFeatures" :key="feat">
-                  {{ feat }}
-                </li>
-              </ul>
-            </div>
-            <UButton
-              to="https://m.me/61571393589144"
-              target="_blank"
-              size="xl"
-              class="h-10 sm:h-12 w-fit justify-center rounded-full bg-ink px-8 text-xs font-light uppercase tracking-[0.1rem] text-ink-inverse sm:text-sm sm:tracking-[0.0875rem]"
-            >
-              Talk to Us
-            </UButton>
-          </div>
-        </div>
-      </div>
-    </section>
-    -->
-
-    <!-- Final CTA -->
     <section id="landing-v2-final-cta" class="px-4 py-20 sm:px-58.5 sm:py-33">
       <div
         class="mx-auto flex max-w-127.5 flex-col items-center gap-10 sm:gap-13"
@@ -931,8 +809,6 @@ const premiumPlanFeatures = [
         </UButton>
       </div>
     </section>
-
-    <!-- Footer -->
   </main>
   <footer
     class="border-t border-ink/10 px-4 pt-5 sm:pt-12 pb-5 sm:pb-10 sm:px-12"

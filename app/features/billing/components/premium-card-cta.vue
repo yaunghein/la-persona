@@ -24,8 +24,6 @@ onMounted(async () => {
       app.dispose();
       return;
     }
-    // app.setBackgroundColor('#171717');
-    // app.setZoom(3.2);
   } catch {
     if (!disposed) app.dispose();
     splineApp = null;

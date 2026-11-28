@@ -285,7 +285,6 @@ function validate(formData: Partial<CardInfoForm>): FormError[] {
 }
 
 function onFormError(event: any) {
-  console.error('Form validation failed:', event.errors);
   toast.add({
     title: 'Please review the form',
     description: buildHelpfulFormErrorMessage(event.errors),
@@ -592,12 +591,6 @@ watch(isSocialSlideoverOpen, (open) => {
               class="h-10 text-sm rounded-full bg-raised px-4 text-ink hover:bg-line"
               @click="triggerFilePicker"
             />
-            <!-- <span
-              v-if="selectedFile"
-              class="text-xs text-primary-500 font-medium"
-            >
-              Ready to upload
-            </span> -->
           </div>
           <p class="text-xs text-subtle">
             JPG, PNG or WebP. Prefer under 800KB.

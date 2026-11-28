@@ -136,10 +136,6 @@ function onSubmit() {
 
 <template>
   <div class="bg-elevated/25 rounded-md p-4 sm:p-8">
-    <!-- <div v-if="isLoading" class="grid grid-cols-2 gap-5">
-      <USkeleton v-for="i in 6" :key="i" class="h-12 w-full" />
-      <USkeleton class="h-20 col-span-2 w-full" />
-    </div> -->
     <h1
       class="text-md sm:text-xl font-medium uppercase tracking-widest text-ink"
     >
@@ -209,16 +205,6 @@ function onSubmit() {
           size="xl"
         />
       </UFormField>
-
-      <!-- <UFormField label="Note" name="note" class="md:col-span-2">
-        <UTextarea
-          v-model="state.note"
-          class="w-full"
-          placeholder="Tell us about the changes..."
-          variant="soft"
-          size="xl"
-        />
-      </UFormField> -->
 
       <div class="md:col-span-2 flex justify-end pt-4">
         <UButton

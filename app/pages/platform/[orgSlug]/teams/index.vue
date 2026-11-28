@@ -99,15 +99,6 @@ const onContactClick = () => {
               </div>
             </div>
           </div>
-
-          <!-- <div class="flex justify-end">
-            <UButton
-              label="Contact Us For Early Access"
-              color="neutral"
-              class="cursor-pointer h-10 text-sm rounded-full bg-ink px-6 text-ink-inverse hover:bg-ink/90"
-              @click="onContactClick"
-            />
-          </div> -->
         </div>
       </div>
     </div>

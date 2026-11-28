@@ -193,15 +193,6 @@ defineExpose({
     @error="onFormError"
     class="space-y-4"
   >
-    <!-- <div class="space-y-4">
-      <h1 class="text-[20px] font-medium uppercase tracking-widest text-ink">
-        {{ titleLabel }}
-      </h1>
-      <p class="text-sm leading-[21px] text-subtle">
-        Please fill in the form below.
-      </p>
-    </div> -->
-
     <UFormField
       label="Message"
       name="message"

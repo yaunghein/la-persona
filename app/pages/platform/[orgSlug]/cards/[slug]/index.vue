@@ -210,7 +210,6 @@ const activeTab = computed({
       }"
     >
       <template #content="{ item }">
-        <!-- <CardDesignInfoForm v-if="item.value === '3d'" /> -->
         <CardInfoForm v-if="item.value === 'contact'" />
         <CardWallpaperDownload v-if="item.value === 'wallpaper'" />
       </template>

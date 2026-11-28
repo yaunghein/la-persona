@@ -23,7 +23,6 @@ export const communitySetting = pgTable(
     inviteToken: text()
       .notNull()
       .$defaultFn(() => nanoid()),
-    /** Join links expire; managers rotate the token to issue a fresh link. */
     splineUrl: text().default('').notNull(),
     backgroundTheme: text().$type<BackgroundTheme>().default('dark').notNull(),
     wallpaperUrl: text().default('').notNull(),

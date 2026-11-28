@@ -50,14 +50,6 @@ const tabItems = computed<TabsItem[]>(() => [
     value: 'registered',
   },
 ]);
-// const tabItems = computed<TabsItem[]>(() => [
-//   { label: `Upcoming Events (${tabCounts.value.upcoming})`, value: 'upcoming' },
-//   { label: `Past Events (${tabCounts.value.past})`, value: 'past' },
-//   {
-//     label: `Registered Events (${tabCounts.value.registered})`,
-//     value: 'registered',
-//   },
-// ]);
 
 const selectedTab = computed({
   get: () => activeTab.value,
