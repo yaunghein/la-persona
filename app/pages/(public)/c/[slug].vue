@@ -53,28 +53,10 @@ const unavailableNotice = computed(() => {
       action: null,
     };
   }
-  if (value.organizationType === ORGANIZATION_TYPES.COMPANY) {
-    return {
-      icon: 'i-lucide-pause',
-      title: 'Card paused',
-      description: `This card is taking a short break. If it’s yours, ask your ${company}\u00a0admin.`,
-      action: null,
-    };
-  }
-  if (value.renewPath) {
-    return {
-      icon: 'i-lucide-pause',
-      title: 'Your card is paused',
-      description:
-        'Your subscription has ended, so visitors can’t see your card. Extend it to bring it\u00a0back.',
-      action: { label: 'Extend my card', to: value.renewPath },
-    };
-  }
   return {
     icon: 'i-lucide-pause',
     title: 'Card paused',
-    description:
-      'This card is taking a short break. Please check back\u00a0soon.',
+    description: `This card is taking a short break. If it’s yours, ask your ${company}\u00a0admin.`,
     action: null,
   };
 });
@@ -767,18 +749,42 @@ async function onSaveContact() {
       </div>
     </div>
 
-    <div
-      v-if="canGoBack || ownCard"
-      class="absolute top-8 left-5 flex sm:left-8"
-    >
-      <button
-        type="button"
-        aria-label="Back"
-        class="grid aspect-square w-9 place-items-center rounded-lg border border-line-heavy bg-line-strong transition duration-300 hover:bg-ink/10"
-        @click="goBack"
+    <div class="absolute inset-x-0 top-0">
+      <div
+        v-if="card.isPaused"
+        class="flex items-center justify-center border-b border-line-heavy bg-line-strong px-8 py-2 backdrop-blur-md"
       >
-        <UIcon name="i-lucide-chevron-left" class="size-5" />
-      </button>
+        <p
+          class="text-center text-xs font-medium uppercase tracking-widest text-ink sm:text-sm"
+        >
+          <template v-if="ownCard">
+            Your {{ card.plan?.isTrial ? 'trial' : 'plan' }} has wrapped up, and
+            our team has sent you an email about it. Please check your inbox. If
+            you can’t find it, we’re always happy to help on our
+            <a
+              href="https://www.facebook.com/share/1BBTr3Emyh/"
+              target="_blank"
+              rel="noopener"
+              class="underline"
+              >Facebook&nbsp;page</a
+            >.
+          </template>
+          <template v-else>
+            This card is taking a little break, so contact exchanges are paused
+            for now. You can still save the contact&nbsp;below.
+          </template>
+        </p>
+      </div>
+      <div v-if="canGoBack || ownCard" class="mt-8 flex px-5 sm:px-8">
+        <button
+          type="button"
+          aria-label="Back"
+          class="grid aspect-square w-9 place-items-center rounded-lg border border-line-heavy bg-line-strong transition duration-300 hover:bg-ink/10"
+          @click="goBack"
+        >
+          <UIcon name="i-lucide-chevron-left" class="size-5" />
+        </button>
+      </div>
     </div>
 
     <div
@@ -795,6 +801,14 @@ async function onSaveContact() {
       >
         Manage Card
       </NuxtLink>
+      <button
+        v-else-if="card.isPaused"
+        :disabled="isSavingContact"
+        @click="onSaveContact"
+        class="grid flex-1 place-items-center rounded-full border border-line-heavy bg-line-strong text-sm font-bold transition duration-300 hover:bg-ink/10 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-line-strong"
+      >
+        Save Contact
+      </button>
       <button
         v-else
         :disabled="isSeamlessExchanging"

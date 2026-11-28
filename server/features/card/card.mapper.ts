@@ -84,5 +84,6 @@ export function toPublicCard(row: CardWithContext): PublicCard {
             status,
           }
         : null,
+    isPaused: false,
   };
 }

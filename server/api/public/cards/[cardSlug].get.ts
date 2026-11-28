@@ -26,7 +26,6 @@ export default defineEventHandler(
           availability: 'retired',
           organizationType: ORGANIZATION_TYPES.COMPANY,
           companyName: retired.companyName,
-          renewPath: null,
         };
       }
       throw notFound('Card');
@@ -37,21 +36,16 @@ export default defineEventHandler(
     const activity = cardActivity(card);
     if (activity === 'ok') return toPublicCard(card);
 
-    const isCompany = card.organization.type === ORGANIZATION_TYPES.COMPANY;
+    // A lapsed card stays visible so shared links keep working; analytics and
+    // contact exchanges stay off until it is extended.
+    if (activity === 'paused') return { ...toPublicCard(card), isPaused: true };
+
     // A vacant card that had a holder still carries their link: they have left.
-    const hasLeft =
-      activity === 'vacant' && (await isCurrentLinkVacated(card.card.id));
-    const isOwner =
-      !isCompany &&
-      !!card.card.userId &&
-      event.context.principal?.user.id === card.card.userId;
+    const hasLeft = await isCurrentLinkVacated(card.card.id);
     return {
       availability: hasLeft ? 'retired' : 'paused',
       organizationType: card.organization.type as OrganizationType,
-      companyName: isCompany ? card.organization.name : null,
-      renewPath: isOwner
-        ? `/platform/${card.organization.slug}/cards/${card.card.slug}?payment=renewal`
-        : null,
+      companyName: card.organization.name,
     };
   }
 );

@@ -173,19 +173,22 @@ export type PublicCard = Pick<
     isTrial: boolean;
     status: SubscriptionStatus;
   } | null;
+  /**
+   * The subscription ended: the card stays visible, but analytics
+   * and contact exchanges are paused until it is extended.
+   */
+  isPaused: boolean;
 };
 
 /**
- * Shown instead of the card. `paused`: the subscription ended (or a company
- * card has no holder yet). `retired`: the holder left the company.
+ * Shown instead of the card. `paused`: a company card with no holder yet.
+ * `retired`: the holder left the company.
  */
 export type UnavailablePublicCard = {
   availability: 'paused' | 'retired';
   organizationType: OrganizationType;
   /** Set for company cards. */
   companyName: string | null;
-  /** Set only for the card's owner, who can extend it. */
-  renewPath: string | null;
 };
 
 /** Contact details printed on a requested card. */
